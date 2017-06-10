@@ -367,15 +367,7 @@ namespace ScriptPlayer.VideoSync
 
             if (dialog.ShowDialog() != true) return;
 
-            IEnumerable<TimeSpan> beatTicks = dialog.Result.Beats.Select(b => TimeSpan.FromTicks(b * videoPlayer.Duration.Ticks / dialog.Result.TotalFrames));
-            SetAllBeats(beatTicks);
-
-            if (dialog.Result.Beats.Count > 0)
-            {
-                long first = dialog.Result.Beats[0];
-
-                //FramePicture.ShowImage(VideoFrameSampler.GetFrame(first, _openFile));
-            }
+            SetAllBeats(dialog.Result);
         }
 
         private void SetAllBeats(IEnumerable<TimeSpan> beats)
@@ -616,6 +608,13 @@ namespace ScriptPlayer.VideoSync
             string content = JsonConvert.SerializeObject(script);
 
             File.WriteAllText(dialog.FileName, content, Encoding.UTF8);
+        }
+
+        private void btnResetSamples_Click(object sender, RoutedEventArgs e)
+        {
+            if (_frameSamples == null) return;
+
+            SetCaptureRect(_frameSamples.CaptureRect);
         }
     }
 

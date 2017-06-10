@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Windows;
 using System.Windows.Shell;
@@ -12,11 +13,11 @@ namespace ScriptPlayer.VideoSync
     public partial class FrameAnalyserDialog : Window
     {
         public static readonly DependencyProperty ResultProperty = DependencyProperty.Register(
-            "Result", typeof(VideoAnalysisResult), typeof(FrameAnalyserDialog), new PropertyMetadata(default(VideoAnalysisResult)));
+            "Result", typeof(List<TimeSpan>), typeof(FrameAnalyserDialog), new PropertyMetadata(default(List<TimeSpan>)));
 
-        public VideoAnalysisResult Result
+        public List<TimeSpan> Result
         {
-            get { return (VideoAnalysisResult) GetValue(ResultProperty); }
+            get { return (List<TimeSpan>) GetValue(ResultProperty); }
             set { SetValue(ResultProperty, value); }
         }
 
@@ -38,8 +39,8 @@ namespace ScriptPlayer.VideoSync
 
         public void Analyse()
         {
-            VideoAnalysisResult result = new VideoAnalysisResult();
-            result.TotalFrames = _frames.TotalFramesInVideo;
+            List<TimeSpan> result = new List<TimeSpan>();
+            
             int frameIndex = 0;
 
             SampleAnalyser analyser = new SampleAnalyser(_condition, _parameters);
@@ -50,18 +51,14 @@ namespace ScriptPlayer.VideoSync
 
                 if (analyser.AddSample(frame.Capture))
                 {
-                    result.Beats.Add(frameIndex);
-
-                    //if (frame.FrameIndex != frameIndex)
-                    //{
-                    //    frameIndex = frameIndex;
-                    //}
+                    TimeSpan timeStamp = _frames.FrameIndexToTimeSpan(frameIndex);
+                    result.Add(timeStamp);
                 }
                 
                 if ((frameIndex+1) % 100 == 0)
                 {
                     double progress01 = (double) frameIndex / _frames.Count;
-                    string progress = $"{frameIndex} / {_frames.Count} ({progress01:P}) - {result.Beats.Count} Beats";
+                    string progress = $"{frameIndex} / {_frames.Count} ({progress01:P}) - {result.Count} Beats";
 
                     Dispatcher.Invoke(() =>
                     {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -81,6 +82,8 @@ namespace ScriptPlayer.Shared
             dc.DrawRectangle(Background, null, new Rect(new Point(0,0), new Size(ActualWidth, ActualHeight)));
 
             if (Duration == TimeSpan.Zero) return;
+
+            Debug.Write(Progress.ToString("c") + "/" + Duration.ToString("c"));
 
             double linePosition = Progress.Divide(Duration) * ActualWidth;
             dc.DrawLine(new Pen(Brushes.White, 1), new Point(linePosition,0), new Point(linePosition, ActualHeight));

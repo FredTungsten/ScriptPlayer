@@ -31,7 +31,7 @@
                 <Separator/>
                 <MenuItem Header="Load" Click="mnuLoad_Click"/>
                 <MenuItem Header="Load Fun" Click="mnuLoadFun_Click"></MenuItem>
-                
+
                 <MenuItem Header="Save As">
                     <MenuItem Header="beats.txt" Click="mnuSave_Click"/>
                     <MenuItem Header="kiiroo.js" Click="mnuSaveKiiroo_Click"/>
@@ -65,7 +65,17 @@
                 <TextBlock Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Text="{Binding BeatCount}" FontSize="32" Foreground="White"/>
                 <shared:BeatBar2 Opacity="1" IsHitTestVisible="False" Height="32" VerticalAlignment="Bottom" Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" x:Name="BeatBar" Background="#13202020" Beats="{Binding Beats}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Grid.Row="0" Grid.Column="0" LineColor="#FF00B9FF" LineWidth="8" Margin="0,0,0,84" />
                 <shared:TimeLineHeader Height="64" VerticalAlignment="Bottom" Marker="{Binding ElementName=videoPlayer, Path=TimeSource.Progress, Mode=OneWay}"/>
-                <ListBox Grid.Column="1" ItemsSource="{Binding Bookmarks}" Margin="0,135,0,35">
+
+                <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,34,0,0" TextWrapping="Wrap" Text="X" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="28,32,0,0" TextWrapping="Wrap" Text="{Binding SampleX}" VerticalAlignment="Top" Width="162"/>
+                <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,62,0,0" TextWrapping="Wrap" Text="Y" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="28,60,0,0" TextWrapping="Wrap" Text="{Binding SampleY}" VerticalAlignment="Top" Width="162"/>
+                <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,90,0,0" TextWrapping="Wrap" Text="W" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="28,88,0,0" TextWrapping="Wrap" Text="{Binding SampleW}" VerticalAlignment="Top" Width="162"/>
+                <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,118,0,0" TextWrapping="Wrap" Text="H" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="28,116,0,0" TextWrapping="Wrap" Text="{Binding SampleH}" VerticalAlignment="Top" Width="162"/>
+
+                <ListBox Grid.Column="1" ItemsSource="{Binding Bookmarks}" Margin="0,169,0,35">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="{x:Type ListBoxItem}">
                             <EventSetter Event="MouseDoubleClick" Handler="Bookmark_DoubleClick"></EventSetter>
@@ -73,14 +83,8 @@
                     </ListBox.ItemContainerStyle>
                 </ListBox>
                 <Button Content="Add Bookmark" Grid.Column="1" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="180" Click="btnAddBookmark_Click"/>
-                <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,12,0,0" TextWrapping="Wrap" Text="X" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="28,10,0,0" TextWrapping="Wrap" Text="{Binding SampleX}" VerticalAlignment="Top" Width="162"/>
-                <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,40,0,0" TextWrapping="Wrap" Text="Y" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="28,38,0,0" TextWrapping="Wrap" Text="{Binding SampleY}" VerticalAlignment="Top" Width="162"/>
-                <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,68,0,0" TextWrapping="Wrap" Text="W" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="28,66,0,0" TextWrapping="Wrap" Text="{Binding SampleW}" VerticalAlignment="Top" Width="162"/>
-                <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,96,0,0" TextWrapping="Wrap" Text="H" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="28,94,0,0" TextWrapping="Wrap" Text="{Binding SampleH}" VerticalAlignment="Top" Width="162"/>
+                <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="31,10,0,0" TextWrapping="Wrap" Text="Sampler Rect" VerticalAlignment="Top" Width="143"/>
+                <Button Content="Reset to Samples" Grid.Column="1" HorizontalAlignment="Left" Margin="31,144,0,0" VerticalAlignment="Top" Width="159" Click="btnResetSamples_Click"/>
             </Grid>
 
             <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>

@@ -62,6 +62,10 @@ namespace ScriptPlayer.VideoSync
         public Int32Rect CaptureRect { get; set; }
 
         public Int32 TotalFramesInVideo { get; set; }
+        
+        public Int64 DurationNumerator { get; set; }
+
+        public Int64 DurationDenominator { get; set; }
 
         public void SaveToFile(string filename)
         {
@@ -136,9 +140,14 @@ namespace ScriptPlayer.VideoSync
                         }
                         case 4:
                         {
-                            int totalFrames = reader.ReadInt32();
-                            result.TotalFramesInVideo = totalFrames;
+                            result.TotalFramesInVideo = reader.ReadInt32();
                             break;
+                        }
+                        case 5:
+                        {
+                            result.DurationNumerator = reader.ReadInt64();
+                            result.DurationDenominator = reader.ReadInt64();
+                                break;
                         }
                     }
                 }
@@ -161,7 +170,7 @@ namespace ScriptPlayer.VideoSync
                 //Endianess
                 writer.Write((byte)(BitConverter.IsLittleEndian?0:1));
 
-                writer.Write((int)3); //Number of Payloads = 3
+                writer.Write((int)5); //Number of Payloads = 5
 
                 //Payload type 1 = VideoFile
                 writer.Write((int)1);
@@ -184,6 +193,7 @@ namespace ScriptPlayer.VideoSync
                 int framelength = (int)(pixelsLength + sizeof(long));
                 int totalLength = numberOfFrames * framelength + sizeof(int) + sizeof(int);
                 writer.Write(totalLength);
+
                 writer.Write(numberOfFrames);
                 writer.Write(pixelsLength);
 
@@ -197,7 +207,32 @@ namespace ScriptPlayer.VideoSync
                 writer.Write((int)4);
                 writer.Write(sizeof(int));
                 writer.Write(TotalFramesInVideo);
+
+                //Payload type 5 = Duration;
+                writer.Write((int)5);
+                writer.Write((int)(2*sizeof(Int64)));
+                writer.Write(DurationNumerator);
+                writer.Write(DurationDenominator);
             }
+        }
+
+        public TimeSpan FrameIndexToTimeSpan(long frameIndex)
+        {
+            // Relative Progress / Total Duration
+            // (frameIndex / TotalFramesInVideo) * (DurationNumerator / DurationDenominator)
+            long actualPosition = (long) ((frameIndex * TimeSpan.TicksPerSecond / (double) TotalFramesInVideo) * (DurationNumerator / (double) DurationDenominator));
+            TimeSpan roundedTimeSpan = TimeSpan.FromTicks(actualPosition);
+
+            //Even Int64 isn't enought ....
+            long timeSpanTicksMs = (frameIndex * DurationNumerator * (TimeSpan.TicksPerSecond / TimeSpan.TicksPerMillisecond) ) / (TotalFramesInVideo * DurationDenominator);
+            TimeSpan timestamp = TimeSpan.FromTicks(timeSpanTicksMs * TimeSpan.TicksPerMillisecond);
+
+            if (Math.Abs((timestamp - roundedTimeSpan).TotalSeconds) > 0.5)
+            {
+                Debug.Write("oO!");
+            }
+
+            return timestamp;
         }
     }
 }

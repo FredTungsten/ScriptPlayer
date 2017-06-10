@@ -40,7 +40,7 @@ namespace ScriptPlayer.VideoSync
 
         public FrameSamplerDialog(string videoFile, Int32Rect captureRect)
         {
-            TaskbarItemInfo = new TaskbarItemInfo()
+            TaskbarItemInfo = new TaskbarItemInfo
             {
                 ProgressState = TaskbarItemProgressState.Normal
             };
@@ -71,12 +71,15 @@ namespace ScriptPlayer.VideoSync
 
         private void ProcessVideo(string fileName)
         {
+
             VideoFileReader reader = new VideoFileReader();
             reader.Open(fileName);
             System.Drawing.Color[] samples = new System.Drawing.Color[_captureRect.Width * _captureRect.Height];
 
             FrameCaptureCollection frameSamples = new FrameCaptureCollection();
             frameSamples.TotalFramesInVideo = (int) reader.FrameCount;
+            frameSamples.DurationNumerator = reader.FrameCount * reader.FrameRate.Denominator;
+            frameSamples.DurationDenominator = reader.FrameRate.Numerator;
             frameSamples.VideoFile = _videoFile;
             frameSamples.CaptureRect = _captureRect;
 
@@ -125,6 +128,10 @@ namespace ScriptPlayer.VideoSync
 
                 current.Dispose();
             } while (_running);
+
+            long framesSampled = frame;
+            long expectedFrames = frameSamples.TotalFramesInVideo;
+            long sampledFrames = frameSamples.Count;
 
             Dispatcher.BeginInvoke(new Action(() =>
             {
