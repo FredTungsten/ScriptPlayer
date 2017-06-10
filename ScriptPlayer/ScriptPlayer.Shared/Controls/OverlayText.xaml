@@ -1,0 +1,13 @@
+﻿<UserControl x:Class="ScriptPlayer.Shared.Controls.OverlayText"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ScriptPlayer.Shared.Controls"
+             mc:Ignorable="d">
+    <Grid Name="grid" Opacity="0">
+        <Border Background="DimGray" BorderThickness="1" BorderBrush="LightGray" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <TextBlock Name="TextBlock" Foreground="White" FontSize="20" Text="Example" Padding="8,0,8,4" HorizontalAlignment="Left" VerticalAlignment="Top"></TextBlock>
+        </Border>
+    </Grid>
+</UserControl>

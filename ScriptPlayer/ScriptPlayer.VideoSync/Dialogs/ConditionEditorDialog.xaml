@@ -1,0 +1,45 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:Controls="clr-namespace:ScriptPlayer.VideoSync.Controls"
+        xmlns:videoSync="clr-namespace:ScriptPlayer.VideoSync"
+        x:Class="ScriptPlayer.VideoSync.ConditionEditorDialog"
+        mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="Condition Editor" Height="409" Width="460.364" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow">
+    <Grid>
+
+        <RadioButton Content="Average" x:Name="rbAverage" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <RadioButton Content="Majority" x:Name="rbMajority" HorizontalAlignment="Left" Margin="10,30,0,0" VerticalAlignment="Top"/>
+
+        <Button IsDefault="True" Content="Ok" Height="23" Width="75" Margin="0,0,90,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="btnOk_Click"/>
+        <Button IsCancel="True" Content="Cancel" Height="23" Width="75" Margin="0,0,10,10" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+
+        <ItemsControl ItemsSource="{Binding Conditions}" Margin="10,50,10,38">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="videoSync:ConditionViewModel">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="30"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding Path=Label}" Grid.Column="0"/>
+                        <RadioButton Margin="2" VerticalAlignment="Center" IsChecked="{Binding IsInclude}" Grid.Column="1"/>
+                        <RadioButton Margin="2" VerticalAlignment="Center" IsChecked="{Binding IsExclude}" Grid.Column="2"/>
+                        <RadioButton Margin="2" VerticalAlignment="Center" IsChecked="{Binding IsDoNotUse}" Grid.Column="3"/>
+                        <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding Path=LowerValue}" Grid.Column="4"/>
+                        <Controls:RangeSlider Minimum="{Binding Minimum}" Maximum="{Binding Maximum}" LowerValue="{Binding LowerValue, Mode=TwoWay}" UpperValue="{Binding UpperValue, Mode=TwoWay}"
+                            Grid.Column="5" HorizontalAlignment="Stretch" Height="Auto" VerticalAlignment="Center"/>
+                        <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding Path=UpperValue}" Grid.Column="6"/>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</Window>
