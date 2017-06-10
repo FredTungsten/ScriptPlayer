@@ -26,6 +26,9 @@ namespace ScriptPlayer.Shared.Scripts
 
         public IEnumerable<ScriptAction> GetScript()
         {
+            if (_actions == null)
+                return new List<ScriptAction>();
+
             return _actions.AsReadOnly();
         }
 
