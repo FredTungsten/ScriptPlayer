@@ -83,8 +83,6 @@ namespace ScriptPlayer.Shared
 
             if (Duration == TimeSpan.Zero) return;
 
-            Debug.Write(Progress.ToString("c") + "/" + Duration.ToString("c"));
-
             double linePosition = Progress.Divide(Duration) * ActualWidth;
             dc.DrawLine(new Pen(Brushes.White, 1), new Point(linePosition,0), new Point(linePosition, ActualHeight));
         }

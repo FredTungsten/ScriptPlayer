@@ -1,0 +1,201 @@
+
+body {
+  font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-size: 12pt;
+  font-style: normal;
+  font-weight: normal;
+  color: white;
+  background-color: black;
+  margin: 0px;
+}
+
+video {
+  height: 100%;
+  width: 100%;
+}
+
+#container {
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#container video {
+  position: relative;
+  z-index: 0;
+}
+
+#scriptplayer {
+    position: absolute;
+    top: 33%;
+    width: 100%;
+    z-index: 1;
+}
+
+#scriptplayer-background {
+    padding: 12px;
+    background-color: black;
+    opacity: 0.4;
+    filter: alpha(opacity=40); /* For IE8 and earlier */
+}
+
+.kc-connection
+{
+    font: 14px 'NoaLTStdLight';
+
+    position: absolute;
+    bottom: 50px;
+    left: -webkit-calc(50% - 90px);
+    left: calc(50% - 90px);
+
+    width: 180px;
+    height: 100px;
+
+    color: white;
+    border-radius: 0 45px 0 45px;
+    background: rgba(0, 0, 0, .1);
+}
+
+.kc-connection .kc-icon
+{
+    margin: 10px 40px;
+}
+
+.kc-connection.on-video
+{
+    left: 10px;
+    top: 10px;
+}
+
+.kc-connection.device-not-connected {
+    -webkit-animation: pulse 1.5s infinite;
+    -moz-animation: pulse 1.5s infinite;
+    -ms-animation: pulse 1.5s infinite;
+    -o-animation: pulse 1.5s infinite;
+    animation: pulse 1.5s infinite;
+}
+
+.kc-connection.device-not-connected .kc-icon
+{
+    background-position: -430px 300px;
+}
+
+.kc-connection.device-not-connected .desc
+{
+    left: 10px;
+}
+
+.kc-connection.device-not-connected .desc::after {
+  content: "Looking for device";
+}
+
+.kc-connection.device-connected .kc-icon
+{
+    background-position: -430px 360px;
+}
+
+.kc-connection.device-connected .desc
+{
+    left: 10px;
+}
+
+.kc-connection.device-connected .desc::after {
+  content: "Device connected";
+}
+
+.kc-connection .close-connection
+{
+    position: relative;
+    top: 50px;
+    left: 180px;
+
+    display: none;
+
+    width: 45px;
+    height: 45px;
+
+    cursor: pointer;
+
+    border-radius: 0 20px 0 20px;
+    background: rgba(0, 0, 0, .1);
+}
+
+.kc-connection .close-connection .kc-icon
+{
+    width: 45px;
+    height: 45px;
+    margin: 0;
+
+    background-position: -247px -6px;
+}
+
+.kc-connection .close-connection:hover .kc-icon
+{
+    background-position: -247px -65px;
+}
+
+.kc-connection.stream-connected .close-connection
+{
+    display: block;
+}
+
+.kc-connection.hide
+{
+    transform: translateY(20px);
+    -webkit-animation: connection-status-hide 1s 1;
+       -moz-animation: connection-status-hide 1s 1;
+            animation: connection-status-hide 1s 1;
+
+    opacity: 0;
+
+    -webkit-filter: blur(5px);
+}
+
+.kc-connection .desc
+{
+    position: relative;
+    top: 70px;
+    left: 40px;
+}
+
+.kc-icon
+{
+    position: absolute;
+
+    display: block;
+
+    width: 95px;
+    height: 55px;
+
+    background: url(../images/icons.png);
+}
+
+@-webkit-keyframes pulse {
+    0% {transform: scale(0.9, 0.9); }
+    50% {transform: scale(1.1, 1.1); }
+    100% {transform: scale(0.9, 0.9); }
+}
+
+@-moz-keyframes pulse {
+    0% {transform: scale(0.9, 0.9); }
+    50% {transform: scale(1.1, 1.1); }
+    100% {transform: scale(0.9, 0.9); }
+}
+
+@-o-keyframes pulse {
+    0% {transform: scale(0.9, 0.9); }
+    50% {transform: scale(1.1, 1.1); }
+    100% {transform: scale(0.9, 0.9); }
+}
+
+@-ms-keyframes pulse {
+    0% {transform: scale(0.9, 0.9); }
+    50% {transform: scale(1.1, 1.1); }
+    100% {transform: scale(0.9, 0.9); }
+}
+
+@keyframes pulse {
+    0% {transform: scale(0.9, 0.9); }
+    50% {transform: scale(1.1, 1.1); }
+    100% {transform: scale(0.9, 0.9); }
+}

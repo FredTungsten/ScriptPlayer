@@ -40,6 +40,7 @@ namespace ScriptPlayer.Shared.Scripts
         [JsonProperty(PropertyName = "range")]
         public int Range { get; set; }
 
+        [JsonProperty(PropertyName = "actions")]
         public List<FunScriptAction> Actions { get; set; }
 
         public FunScriptFile()
