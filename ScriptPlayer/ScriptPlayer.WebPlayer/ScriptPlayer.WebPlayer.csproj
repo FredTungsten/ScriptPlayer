@@ -28,16 +28,16 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TypeScriptTarget>ES6</TypeScriptTarget>
     <TypeScriptJSXEmit>None</TypeScriptJSXEmit>
     <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
     <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
-    <TypeScriptModuleKind>None</TypeScriptModuleKind>
+    <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
     <TypeScriptRemoveComments>False</TypeScriptRemoveComments>
-    <TypeScriptOutFile />
+    <TypeScriptOutFile>all.js</TypeScriptOutFile>
     <TypeScriptOutDir />
     <TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
     <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
@@ -69,9 +69,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="data\POV Cock Hero Sync - Clubbed to death.mp4" />
-    <Content Include="index-embed.html" />
+    <Content Include="dist\webbundle.js" />
     <Content Include="packages.config" />
+    <Content Include="webpack.config.js" />
+    <None Include=".bin\git.cmd" />
+    <None Include=".bin\node.cmd" />
+    <None Include=".bin\npm.cmd" />
     <None Include="data\POV Cock Hero Sync - Clubbed to death.json" />
+    <Content Include="package.json" />
+    <Content Include="tsconfig.json" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -81,9 +87,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="css\main.css" />
-    <Content Include="images\play.png" />
-    <Content Include="index-standalone.html" />
-    <TypeScriptCompile Include="js\scriptplayer.ts" />
+    <Content Include="img\play.png" />
+    <Content Include="index.html" />
+    <TypeScriptCompile Include="src\scriptplayer.ts" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>

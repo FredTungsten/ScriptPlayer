@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <title>ScriptPlayer Web-Demo</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+<body>
+    <div id="container">
+        <!-- Grab it here: https://www.pornhub.com/view_video.php?viewkey=ph5929326784f56-->
+        <video id="video">
+            <source src="data/POV Cock Hero Sync - Clubbed to death.mp4" type="video/mp4">
+        </video>
+        <div style="display: block;" id="overlay">
+            <div id="banner">
+                <h2 id="banner-text">Loading ...</h2>
+                <div style="display: block;" id="play-button">
+                    <a id="play-link" href="javascript:void(0);"><img src="img/play.png" /></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script language="javascript" type="text/javascript" src="dist/webbundle.js"></script>
+
+    <script language="javascript" type="text/javascript">
+    document.addEventListener("DOMContentLoaded", () => {
+        var scriptFile = "data/POV Cock Hero Sync - Clubbed to death.json";
+        var scriptPlayer = new ScriptPlayerBundle.ScriptPlayer(scriptFile, document.getElementById("video"));
+    });
+    </script>
+
+</body>
+</html>
