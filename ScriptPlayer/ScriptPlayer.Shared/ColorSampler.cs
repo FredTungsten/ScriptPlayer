@@ -201,9 +201,9 @@ namespace ScriptPlayer.Shared
                 }
                 case ConditionState.Exclude:
                 {
-                    if (MinValue <= value) return false;
-                    if (MaxValue >= value) return false;
-                    return true;
+                    if (value < MinValue) return true;
+                    if (value > MaxValue) return true;
+                    return false;
                 }
                 default:
                     throw new ArgumentOutOfRangeException();
