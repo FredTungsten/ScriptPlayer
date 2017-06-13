@@ -67,7 +67,7 @@ class DeviceHandler {
 
     setPosition = (position: number, speed: number) => {
         if (this.devices.length === 0) return;
-        this.client.SendDeviceMessage(this.devices[0], new Messages.FleshlightLaunchRawCmd(speed, position));
+        this.client.SendDeviceMessage(this.devices[0], new Messages.FleshlightLaunchFW12Cmd(speed, position));
     }
     requestDeviceList = () => {
             console.log("Requesting Device List");

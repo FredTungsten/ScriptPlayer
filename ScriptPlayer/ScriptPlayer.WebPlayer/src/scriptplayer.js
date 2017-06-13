@@ -1,4 +1,5 @@
-//Run the Webpack task runner to pack it
+//Run the Webpack task runner to pack it,
+//Compiled Version should be @ dist/webbundle.js
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /* Imports */
@@ -32,7 +33,7 @@ class DeviceHandler {
         this.setPosition = (position, speed) => {
             if (this.devices.length === 0)
                 return;
-            this.client.SendDeviceMessage(this.devices[0], new Messages.FleshlightLaunchRawCmd(speed, position));
+            this.client.SendDeviceMessage(this.devices[0], new Messages.FleshlightLaunchFW12Cmd(speed, position));
         };
         this.requestDeviceList = () => {
             console.log("Requesting Device List");

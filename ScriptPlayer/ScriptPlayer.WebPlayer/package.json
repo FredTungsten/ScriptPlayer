@@ -3,7 +3,7 @@
   "name": "scriptplayer",
   "private": true,
   "dependencies": {
-    "buttplug": "0.0.2",
+    "buttplug": "0.0.3",
     "events": "^1.1.1",
     "node": "0.0.0"
   },
