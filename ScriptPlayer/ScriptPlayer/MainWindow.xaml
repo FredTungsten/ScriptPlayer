@@ -20,6 +20,16 @@
 
         <shared:VideoPlayer HideMouse="true"  MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" MouseDoubleClick="VideoPlayer_OnMouseDoubleClick" Grid.Row="1" x:Name="VideoPlayer" Grid.ColumnSpan="2"/>
         <controls:OverlayText x:Name="OverlayText" Grid.Row="1" Margin="10" Grid.ColumnSpan="2"/>
+        <Grid Name="Shade" Grid.Row="1" Grid.ColumnSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="20*"/>
+                <RowDefinition Height="5"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" shared:HideOnHover.IsActive="True"/>
+            <Rectangle Fill="Black" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="2"></Rectangle>
+        </Grid>
 
         <Menu Name="MnuMain" Grid.Row="0" Grid.ColumnSpan="2">
             <MenuItem Header="File">

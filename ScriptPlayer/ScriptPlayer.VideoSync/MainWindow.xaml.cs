@@ -190,6 +190,8 @@ namespace ScriptPlayer.VideoSync
         private TimeSpan _stretchFromEnd;
         private TimeSpan _stretchToEnd;
         private TimeSpan _stretchToBegin;
+        private TimeSpan _marker1;
+        private TimeSpan _marker2;
 
         private void AddBeat(TimeSpan positionTotalSeconds)
         {
@@ -470,6 +472,15 @@ namespace ScriptPlayer.VideoSync
         {
             ShiftTime(TimeSpan.FromMinutes(1));
         }
+        private void btnMarker1_Click(object sender, RoutedEventArgs e)
+        {
+            _marker1 = videoPlayer.GetPosition();
+        }
+
+        private void btnMarker2_Click(object sender, RoutedEventArgs e)
+        {
+            _marker2 = videoPlayer.GetPosition();
+        }
 
         private void btnStretchFromBegin_Click(object sender, RoutedEventArgs e)
         {
@@ -615,6 +626,14 @@ namespace ScriptPlayer.VideoSync
             if (_frameSamples == null) return;
 
             SetCaptureRect(_frameSamples.CaptureRect);
+        }
+
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            SetAllBeats(Beats.Where(t => t < tBegin || t > tEnd));
         }
     }
 

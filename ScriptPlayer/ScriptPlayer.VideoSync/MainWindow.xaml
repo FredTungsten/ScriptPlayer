@@ -121,6 +121,9 @@
                     <Button Margin="10,0,0,0" Content="STB" Width="30" Click="btnStretchToBegin_Click"/>
                     <Button Content="STE" Width="30" Click="btnStretchToEnd_Click"/>
                     <Button Margin="10,0,0,0" Content="Exe" Width="30" Click="btnStretchExecute_Click"/>
+                    <Button Margin="10,0,0,0" Content="M1" Width="30" Click="btnMarker1_Click"/>
+                    <Button Margin="0,0,0,0" Content="M2" Width="30" Click="btnMarker2_Click"/>
+                    <Button Margin="0,0,0,0" Content="Del" Width="30" Click="btnDelete_Click"/>
                     <shared:SeekBar Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}"/>
                 </DockPanel>
 

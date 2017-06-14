@@ -42,7 +42,7 @@ namespace ScriptPlayer.VideoSync
             Conditions.Add(new ConditionViewModel("Green", 0, 255, condition?.Green));
             Conditions.Add(new ConditionViewModel("Blue", 0, 255, condition?.Blue));
 
-            Conditions.Add(new ConditionViewModel("Hue", 0, 100, condition?.Hue));
+            Conditions.Add(new ConditionViewModel("Hue", 0, 360, condition?.Hue));
             Conditions.Add(new ConditionViewModel("Sat", 0, 100, condition?.Saturation));
             Conditions.Add(new ConditionViewModel("Lum", 0, 100, condition?.Luminosity));
 
@@ -96,12 +96,12 @@ namespace ScriptPlayer.VideoSync
     public class ConditionViewModel : INotifyPropertyChanged
     {
         private ConditionState _state;
-        private byte _maximum;
-        private byte _minimum;
-        private byte _upperValue;
-        private byte _lowerValue;
+        private int _maximum;
+        private int _minimum;
+        private int _upperValue;
+        private int _lowerValue;
         private string _label;
-        private bool _isDoNotUse;
+        private bool _isDoNotUse = true;
         private bool _isInclude;
         private bool _isExclude;
 
@@ -116,7 +116,7 @@ namespace ScriptPlayer.VideoSync
             }
         }
 
-        public byte LowerValue
+        public int LowerValue
         {
             get { return _lowerValue; }
             set
@@ -127,7 +127,7 @@ namespace ScriptPlayer.VideoSync
             }
         }
 
-        public byte UpperValue
+        public int UpperValue
         {
             get { return _upperValue; }
             set
@@ -138,7 +138,7 @@ namespace ScriptPlayer.VideoSync
             }
         }
 
-        public byte Minimum
+        public int Minimum
         {
             get { return _minimum; }
             set
@@ -149,7 +149,7 @@ namespace ScriptPlayer.VideoSync
             }
         }
 
-        public byte Maximum
+        public int Maximum
         {
             get { return _maximum; }
             set
@@ -238,7 +238,7 @@ namespace ScriptPlayer.VideoSync
             }
         }
 
-        public ConditionViewModel(string label, byte min, byte max, SampleCondtionParameter parameter)
+        public ConditionViewModel(string label, int min, int max, SampleCondtionParameter parameter)
         {
             Label = label;
             Minimum = min;

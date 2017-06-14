@@ -363,6 +363,9 @@ namespace ScriptPlayer
 
                 Grid.SetRow(VideoPlayer, 0);
                 Grid.SetRowSpan(VideoPlayer, 3);
+
+                Grid.SetRow(Shade, 0);
+                Grid.SetRowSpan(Shade, 3);
             }
             else
             {
@@ -376,6 +379,9 @@ namespace ScriptPlayer
 
                 Grid.SetRow(VideoPlayer, 1);
                 Grid.SetRowSpan(VideoPlayer, 1);
+
+                Grid.SetRow(Shade, 1);
+                Grid.SetRowSpan(Shade, 1);
             }
         }
 

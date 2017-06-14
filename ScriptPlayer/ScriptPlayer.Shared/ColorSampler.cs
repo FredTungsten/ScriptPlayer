@@ -181,11 +181,11 @@ namespace ScriptPlayer.Shared
 
     public class SampleCondtionParameter
     {
-        public byte MinValue { get; set; }
-        public byte MaxValue { get; set; }
+        public int MinValue { get; set; }
+        public int MaxValue { get; set; }
         public ConditionState State { get; set; }
 
-        public bool IsAcceptableValue(byte value)
+        public bool IsAcceptableValue(int value)
         {
             switch (State)
             {
@@ -239,7 +239,7 @@ namespace ScriptPlayer.Shared
                         positiveSamples += CheckSample(rgbPixels[i + 0], rgbPixels[i + 1], rgbPixels[i + 2]) ? 1 : 0;
                     }
 
-                    byte acceptedPixels = (byte) Math.Round(100.0 * (positiveSamples / (double) pixels));
+                    int acceptedPixels = (int) Math.Round(100.0 * (positiveSamples / (double) pixels));
 
                     return MatchedSamples.IsAcceptableValue(acceptedPixels);
             }
@@ -258,9 +258,9 @@ namespace ScriptPlayer.Shared
             {
                 var hsl = HslConversion.FromRgb(r, g, b);
 
-                if (!Hue.IsAcceptableValue((byte)Math.Round(hsl.Item1))) return false;
-                if (!Saturation.IsAcceptableValue((byte)Math.Round(hsl.Item2))) return false;
-                if (!Luminosity.IsAcceptableValue((byte)Math.Round(hsl.Item3))) return false;
+                if (!Hue.IsAcceptableValue((int)Math.Round(hsl.Item1))) return false;
+                if (!Saturation.IsAcceptableValue((int)Math.Round(hsl.Item2))) return false;
+                if (!Luminosity.IsAcceptableValue((int)Math.Round(hsl.Item3))) return false;
             }
 
             return true;

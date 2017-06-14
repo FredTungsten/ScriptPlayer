@@ -33,6 +33,8 @@ namespace ScriptPlayer.Shared
                 if (r == max)
                 {
                     h = (g - b) / delta;
+                    if (h < 0)
+                        h += 6;
                 }
                 else if (g == max)
                 {
@@ -42,9 +44,11 @@ namespace ScriptPlayer.Shared
                 {
                     h = 4 + (r - g) / delta;
                 }
+
+                h *= 60;
             }
 
-            return new Tuple<double, double, double>(h * 100.0, s * 100.0, l * 100.0);
+            return new Tuple<double, double, double>(h, s * 100.0, l * 100.0);
         }
     }
 }

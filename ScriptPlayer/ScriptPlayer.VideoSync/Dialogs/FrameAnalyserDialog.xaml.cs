@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Shell;
@@ -39,8 +40,6 @@ namespace ScriptPlayer.VideoSync
 
         public void Analyse()
         {
-            List<TimeSpan> result = new List<TimeSpan>();
-            
             int frameIndex = 0;
 
             SampleAnalyser analyser = new SampleAnalyser(_condition, _parameters);
@@ -49,16 +48,12 @@ namespace ScriptPlayer.VideoSync
             {
                 if (!_running) break;
 
-                if (analyser.AddSample(frame.Capture))
-                {
-                    TimeSpan timeStamp = _frames.FrameIndexToTimeSpan(frameIndex);
-                    result.Add(timeStamp);
-                }
-                
+                analyser.AddSample(frame);
+
                 if ((frameIndex+1) % 100 == 0)
                 {
                     double progress01 = (double) frameIndex / _frames.Count;
-                    string progress = $"{frameIndex} / {_frames.Count} ({progress01:P}) - {result.Count} Beats";
+                    string progress = $"{frameIndex} / {_frames.Count} ({progress01:P})";
 
                     Dispatcher.Invoke(() =>
                     {
@@ -70,6 +65,9 @@ namespace ScriptPlayer.VideoSync
 
                 frameIndex++;
             }
+
+            List<long> frames = analyser.GetResults();
+            List<TimeSpan> result = frames.Select(frame => _frames.FrameIndexToTimeSpan(frame)).ToList();
 
             Dispatcher.BeginInvoke(new Action(() =>
             {
