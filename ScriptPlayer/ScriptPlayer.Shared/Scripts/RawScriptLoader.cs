@@ -21,7 +21,7 @@ namespace ScriptPlayer.Shared.Scripts
         {
             return new List<ScriptFileFormat>
             {
-                new ScriptFileFormat("Raw Script", "raw", "txt", "json")
+                new ScriptFileFormat("Raw Script", "launch", "json")
             };
         }
     }

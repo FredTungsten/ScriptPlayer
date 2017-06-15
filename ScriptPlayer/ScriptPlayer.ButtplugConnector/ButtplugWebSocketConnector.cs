@@ -13,31 +13,6 @@ using Newtonsoft.Json.Linq;
 
 namespace ScriptPlayer.ButtplugConnector
 {
-    public abstract class MessageCallback
-    {
-        public abstract void Callback(ButtplugMessage result);
-    }
-
-    public class ButtplugMessageCallback<T> : MessageCallback where T : ButtplugMessage
-    {
-        private readonly Action<T> _onSuccess;
-        private readonly Action<ButtplugMessage> _onFailure;
-
-        public ButtplugMessageCallback(Action<T> onSuccess, Action<ButtplugMessage> onFailure)
-        {
-            _onSuccess = onSuccess;
-            _onFailure = onFailure;
-        }
-
-        public override void Callback(ButtplugMessage result)
-        {
-            if (result is T)
-                _onSuccess((T)result);
-            else
-                _onFailure(result);
-        }
-    }
-
     public class ButtplugWebSocketConnector
     {
         private static readonly Dictionary<string, Type> MessageTypes;
@@ -58,25 +33,29 @@ namespace ScriptPlayer.ButtplugConnector
         private bool _running;
 
         private readonly object _callbackLocker = new object();
-        private readonly Dictionary<uint, MessageCallback> _registeredCallbacks = new Dictionary<uint, MessageCallback>();
+        private readonly Dictionary<uint, ButtplugPromise> _registeredPromises = new Dictionary<uint, ButtplugPromise>();
 
-        private void AddCallback(uint messageId, MessageCallback callback)
+        private void AddPromise(uint messageId, ButtplugPromise promise)
         {
-            if (callback == null)
+            if (promise == null)
                 return;
 
             lock (_callbackLocker)
             {
-                _registeredCallbacks.Add(messageId, callback);
+                _registeredPromises.Add(messageId, promise);
             }
         }
 
-        private MessageCallback GetCallback(uint messageId)
+        private ButtplugPromise GetPromise(uint messageId)
         {
             lock (_callbackLocker)
             {
-                if (_registeredCallbacks.ContainsKey(messageId))
-                    return _registeredCallbacks[messageId];
+                if (_registeredPromises.ContainsKey(messageId))
+                {
+                    var result = _registeredPromises[messageId];
+                    _registeredPromises.Remove(messageId);
+                    return result;
+                }
                 return null;
             }
         }
@@ -96,8 +75,8 @@ namespace ScriptPlayer.ButtplugConnector
 
             StartReadQueue();
 
-            await Send(new RequestServerInfo("ScriptPlayer"), new ButtplugMessageCallback<ServerInfo>(ServerInfoResponse, GenericFailure));
-            await Send(new RequestDeviceList(), new ButtplugMessageCallback<DeviceList>(DeviceListReceived, GenericFailure));
+            Send<ServerInfo>(new RequestServerInfo("ScriptPlayer")).Then(ServerInfoResponse, GenericFailure);
+            Send<DeviceList>(new RequestDeviceList()).Then(DeviceListReceived, GenericFailure);
         }
 
         public async Task Disconnect()
@@ -114,11 +93,11 @@ namespace ScriptPlayer.ButtplugConnector
                 new CancellationTokenSource(2000).Token);
         }
 
-        private async void DeviceListReceived(DeviceList list)
+        private void DeviceListReceived(DeviceList list)
         {
             if (list.Devices.Length == 0)
             {
-                await StartScanning();
+                StartScanning();
             }
             else
             {
@@ -192,10 +171,10 @@ namespace ScriptPlayer.ButtplugConnector
 
         private void HandleMessage(ButtplugMessage message)
         {
-            var callback = GetCallback(message.Id);
+            var callback = GetPromise(message.Id);
             if (callback != null)
             {
-                callback.Callback(message);
+                callback.SetResult(message);
             }
             else
             {
@@ -236,15 +215,30 @@ namespace ScriptPlayer.ButtplugConnector
             _devices.Remove(index);
         }
 
-        private async Task Send(ButtplugMessage message, MessageCallback callback)
+        private ButtplugPromise<T> Send<T>(ButtplugMessage message) where T : ButtplugMessage
+        {
+            ButtplugPromise<T> promise = new ButtplugPromise<T>();
+            Send(message, promise);
+            return promise;
+        }
+
+        private async void Send(ButtplugMessage message, ButtplugPromise promise)
         {
             message.Id = GetNextMessageId();
 
-            AddCallback(message.Id, callback);
+            AddPromise(message.Id, promise);
 
-            CancellationTokenSource source = new CancellationTokenSource(_timeout);
-            await _client.SendAsync(Jsonify(message), WebSocketMessageType.Text, true, source.Token);
-            source.Dispose();
+            try
+            {
+                CancellationTokenSource source = new CancellationTokenSource(_timeout);
+                await _client.SendAsync(Jsonify(message), WebSocketMessageType.Text, true, source.Token);
+                source.Dispose();
+            }
+            catch (OperationCanceledException)
+            {
+                promise.Cancel();
+                GetPromise(message.Id);
+            }
         }
 
         private IEnumerable<ButtplugMessage> Dejsonify(string response)
@@ -267,32 +261,9 @@ namespace ScriptPlayer.ButtplugConnector
             return result;
         }
 
-        public async Task StartScanning()
+        public ButtplugPromise<Ok> StartScanning()
         {
-            await Send(new StartScanning(), new ButtplugMessageCallback<Ok>(ScanStarted, GenericFailure));
-        }
-
-        private void ScanStarted(Ok obj)
-        {
-            Debug.WriteLine("Ok");
-        }
-
-        private T Expect<T>(ButtplugMessage message) where T : ButtplugMessage
-        {
-            if (message is T)
-            {
-                return (T)message;
-            }
-
-            if (message is Error)
-            {
-                Error error = (Error)message;
-                Debug.WriteLine($"Error in Connect: {error.Id} - {error.ErrorMessage}");
-                return null;
-            }
-
-            Debug.WriteLine($"Unexpected Message Type: {message.GetType()}");
-            return null;
+            return Send<Ok>(new StartScanning());
         }
 
         private ArraySegment<byte> Jsonify(params ButtplugMessage[] messages)
@@ -314,12 +285,12 @@ namespace ScriptPlayer.ButtplugConnector
             return new ArraySegment<byte>(Encoding.UTF8.GetBytes(json));
         }
 
-        public async Task SetPosition(byte position, byte speed)
+        public void SetPosition(byte position, byte speed)
         {
             if (_devices.Count == 0)
                 return;
 
-            await Send(new FleshlightLaunchFW12Cmd(_devices.First().Key, speed, position), new ButtplugMessageCallback<Ok>(SetPositionSuccess, GenericFailure));
+            Send<Ok>(new FleshlightLaunchFW12Cmd(_devices.First().Key, speed, position)).Then(SetPositionSuccess, GenericFailure);
         }
 
         private void SetPositionSuccess(Ok obj)
