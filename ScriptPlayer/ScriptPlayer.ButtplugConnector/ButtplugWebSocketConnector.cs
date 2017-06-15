@@ -66,31 +66,42 @@ namespace ScriptPlayer.ButtplugConnector
             return (uint)(msg % uint.MaxValue);
         }
 
-        public async Task Connect(string uri = "ws://localhost:12345/buttplug")
+        public async Task<bool> Connect(string uri = "ws://localhost:12345/buttplug")
         {
-            CancellationTokenSource source = new CancellationTokenSource(_timeout);
-            _client = new ClientWebSocket();
-            await _client.ConnectAsync(new Uri(uri), source.Token);
-            source.Dispose();
+            try
+            {
+                CancellationTokenSource source = new CancellationTokenSource(_timeout);
+                _client = new ClientWebSocket();
+                await _client.ConnectAsync(new Uri(uri), source.Token);
+                source.Dispose();
+            }
+            catch (WebSocketException)
+            {
+                return false;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
 
             StartReadQueue();
 
             Send<ServerInfo>(new RequestServerInfo("ScriptPlayer")).Then(ServerInfoResponse, GenericFailure);
             Send<DeviceList>(new RequestDeviceList()).Then(DeviceListReceived, GenericFailure);
+
+            return true;
         }
 
         public async Task Disconnect()
         {
             _running = false;
 
-            if(_readThreadCancellationSource != null)
-                _readThreadCancellationSource.Cancel();
+            _readThreadCancellationSource?.Cancel();
 
             if (!_readThread.Join(500))
                 _readThread.Abort();
 
-            await _client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Close",
-                new CancellationTokenSource(2000).Token);
+            _client.Dispose();
         }
 
         private void DeviceListReceived(DeviceList list)
@@ -102,7 +113,7 @@ namespace ScriptPlayer.ButtplugConnector
             else
             {
                 ClearDevices();
-                foreach (var device in list.Devices)
+                foreach (DeviceMessageInfo device in list.Devices)
                 {
                     AddDevice(device.DeviceName ?? "Unknown Device", device.DeviceIndex);
                 }
@@ -150,6 +161,7 @@ namespace ScriptPlayer.ButtplugConnector
 
                     try
                     {
+                        
                         var messageArray = Dejsonify(response);
 
                         foreach (ButtplugMessage message in messageArray)
@@ -247,8 +259,9 @@ namespace ScriptPlayer.ButtplugConnector
 
             List<ButtplugMessage> result = new List<ButtplugMessage>();
 
-            foreach (JObject messageWrapper in array)
+            foreach (var jToken in array)
             {
+                var messageWrapper = (JObject) jToken;
                 var message = messageWrapper.Properties().First();
 
                 Type type = MessageTypes[message.Name];

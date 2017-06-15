@@ -436,11 +436,13 @@ namespace ScriptPlayer
                 case Key.Left:
                 {
                     VideoPlayer.SetPosition(VideoPlayer.GetPosition() - TimeSpan.FromSeconds(5));
+                    ShowPosition();
                     break;
                 }
                 case Key.Right:
                 {
                     VideoPlayer.SetPosition(VideoPlayer.GetPosition() + TimeSpan.FromSeconds(5));
+                    ShowPosition();
                     break;
                 }
                 default:
@@ -451,6 +453,11 @@ namespace ScriptPlayer
             }
 
             e.Handled = handled;
+        }
+
+        private void ShowPosition()
+        {
+            OverlayText.SetText($@"{VideoPlayer.TimeSource.Progress:h\:mm\:ss} / {VideoPlayer.Duration:h\:mm\:ss}", TimeSpan.FromSeconds(1));
         }
 
         private void TogglePlayback()
@@ -481,7 +488,12 @@ namespace ScriptPlayer
         private async void btnConnectButtplug_OnClick(object sender, RoutedEventArgs e)
         {
             _connector = new ButtplugWebSocketConnector();
-            await _connector.Connect();
+            bool success = await _connector.Connect();
+
+            if(success)
+                OverlayText.SetText("Connected to Buttplug", TimeSpan.FromSeconds(1));
+            else
+                OverlayText.SetText("Could not connect to Buttplug", TimeSpan.FromSeconds(2));
         }
     }
 }
