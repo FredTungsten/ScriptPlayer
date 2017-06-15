@@ -105,7 +105,7 @@ namespace ScriptPlayer.Shared
 
                 
 
-                FormattedText text = new FormattedText(GetText(currentPosition), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, 10, Brushes.White, 96);
+                FormattedText text = new FormattedText(GetText(currentPosition), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, 10, Brushes.White);
 
                 drawingContext.DrawText(text, new Point(x - text.Width / 2, text.Height));
 

@@ -7,8 +7,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        <Button Content="Connect" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
-        <Button Content="Scan" HorizontalAlignment="Left" Margin="10,35,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click_1"/>
+        <Button Content="Connect" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75" Click="btnConnect_Click"/>
+        <Button Content="Scan" HorizontalAlignment="Left" Margin="10,35,0,0" VerticalAlignment="Top" Width="75" Click="btnStartScanning_Click"/>
         <Button Content="Move" HorizontalAlignment="Left" Margin="10,60,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click_2"/>
 
     </Grid>

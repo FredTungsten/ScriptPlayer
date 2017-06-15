@@ -24,7 +24,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="20*"/>
                 <RowDefinition Height="5"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="0*"/>
             </Grid.RowDefinitions>
             
             <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" shared:HideOnHover.IsActive="True"/>
@@ -36,8 +36,9 @@
                 <MenuItem Header="Open Video" Click="mnuOpenVideo_Click"/>
                 <MenuItem Header="Open Script" Click="mnuOpenScript_Click"/>
             </MenuItem>
-            <MenuItem Header="Launch">
-                <MenuItem Header="Connect" Click="btnConnectLaunch_OnClick"/>
+            <MenuItem Header="Devices">
+                <MenuItem Header="Connect Launch directly" Click="btnConnectLaunch_OnClick"/>
+                <MenuItem Header="Connect via Buttplug" Click="btnConnectButtplug_OnClick"/>
             </MenuItem>
         </Menu>
 

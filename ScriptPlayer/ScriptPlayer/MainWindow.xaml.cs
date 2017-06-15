@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
+using ScriptPlayer.ButtplugConnector;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -40,8 +41,12 @@ namespace ScriptPlayer
 
         private bool _wasPlaying;
         private ScriptHandler _scriptHandler;
+
         private Launch _launch;
         private LaunchBluetooth _launchConnect;
+
+        private ButtplugWebSocketConnector _connector;
+
         private bool _fullscreen;
         private Rect _windowPosition;
         private WindowState _windowState;
@@ -281,8 +286,11 @@ namespace ScriptPlayer
 
         private void SetLaunch(byte position, byte speed)
         {
-            if(VideoPlayer.IsPlaying)
+            if (VideoPlayer.IsPlaying)
+            {
                 _launch?.EnqueuePosition(position, speed);
+                _connector?.SetPosition(position, speed);
+            }
         }
 
         private void btnConnectLaunch_OnClick(object sender, RoutedEventArgs e)
@@ -457,6 +465,7 @@ namespace ScriptPlayer
         {
             VideoPlayer.Pause();
             _launch?.Close();
+            _connector?.Disconnect();
         }
 
         private void sldDelay_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -467,6 +476,12 @@ namespace ScriptPlayer
         private void CckHeatMap_OnChecked(object sender, RoutedEventArgs e)
         {
             UpdateHeatMap();
+        }
+
+        private async void btnConnectButtplug_OnClick(object sender, RoutedEventArgs e)
+        {
+            _connector = new ButtplugWebSocketConnector();
+            await _connector.Connect();
         }
     }
 }

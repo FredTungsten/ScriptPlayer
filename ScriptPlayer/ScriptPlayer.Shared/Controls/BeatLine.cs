@@ -149,7 +149,7 @@ namespace ScriptPlayer.Shared
                 if(on)
                     drawingContext.DrawRectangle(Brushes.White,null, new Rect(x,0,widthPerCylce,ActualHeight));
 
-                var text = new FormattedText(i.ToString("D"), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, 12.0, Brushes.Black, new NumberSubstitution(), TextFormattingMode.Display, 96);
+                var text = new FormattedText(i.ToString("D"), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, 12.0, Brushes.Black, new NumberSubstitution(), TextFormattingMode.Display);
 
                 drawingContext.DrawText(text, new Point(x,0));
 
