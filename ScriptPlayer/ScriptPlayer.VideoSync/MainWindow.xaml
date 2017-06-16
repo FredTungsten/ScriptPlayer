@@ -10,8 +10,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="213*"/>
+            <RowDefinition Height="19*"/>
         </Grid.RowDefinitions>
 
         <Menu x:Name="menu">
@@ -47,9 +47,12 @@
                 <Separator/>
                 <MenuItem IsCheckable="true" Name="cckRecord" Header="Record from Live-Sampler"/>
             </MenuItem>
+            <MenuItem Header="Tracker">
+                <MenuItem Header="Track Blob" Click="mnuTrackBlob_OnClick"/>
+            </MenuItem>
         </Menu>
 
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" Grid.RowSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="4*"/>
                 <RowDefinition Height="5"/>
@@ -75,7 +78,7 @@
                 <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,118,0,0" TextWrapping="Wrap" Text="H" VerticalAlignment="Top"/>
                 <TextBox Grid.Column="1" HorizontalAlignment="Left" Height="23" Margin="28,116,0,0" TextWrapping="Wrap" Text="{Binding SampleH}" VerticalAlignment="Top" Width="162"/>
 
-                <ListBox Grid.Column="1" ItemsSource="{Binding Bookmarks}" Margin="0,169,0,35">
+                <ListBox Grid.Column="1" ItemsSource="{Binding Bookmarks}" Margin="0,169,0,69" ItemStringFormat="{}{0:hh\:mm\:ss\.fff}">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="{x:Type ListBoxItem}">
                             <EventSetter Event="MouseDoubleClick" Handler="Bookmark_DoubleClick"></EventSetter>
@@ -85,6 +88,7 @@
                 <Button Content="Add Bookmark" Grid.Column="1" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="180" Click="btnAddBookmark_Click"/>
                 <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="31,10,0,0" TextWrapping="Wrap" Text="Sampler Rect" VerticalAlignment="Top" Width="143"/>
                 <Button Content="Reset to Samples" Grid.Column="1" HorizontalAlignment="Left" Margin="31,144,0,0" VerticalAlignment="Top" Width="159" Click="btnResetSamples_Click"/>
+                <Button Content="Reset Bookmarks" Grid.Column="1" HorizontalAlignment="Right" Margin="0,0,10,35" VerticalAlignment="Bottom" Width="180" Click="btnResetBookmarks_Click"/>
             </Grid>
 
             <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
@@ -92,6 +96,7 @@
             <Grid Grid.Row="2">
 
                 <Grid.RowDefinitions>
+                    <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
@@ -107,7 +112,7 @@
                     <TextBlock VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=Midpoint, StringFormat={}{0:f2}}"/>
                 </StackPanel>
 
-                <DockPanel Grid.Row="1" LastChildFill="True">
+                <DockPanel Grid.Row="1" LastChildFill="False">
                     <Button FontFamily="Webdings" Content="4" Click="btnPlay_Click" Width="30"/>
                     <Button FontFamily="Webdings" Content=";" Click="btnPause_Click" Width="30"/>
                     <Button FontFamily="Webdings" Content="9" Width="30" Click="btnPreviousBookmark_Click" Margin="10,0,0,0"/>
@@ -124,19 +129,14 @@
                     <Button Margin="10,0,0,0" Content="M1" Width="30" Click="btnMarker1_Click"/>
                     <Button Margin="0,0,0,0" Content="M2" Width="30" Click="btnMarker2_Click"/>
                     <Button Margin="0,0,0,0" Content="Del" Width="30" Click="btnDelete_Click"/>
-                    <shared:SeekBar Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}"/>
+                    <Button Margin="0,0,0,0" Content="+" Width="30" Click="btnAdd_Click"/>
                 </DockPanel>
 
+                <shared:SeekBar Grid.Row="2" Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}"/>
 
-                <Rectangle Grid.Row="2" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="80" Stroke="Red" StrokeThickness="1" Fill="{Binding Sampler.PixelPreview}"/>
-                <shared:ColorSampleBar x:Name="colorSampleBar" Grid.Row="2" Margin="0,0,80,0" Samples="150" Sampler="{Binding Sampler}" TimeSource="{Binding ElementName=videoPlayer, Path=TimeSource}"/>
+                <Rectangle Grid.Row="3" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="80" Stroke="Red" StrokeThickness="1" Fill="{Binding Sampler.PixelPreview}"/>
+                <shared:ColorSampleBar x:Name="colorSampleBar" Grid.Row="3" Margin="0,0,80,0" Samples="150" Sampler="{Binding Sampler}" TimeSource="{Binding ElementName=videoPlayer, Path=TimeSource}"/>
             </Grid>
         </Grid>
-
-        <StatusBar Grid.Row="2">
-            <StatusBarItem>
-                <TextBlock x:Name="StatusText" Text="Test"/>
-            </StatusBarItem>
-        </StatusBar>
     </Grid>
 </Window>

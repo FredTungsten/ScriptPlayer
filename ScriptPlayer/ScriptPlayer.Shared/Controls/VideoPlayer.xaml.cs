@@ -18,7 +18,7 @@ namespace ScriptPlayer.Shared
 
         private static void OnHideMousePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VideoPlayer) d).UpdateMouse();
+            ((VideoPlayer)d).UpdateMouse();
         }
 
         private void UpdateMouse()
@@ -33,7 +33,7 @@ namespace ScriptPlayer.Shared
 
         public bool HideMouse
         {
-            get { return (bool) GetValue(HideMouseProperty); }
+            get { return (bool)GetValue(HideMouseProperty); }
             set { SetValue(HideMouseProperty, value); }
         }
         public bool IsPlaying => _isPlaying;
@@ -43,7 +43,7 @@ namespace ScriptPlayer.Shared
 
         private static void OnSampleRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VideoPlayer) d).RefreshRect();
+            ((VideoPlayer)d).RefreshRect();
         }
 
         private void RefreshRect()
@@ -62,7 +62,7 @@ namespace ScriptPlayer.Shared
 
         public Rect SampleRect
         {
-            get { return (Rect) GetValue(SampleRectProperty); }
+            get { return (Rect)GetValue(SampleRectProperty); }
             set { SetValue(SampleRectProperty, value); }
         }
 
@@ -71,7 +71,7 @@ namespace ScriptPlayer.Shared
 
         public double DisplayedWidth
         {
-            get { return (double) GetValue(DisplayedWidthProperty); }
+            get { return (double)GetValue(DisplayedWidthProperty); }
             set { SetValue(DisplayedWidthProperty, value); }
         }
 
@@ -80,7 +80,7 @@ namespace ScriptPlayer.Shared
 
         public double DisplayedHeight
         {
-            get { return (double) GetValue(DisplayedHeightProperty); }
+            get { return (double)GetValue(DisplayedHeightProperty); }
             set { SetValue(DisplayedHeightProperty, value); }
         }
 
@@ -99,7 +99,7 @@ namespace ScriptPlayer.Shared
 
         // Using a DependencyProperty as the backing store for Resolution.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ResolutionProperty =
-            DependencyProperty.Register("Resolution", typeof(Resolution), typeof(VideoPlayer), new PropertyMetadata(new Resolution(0,0)));
+            DependencyProperty.Register("Resolution", typeof(Resolution), typeof(VideoPlayer), new PropertyMetadata(new Resolution(0, 0)));
 
         public static readonly DependencyProperty VideoBrushProperty = DependencyProperty.Register(
             "VideoBrush", typeof(Brush), typeof(VideoPlayer), new PropertyMetadata(default(Brush)));
@@ -109,7 +109,7 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan Duration
         {
-            get { return (TimeSpan) GetValue(DurationProperty); }
+            get { return (TimeSpan)GetValue(DurationProperty); }
             set { SetValue(DurationProperty, value); }
         }
 
@@ -118,7 +118,7 @@ namespace ScriptPlayer.Shared
 
         public TimeSource TimeSource
         {
-            get { return (TimeSource) GetValue(TimeSourceProperty); }
+            get { return (TimeSource)GetValue(TimeSourceProperty); }
             set { SetValue(TimeSourceProperty, value); }
         }
 
@@ -127,13 +127,13 @@ namespace ScriptPlayer.Shared
 
         public string OpenFile
         {
-            get { return (string) GetValue(OpenFileProperty); }
+            get { return (string)GetValue(OpenFileProperty); }
             set { SetValue(OpenFileProperty, value); }
         }
 
         public Brush VideoBrush
         {
-            get { return (Brush) GetValue(VideoBrushProperty); }
+            get { return (Brush)GetValue(VideoBrushProperty); }
             set { SetValue(VideoBrushProperty, value); }
         }
 
@@ -141,6 +141,8 @@ namespace ScriptPlayer.Shared
         private bool _down;
         private bool _isPlaying;
         private DispatcherTimer _mouseTimer;
+        private double _scale;
+        private Point _offset;
 
         public VideoPlayer()
         {
@@ -213,11 +215,11 @@ namespace ScriptPlayer.Shared
         {
             if (e.ClickCount == 1)
             {
-                ((IInputElement) sender).CaptureMouse();
+                ((IInputElement)sender).CaptureMouse();
                 _down = true;
 
                 int x, y;
-                ClampPosition(e.GetPosition((IInputElement) sender), out x, out y);
+                ClampPosition(e.GetPosition((IInputElement)sender), out x, out y);
                 OnVideoMouseDown(x, y);
             }
         }
@@ -253,7 +255,7 @@ namespace ScriptPlayer.Shared
 
         public void SetPosition(TimeSpan position)
         {
-            if(position < TimeSpan.Zero)
+            if (position < TimeSpan.Zero)
                 position = TimeSpan.Zero;
 
             if (position > _player.NaturalDuration)
@@ -290,6 +292,40 @@ namespace ScriptPlayer.Shared
         public void Dispose()
         {
             _player.Stop();
+        }
+
+        public void ResetTransform()
+        {
+            _scale = 1;
+            _offset = new Point(0, 0);
+            Border.RenderTransformOrigin = new Point(0.5, 0.5);
+            ApplyTransform();
+        }
+
+        private void ApplyTransform()
+        {
+            TransformGroup g = new TransformGroup();
+            g.Children.Add(new ScaleTransform(_scale, _scale));
+            g.Children.Add(new TranslateTransform(_offset.X, _offset.Y));
+
+            Border.RenderTransform = g;
+        }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            ResetTransform();
+        }
+
+        public void Move(Point delta)
+        {
+            _offset = new Point(_offset.X + delta.X, _offset.Y + delta.Y);
+            ApplyTransform();
+        }
+
+        public void ChangeZoom(double delta)
+        {
+            _scale = Math.Min(10, Math.Max(0.1, _scale + delta));
+            ApplyTransform();
         }
     }
 

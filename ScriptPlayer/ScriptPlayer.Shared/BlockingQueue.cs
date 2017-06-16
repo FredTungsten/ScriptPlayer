@@ -17,6 +17,8 @@ namespace ScriptPlayer.Shared
         {
             _closed = true;
             _event.Set();
+            Thread.Yield();
+            _event.Set();
         }
 
         public void Enqueue(T item)
@@ -38,8 +40,12 @@ namespace ScriptPlayer.Shared
 
             while (!_queue.TryDequeue(out result))
             {
+                if (_closed) return null;
+
                 while (_queue.IsEmpty)
                 {
+                    if (_closed) return null;
+
                     _event.WaitOne();
                     _event.Reset();
                 }

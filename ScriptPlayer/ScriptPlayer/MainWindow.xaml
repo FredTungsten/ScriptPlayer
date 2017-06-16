@@ -61,7 +61,10 @@
                 <Slider Name="sldDelay" Minimum="-200" Maximum="200" ValueChanged="sldDelay_OnValueChanged" />
                 <TextBlock Margin="4,0" Text="{Binding ElementName=sldDelay, Path=Value, StringFormat={}Script Delay: {0:f0}ms}"/>
                 <CheckBox Margin="4" Name="cckHeatMap" Checked="CckHeatMap_OnChecked" Unchecked="CckHeatMap_OnChecked">Show HeatMap</CheckBox>
+                <CheckBox IsChecked="True" Name="cckWithResponse" Unchecked="cckWithResponse_Checked" Checked="cckWithResponse_Checked" Content="Write with Response" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top"/>
+                <Button Content="Test delays" HorizontalAlignment="Stretch" Margin="4" VerticalAlignment="Top" Click="btnMeasureSpeed_Click" />
             </StackPanel>
+            
         </Grid>
     </Grid>
 </Window>

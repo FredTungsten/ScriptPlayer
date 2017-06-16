@@ -1,8 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
@@ -13,6 +15,7 @@ using ScriptPlayer.Shared.Scripts;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using Point = System.Windows.Point;
 
 namespace ScriptPlayer
 {
@@ -445,6 +448,54 @@ namespace ScriptPlayer
                     ShowPosition();
                     break;
                 }
+                case Key.NumPad0:
+                {
+                    
+                    break;
+                }
+                case Key.NumPad1:
+                {
+                    VideoPlayer.ChangeZoom(-0.02);
+                    break;
+                }
+                case Key.NumPad2:
+                {
+                    VideoPlayer.Move(new Point(0, 1));
+                    break;
+                }
+                case Key.NumPad3:
+                {
+                    break;
+                }
+                case Key.NumPad4:
+                {
+                    VideoPlayer.Move(new Point(-1, 0));
+                    break;
+                }
+                case Key.NumPad5:
+                {
+                    VideoPlayer.ResetTransform();
+                    break;
+                }
+                case Key.NumPad6:
+                {
+                    VideoPlayer.Move(new Point(1, 0));
+                        break;
+                }
+                case Key.NumPad7:
+                {
+                    break;
+                }
+                case Key.NumPad8:
+                {
+                    VideoPlayer.Move(new Point(0, -1));
+                        break;
+                }
+                case Key.NumPad9:
+                    VideoPlayer.ChangeZoom(0.02);
+                    {
+                    break;
+                }
                 default:
                 {
                     handled = false;
@@ -494,6 +545,23 @@ namespace ScriptPlayer
                 OverlayText.SetText("Connected to Buttplug", TimeSpan.FromSeconds(1));
             else
                 OverlayText.SetText("Could not connect to Buttplug", TimeSpan.FromSeconds(2));
+        }
+
+        private void cckWithResponse_Checked(object sender, RoutedEventArgs e)
+        {
+            if(_launch != null)
+                _launch.SendCommandsWithResponse = cckWithResponse.IsChecked == true;
+        }
+
+        private void btnMeasureSpeed_Click(object sender, RoutedEventArgs e)
+        {
+            if (_launch == null)
+                return;
+            for (int i = 0; i < 10; i++)
+            {
+                _launch.EnqueuePosition((byte) (i%2 == 0?20:70),50);
+            }
+           
         }
     }
 }

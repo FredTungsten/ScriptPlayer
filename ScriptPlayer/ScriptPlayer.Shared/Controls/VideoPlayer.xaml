@@ -6,7 +6,7 @@
              xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
              xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="300" d:DesignWidth="300" Loaded="UserControl_Loaded">
     <Grid>
         <Border Background="Black" Grid.Column="0">
             <Viewbox LayoutUpdated="Viewbox_LayoutUpdated">

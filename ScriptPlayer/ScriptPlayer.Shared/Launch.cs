@@ -12,15 +12,22 @@ namespace ScriptPlayer.Shared
 {
     public class Launch
     {
+        public bool SendCommandsWithResponse { get; set; } = false;
+
+        public TimeSpan MinDelayBetweenCommands = TimeSpan.FromMilliseconds(150);
+        public TimeSpan AcceptableCommandExecutionDelay = TimeSpan.FromMilliseconds(1);
+
         public event EventHandler<Exception> Disconnected; 
 
         private BluetoothLEDevice _device;
         private readonly GattCharacteristic _commandCharacteristics;
         private readonly GattCharacteristic _notifyCharacteristics;
         private readonly GattCharacteristic _writeCharacteristics;
+        
+        private readonly Thread _commandThread;
+        private readonly BlockingQueue<QueueEntry> _queue = new BlockingQueue<QueueEntry>();
+
         private bool _initialized;
-        private Thread _commandThread;
-        private BlockingQueue<QueueEntry> _queue = new BlockingQueue<QueueEntry>();
         private bool _running;
 
         public Launch(BluetoothLEDevice device, GattCharacteristic writeCharacteristics, GattCharacteristic notifyCharacteristics, GattCharacteristic commandCharacteristics)
@@ -39,11 +46,16 @@ namespace ScriptPlayer.Shared
         {
             _running = false;
             _queue.Close();
+
+            if(!_commandThread.Join(TimeSpan.FromMilliseconds(500)))
+                _commandThread.Abort();
         }
+
+        private DateTime _lastCommand;
 
         private async void CommandLoop()
         {
-            TimeSpan showDelay = TimeSpan.FromMilliseconds(1);
+            _lastCommand = DateTime.Now - MinDelayBetweenCommands;
 
             while (_running)
             {
@@ -52,11 +64,19 @@ namespace ScriptPlayer.Shared
                 if (entry == null)
                     return;
 
-                TimeSpan delay = DateTime.Now - entry.Submitted;
-                if(delay != showDelay)
-                    Debug.WriteLine("Delay: " + delay.ToString("g"));
+                DateTime now = DateTime.Now;
+
+                TimeSpan wait = now - _lastCommand;
+                if (wait < MinDelayBetweenCommands)
+                    await Task.Delay(MinDelayBetweenCommands - wait);
+
+                TimeSpan delay = now - entry.Submitted;
+                if (delay > AcceptableCommandExecutionDelay)
+                    Debug.WriteLine("Command Execution Delay: " + delay.ToString("g"));
 
                 await SetPosition(entry.Position, entry.Speed);
+
+                _lastCommand = now;
             }
         }
 
@@ -74,7 +94,7 @@ namespace ScriptPlayer.Shared
 
                 IBuffer buffer = GetBuffer(position, speed);
 
-                var result = await _writeCharacteristics.WriteValueAsync(buffer);
+                var result = await _writeCharacteristics.WriteValueAsync(buffer, SendCommandsWithResponse? GattWriteOption.WriteWithResponse : GattWriteOption.WriteWithoutResponse);
 
                 return result == GattCommunicationStatus.Success;
             }

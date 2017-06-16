@@ -17,6 +17,7 @@ using Microsoft.Win32;
 using Newtonsoft.Json;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
+using ScriptPlayer.VideoSync.Dialogs;
 using Brush = System.Windows.Media.Brush;
 using Color = System.Windows.Media.Color;
 
@@ -78,11 +79,11 @@ namespace ScriptPlayer.VideoSync
         }
 
         public static readonly DependencyProperty BookmarksProperty = DependencyProperty.Register(
-            "Bookmarks", typeof(ObservableCollection<TimeSpan>), typeof(MainWindow), new PropertyMetadata(default(ObservableCollection<TimeSpan>)));
+            "Bookmarks", typeof(List<TimeSpan>), typeof(MainWindow), new PropertyMetadata(default(List<TimeSpan>)));
 
-        public ObservableCollection<TimeSpan> Bookmarks
+        public List<TimeSpan> Bookmarks
         {
-            get { return (ObservableCollection<TimeSpan>) GetValue(BookmarksProperty); }
+            get { return (List<TimeSpan>) GetValue(BookmarksProperty); }
             set { SetValue(BookmarksProperty, value); }
         }
 
@@ -93,15 +94,6 @@ namespace ScriptPlayer.VideoSync
         {
             get { return (ColorSampler) GetValue(SamplerProperty); }
             set { SetValue(SamplerProperty, value); }
-        }
-
-        public static readonly DependencyProperty TimelineProperty = DependencyProperty.Register(
-            "Timeline", typeof(BeatTimeline), typeof(MainWindow), new PropertyMetadata(default(BeatTimeline)));
-
-        public BeatTimeline Timeline
-        {
-            get { return (BeatTimeline) GetValue(TimelineProperty); }
-            set { SetValue(TimelineProperty, value); }
         }
 
         public static readonly DependencyProperty DurationProperty = DependencyProperty.Register(
@@ -150,10 +142,9 @@ namespace ScriptPlayer.VideoSync
 
         public MainWindow()
         {
-            Bookmarks = new ObservableCollection<TimeSpan>();
+            Bookmarks = new List<TimeSpan>();
             SetAllBeats(new BeatCollection()); 
             InitializeComponent();
-            Timeline = new BeatTimeline { TimeSource = videoPlayer.TimeSource };
         }
 
         private void InitializeSampler()
@@ -414,7 +405,16 @@ namespace ScriptPlayer.VideoSync
 
         private void btnAddBookmark_Click(object sender, RoutedEventArgs e)
         {
-            Bookmarks.Add(videoPlayer.GetPosition());
+            List<TimeSpan> newBookMarks = new List<TimeSpan>(Bookmarks);
+            newBookMarks.Add(videoPlayer.GetPosition());
+            newBookMarks.Sort();
+
+            Bookmarks = newBookMarks;
+        }
+
+        private void btnResetBookmarks_Click(object sender, RoutedEventArgs e)
+        {
+            Bookmarks = new List<TimeSpan>();
         }
 
         private void Bookmark_DoubleClick(object sender, MouseButtonEventArgs e)
@@ -635,34 +635,17 @@ namespace ScriptPlayer.VideoSync
 
             SetAllBeats(Beats.Where(t => t < tBegin || t > tEnd));
         }
-    }
 
-    internal class VideoFrameSampler    
-    {
-        [System.Runtime.InteropServices.DllImport("gdi32.dll")]
-        public static extern bool DeleteObject(IntPtr hObject);
-        public static ImageSource GetFrame(long first, string openFile)
+        private void mnuTrackBlob_OnClick(object sender, RoutedEventArgs e)
         {
-            VideoFileReader reader = new VideoFileReader();
-            reader.Open(openFile);
+            var dialog = new VisualTrackerDialog(_openFile, _marker1, _marker2,new Rectangle(SampleX,SampleY,SampleW,SampleH));
+            dialog.Show();
+        }
 
-            Bitmap current = null;
-            for (int i = 0; i <= first; i++)
-                current = reader.ReadVideoFrame();
-
-            var hBitmap = current.GetHbitmap();
-
-            var capture = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
-                hBitmap,
-                IntPtr.Zero,
-                Int32Rect.Empty,
-                BitmapSizeOptions.FromWidthAndHeight(current.Width, current.Height));
-
-            capture.Freeze();
-
-            return capture;
-
-            DeleteObject(hBitmap);
+        private void btnAdd_Click(object sender, RoutedEventArgs e)
+        {
+            Beats.Add(videoPlayer.GetPosition());
+            SetAllBeats(Beats);
         }
     }
 }
