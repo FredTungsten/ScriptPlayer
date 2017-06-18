@@ -14,7 +14,7 @@ namespace ScriptPlayer.Shared
     {
         public bool SendCommandsWithResponse { get; set; } = false;
 
-        public TimeSpan MinDelayBetweenCommands = TimeSpan.FromMilliseconds(150);
+        public TimeSpan MinDelayBetweenCommands = TimeSpan.FromMilliseconds(200);
         public TimeSpan AcceptableCommandExecutionDelay = TimeSpan.FromMilliseconds(1);
 
         public event EventHandler<Exception> Disconnected; 

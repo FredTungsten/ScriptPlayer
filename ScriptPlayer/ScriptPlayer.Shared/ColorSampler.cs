@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Xml.Serialization;
 using ScriptPlayer.Shared.Properties;
 
 namespace ScriptPlayer.Shared
@@ -181,9 +182,13 @@ namespace ScriptPlayer.Shared
 
     public class SampleCondtionParameter
     {
+        [XmlAttribute("Min")]
         public int MinValue { get; set; }
+        [XmlAttribute("Max")]
         public int MaxValue { get; set; }
+        [XmlAttribute("State")]
         public ConditionState State { get; set; }
+
 
         public bool IsAcceptableValue(int value)
         {
@@ -214,7 +219,6 @@ namespace ScriptPlayer.Shared
     public class PixelColorSampleCondition : SampleCondition
     {
         public ConditionSource Source { get; set; }
-        
         public SampleCondtionParameter MatchedSamples { get; set; }
         public SampleCondtionParameter Red { get; set; }
         public SampleCondtionParameter Green { get; set; }

@@ -154,6 +154,9 @@
     <Compile Include="Dialogs\DoubleInputDialog.xaml.cs">
       <DependentUpon>DoubleInputDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\MocktestDialog.xaml.cs">
+      <DependentUpon>MocktestDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\VisualTrackerDialog.xaml.cs">
       <DependentUpon>VisualTrackerDialog.xaml</DependentUpon>
     </Compile>
@@ -197,6 +200,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\FramePicture.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\MocktestDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

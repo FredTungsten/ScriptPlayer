@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:converters="clr-namespace:ScriptPlayer.Shared.Converters"
              xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
-             mc:Ignorable="d" 
+             mc:Ignorable="d" RenderOptions.BitmapScalingMode="HighQuality"
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
         <converters:PositionToMarginConverter MarginBottom="0,130,0,0" MarginTop="0,0,0,0" x:Key="MarginConverter"/>

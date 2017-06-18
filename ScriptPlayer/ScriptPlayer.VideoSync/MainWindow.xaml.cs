@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -12,14 +11,12 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Accord.Video.FFMPEG;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 using ScriptPlayer.VideoSync.Dialogs;
 using Brush = System.Windows.Media.Brush;
-using Color = System.Windows.Media.Color;
 
 namespace ScriptPlayer.VideoSync
 {
@@ -28,6 +25,24 @@ namespace ScriptPlayer.VideoSync
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly DependencyProperty BeatBarDurationProperty = DependencyProperty.Register(
+            "BeatBarDuration", typeof(double), typeof(MainWindow), new PropertyMetadata(5.0));
+
+        public double BeatBarDuration
+        {
+            get { return (double) GetValue(BeatBarDurationProperty); }
+            set { SetValue(BeatBarDurationProperty, value); }
+        }
+
+        public static readonly DependencyProperty BeatBarCenterProperty = DependencyProperty.Register(
+            "BeatBarCenter", typeof(double), typeof(MainWindow), new PropertyMetadata(0.5));
+
+        public double BeatBarCenter
+        {
+            get { return (double) GetValue(BeatBarCenterProperty); }
+            set { SetValue(BeatBarCenterProperty, value); }
+        }
+
         public static readonly DependencyProperty SampleXProperty = DependencyProperty.Register(
             "SampleX", typeof(int), typeof(MainWindow), new PropertyMetadata(680, OnSampleSizeChanged));
 
@@ -174,9 +189,11 @@ namespace ScriptPlayer.VideoSync
         private Int32Rect _captureRect = new Int32Rect(680, 700, 4, 4);
         private bool _wasplaying;
         private string _openFile;
+
         private FrameCaptureCollection _frameSamples;
         private BeatCollection _originalBeats;
-        private PixelColorSampleCondition _condition = null;
+        private PixelColorSampleCondition _condition = new PixelColorSampleCondition();
+
         private TimeSpan _stretchFromBegin;
         private TimeSpan _stretchFromEnd;
         private TimeSpan _stretchToEnd;
@@ -192,8 +209,7 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuOpenVideo_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Videos|*.mp4;*.mpg;*.mpeg;*.avi|All Files|*.*";
+            OpenFileDialog dialog = new OpenFileDialog {Filter = "Videos|*.mp4;*.mpg;*.mpeg;*.avi|All Files|*.*"};
             if (dialog.ShowDialog(this) != true) return;
 
             OpenVideo(dialog.FileName);
@@ -346,15 +362,21 @@ namespace ScriptPlayer.VideoSync
             SetCaptureRect(_frameSamples.CaptureRect);
         }
 
-        private void OpenVideo(string videoFile)
+        private void OpenVideo(string videoFile, bool play = false)
         {
             _openFile = videoFile;
             videoPlayer.Open(videoFile);
-            videoPlayer.Play();
+            if(play)
+                videoPlayer.Play();
         }
 
         private void mnuAnalyseSamples_Click(object sender, RoutedEventArgs e)
         {
+            if (_frameSamples == null)
+            {
+                MessageBox.Show(this, "No samples to analyse!");
+            }
+
             AnalysisParameters parameters = new AnalysisParameters();
             FrameAnalyserDialog dialog = new FrameAnalyserDialog(_frameSamples, _condition, parameters);
 
@@ -434,8 +456,13 @@ namespace ScriptPlayer.VideoSync
             ConditionEditorDialog dialog = new ConditionEditorDialog(_condition);
             if (dialog.ShowDialog() != true) return;
 
-            _condition = dialog.Result;
-            colorSampleBar.SampleCondition = _condition;
+            SetCondition(dialog.Result);
+        }
+
+        private void SetCondition(PixelColorSampleCondition condition)
+        {
+            _condition = condition;
+            colorSampleBar.SampleCondition = condition;
         }
 
         private void ShiftTime(TimeSpan timespan)
@@ -526,6 +553,28 @@ namespace ScriptPlayer.VideoSync
             if (Beats.Count == 0) return;
             TimeSpan beat = Beats.First();
             videoPlayer.SetPosition(beat);
+        }
+
+        private void mnuFindShortestBeat_Click(object sender, RoutedEventArgs e)
+        {
+            if (Beats == null) return;
+            if (Beats.Count < 2) return;
+
+            TimeSpan shortest = TimeSpan.MaxValue;
+            TimeSpan position = TimeSpan.Zero;
+
+            for (int i = 0; i < Beats.Count - 1; i++)
+            {
+                TimeSpan duration = Beats[i + 1] - Beats[i];
+                if (duration < shortest)
+                {
+                    shortest = duration;
+                    position = Beats[i];
+                }
+            }
+
+            videoPlayer.SetPosition(position);
+            MessageBox.Show("Shortest beat: " + shortest.TotalMilliseconds + " ms");
         }
 
         private void mnuJumpToLastBeat_Click(object sender, RoutedEventArgs e)
@@ -646,6 +695,49 @@ namespace ScriptPlayer.VideoSync
         {
             Beats.Add(videoPlayer.GetPosition());
             SetAllBeats(Beats);
+        }
+
+        private void MenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            new MocktestDialog().Show();
+        }
+
+        private void mnuSaveProject_Click(object sender, RoutedEventArgs e)
+        {
+            if (String.IsNullOrWhiteSpace(_openFile))
+                return;
+
+            SaveFileDialog dialog = new SaveFileDialog{Filter = "Beat Projects|*.bproj"};
+            dialog.FileName = Path.ChangeExtension(_openFile, ".bproj");
+
+            if (dialog.ShowDialog(this) != true)
+                return;
+
+            BeatProject project = new BeatProject
+            {
+                VideoFile = _openFile,
+                SampleCondition = _condition,
+                BeatBarDuration = BeatBar.TotalDisplayedDuration,
+                BeatBarMidpoint = BeatBar.Midpoint,
+                Beats = Beats.Select(b => b.Ticks).ToList(),
+                Bookmarks = Bookmarks.Select(b => b.Ticks).ToList()
+            };
+            project.Save(dialog.FileName);
+        }
+
+        private void mnuLoadProject_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog { Filter = "Beat Projects|*.bproj" };
+            if (dialog.ShowDialog(this) != true)
+                return;
+
+            BeatProject project = BeatProject.Load(dialog.FileName);
+            OpenVideo(project.VideoFile);
+            SetCondition(project.SampleCondition);
+            BeatBarDuration = project.BeatBarDuration;
+            BeatBarCenter = project.BeatBarMidpoint;
+            Beats = new BeatCollection(project.Beats.Select(TimeSpan.FromTicks));
+            Bookmarks = project.Bookmarks.Select(TimeSpan.FromTicks).ToList();
         }
     }
 }

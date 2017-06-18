@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -9,6 +10,11 @@ namespace ScriptPlayer.Shared
         public string VideoFile { get; set; }
 
         public List<BeatSegment> Segments { get; set; }
+        public PixelColorSampleCondition SampleCondition { get; set; }
+        public double BeatBarDuration { get; set; }
+        public double BeatBarMidpoint { get; set; }
+        public List<long> Beats { get; set; }
+        public List<long> Bookmarks { get; set; }
 
         public BeatProject()
         {

@@ -9,7 +9,7 @@ namespace ScriptPlayer.Shared
 {
     public class BeatCollection : ICollection<TimeSpan>
     {
-        private List<TimeSpan> _beats;
+        private readonly List<TimeSpan> _beats;
 
         public BeatCollection()
         {           
@@ -20,6 +20,11 @@ namespace ScriptPlayer.Shared
         {
             _beats = new List<TimeSpan>(beats);
             _beats.Sort();
+        }
+
+        public TimeSpan this[int index]
+        {
+            get => _beats[index];
         }
 
         public bool Remove(TimeSpan item)
@@ -99,7 +104,13 @@ namespace ScriptPlayer.Shared
             {
                 List<TimeSpan> beats = new List<TimeSpan>();
                 while (!reader.EndOfStream)
-                    beats.Add(TimeSpan.FromSeconds(double.Parse(reader.ReadLine().Replace(",","."), culture)));
+                {
+                    string line = reader.ReadLine();
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
+
+                    beats.Add(TimeSpan.FromSeconds(double.Parse(line.Replace(",", "."), culture)));
+                }
 
                 return new BeatCollection(beats);
             }

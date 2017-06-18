@@ -13,6 +13,25 @@ namespace ScriptPlayer.Shared
     /// </summary>
     public partial class VideoPlayer : UserControl, IDisposable
     {
+        public static readonly DependencyProperty VolumeProperty = DependencyProperty.Register(
+            "Volume", typeof(double), typeof(VideoPlayer), new PropertyMetadata(100.0, OnVolumePropertyChanged));
+
+        private static void OnVolumePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((VideoPlayer) d).OnVolumeChanged();
+        }
+
+        private void OnVolumeChanged()
+        {
+            _player.Volume = Volume / 100.0;
+        }
+
+        public double Volume
+        {
+            get { return (double) GetValue(VolumeProperty); }
+            set { SetValue(VolumeProperty, value); }
+        }
+
         public static readonly DependencyProperty HideMouseProperty = DependencyProperty.Register(
             "HideMouse", typeof(bool), typeof(VideoPlayer), new PropertyMetadata(default(bool), OnHideMousePropertyChanged));
 
@@ -160,14 +179,18 @@ namespace ScriptPlayer.Shared
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
+            ResetHideMouseTimer();
+            base.OnMouseMove(e);
+        }
+
+        private void ResetHideMouseTimer()
+        {
             if (HideMouse)
             {
                 SetMouse(true);
                 _mouseTimer.Stop();
                 _mouseTimer.Start();
             }
-
-            base.OnMouseMove(e);
         }
 
         public void Play()
@@ -176,6 +199,8 @@ namespace ScriptPlayer.Shared
             _player.Play();
             _isPlaying = true;
             Fadeout.Animate("4");
+
+            ResetHideMouseTimer();
         }
 
         public void Pause()
@@ -199,7 +224,7 @@ namespace ScriptPlayer.Shared
             _player.MediaOpened += PlayerOnMediaOpened;
 
             TimeSource = new MediaPlayerTimeSource(_player,
-                new DispatcherClock(Dispatcher, TimeSpan.FromMilliseconds(10))); //new CompositionTargetClock());
+                new DispatcherClock(Dispatcher, TimeSpan.FromMilliseconds(10)));
 
             VideoBrush = new DrawingBrush(new VideoDrawing { Player = _player, Rect = new Rect(0, 0, 1, 1) }) { Stretch = Stretch.Fill };
         }

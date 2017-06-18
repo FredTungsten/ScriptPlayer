@@ -24,6 +24,15 @@ namespace ScriptPlayer
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly DependencyProperty VolumeProperty = DependencyProperty.Register(
+            "Volume", typeof(double), typeof(MainWindow), new PropertyMetadata(50.0));
+
+        public double Volume
+        {
+            get { return (double) GetValue(VolumeProperty); }
+            set { SetValue(VolumeProperty, value); }
+        }
+
         public static readonly DependencyProperty MinPositionProperty = DependencyProperty.Register(
             "MinPosition", typeof(byte), typeof(MainWindow), new PropertyMetadata(default(byte)));
 
@@ -276,10 +285,21 @@ namespace ScriptPlayer
             if (eventArgs.NextAction == null)
                 return;
 
+            eventArgs.CurrentAction.Position = TransformPosition(eventArgs.CurrentAction.Position);
+            eventArgs.NextAction.Position = TransformPosition(eventArgs.NextAction.Position);
+
+
             byte position = eventArgs.NextAction.Position;
             TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
             byte speed = SpeedPredictor.Predict2((byte) Math.Abs(eventArgs.CurrentAction.Position - position), duration);
             SetLaunch(position, speed);
+        }
+
+        private byte TransformPosition(byte pos)
+        {
+            //TODO: Add proper Settings in MainWindow
+            //return (byte) (pos > 50 ? 95 : 5);
+            return pos;
         }
 
         private void HandleRawScriptAction(ScriptActionEventArgs<RawScriptAction> eventArgs)
@@ -414,6 +434,14 @@ namespace ScriptPlayer
         private void VideoPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             TogglePlayback();
+        }
+
+        protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
+        {
+            e.Handled = true;
+
+            Volume = Math.Min(100.0, Math.Max(0, Volume + Math.Sign(e.Delta)*5));
+            OverlayText.SetText(String.Format("Volume: {0:f0}%", Volume), TimeSpan.FromSeconds(2));
         }
 
         private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
