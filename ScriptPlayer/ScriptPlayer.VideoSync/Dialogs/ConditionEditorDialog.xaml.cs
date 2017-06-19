@@ -3,19 +3,24 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using ScriptPlayer.Shared;
 using ScriptPlayer.VideoSync.Annotations;
 
 namespace ScriptPlayer.VideoSync
 {
-    /// <summary>
-    /// Interaction logic for ConditionEditorDialog.xaml
-    /// </summary>
     public partial class ConditionEditorDialog : Window
     {
+        public event EventHandler<PixelColorSampleCondition> LiveConditionUpdate;
+
+        public static readonly DependencyProperty ReanalyseProperty = DependencyProperty.Register(
+            "Reanalyse", typeof(bool), typeof(ConditionEditorDialog), new PropertyMetadata(true));
+
+        public bool Reanalyse
+        {
+            get { return (bool) GetValue(ReanalyseProperty); }
+            set { SetValue(ReanalyseProperty, value); }
+        }
+
         public static readonly DependencyProperty ResultProperty = DependencyProperty.Register(
             "Result", typeof(PixelColorSampleCondition), typeof(ConditionEditorDialog), new PropertyMetadata(default(PixelColorSampleCondition)));
 
@@ -34,7 +39,6 @@ namespace ScriptPlayer.VideoSync
             set { SetValue(ConditionsProperty, value); }
         }
 
-        private Color _color;
         public ConditionEditorDialog(PixelColorSampleCondition condition)
         {
             Conditions = new List<ConditionViewModel>();
@@ -62,10 +66,24 @@ namespace ScriptPlayer.VideoSync
                         throw new ArgumentOutOfRangeException();
                 }
             }
+
+            foreach (var cond in Conditions)
+                cond.PropertyChanged += CondOnPropertyChanged;
         }
-    
+
+        private void CondOnPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+        {
+            OnLiveConditionUpdate(GetCondition());
+        }
+
 
         private void btnOk_Click(object sender, RoutedEventArgs e)
+        {
+            Result = GetCondition();
+            DialogResult = true;
+        }
+
+        private PixelColorSampleCondition GetCondition()
         {
             PixelColorSampleCondition result = new PixelColorSampleCondition
             {
@@ -80,16 +98,19 @@ namespace ScriptPlayer.VideoSync
             if (rbMajority.IsChecked == true)
             {
                 result.Source = ConditionSource.Majority;
-                result.MatchedSamples = new SampleCondtionParameter{MaxValue = 100, MinValue = 50, State = ConditionState.Include};
+                result.MatchedSamples = new SampleCondtionParameter { MaxValue = 100, MinValue = 50, State = ConditionState.Include };
             }
             else
             {
                 result.Source = ConditionSource.Average;
                 result.MatchedSamples = new SampleCondtionParameter { MaxValue = 100, MinValue = 50, State = ConditionState.NotUsed };
             }
+            return result;
+        }
 
-            Result = result;
-            DialogResult = true;
+        protected virtual void OnLiveConditionUpdate(PixelColorSampleCondition e)
+        {
+            LiveConditionUpdate?.Invoke(this, e);
         }
     }
 

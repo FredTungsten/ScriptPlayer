@@ -57,7 +57,7 @@
                 <MenuItem Header="Track Blob" Click="mnuTrackBlob_OnClick"/>
             </MenuItem>
             <MenuItem Header="Misc">
-                <MenuItem Header="Launch Mockup" Click="MenuItem_OnClick"></MenuItem>
+                <MenuItem Header="Launch Mockup" Click="mnuShowMock_Click"></MenuItem>
             </MenuItem>
         </Menu>
 

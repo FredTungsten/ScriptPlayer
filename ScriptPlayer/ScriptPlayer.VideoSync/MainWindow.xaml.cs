@@ -372,9 +372,15 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuAnalyseSamples_Click(object sender, RoutedEventArgs e)
         {
+            AnalyseSamples();
+        }
+
+        private void AnalyseSamples()
+        {
             if (_frameSamples == null)
             {
                 MessageBox.Show(this, "No samples to analyse!");
+                return;
             }
 
             AnalysisParameters parameters = new AnalysisParameters();
@@ -453,10 +459,26 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuSetCondition_Click(object sender, RoutedEventArgs e)
         {
-            ConditionEditorDialog dialog = new ConditionEditorDialog(_condition);
-            if (dialog.ShowDialog() != true) return;
+            var currentCondition = _condition;
+            ConditionEditorDialog dialog = new ConditionEditorDialog(currentCondition);
+            dialog.LiveConditionUpdate += DialogOnLiveConditionUpdate;
 
-            SetCondition(dialog.Result);
+            if (dialog.ShowDialog() != true)
+            {
+                SetCondition(currentCondition);
+            }
+            else
+            {
+                SetCondition(dialog.Result);
+                if (dialog.Reanalyse)
+                    AnalyseSamples();
+            }
+            
+        }
+
+        private void DialogOnLiveConditionUpdate(object sender, PixelColorSampleCondition condition)
+        {
+            SetCondition(condition);
         }
 
         private void SetCondition(PixelColorSampleCondition condition)
@@ -697,7 +719,7 @@ namespace ScriptPlayer.VideoSync
             SetAllBeats(Beats);
         }
 
-        private void MenuItem_OnClick(object sender, RoutedEventArgs e)
+        private void mnuShowMock_Click(object sender, RoutedEventArgs e)
         {
             new MocktestDialog().Show();
         }

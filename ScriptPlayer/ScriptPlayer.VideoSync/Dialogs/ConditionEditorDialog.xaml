@@ -7,16 +7,22 @@
         xmlns:videoSync="clr-namespace:ScriptPlayer.VideoSync"
         x:Class="ScriptPlayer.VideoSync.ConditionEditorDialog"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Condition Editor" Height="409" Width="460.364" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow">
+    SizeToContent="Height"
+        Title="Condition Editor" Width="460.364" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-        <RadioButton Content="Average" x:Name="rbAverage" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <RadioButton Content="Majority" x:Name="rbMajority" HorizontalAlignment="Left" Margin="10,30,0,0" VerticalAlignment="Top"/>
+        <RadioButton Grid.Row="0" Content="Average" x:Name="rbAverage" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <RadioButton Grid.Row="0" Content="Majority" x:Name="rbMajority" HorizontalAlignment="Left" Margin="10,30,0,0" VerticalAlignment="Top"/>
 
-        <Button IsDefault="True" Content="Ok" Height="23" Width="75" Margin="0,0,90,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="btnOk_Click"/>
-        <Button IsCancel="True" Content="Cancel" Height="23" Width="75" Margin="0,0,10,10" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+        <Button Grid.Row="2" IsDefault="True" Content="Ok" Height="23" Width="75" Margin="0,0,90,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="btnOk_Click"/>
+        <Button Grid.Row="2" IsCancel="True" Content="Cancel" Height="23" Width="75" Margin="0,0,10,10" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
 
-        <ItemsControl ItemsSource="{Binding Conditions}" Margin="10,50,10,38">
+        <ItemsControl  Grid.Row="1" ItemsSource="{Binding Conditions}" Margin="10">
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="videoSync:ConditionViewModel">
                     <Grid>
@@ -35,11 +41,31 @@
                         <RadioButton Margin="2" VerticalAlignment="Center" IsChecked="{Binding IsDoNotUse}" Grid.Column="3"/>
                         <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding Path=LowerValue}" Grid.Column="4"/>
                         <Controls:RangeSlider Minimum="{Binding Minimum}" Maximum="{Binding Maximum}" LowerValue="{Binding LowerValue, Mode=TwoWay}" UpperValue="{Binding UpperValue, Mode=TwoWay}"
-                            Grid.Column="5" HorizontalAlignment="Stretch" Height="Auto" VerticalAlignment="Center"/>
+                            Grid.Column="5" HorizontalAlignment="Stretch" Height="Auto" VerticalAlignment="Center">
+                            <Controls:RangeSlider.Style>
+                                <Style TargetType="Controls:RangeSlider">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDoNotUse}" Value="True">
+                                            <Setter Property="OutsideBrush" Value="LightGray"/>
+                                            <Setter Property="InsideBrush" Value="LightGray"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsInclude}" Value="True">
+                                            <Setter Property="OutsideBrush" Value="Red"/>
+                                            <Setter Property="InsideBrush" Value="Lime"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsExclude}" Value="True">
+                                            <Setter Property="OutsideBrush" Value="Lime"/>
+                                            <Setter Property="InsideBrush" Value="Red"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Controls:RangeSlider.Style>
+                        </Controls:RangeSlider>
                         <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding Path=UpperValue}" Grid.Column="6"/>
                     </Grid>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <CheckBox IsChecked="{Binding Reanalyse, Mode=TwoWay}" Content="Re-Analyse Samples" Margin="0,0,170,13" Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="126"/>
     </Grid>
 </Window>

@@ -1,10 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
@@ -441,7 +438,7 @@ namespace ScriptPlayer
             e.Handled = true;
 
             Volume = Math.Min(100.0, Math.Max(0, Volume + Math.Sign(e.Delta)*5));
-            OverlayText.SetText(String.Format("Volume: {0:f0}%", Volume), TimeSpan.FromSeconds(2));
+            OverlayText.SetText($"Volume: {Volume:f0}%", TimeSpan.FromSeconds(2));
         }
 
         private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
