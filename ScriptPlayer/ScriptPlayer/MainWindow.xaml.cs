@@ -22,7 +22,17 @@ namespace ScriptPlayer
     public partial class MainWindow : Window
     {
         public static readonly DependencyProperty VolumeProperty = DependencyProperty.Register(
-            "Volume", typeof(double), typeof(MainWindow), new PropertyMetadata(50.0));
+            "Volume", typeof(double), typeof(MainWindow), new PropertyMetadata(50.0, OnVolumePropertyChanged));
+
+        private static void OnVolumePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((MainWindow) d).OnVolumeChanged();
+        }
+
+        private void OnVolumeChanged()
+        {
+            OverlayText.SetText($"Volume: {Volume:f0}%", TimeSpan.FromSeconds(2));
+        }
 
         public double Volume
         {
@@ -436,9 +446,7 @@ namespace ScriptPlayer
         protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
         {
             e.Handled = true;
-
-            Volume = Math.Min(100.0, Math.Max(0, Volume + Math.Sign(e.Delta)*5));
-            OverlayText.SetText($"Volume: {Volume:f0}%", TimeSpan.FromSeconds(2));
+            Volume = Math.Min(100.0, Math.Max(0, 5 * ((int)(Volume/5) + Math.Sign(e.Delta))));
         }
 
         private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
