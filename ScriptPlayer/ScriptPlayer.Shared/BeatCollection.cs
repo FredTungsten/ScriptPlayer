@@ -11,6 +11,7 @@ namespace ScriptPlayer.Shared
     {
         private readonly List<TimeSpan> _beats;
 
+        private static CultureInfo _culture = new CultureInfo("en-us");
         public BeatCollection()
         {           
             _beats =  new List<TimeSpan>();
@@ -92,14 +93,13 @@ namespace ScriptPlayer.Shared
                 using (TextWriter writer = new StreamWriter(stream))
                 {
                     foreach (TimeSpan beat in _beats)
-                        writer.WriteLine(beat.TotalSeconds.ToString("f3"));
+                        writer.WriteLine(beat.TotalSeconds.ToString("f3", _culture));
                 }
             }
         }
 
         public static BeatCollection Load(string filename)
         {
-            CultureInfo culture = new CultureInfo("en-us");
             using (var reader = File.OpenText(filename))
             {
                 List<TimeSpan> beats = new List<TimeSpan>();
@@ -109,7 +109,7 @@ namespace ScriptPlayer.Shared
                     if (string.IsNullOrWhiteSpace(line))
                         continue;
 
-                    beats.Add(TimeSpan.FromSeconds(double.Parse(line.Replace(",", "."), culture)));
+                    beats.Add(TimeSpan.FromSeconds(double.Parse(line.Replace(",", "."), _culture)));
                 }
 
                 return new BeatCollection(beats);
