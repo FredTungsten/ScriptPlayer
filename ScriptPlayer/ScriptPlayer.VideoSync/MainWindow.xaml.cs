@@ -406,7 +406,7 @@ namespace ScriptPlayer.VideoSync
                 return;
             }
 
-            AnalysisParameters parameters = new AnalysisParameters(){MaxPositiveSamples = 10};
+            AnalysisParameters parameters = new AnalysisParameters() { MaxPositiveSamples = 10 };
             FrameAnalyserDialog dialog = new FrameAnalyserDialog(_frameSamples, _condition, parameters);
 
             if (dialog.ShowDialog() != true) return;
@@ -845,14 +845,14 @@ namespace ScriptPlayer.VideoSync
             TimeSpan first = beatsToEvenOut.Min();
             TimeSpan last = beatsToEvenOut.Max();
 
-            int numberOfBeats = (int) (beatsToEvenOut.Count + dialog.Result);
+            int numberOfBeats = (int)(beatsToEvenOut.Count + dialog.Result);
 
             if (numberOfBeats > 1)
             {
                 TimeSpan tStart = first;
                 TimeSpan intervall = (last - first).Divide(numberOfBeats - 1);
 
-                for(int i = 0; i < numberOfBeats; i++)
+                for (int i = 0; i < numberOfBeats; i++)
                     otherBeats.Add(tStart + intervall.Multiply(i));
             }
 
@@ -883,8 +883,47 @@ namespace ScriptPlayer.VideoSync
             }
             else
             {
-                MessageBox.Show((next-previous).TotalMilliseconds.ToString("f0"), "Duration", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show((next - previous).TotalMilliseconds.ToString("f0"), "Duration", MessageBoxButton.OK, MessageBoxImage.Information);
             }
+        }
+
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            bool handled = true;
+            switch (e.Key)
+            {
+                case Key.Space:
+                    {
+                        if (videoPlayer.IsPlaying)
+                            videoPlayer.Pause();
+                        else
+                            videoPlayer.Play();
+                        break;
+                    }
+                default:
+                    handled = false;
+                    break;
+            }
+
+            if (handled)
+                e.Handled = true;
+        }
+
+        private void BeatBar_OnTimeMouseDown(object sender, TimeSpan e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) != 0)
+                RemoveClosestBeat(e);
+            else
+                Beats.Add(e);
+
+            BeatBar.InvalidateVisual();
+        }
+
+        private void RemoveClosestBeat(TimeSpan timeSpan)
+        {
+            TimeSpan closest = Beats.OrderBy(b => Math.Abs(b.Ticks - timeSpan.Ticks)).First();
+            Beats.Remove(closest);
+
         }
     }
 }

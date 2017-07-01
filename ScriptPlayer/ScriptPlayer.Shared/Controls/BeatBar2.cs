@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace ScriptPlayer.Shared
 {
     public class BeatBar2 : Control
     {
+        public event EventHandler<TimeSpan> TimeMouseDown; 
+
         public static readonly DependencyProperty LineColorProperty = DependencyProperty.Register(
             "LineColor", typeof(Color), typeof(BeatBar2), new PropertyMetadata(Colors.Lime, OnVisualPropertyChanged));
 
@@ -68,6 +71,17 @@ namespace ScriptPlayer.Shared
             set { SetValue(ProgressProperty, value); }
         }
 
+        protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            double x = e.GetPosition(this).X;
+
+            double relativeProgress = (x / ActualWidth) - Midpoint;
+
+            TimeSpan position = Progress + TimeSpan.FromSeconds(TotalDisplayedDuration * relativeProgress);
+
+            OnTimeMouseDown(position);
+        }
+
         protected override void OnRender(DrawingContext drawingContext)
         {
             Rect fullRect = new Rect(new Point(), new Size(ActualWidth, ActualHeight));
@@ -107,6 +121,11 @@ namespace ScriptPlayer.Shared
         {
             drawingContext.DrawLine(new Pen(new SolidColorBrush(primary) { Opacity = 0.5 }, lineWidth) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
             drawingContext.DrawLine(new Pen(new SolidColorBrush(Colors.White) { Opacity = 1.0 }, 2) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
+        }
+
+        protected virtual void OnTimeMouseDown(TimeSpan e)
+        {
+            TimeMouseDown?.Invoke(this, e);
         }
     }
 }
