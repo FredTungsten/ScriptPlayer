@@ -100,6 +100,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\buttplug-csharp\Buttplug\Buttplug.csproj">
+      <Project>{23D9EC18-2DBA-4149-A951-B84786D4BFA6}</Project>
+      <Name>Buttplug</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ScriptPlayer.ButtplugConnector\ScriptPlayer.ButtplugConnector.csproj">
       <Project>{d18cdaf9-fe97-41a1-bce8-edb08ea433e9}</Project>
       <Name>ScriptPlayer.ButtplugConnector</Name>

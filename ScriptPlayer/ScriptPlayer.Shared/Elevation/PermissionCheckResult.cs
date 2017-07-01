@@ -1,4 +1,4 @@
-namespace UacElevation
+namespace ScriptPlayer.Shared.Elevation
 {
     public enum PermissionCheckResult
     {

@@ -198,7 +198,7 @@ namespace ScriptPlayer.Shared
             SystemIdelPreventer.Prevent(true);
             _player.Play();
             _isPlaying = true;
-            Fadeout.Animate("4");
+            //Fadeout.Animate("4");
 
             ResetHideMouseTimer();
         }
@@ -208,7 +208,7 @@ namespace ScriptPlayer.Shared
             SystemIdelPreventer.Prevent(false);
             _player.Pause();
             _isPlaying = false;
-            Fadeout.Animate(";");
+            //Fadeout.Animate(";");
         }
 
         public void Open(string filename)

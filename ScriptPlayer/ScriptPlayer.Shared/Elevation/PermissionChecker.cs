@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using System.Security.AccessControl;
 using Microsoft.Win32;
-using UacElevation;
 
 namespace ScriptPlayer.Shared.Elevation
 {

@@ -1,4 +1,4 @@
-﻿namespace ScriptPlayer.VideoSync
+﻿namespace ScriptPlayer.Shared
 {
     public struct FrameCapture
     {

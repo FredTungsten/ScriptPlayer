@@ -1,6 +1,6 @@
 using Microsoft.Win32;
 
-namespace UacElevation
+namespace ScriptPlayer.Shared.Elevation
 {
     public class RegistryValue
     {

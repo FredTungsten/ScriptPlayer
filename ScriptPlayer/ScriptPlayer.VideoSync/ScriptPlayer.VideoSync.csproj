@@ -19,7 +19,7 @@
     </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -132,12 +132,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="AnalysisParameters.cs" />
     <Compile Include="AudioTests.xaml.cs">
       <DependentUpon>AudioTests.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\RangeSlider.xaml.cs">
-      <DependentUpon>RangeSlider.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\ColorPicker.xaml.cs">
       <DependentUpon>ColorPicker.xaml</DependentUpon>
@@ -160,14 +156,8 @@
     <Compile Include="Dialogs\VisualTrackerDialog.xaml.cs">
       <DependentUpon>VisualTrackerDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="FrameCapture.cs" />
     <Compile Include="Properties\Annotations.cs" />
-    <Compile Include="SampleAnalyser.cs" />
     <Page Include="AudioTests.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\RangeSlider.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -218,7 +208,6 @@
     <Compile Include="Dialogs\FrameAnalyserDialog.xaml.cs">
       <DependentUpon>FrameAnalyserDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="FrameCaptureCollection.cs" />
     <Compile Include="Dialogs\FrameSamplerDialog.xaml.cs">
       <DependentUpon>FrameSamplerDialog.xaml</DependentUpon>
     </Compile>

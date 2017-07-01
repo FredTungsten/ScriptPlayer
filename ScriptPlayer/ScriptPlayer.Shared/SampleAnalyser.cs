@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ScriptPlayer.Shared;
 
-namespace ScriptPlayer.VideoSync
+namespace ScriptPlayer.Shared
 {
     public class SampleAnalyser
     {
@@ -81,6 +80,14 @@ namespace ScriptPlayer.VideoSync
                         {
                             beatActive = true;
                             beatActiveSinceIndex = i;
+                        }
+                        else if (positivesInARow >= _parameters.MaxPositiveSamples)
+                        {
+                            beatActive = false;
+                            resultIndices.Add(new Tuple<int, int>(beatActiveSinceIndex, i - 1));
+
+                            positivesInARow = 0;
+                            negativesInARow++;
                         }
                     }
                 }

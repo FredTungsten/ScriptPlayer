@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:Controls="clr-namespace:ScriptPlayer.VideoSync.Controls"
         xmlns:videoSync="clr-namespace:ScriptPlayer.VideoSync"
+        xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         x:Class="ScriptPlayer.VideoSync.ConditionEditorDialog"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
     SizeToContent="Height"
@@ -40,10 +40,10 @@
                         <RadioButton Margin="2" VerticalAlignment="Center" IsChecked="{Binding IsExclude}" Grid.Column="2"/>
                         <RadioButton Margin="2" VerticalAlignment="Center" IsChecked="{Binding IsDoNotUse}" Grid.Column="3"/>
                         <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding Path=LowerValue}" Grid.Column="4"/>
-                        <Controls:RangeSlider Minimum="{Binding Minimum}" Maximum="{Binding Maximum}" LowerValue="{Binding LowerValue, Mode=TwoWay}" UpperValue="{Binding UpperValue, Mode=TwoWay}"
+                        <shared:RangeSlider Minimum="{Binding Minimum}" Maximum="{Binding Maximum}" LowerValue="{Binding LowerValue, Mode=TwoWay}" UpperValue="{Binding UpperValue, Mode=TwoWay}"
                             Grid.Column="5" HorizontalAlignment="Stretch" Height="Auto" VerticalAlignment="Center">
-                            <Controls:RangeSlider.Style>
-                                <Style TargetType="Controls:RangeSlider">
+                            <shared:RangeSlider.Style>
+                                <Style TargetType="shared:RangeSlider">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsDoNotUse}" Value="True">
                                             <Setter Property="OutsideBrush" Value="LightGray"/>
@@ -59,8 +59,8 @@
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </Controls:RangeSlider.Style>
-                        </Controls:RangeSlider>
+                            </shared:RangeSlider.Style>
+                        </shared:RangeSlider>
                         <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding Path=UpperValue}" Grid.Column="6"/>
                     </Grid>
                 </DataTemplate>
@@ -69,3 +69,4 @@
         <CheckBox IsChecked="{Binding Reanalyse, Mode=TwoWay}" Content="Re-Analyse Samples" Margin="0,0,170,13" Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="126"/>
     </Grid>
 </Window>
+

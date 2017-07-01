@@ -14,11 +14,11 @@ namespace ScriptPlayer.Shared
             double relativeLength = range / 99.0;
             double durationAtFullSpeed = TurnaroundDelay + relativeLength / FullLengthsPerSecond;
             double requiredSpeed = durationAtFullSpeed / duration.TotalSeconds;
-            byte actualSpeed = ClampSpeed(requiredSpeed * 99.0);
+            byte actualSpeed = Clamp(requiredSpeed * 99.0);
             return actualSpeed;
         }
 
-        private static byte ClampSpeed(double requiredSpeed)
+        public static byte Clamp(double requiredSpeed)
         {
             return (byte)Math.Min(99, Math.Max(0, Math.Round(requiredSpeed, MidpointRounding.AwayFromZero)));
         }
@@ -33,7 +33,7 @@ namespace ScriptPlayer.Shared
         {
             double mil = duration.TotalMilliseconds * 90 / range;
             double speed = 25000 * Math.Pow(mil, -1.05);
-            return ClampSpeed(speed);
+            return Clamp(speed);
         }
     }
 }

@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
 
-namespace ScriptPlayer.VideoSync
+namespace ScriptPlayer.Shared
 {
     public class FrameCaptureCollection : ICollection<FrameCapture>
     {
@@ -21,6 +22,9 @@ namespace ScriptPlayer.VideoSync
         {
             _list = new List<FrameCapture>(captures);
         }
+
+        public FrameCapture this[int index] => _list[index];
+
         public IEnumerator<FrameCapture> GetEnumerator()
         {
             return _list.GetEnumerator();
@@ -223,11 +227,13 @@ namespace ScriptPlayer.VideoSync
             long actualPosition = (long) ((frameIndex * TimeSpan.TicksPerSecond / (double) TotalFramesInVideo) * (DurationNumerator / (double) DurationDenominator));
             TimeSpan roundedTimeSpan = TimeSpan.FromTicks(actualPosition);
 
+            return roundedTimeSpan;
+
             //Even Int64 isn't enought ....
             long timeSpanTicksMs = (frameIndex * DurationNumerator * (TimeSpan.TicksPerSecond / TimeSpan.TicksPerMillisecond) ) / (TotalFramesInVideo * DurationDenominator);
             TimeSpan timestamp = TimeSpan.FromTicks(timeSpanTicksMs * TimeSpan.TicksPerMillisecond);
 
-            if (Math.Abs((timestamp - roundedTimeSpan).TotalSeconds) > 0.5)
+            if (Math.Abs((timestamp - roundedTimeSpan).TotalSeconds) > 0.1)
             {
                 Debug.Write("oO!");
             }

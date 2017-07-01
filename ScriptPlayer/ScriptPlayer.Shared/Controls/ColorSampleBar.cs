@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -48,6 +49,25 @@ namespace ScriptPlayer.Shared
         public static readonly DependencyProperty SampleConditionProperty = DependencyProperty.Register(
             "SampleCondition", typeof(SampleCondition), typeof(ColorSampleBar), new PropertyMetadata(default(SampleCondition), OnSampleConditionPropertyChanged));
 
+        public static readonly DependencyProperty FramesProperty = DependencyProperty.Register(
+            "Frames", typeof(FrameCaptureCollection), typeof(ColorSampleBar), new PropertyMetadata(default(FrameCaptureCollection), OnFramesPropertyChanged));
+
+        private static void OnFramesPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((ColorSampleBar) d).OnFrameChanged();
+        }
+
+        private void OnFrameChanged()
+        {
+            InvalidateVisual();
+        }
+
+        public FrameCaptureCollection Frames
+        {
+            get { return (FrameCaptureCollection) GetValue(FramesProperty); }
+            set { SetValue(FramesProperty, value); }
+        }
+
         private static void OnSampleConditionPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((ColorSampleBar)d).InvalidateVisual();
@@ -76,8 +96,29 @@ namespace ScriptPlayer.Shared
         {
             if (Sampler == null) return;
 
-            _colors = Sampler.GetColors(progress, Samples);
+            if (Frames == null)
+            {
+                _colors = Sampler.GetColors(progress, Samples);
+            }
+            else
+            {
+                double frame = progress.TotalSeconds * Frames.DurationDenominator * Frames.TotalFramesInVideo / Frames.DurationNumerator;
+                int lastIndex = (int) Math.Round(frame);
+                int firstIndex = lastIndex - Samples + 1;
+
+                lastIndex = ClampInt(lastIndex, 0, Frames.Count);
+                firstIndex = ClampInt(firstIndex, 0, Frames.Count);
+
+                _colors = Frames.Skip(firstIndex - 1).Take(lastIndex - firstIndex)
+                    .Select(p => SampleCondition.GetAverageColor(p.Capture)).Reverse().ToList();
+            }
+
             InvalidateVisual();
+        }
+
+        private int ClampInt(int value, int min, int max)
+        {
+            return Math.Min(max, Math.Max(min, value));
         }
 
         public ColorSampleBar()
@@ -142,18 +183,21 @@ namespace ScriptPlayer.Shared
         protected override void OnRender(DrawingContext drawingContext)
         {
             var rect = new Rect(0, 0, ActualWidth, ActualHeight);
+
+            Color[] colors;
+
             if (_colors == null)
             {
                 drawingContext.DrawRectangle(Brushes.Black, null, rect);
-
             }
             else
             {
-                var colors = _colors.ToArray();
+                colors = _colors.ToArray();
                 Array.Reverse(colors);
                 var background = new LinearGradientBrush(HeatMapGenerator.GradientsSharpFromColors(colors),
                     new Point(0, 0), new Point(1, 0));
                 drawingContext.DrawRectangle(background, null, rect);
+
 
                 var conditionRect = new Rect(0, ActualHeight - 8, ActualWidth, 8);
 
@@ -167,7 +211,7 @@ namespace ScriptPlayer.Shared
 
                     for (int i = 0; i < samples.Length; i++)
                     {
-                        bool isOk = SampleCondition.CheckSample(new[] { colors[i].R, colors[i].G, colors[i].B });
+                        bool isOk = SampleCondition.CheckSample(new[] {colors[i].R, colors[i].G, colors[i].B});
                         samples[i] = isOk ? Colors.Lime : Colors.Red;
                     }
 
@@ -179,7 +223,7 @@ namespace ScriptPlayer.Shared
 
                 if (_down)
                 {
-                    _segment = (int)(_mousePos.X / ActualWidth * _colors.Count);
+                    _segment = (int) (_mousePos.X / ActualWidth * _colors.Count);
                     _segment = Math.Max(0, Math.Min(_colors.Count - 1, _segment));
 
                     double segmentWidth = ActualWidth / _colors.Count;

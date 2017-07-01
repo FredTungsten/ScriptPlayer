@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -14,7 +13,7 @@ namespace ScriptPlayer.Shared
     {
         public bool SendCommandsWithResponse { get; set; } = false;
 
-        public TimeSpan MinDelayBetweenCommands = TimeSpan.FromMilliseconds(200);
+        public TimeSpan MinDelayBetweenCommands = TimeSpan.FromMilliseconds(166);
         public TimeSpan AcceptableCommandExecutionDelay = TimeSpan.FromMilliseconds(1);
 
         public event EventHandler<Exception> Disconnected; 
@@ -51,12 +50,8 @@ namespace ScriptPlayer.Shared
                 _commandThread.Abort();
         }
 
-        private DateTime _lastCommand;
-
         private async void CommandLoop()
         {
-            _lastCommand = DateTime.Now - MinDelayBetweenCommands;
-
             while (_running)
             {
                 var entry = _queue.Deqeue();
@@ -65,24 +60,22 @@ namespace ScriptPlayer.Shared
                     return;
 
                 DateTime now = DateTime.Now;
-
-                TimeSpan wait = now - _lastCommand;
-                if (wait < MinDelayBetweenCommands)
-                    await Task.Delay(MinDelayBetweenCommands - wait);
-
                 TimeSpan delay = now - entry.Submitted;
+
                 if (delay > AcceptableCommandExecutionDelay)
                     Debug.WriteLine("Command Execution Delay: " + delay.ToString("g"));
 
                 await SetPosition(entry.Position, entry.Speed);
 
-                _lastCommand = now;
+                TimeSpan wait = DateTime.Now - now;
+                if (wait < MinDelayBetweenCommands)
+                    await Task.Delay(MinDelayBetweenCommands - wait);
             }
         }
 
         public void EnqueuePosition(byte position, byte speed)
         {
-            _queue.Enqueue(new QueueEntry(position, speed));
+            _queue.ReplaceExisting(new QueueEntry(position, speed), e => Math.Abs(e.Position - position) < 10);
         }
 
         public async Task<bool> SetPosition(byte position, byte speed)
@@ -92,9 +85,12 @@ namespace ScriptPlayer.Shared
                 if (!await Initialize())
                     return false;
 
-                IBuffer buffer = GetBuffer(position, speed);
+                GattWriteOption option = SendCommandsWithResponse
+                    ? GattWriteOption.WriteWithResponse
+                    : GattWriteOption.WriteWithoutResponse;
 
-                var result = await _writeCharacteristics.WriteValueAsync(buffer, SendCommandsWithResponse? GattWriteOption.WriteWithResponse : GattWriteOption.WriteWithoutResponse);
+                IBuffer buffer = GetBuffer(position, speed);
+                GattCommunicationStatus result = await _writeCharacteristics.WriteValueAsync(buffer, option);
 
                 return result == GattCommunicationStatus.Success;
             }

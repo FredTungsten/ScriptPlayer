@@ -17,7 +17,9 @@
         <Menu x:Name="menu">
             <MenuItem Header="File">
                 <MenuItem Header="Open Video" Click="mnuOpenVideo_Click" />
-                <MenuItem Header="Quickload" Click="mnuQuickLoad_CLick" />
+                <Separator/>
+                <MenuItem Header="Load Project" Click="mnuLoadProject_Click"/>
+                <MenuItem Header="Save Project" Click="mnuSaveProject_Click"/>
             </MenuItem>
             <MenuItem Header="Sampler">
                 <MenuItem Header="Run" Click="mnuFrameSampler_Click"/>
@@ -30,14 +32,12 @@
                 <MenuItem Header="Clear" Click="mnuClear_Click"/>
                 <Separator/>
                 <MenuItem Header="Load">
-                    <MenuItem Header="Beat Project" Click="mnuLoadProject_Click"/>
                     <MenuItem Header="beats.txt" Click="mnuLoad_Click"/>
                     <MenuItem Header="Funscript" Click="mnuLoadFun_Click" />
                 </MenuItem>
 
                 <MenuItem Header="Save As">
-                    <MenuItem Header="Beat Project" Click="mnuSaveProject_Click"/>
-                    <MenuItem Header="beats.txt" Click="mnuSave_Click"/>
+                    <MenuItem Header="beats.txt" Click="mnuSaveBeats_Click"/>
                     <MenuItem Header="kiiroo.js" Click="mnuSaveKiiroo_Click"/>
                     <MenuItem Header="Funscript" Click="mnuSaveFunscript_Click"/>
                 </MenuItem>
@@ -50,6 +50,7 @@
                 <MenuItem Header="Jump to Last" Click="mnuJumpToLastBeat_Click"/>
                 <Separator/>
                 <MenuItem Header="Find shortest" Click="mnuFindShortestBeat_Click"/>
+                <MenuItem Header="Show Duration" Click="mnuShowBeatDuration_Click"/>
                 <Separator/>
                 <MenuItem IsCheckable="true" Name="cckRecord" Header="Record from Live-Sampler"/>
             </MenuItem>
@@ -115,6 +116,7 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <StackPanel Orientation="Horizontal">
@@ -131,10 +133,12 @@
                     <Button FontFamily="Webdings" Content="4" Click="btnPlay_Click" Width="30"/>
                     <Button FontFamily="Webdings" Content=";" Click="btnPause_Click" Width="30"/>
                     <Button FontFamily="Webdings" Content="9" Width="30" Click="btnPreviousBookmark_Click" Margin="10,0,0,0"/>
+                    <Button FontFamily="Webdings" Content="7" Width="30" Click="btnBeatBarDurationBack_Click"/>
                     <Button FontFamily="Webdings" Content="7" Width="30" Click="btnSecondBack_Click"/>
                     <Button FontFamily="Webdings" Content="3" Width="30" Click="btnFrameBack_Click"/>
                     <Button FontFamily="Webdings" Content="4" Width="30" Click="btnFrameForward_Click"/>
                     <Button FontFamily="Webdings" Content="8" Width="30" Click="btnSecondForward_Click"/>
+                    <Button FontFamily="Webdings" Content="8" Width="30" Click="btnBeatbarDurationForward_Click"/>
                     <Button FontFamily="Webdings" Content=":" Width="30" Click="btnNextBookmark_Click"/>
                     <Button Margin="10,0,0,0" Content="SFB" Width="30" Click="btnStretchFromBegin_Click"/>
                     <Button Content="SFE" Width="30" Click="btnStretchFromEnd_Click"/>
@@ -145,12 +149,15 @@
                     <Button Margin="0,0,0,0" Content="M2" Width="30" Click="btnMarker2_Click"/>
                     <Button Margin="0,0,0,0" Content="Del" Width="30" Click="btnDelete_Click"/>
                     <Button Margin="0,0,0,0" Content="+" Width="30" Click="btnAdd_Click"/>
+                    <Button Margin="0,0,0,0" Content="+" Width="30" Click="btnEven_Click"/>
                 </DockPanel>
 
                 <shared:SeekBar Grid.Row="2" Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}"/>
 
                 <Rectangle Grid.Row="3" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="80" Stroke="Red" StrokeThickness="1" Fill="{Binding Sampler.PixelPreview}"/>
                 <shared:ColorSampleBar x:Name="colorSampleBar" Grid.Row="3" Margin="0,0,80,0" Samples="150" Sampler="{Binding Sampler}" TimeSource="{Binding ElementName=videoPlayer, Path=TimeSource}"/>
+                
+                <shared:PositionBar LineColor="Lime" Background="Black" Height="50" Grid.Row="4" TotalDisplayedDuration="{Binding BeatBarDuration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Positions="{Binding Positions}"/>
             </Grid>
         </Grid>
     </Grid>

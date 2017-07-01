@@ -6,7 +6,6 @@ using System.Security.Principal;
 using System.Threading;
 using System.Windows;
 using ScriptPlayer.Shared.Elevation;
-using UacElevation;
 
 namespace ScriptPlayer
 {

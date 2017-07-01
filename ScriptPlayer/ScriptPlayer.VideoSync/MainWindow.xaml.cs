@@ -25,12 +25,21 @@ namespace ScriptPlayer.VideoSync
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly DependencyProperty PositionsProperty = DependencyProperty.Register(
+            "Positions", typeof(PositionCollection), typeof(MainWindow), new PropertyMetadata(default(PositionCollection)));
+
+        public PositionCollection Positions
+        {
+            get { return (PositionCollection)GetValue(PositionsProperty); }
+            set { SetValue(PositionsProperty, value); }
+        }
+
         public static readonly DependencyProperty BeatBarDurationProperty = DependencyProperty.Register(
             "BeatBarDuration", typeof(double), typeof(MainWindow), new PropertyMetadata(5.0));
 
         public double BeatBarDuration
         {
-            get { return (double) GetValue(BeatBarDurationProperty); }
+            get { return (double)GetValue(BeatBarDurationProperty); }
             set { SetValue(BeatBarDurationProperty, value); }
         }
 
@@ -39,7 +48,7 @@ namespace ScriptPlayer.VideoSync
 
         public double BeatBarCenter
         {
-            get { return (double) GetValue(BeatBarCenterProperty); }
+            get { return (double)GetValue(BeatBarCenterProperty); }
             set { SetValue(BeatBarCenterProperty, value); }
         }
 
@@ -48,7 +57,7 @@ namespace ScriptPlayer.VideoSync
 
         private static void OnSampleSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((MainWindow) d).UpdateSampleSize();
+            ((MainWindow)d).UpdateSampleSize();
         }
 
         private void UpdateSampleSize()
@@ -59,10 +68,9 @@ namespace ScriptPlayer.VideoSync
             SetCaptureRect(rect);
         }
 
-
         public int SampleX
         {
-            get { return (int) GetValue(SampleXProperty); }
+            get { return (int)GetValue(SampleXProperty); }
             set { SetValue(SampleXProperty, value); }
         }
 
@@ -71,7 +79,7 @@ namespace ScriptPlayer.VideoSync
 
         public int SampleY
         {
-            get { return (int) GetValue(SampleYProperty); }
+            get { return (int)GetValue(SampleYProperty); }
             set { SetValue(SampleYProperty, value); }
         }
 
@@ -80,16 +88,16 @@ namespace ScriptPlayer.VideoSync
 
         public int SampleW
         {
-            get { return (int) GetValue(SampleWProperty); }
+            get { return (int)GetValue(SampleWProperty); }
             set { SetValue(SampleWProperty, value); }
         }
 
         public static readonly DependencyProperty SampleHProperty = DependencyProperty.Register(
             "SampleH", typeof(int), typeof(MainWindow), new PropertyMetadata(4, OnSampleSizeChanged));
-   
+
         public int SampleH
         {
-            get { return (int) GetValue(SampleHProperty); }
+            get { return (int)GetValue(SampleHProperty); }
             set { SetValue(SampleHProperty, value); }
         }
 
@@ -98,7 +106,7 @@ namespace ScriptPlayer.VideoSync
 
         public List<TimeSpan> Bookmarks
         {
-            get { return (List<TimeSpan>) GetValue(BookmarksProperty); }
+            get { return (List<TimeSpan>)GetValue(BookmarksProperty); }
             set { SetValue(BookmarksProperty, value); }
         }
 
@@ -107,7 +115,7 @@ namespace ScriptPlayer.VideoSync
 
         public ColorSampler Sampler
         {
-            get { return (ColorSampler) GetValue(SamplerProperty); }
+            get { return (ColorSampler)GetValue(SamplerProperty); }
             set { SetValue(SamplerProperty, value); }
         }
 
@@ -116,7 +124,7 @@ namespace ScriptPlayer.VideoSync
 
         public double Duration
         {
-            get { return (double) GetValue(DurationProperty); }
+            get { return (double)GetValue(DurationProperty); }
             set { SetValue(DurationProperty, value); }
         }
 
@@ -128,7 +136,7 @@ namespace ScriptPlayer.VideoSync
 
         public BeatCollection Beats
         {
-            get { return (BeatCollection) GetValue(BeatsProperty); }
+            get { return (BeatCollection)GetValue(BeatsProperty); }
             set { SetValue(BeatsProperty, value); }
         }
 
@@ -138,7 +146,7 @@ namespace ScriptPlayer.VideoSync
 
         public int BeatCount
         {
-            get { return (int) GetValue(BeatCountProperty); }
+            get { return (int)GetValue(BeatCountProperty); }
             set { SetValue(BeatCountProperty, value); }
         }
 
@@ -151,14 +159,14 @@ namespace ScriptPlayer.VideoSync
 
         public Brush PixelPreview
         {
-            get { return (Brush) GetValue(PixelPreviewProperty); }
+            get { return (Brush)GetValue(PixelPreviewProperty); }
             set { SetValue(PixelPreviewProperty, value); }
         }
 
         public MainWindow()
         {
             Bookmarks = new List<TimeSpan>();
-            SetAllBeats(new BeatCollection()); 
+            SetAllBeats(new BeatCollection());
             InitializeComponent();
         }
 
@@ -188,7 +196,9 @@ namespace ScriptPlayer.VideoSync
 
         private Int32Rect _captureRect = new Int32Rect(680, 700, 4, 4);
         private bool _wasplaying;
-        private string _openFile;
+
+        private string _videoFile;
+        private string _projectFile;
 
         private FrameCaptureCollection _frameSamples;
         private BeatCollection _originalBeats;
@@ -207,17 +217,21 @@ namespace ScriptPlayer.VideoSync
             Beats.Add(positionTotalSeconds);
         }
 
+
+        private readonly string[] _supportedVideoExtensions = { "mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf" };
         private void mnuOpenVideo_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog {Filter = "Videos|*.mp4;*.mpg;*.mpeg;*.avi|All Files|*.*"};
+            string videoFilters = String.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"));
+
+            OpenFileDialog dialog = new OpenFileDialog { Filter = $"Videos|{videoFilters}|All Files|*.*" };
             if (dialog.ShowDialog(this) != true) return;
 
-            OpenVideo(dialog.FileName);
+            OpenVideo(dialog.FileName, true, true);
         }
 
         private void SeekBar_OnSeek(object sender, double relative, TimeSpan absolute, int downMoveUp)
         {
-            switch(downMoveUp)
+            switch (downMoveUp)
             {
                 case 0:
                     _wasplaying = videoPlayer.IsPlaying;
@@ -229,7 +243,7 @@ namespace ScriptPlayer.VideoSync
                     break;
                 case 2:
                     videoPlayer.SetPosition(absolute);
-                    if(_wasplaying)
+                    if (_wasplaying)
                         videoPlayer.Play();
                     break;
             }
@@ -250,16 +264,21 @@ namespace ScriptPlayer.VideoSync
             Beats.Clear();
         }
 
-        private void mnuSave_Click(object sender, RoutedEventArgs e)
+        private void mnuSaveBeats_Click(object sender, RoutedEventArgs e)
         {
             SaveFileDialog dialog = new SaveFileDialog
             {
-                FileName = Path.GetFileNameWithoutExtension(_openFile)
+                FileName = Path.GetFileNameWithoutExtension(_videoFile)
             };
             dialog.Filter = "Text-File|*.txt";
             if (dialog.ShowDialog(this) != true) return;
 
-            Beats.Save(dialog.FileName);
+            SaveAsBeatsFile(dialog.FileName);
+        }
+
+        private void SaveAsBeatsFile(string filename)
+        {
+            Beats.Save(filename);
         }
 
         private void mnuLoad_Click(object sender, RoutedEventArgs e)
@@ -273,12 +292,6 @@ namespace ScriptPlayer.VideoSync
         private void LoadBeatsFile(string filename)
         {
             SetAllBeats(BeatCollection.Load(filename));
-        }
-
-        private void mnuQuickLoad_CLick(object sender, RoutedEventArgs e)
-        {
-            var videoFile = @"D:\Videos\CH\FH\Fap Hero - Pendulum (No-host).mp4";
-            OpenVideo(videoFile);
         }
 
         private void videoPlayer_Loaded(object sender, RoutedEventArgs e)
@@ -317,10 +330,10 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuFrameSampler_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new FrameSamplerDialog(_openFile, _captureRect);
+            var dialog = new FrameSamplerDialog(_videoFile, _captureRect);
             if (dialog.ShowDialog() != true) return;
 
-            _frameSamples = dialog.Result;
+            SetSamples(dialog.Result);
         }
 
         private void mnuSaveSamples_Click(object sender, RoutedEventArgs e)
@@ -334,7 +347,7 @@ namespace ScriptPlayer.VideoSync
             SaveFileDialog dialog = new SaveFileDialog
             {
                 Filter = "Frame Sample Files|*.framesamples|All Files|*.*",
-                FileName = Path.GetFileNameWithoutExtension(_openFile)
+                FileName = Path.GetFileNameWithoutExtension(_videoFile)
             };
 
             if (dialog.ShowDialog(this) != true) return;
@@ -348,26 +361,36 @@ namespace ScriptPlayer.VideoSync
 
             if (dialog.ShowDialog(this) != true) return;
 
-            _frameSamples = FrameCaptureCollection.FromFile(dialog.FileName);
+            SetSamples(FrameCaptureCollection.FromFile(dialog.FileName));
 
-            if (_openFile != _frameSamples.VideoFile)
+            if (_videoFile != _frameSamples.VideoFile)
             {
                 if (MessageBox.Show(this, "Load '" + _frameSamples.VideoFile + "'?", "Open associated file?",
                         MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
-                    OpenVideo(_frameSamples.VideoFile);
+                    OpenVideo(_frameSamples.VideoFile, true, false);
                 }
             }
-
-            SetCaptureRect(_frameSamples.CaptureRect);
         }
 
-        private void OpenVideo(string videoFile, bool play = false)
+        private void SetSamples(FrameCaptureCollection frames)
         {
-            _openFile = videoFile;
+            _frameSamples = frames;
+            SetCaptureRect(_frameSamples.CaptureRect);
+            colorSampleBar.Frames = _frameSamples;
+        }
+
+        private void OpenVideo(string videoFile, bool play, bool resetFileNames)
+        {
+            _videoFile = videoFile;
             videoPlayer.Open(videoFile);
-            if(play)
+            if (play)
                 videoPlayer.Play();
+
+            if (resetFileNames)
+            {
+                _projectFile = null;
+            }
         }
 
         private void mnuAnalyseSamples_Click(object sender, RoutedEventArgs e)
@@ -383,7 +406,7 @@ namespace ScriptPlayer.VideoSync
                 return;
             }
 
-            AnalysisParameters parameters = new AnalysisParameters();
+            AnalysisParameters parameters = new AnalysisParameters(){MaxPositiveSamples = 10};
             FrameAnalyserDialog dialog = new FrameAnalyserDialog(_frameSamples, _condition, parameters);
 
             if (dialog.ShowDialog() != true) return;
@@ -452,7 +475,7 @@ namespace ScriptPlayer.VideoSync
 
             if (!(item.DataContext is TimeSpan)) return;
 
-            TimeSpan position = (TimeSpan) item.DataContext;
+            TimeSpan position = (TimeSpan)item.DataContext;
 
             videoPlayer.SetPosition(position);
         }
@@ -473,7 +496,7 @@ namespace ScriptPlayer.VideoSync
                 if (dialog.Reanalyse)
                     AnalyseSamples();
             }
-            
+
         }
 
         private void DialogOnLiveConditionUpdate(object sender, PixelColorSampleCondition condition)
@@ -490,6 +513,17 @@ namespace ScriptPlayer.VideoSync
         private void ShiftTime(TimeSpan timespan)
         {
             videoPlayer.SetPosition(videoPlayer.GetPosition() + timespan);
+        }
+
+
+        private void btnBeatBarDurationBack_Click(object sender, RoutedEventArgs e)
+        {
+            ShiftTime(TimeSpan.FromSeconds(-BeatBarDuration));
+        }
+
+        private void btnBeatbarDurationForward_Click(object sender, RoutedEventArgs e)
+        {
+            ShiftTime(TimeSpan.FromSeconds(BeatBarDuration));
         }
 
         private void btnPreviousBookmark_Click(object sender, RoutedEventArgs e)
@@ -612,7 +646,7 @@ namespace ScriptPlayer.VideoSync
             SaveFileDialog dialog = new SaveFileDialog
             {
                 Filter = "Kiiroo JS|*.js|All Files|*.*",
-                FileName = Path.GetFileNameWithoutExtension(_openFile)
+                FileName = Path.GetFileNameWithoutExtension(_videoFile)
             };
 
             if (dialog.ShowDialog(this) != true) return;
@@ -630,7 +664,7 @@ namespace ScriptPlayer.VideoSync
                 {
                     up ^= true;
 
-                    commands.Add(String.Format(culture, "{0:f2}:{1}", timestamp.TotalSeconds,up?4:1));
+                    commands.Add(String.Format(culture, "{0:f2}:{1}", timestamp.TotalSeconds, up ? 4 : 1));
                 }
 
                 writer.Write(String.Join(",", commands));
@@ -641,23 +675,31 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuLoadFun_Click(object sender, RoutedEventArgs e)
         {
-            //OpenFileDialog dialog = new OpenFileDialog();
-            //dialog.Filter = "Funscript|*.funscript";
-
-            //if (dialog.ShowDialog(this) != true)
-            //    return;
-
-            //FunScriptLoader loader = new FunScriptLoader();
-            //loader.Load(dialog.FileName);
-
             OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Raw Script|*.raw";
+            dialog.Filter = "Funscript|*.funscript";
 
             if (dialog.ShowDialog(this) != true)
                 return;
 
-            RawScriptLoader loader = new RawScriptLoader();
-            loader.Load(dialog.FileName);
+            FunScriptLoader loader = new FunScriptLoader();
+            var actions = loader.Load(dialog.FileName).Cast<FunScriptAction>();
+
+            var pos = actions.Select(s => new TimedPosition()
+            {
+                TimeStamp = s.TimeStamp,
+                Position = s.Position
+            });
+
+            Positions = new PositionCollection(pos);
+
+            //OpenFileDialog dialog = new OpenFileDialog();
+            //dialog.Filter = "Raw Script|*.raw";
+
+            //if (dialog.ShowDialog(this) != true)
+            //    return;
+
+            //RawScriptLoader loader = new RawScriptLoader();
+            //loader.Load(dialog.FileName);
         }
 
         private void mnuSaveFunscript_Click(object sender, RoutedEventArgs e)
@@ -665,31 +707,38 @@ namespace ScriptPlayer.VideoSync
             SaveFileDialog dialog = new SaveFileDialog
             {
                 Filter = "Funscript|*.funscript|All Files|*.*",
-                FileName = Path.GetFileNameWithoutExtension(_openFile)
+                FileName = Path.GetFileNameWithoutExtension(_videoFile)
             };
 
             if (dialog.ShowDialog(this) != true) return;
 
-            FunScriptFile script = new FunScriptFile();
-            script.Inverted = false;
-            script.Range = 85;
-            script.Version = new Version(1,0);
+            SaveAsFunscript(dialog.FileName);
+        }
 
-            bool up = false;
+        private void SaveAsFunscript(string filename)
+        {
+            FunScriptFile script = new FunScriptFile
+            {
+                Inverted = false,
+                Range = 90,
+                Version = new Version(1, 0)
+            };
+
+            bool up = true;
             foreach (TimeSpan timestamp in Beats)
             {
                 up ^= true;
 
                 script.Actions.Add(new FunScriptAction
                 {
-                    Position = (byte) (up?99:15),
+                    Position = (byte)(up ? 90 : 5),
                     TimeStamp = timestamp
                 });
             }
 
             string content = JsonConvert.SerializeObject(script);
 
-            File.WriteAllText(dialog.FileName, content, Encoding.UTF8);
+            File.WriteAllText(filename, content, Encoding.UTF8);
         }
 
         private void btnResetSamples_Click(object sender, RoutedEventArgs e)
@@ -709,7 +758,7 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuTrackBlob_OnClick(object sender, RoutedEventArgs e)
         {
-            var dialog = new VisualTrackerDialog(_openFile, _marker1, _marker2,new Rectangle(SampleX,SampleY,SampleW,SampleH));
+            var dialog = new VisualTrackerDialog(_videoFile, _marker1, _marker2, new Rectangle(SampleX, SampleY, SampleW, SampleH));
             dialog.Show();
         }
 
@@ -724,27 +773,36 @@ namespace ScriptPlayer.VideoSync
             new MocktestDialog().Show();
         }
 
-        private void mnuSaveProject_Click(object sender, RoutedEventArgs e)
+        private void SaveProjectAs()
         {
-            if (String.IsNullOrWhiteSpace(_openFile))
+            if (String.IsNullOrWhiteSpace(_videoFile))
                 return;
 
-            SaveFileDialog dialog = new SaveFileDialog{Filter = "Beat Projects|*.bproj"};
-            dialog.FileName = Path.ChangeExtension(_openFile, ".bproj");
+            SaveFileDialog dialog = new SaveFileDialog { Filter = "Beat Projects|*.bproj" };
+            dialog.FileName = Path.ChangeExtension(_videoFile, ".bproj");
 
             if (dialog.ShowDialog(this) != true)
                 return;
 
+            SaveProjectAs(dialog.FileName);
+        }
+
+        private void SaveProjectAs(string filename)
+        {
             BeatProject project = new BeatProject
             {
-                VideoFile = _openFile,
+                VideoFile = _videoFile,
                 SampleCondition = _condition,
                 BeatBarDuration = BeatBar.TotalDisplayedDuration,
                 BeatBarMidpoint = BeatBar.Midpoint,
                 Beats = Beats.Select(b => b.Ticks).ToList(),
                 Bookmarks = Bookmarks.Select(b => b.Ticks).ToList()
             };
-            project.Save(dialog.FileName);
+            project.Save(filename);
+            _projectFile = filename;
+
+            SaveAsFunscript(Path.ChangeExtension(_videoFile, "funscript"));
+            SaveAsBeatsFile(Path.ChangeExtension(_videoFile, "txt"));
         }
 
         private void mnuLoadProject_Click(object sender, RoutedEventArgs e)
@@ -754,12 +812,79 @@ namespace ScriptPlayer.VideoSync
                 return;
 
             BeatProject project = BeatProject.Load(dialog.FileName);
-            OpenVideo(project.VideoFile);
+            OpenVideo(project.VideoFile, true, false);
             SetCondition(project.SampleCondition);
             BeatBarDuration = project.BeatBarDuration;
             BeatBarCenter = project.BeatBarMidpoint;
             Beats = new BeatCollection(project.Beats.Select(TimeSpan.FromTicks));
             Bookmarks = project.Bookmarks.Select(TimeSpan.FromTicks).ToList();
+
+            _projectFile = dialog.FileName;
+        }
+
+        private void mnuSaveProject_Click(object sender, RoutedEventArgs e)
+        {
+            if (String.IsNullOrWhiteSpace(_projectFile))
+                SaveProjectAs();
+            else
+                SaveProjectAs(_projectFile);
+        }
+
+        private void btnEven_Click(object sender, RoutedEventArgs e)
+        {
+            DoubleInputDialog dialog = new DoubleInputDialog(0);
+            if (!dialog.ShowDialog() == true) return;
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> beatsToEvenOut = Beats.GetBeats(tBegin, tEnd).ToList();
+
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+
+            TimeSpan first = beatsToEvenOut.Min();
+            TimeSpan last = beatsToEvenOut.Max();
+
+            int numberOfBeats = (int) (beatsToEvenOut.Count + dialog.Result);
+
+            if (numberOfBeats > 1)
+            {
+                TimeSpan tStart = first;
+                TimeSpan intervall = (last - first).Divide(numberOfBeats - 1);
+
+                for(int i = 0; i < numberOfBeats; i++)
+                    otherBeats.Add(tStart + intervall.Multiply(i));
+            }
+
+            SetAllBeats(otherBeats);
+        }
+
+        private void mnuShowBeatDuration_Click(object sender, RoutedEventArgs e)
+        {
+            TimeSpan previous = TimeSpan.MinValue;
+            TimeSpan next = TimeSpan.MaxValue;
+
+            TimeSpan position = videoPlayer.GetPosition();
+
+            foreach (TimeSpan t in Beats)
+            {
+                if (t < position)
+                    previous = t;
+                else
+                {
+                    next = t;
+                    break;
+                }
+            }
+
+            if (previous == TimeSpan.MinValue || next == TimeSpan.MaxValue)
+            {
+                MessageBox.Show("Can't find adjecent beat!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else
+            {
+                MessageBox.Show((next-previous).TotalMilliseconds.ToString("f0"), "Duration", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
     }
 }

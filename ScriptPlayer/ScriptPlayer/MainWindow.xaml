@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
-        xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="Script Player" Height="350" Width="525" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico">
@@ -20,7 +19,7 @@
         </Grid.RowDefinitions>
 
         <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true"  MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" MouseDoubleClick="VideoPlayer_OnMouseDoubleClick" Grid.Row="1" x:Name="VideoPlayer" Grid.ColumnSpan="2"/>
-        <controls:OverlayText x:Name="OverlayText" Grid.Row="1" Margin="10" Grid.ColumnSpan="2"/>
+        <shared:OverlayText x:Name="OverlayText" Grid.Row="1" Margin="10" Grid.ColumnSpan="2"/>
         <Grid Name="Shade" Grid.Row="1" Grid.ColumnSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="20*"/>
@@ -60,14 +59,29 @@
         </DockPanel>
         <Grid shared:HideOnHover.IsActive="True" Width="140" Background="White" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1" VerticalAlignment="Stretch">
             <StackPanel>
-                <TextBlock HorizontalAlignment="Center" Text="DEBUG"/>
-                <Slider Name="sldDelay" Minimum="-200" Maximum="200" ValueChanged="sldDelay_OnValueChanged" />
-                <TextBlock Margin="4,0" Text="{Binding ElementName=sldDelay, Path=Value, StringFormat={}Script Delay: {0:f0}ms}"/>
+                <TextBlock Margin="4" HorizontalAlignment="Center" Text="DEBUG"/>
+                <Slider Margin="4" Name="sldDelay" Minimum="-200" Maximum="200" ValueChanged="sldDelay_OnValueChanged" />
+                <TextBlock Margin="4" Text="{Binding ElementName=sldDelay, Path=Value, StringFormat={}Script Delay: {0:f0}ms}"/>
                 <CheckBox Margin="4" Name="cckHeatMap" Checked="CckHeatMap_OnChecked" Unchecked="CckHeatMap_OnChecked">Show HeatMap</CheckBox>
-                <CheckBox IsChecked="True" Name="cckWithResponse" Unchecked="cckWithResponse_Checked" Checked="cckWithResponse_Checked" Content="Write with Response" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top"/>
-                <Button Content="Test delays" HorizontalAlignment="Stretch" Margin="4" VerticalAlignment="Top" Click="btnMeasureSpeed_Click" />
-            </StackPanel>
+                <TextBlock Margin="4" HorizontalAlignment="Center" Text="Range"/>
+                <shared:RangeSlider Margin="4" Name="sldRange" Minimum="0" Maximum="99" LowerValue="{Binding MinPosition, Mode=TwoWay}" UpperValue="{Binding MaxPosition, Mode=TwoWay}"/>
+                <DockPanel Margin="4" LastChildFill="False">
+                    <TextBlock Text="{Binding MinPosition}" DockPanel.Dock="Left"/>
+                    <TextBlock Text="{Binding MaxPosition}" DockPanel.Dock="Right"/>
+                </DockPanel>
 
+                <TextBlock Margin="4" Text="Speed Multiplier" TextAlignment="Center"/>
+                <Slider Margin="4" Name="sldSpeed" Minimum="0.5" Maximum="2.0" Value="{Binding SpeedMultiplier}"/>
+                <TextBlock Margin="4" Text="{Binding SpeedMultiplier, StringFormat={}{0:f1}}" TextAlignment="Center"/>
+
+                <TextBlock Margin="4" Text="Min Command Delay" TextAlignment="Center"/>
+                <Slider Margin="4" Name="sldCommandDelay" Minimum="75" Maximum="200" Value="{Binding CommandDelay}"/>
+                <TextBlock Margin="4" Text="{Binding CommandDelay, StringFormat={}{0:f1}}" TextAlignment="Center"/>
+
+                <TextBlock Margin="4" Text="Test Patterns"></TextBlock>
+                <ComboBox Name="cmbPattern"></ComboBox>
+                <Button Content="Insert Pattern" VerticalAlignment="Top" Click="btnTestPattern_Click" />
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

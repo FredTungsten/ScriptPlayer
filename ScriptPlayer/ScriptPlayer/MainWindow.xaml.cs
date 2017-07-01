@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
@@ -21,12 +22,50 @@ namespace ScriptPlayer
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly DependencyProperty CommandDelayProperty = DependencyProperty.Register(
+            "CommandDelay", typeof(double), typeof(MainWindow), new PropertyMetadata(default(double), OnCommandDelayPropertyChanged));
+
+        private static void OnCommandDelayPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((MainWindow) d).CommandDelayChanged();
+        }
+
+        private void CommandDelayChanged()
+        {
+            if (_launch != null)
+                _launch.MinDelayBetweenCommands = TimeSpan.FromMilliseconds(CommandDelay);
+        }
+
+        public double CommandDelay
+        {
+            get { return (double) GetValue(CommandDelayProperty); }
+            set { SetValue(CommandDelayProperty, value); }
+        }
+
+        public static readonly DependencyProperty SpeedMultiplierProperty = DependencyProperty.Register(
+            "SpeedMultiplier", typeof(double), typeof(MainWindow), new PropertyMetadata(1.0));
+
+        public double SpeedMultiplier
+        {
+            get { return (double) GetValue(SpeedMultiplierProperty); }
+            set { SetValue(SpeedMultiplierProperty, value); }
+        }
+
+        public static readonly DependencyProperty RandomRangeProperty = DependencyProperty.Register(
+            "RandomRange", typeof(bool), typeof(MainWindow), new PropertyMetadata(default(bool)));
+
+        public bool RandomRange
+        {
+            get { return (bool)GetValue(RandomRangeProperty); }
+            set { SetValue(RandomRangeProperty, value); }
+        }
+
         public static readonly DependencyProperty VolumeProperty = DependencyProperty.Register(
             "Volume", typeof(double), typeof(MainWindow), new PropertyMetadata(50.0, OnVolumePropertyChanged));
 
         private static void OnVolumePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((MainWindow) d).OnVolumeChanged();
+            ((MainWindow)d).OnVolumeChanged();
         }
 
         private void OnVolumeChanged()
@@ -36,27 +75,30 @@ namespace ScriptPlayer
 
         public double Volume
         {
-            get { return (double) GetValue(VolumeProperty); }
+            get { return (double)GetValue(VolumeProperty); }
             set { SetValue(VolumeProperty, value); }
         }
 
         public static readonly DependencyProperty MinPositionProperty = DependencyProperty.Register(
-            "MinPosition", typeof(byte), typeof(MainWindow), new PropertyMetadata(default(byte)));
+            "MinPosition", typeof(byte), typeof(MainWindow), new PropertyMetadata((byte)15));
 
         public byte MinPosition
         {
-            get { return (byte) GetValue(MinPositionProperty); }
+            get { return (byte)GetValue(MinPositionProperty); }
             set { SetValue(MinPositionProperty, value); }
         }
 
         public static readonly DependencyProperty MaxPositionProperty = DependencyProperty.Register(
-            "MaxPosition", typeof(byte), typeof(MainWindow), new PropertyMetadata(default(byte)));
+            "MaxPosition", typeof(byte), typeof(MainWindow), new PropertyMetadata((byte)95));
 
         public byte MaxPosition
         {
-            get { return (byte) GetValue(MaxPositionProperty); }
+            get { return (byte)GetValue(MaxPositionProperty); }
             set { SetValue(MaxPositionProperty, value); }
         }
+
+        private string _openVideo;
+        private string _openScript;
 
         private bool _wasPlaying;
         private ScriptHandler _scriptHandler;
@@ -75,6 +117,54 @@ namespace ScriptPlayer
             _supportedScriptExtensions = ScriptLoaderManager.GetSupportedExtensions();
 
             InitializeComponent();
+
+            cmbPattern.Items.Add("Go to 0");
+            cmbPattern.Items.Add("Go to 99");
+            cmbPattern.Items.Add("SawTooth Up");
+            cmbPattern.Items.Add("SawTooth Down");
+            cmbPattern.Items.Add("Stairs Up");
+            cmbPattern.Items.Add("Stairs Down");
+        }
+
+        private void btnTestPattern_Click(object sender, RoutedEventArgs e)
+        {
+            switch (cmbPattern.SelectedIndex)
+            {
+                case 0:
+                    TestPattern(TimeSpan.FromMilliseconds(200), 0);
+                    break;
+                case 1:
+                    TestPattern(TimeSpan.FromMilliseconds(200), 99);
+                    break;
+                case 2:
+                    TestPattern(TimeSpan.FromMilliseconds(200), 0, 10, 0, 20, 0, 30, 0, 40, 0, 50, 0, 60, 0, 70, 0, 80, 0, 90, 0, 99);
+                    break;
+                case 3:
+                    TestPattern(TimeSpan.FromMilliseconds(200), 99, 90, 99, 80, 99, 70, 99, 60, 99, 50, 99, 40, 99, 30, 99, 20, 99, 10, 99, 0);
+                    break;
+                case 4:
+                    TestPattern(TimeSpan.FromMilliseconds(200), 0, 20, 10, 30, 20, 40, 30, 50, 40, 60, 50, 70, 60, 80, 70, 90, 80, 99, 90);
+                    break;
+                case 5:
+                    TestPattern(TimeSpan.FromMilliseconds(200), 99, 80, 90, 70, 80, 60, 70, 50, 60, 40, 50, 30, 40, 20, 30, 10, 20, 0);
+                    break;
+
+            }
+        }
+
+        private async void TestPattern(TimeSpan delay, params byte[] positions)
+        {
+            SetLaunch(positions[0], 20);
+            await Task.Delay(300);
+
+            for (int i = 1; i < positions.Length; i++)
+            {
+                byte speed = SpeedPredictor.Predict2((byte)Math.Abs(TransformPosition(positions[i - 1], 0, 99) - TransformPosition(positions[i], 0, 99)), delay);
+                SetLaunch(TransformPosition(positions[i], 0, 99), speed, false);
+
+                if (i + 1 < positions.Length)
+                    await Task.Delay(delay);
+            }
         }
 
         private void btnPlay_Click(object sender, RoutedEventArgs e)
@@ -106,16 +196,16 @@ namespace ScriptPlayer
                     if (_wasPlaying)
                         VideoPlayer.Play();
                     break;
-            }   
+            }
         }
 
-        private readonly string[] _supportedVideoExtensions = {"mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v","mov", "wmv","asf"};
+        private readonly string[] _supportedVideoExtensions = { "mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf" };
         private readonly string[] _supportedScriptExtensions;
 
-        private string _openVideo;
-        private string _openScript;
         private int _lastScriptFilterIndex = 1;
         private int _lastVideoFilterIndex = 1;
+        private byte _minScriptPosition;
+        private byte _maxScriptPosition;
 
         private void mnuOpenVideo_Click(object sender, RoutedEventArgs e)
         {
@@ -140,7 +230,7 @@ namespace ScriptPlayer
             _openVideo = filename;
             VideoPlayer.Open(filename);
 
-            if(checkForScript)
+            if (checkForScript)
                 TryFindMatchingScript(filename);
 
             VideoPlayer.Play();
@@ -155,7 +245,7 @@ namespace ScriptPlayer
             if (!String.IsNullOrWhiteSpace(scriptFile))
             {
                 string nameOnly = Path.GetFileName(scriptFile);
-                if(MessageBox.Show(this, $"Do you want to also load '{nameOnly}'?","Also load Script?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                if (MessageBox.Show(this, $"Do you want to also load '{nameOnly}'?", "Also load Script?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                     LoadScript(scriptFile, false);
             }
         }
@@ -244,14 +334,48 @@ namespace ScriptPlayer
             if (loader == null)
                 return;
 
-            var actions = loader.Load(fileToLoad);
-            _scriptHandler.SetScript(actions);
-            _openScript = fileToLoad;
+            LoadScript(loader, fileToLoad);
 
-            if(checkForVideo)
+            if (checkForVideo)
                 TryFindMatchingVideo(fileToLoad);
 
             UpdateHeatMap();
+        }
+
+        private void LoadScript(ScriptLoader loader, string fileName)
+        {
+            var actions = loader.Load(fileName);
+            _scriptHandler.SetScript(actions);
+            _openScript = fileName;
+
+            FindMaxPositions();
+        }
+
+        private void FindMaxPositions()
+        {
+            var actions = _scriptHandler.GetScript();
+
+            byte minPos = 99;
+            byte maxPos = 0;
+
+            foreach (var action in actions)
+            {
+                if (action is FunScriptAction)
+                {
+                    byte position = ((FunScriptAction)action).Position;
+                    minPos = Math.Min(minPos, position);
+                    maxPos = Math.Max(maxPos, position);
+                }
+                else if (action is RawScriptAction)
+                {
+                    byte position = ((RawScriptAction)action).Position;
+                    minPos = Math.Min(minPos, position);
+                    maxPos = Math.Max(maxPos, position);
+                }
+            }
+
+            _minScriptPosition = minPos;
+            _maxScriptPosition = maxPos;
         }
 
         private void UpdateHeatMap()
@@ -298,25 +422,48 @@ namespace ScriptPlayer
 
             byte position = eventArgs.NextAction.Position;
             TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
-            byte speed = SpeedPredictor.Predict2((byte) Math.Abs(eventArgs.CurrentAction.Position - position), duration);
+            byte speed = SpeedPredictor.Predict((byte)Math.Abs(eventArgs.CurrentAction.Position - position), duration);
             SetLaunch(position, speed);
+        }
+
+        Random _rng = new Random();
+
+        private byte TransformPosition(byte pos, byte inMin, byte inMax)
+        {
+            double relative = (double)(pos - inMin) / (inMax - inMin);
+
+            if (RandomRange)
+            {
+                if (relative > 0.5)
+                {
+                    relative = _rng.NextDouble() * 0.5 + 0.5;
+                }
+                else
+                {
+                    relative = _rng.NextDouble() * 0.5;
+                }
+            }
+
+            relative = Math.Min(1, Math.Max(0, relative));
+            byte absolute = (byte)(MinPosition + (MaxPosition - MinPosition) * relative);
+            return SpeedPredictor.Clamp(absolute);
         }
 
         private byte TransformPosition(byte pos)
         {
-            //TODO: Add proper Settings in MainWindow
-            //return (byte) (pos > 50 ? 95 : 5);
-            return pos;
+            return TransformPosition(pos, _minScriptPosition, _maxScriptPosition);
         }
 
         private void HandleRawScriptAction(ScriptActionEventArgs<RawScriptAction> eventArgs)
         {
-            SetLaunch(eventArgs.CurrentAction.Position, eventArgs.CurrentAction.Speed);
+            SetLaunch(TransformPosition(eventArgs.CurrentAction.Position), eventArgs.CurrentAction.Speed);
         }
 
-        private void SetLaunch(byte position, byte speed)
+        private void SetLaunch(byte position, byte speed, bool requirePlaying = true)
         {
-            if (VideoPlayer.IsPlaying)
+            speed = (byte) Math.Min(99, Math.Max(0, speed * SpeedMultiplier));
+
+            if (VideoPlayer.IsPlaying || !requirePlaying)
             {
                 _launch?.EnqueuePosition(position, speed);
                 _connector?.SetPosition(position, speed);
@@ -356,13 +503,11 @@ namespace ScriptPlayer
 
             if (dialog.ShowDialog(this) != true) return;
             _lastScriptFilterIndex = dialog.FilterIndex;
-            var format = formats.GetFormat(dialog.FilterIndex -1, dialog.FileName);
+            var format = formats.GetFormat(dialog.FilterIndex - 1, dialog.FileName);
 
             var loader = ScriptLoaderManager.GetLoader(format);
-            var actions = loader.Load(dialog.FileName);
 
-            _scriptHandler.SetScript(actions);
-            _openScript = dialog.FileName;
+            LoadScript(loader, dialog.FileName);
 
             TryFindMatchingVideo(dialog.FileName);
 
@@ -446,7 +591,7 @@ namespace ScriptPlayer
         protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
         {
             e.Handled = true;
-            Volume = Math.Min(100.0, Math.Max(0, 5 * ((int)(Volume/5) + Math.Sign(e.Delta))));
+            Volume = Math.Min(100.0, Math.Max(0, 5 * ((int)(Volume / 5) + Math.Sign(e.Delta))));
         }
 
         private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -455,85 +600,85 @@ namespace ScriptPlayer
             switch (e.Key)
             {
                 case Key.Enter:
-                {
-                    ToggleFullscreen();
-                    break;
-                }
+                    {
+                        ToggleFullscreen();
+                        break;
+                    }
                 case Key.Escape:
-                {
-                    SetFullscreen(false);
-                    break;
-                }
+                    {
+                        SetFullscreen(false);
+                        break;
+                    }
                 case Key.Space:
-                {
-                    TogglePlayback();
-                    break;
-                }
+                    {
+                        TogglePlayback();
+                        break;
+                    }
                 case Key.Left:
-                {
-                    VideoPlayer.SetPosition(VideoPlayer.GetPosition() - TimeSpan.FromSeconds(5));
-                    ShowPosition();
-                    break;
-                }
+                    {
+                        VideoPlayer.SetPosition(VideoPlayer.GetPosition() - TimeSpan.FromSeconds(5));
+                        ShowPosition();
+                        break;
+                    }
                 case Key.Right:
-                {
-                    VideoPlayer.SetPosition(VideoPlayer.GetPosition() + TimeSpan.FromSeconds(5));
-                    ShowPosition();
-                    break;
-                }
+                    {
+                        VideoPlayer.SetPosition(VideoPlayer.GetPosition() + TimeSpan.FromSeconds(5));
+                        ShowPosition();
+                        break;
+                    }
                 case Key.NumPad0:
-                {
-                    
-                    break;
-                }
+                    {
+
+                        break;
+                    }
                 case Key.NumPad1:
-                {
-                    VideoPlayer.ChangeZoom(-0.02);
-                    break;
-                }
+                    {
+                        VideoPlayer.ChangeZoom(-0.02);
+                        break;
+                    }
                 case Key.NumPad2:
-                {
-                    VideoPlayer.Move(new Point(0, 1));
-                    break;
-                }
+                    {
+                        VideoPlayer.Move(new Point(0, 1));
+                        break;
+                    }
                 case Key.NumPad3:
-                {
-                    break;
-                }
+                    {
+                        break;
+                    }
                 case Key.NumPad4:
-                {
-                    VideoPlayer.Move(new Point(-1, 0));
-                    break;
-                }
+                    {
+                        VideoPlayer.Move(new Point(-1, 0));
+                        break;
+                    }
                 case Key.NumPad5:
-                {
-                    VideoPlayer.ResetTransform();
-                    break;
-                }
+                    {
+                        VideoPlayer.ResetTransform();
+                        break;
+                    }
                 case Key.NumPad6:
-                {
-                    VideoPlayer.Move(new Point(1, 0));
+                    {
+                        VideoPlayer.Move(new Point(1, 0));
                         break;
-                }
+                    }
                 case Key.NumPad7:
-                {
-                    break;
-                }
-                case Key.NumPad8:
-                {
-                    VideoPlayer.Move(new Point(0, -1));
+                    {
                         break;
-                }
+                    }
+                case Key.NumPad8:
+                    {
+                        VideoPlayer.Move(new Point(0, -1));
+                        break;
+                    }
                 case Key.NumPad9:
                     VideoPlayer.ChangeZoom(0.02);
                     {
-                    break;
-                }
+                        break;
+                    }
                 default:
-                {
-                    handled = false;
-                    break;
-                }
+                    {
+                        handled = false;
+                        break;
+                    }
             }
 
             e.Handled = handled;
@@ -546,7 +691,7 @@ namespace ScriptPlayer
 
         private void TogglePlayback()
         {
-            if(VideoPlayer.IsPlaying)
+            if (VideoPlayer.IsPlaying)
                 VideoPlayer.Pause();
             else
                 VideoPlayer.Play();
@@ -574,27 +719,10 @@ namespace ScriptPlayer
             _connector = new ButtplugWebSocketConnector();
             bool success = await _connector.Connect();
 
-            if(success)
+            if (success)
                 OverlayText.SetText("Connected to Buttplug", TimeSpan.FromSeconds(1));
             else
                 OverlayText.SetText("Could not connect to Buttplug", TimeSpan.FromSeconds(2));
-        }
-
-        private void cckWithResponse_Checked(object sender, RoutedEventArgs e)
-        {
-            if(_launch != null)
-                _launch.SendCommandsWithResponse = cckWithResponse.IsChecked == true;
-        }
-
-        private void btnMeasureSpeed_Click(object sender, RoutedEventArgs e)
-        {
-            if (_launch == null)
-                return;
-            for (int i = 0; i < 10; i++)
-            {
-                _launch.EnqueuePosition((byte) (i%2 == 0?20:70),50);
-            }
-           
         }
     }
 }

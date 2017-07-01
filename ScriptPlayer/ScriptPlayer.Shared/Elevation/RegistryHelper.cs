@@ -1,9 +1,8 @@
 using System;
-using System.Linq;
 using System.Security;
 using Microsoft.Win32;
 
-namespace UacElevation
+namespace ScriptPlayer.Shared.Elevation
 {
     public class RegistryHelper
     {
