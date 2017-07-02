@@ -8,8 +8,32 @@ using System.Windows.Media;
 
 namespace ScriptPlayer.Shared
 {
+    public enum MarkerMode
+    {
+        Center,
+        OutOfBoundsRecenter,
+        OutOfBoundsJump,
+        None
+    }
+
     public class TimeLineHeader : Control
     {
+        public static readonly DependencyProperty MarkerModeProperty = DependencyProperty.Register(
+            "MarkerMode", typeof(MarkerMode), typeof(TimeLineHeader), new PropertyMetadata(MarkerMode.Center, OnMarkerModePropertyChanged));
+
+        private static void OnMarkerModePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            TimeLineHeader header = (TimeLineHeader)d;
+            header.RecheckMarker();
+            header.InvalidateVisual();
+        }
+
+        public MarkerMode MarkerMode
+        {
+            get { return (MarkerMode) GetValue(MarkerModeProperty); }
+            set { SetValue(MarkerModeProperty, value); }
+        }
+
         public static readonly DependencyProperty MarkerProperty = DependencyProperty.Register(
             "Marker", typeof(TimeSpan), typeof(TimeLineHeader), new PropertyMetadata(default(TimeSpan), OnMarkerPositionChanged));
 
@@ -22,9 +46,31 @@ namespace ScriptPlayer.Shared
 
         private void RecheckMarker()
         {
-            if (Marker < Offset || Marker > Offset + ViewPort)
+            switch (MarkerMode)
             {
-                Position = Marker;
+                case MarkerMode.Center:
+                    Position = Marker;
+                    break;
+                case MarkerMode.OutOfBoundsRecenter:
+                    if (Marker < Offset || Marker > Offset + ViewPort)
+                    {
+                        Position = Marker;
+                    }
+                    break;
+                case MarkerMode.OutOfBoundsJump:
+                    if (Marker < Offset)
+                    {
+                        Position = Marker + Offset;
+                    }
+                    else if (Marker > Offset + ViewPort)
+                    {
+                        Position = Marker;
+                    }
+                    break;
+                case MarkerMode.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 

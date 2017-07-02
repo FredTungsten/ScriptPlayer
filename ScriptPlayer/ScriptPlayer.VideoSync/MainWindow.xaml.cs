@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Channels;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,11 +36,11 @@ namespace ScriptPlayer.VideoSync
         }
 
         public static readonly DependencyProperty BeatBarDurationProperty = DependencyProperty.Register(
-            "BeatBarDuration", typeof(double), typeof(MainWindow), new PropertyMetadata(5.0));
+            "BeatBarDuration", typeof(TimeSpan), typeof(MainWindow), new PropertyMetadata(TimeSpan.FromSeconds(5.0)));
 
-        public double BeatBarDuration
+        public TimeSpan BeatBarDuration
         {
-            get { return (double)GetValue(BeatBarDurationProperty); }
+            get { return (TimeSpan)GetValue(BeatBarDurationProperty); }
             set { SetValue(BeatBarDurationProperty, value); }
         }
 
@@ -422,7 +423,7 @@ namespace ScriptPlayer.VideoSync
 
         private double GetDouble(double defaultValue)
         {
-            DoubleInputDialog dialog = new DoubleInputDialog(defaultValue);
+            DoubleInputDialog dialog = new DoubleInputDialog(defaultValue){Owner = this};
             dialog.Owner = this;
             if (dialog.ShowDialog() != true)
                 return double.NaN;
@@ -518,12 +519,12 @@ namespace ScriptPlayer.VideoSync
 
         private void btnBeatBarDurationBack_Click(object sender, RoutedEventArgs e)
         {
-            ShiftTime(TimeSpan.FromSeconds(-BeatBarDuration));
+            ShiftTime(-BeatBarDuration);
         }
 
         private void btnBeatbarDurationForward_Click(object sender, RoutedEventArgs e)
         {
-            ShiftTime(TimeSpan.FromSeconds(BeatBarDuration));
+            ShiftTime(BeatBarDuration);
         }
 
         private void btnPreviousBookmark_Click(object sender, RoutedEventArgs e)
@@ -557,12 +558,27 @@ namespace ScriptPlayer.VideoSync
         }
         private void btnMarker1_Click(object sender, RoutedEventArgs e)
         {
-            _marker1 = videoPlayer.GetPosition();
+            SetMarker(1, videoPlayer.GetPosition());
+        }
+
+        private void SetMarker(int index, TimeSpan position)
+        {
+            switch (index)
+            {
+                case 1:
+                    _marker1 = position;
+                    BeatBar.Marker1 = _marker1;
+                    break;
+                case 2:
+                    _marker2 = position;
+                    BeatBar.Marker2 = _marker2;
+                    break;
+            }
         }
 
         private void btnMarker2_Click(object sender, RoutedEventArgs e)
         {
-            _marker2 = videoPlayer.GetPosition();
+            SetMarker(2, videoPlayer.GetPosition());
         }
 
         private void btnStretchFromBegin_Click(object sender, RoutedEventArgs e)
@@ -750,6 +766,11 @@ namespace ScriptPlayer.VideoSync
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
+            DeleteBeatsWithinMarkers();
+        }
+
+        private void DeleteBeatsWithinMarkers()
+        {
             TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
             TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
 
@@ -793,7 +814,7 @@ namespace ScriptPlayer.VideoSync
             {
                 VideoFile = _videoFile,
                 SampleCondition = _condition,
-                BeatBarDuration = BeatBar.TotalDisplayedDuration,
+                BeatBarDuration = BeatBar.TotalDisplayedDuration.TotalSeconds,
                 BeatBarMidpoint = BeatBar.Midpoint,
                 Beats = Beats.Select(b => b.Ticks).ToList(),
                 Bookmarks = Bookmarks.Select(b => b.Ticks).ToList()
@@ -814,7 +835,7 @@ namespace ScriptPlayer.VideoSync
             BeatProject project = BeatProject.Load(dialog.FileName);
             OpenVideo(project.VideoFile, true, false);
             SetCondition(project.SampleCondition);
-            BeatBarDuration = project.BeatBarDuration;
+            BeatBarDuration = TimeSpan.FromSeconds(project.BeatBarDuration);
             BeatBarCenter = project.BeatBarMidpoint;
             Beats = new BeatCollection(project.Beats.Select(TimeSpan.FromTicks));
             Bookmarks = project.Bookmarks.Select(TimeSpan.FromTicks).ToList();
@@ -830,33 +851,50 @@ namespace ScriptPlayer.VideoSync
                 SaveProjectAs(_projectFile);
         }
 
-        private void btnEven_Click(object sender, RoutedEventArgs e)
+        private void btnNormalize_Click(object sender, RoutedEventArgs e)
         {
-            DoubleInputDialog dialog = new DoubleInputDialog(0);
-            if (!dialog.ShowDialog() == true) return;
+            Normalize();
+        }
 
-            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
-            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+        private void Normalize()
+        {
+            bool wasPlaying = videoPlayer.IsPlaying;
+            if (wasPlaying)
+                videoPlayer.Pause();
 
-            List<TimeSpan> beatsToEvenOut = Beats.GetBeats(tBegin, tEnd).ToList();
-
-            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
-
-            TimeSpan first = beatsToEvenOut.Min();
-            TimeSpan last = beatsToEvenOut.Max();
-
-            int numberOfBeats = (int)(beatsToEvenOut.Count + dialog.Result);
-
-            if (numberOfBeats > 1)
+            try
             {
-                TimeSpan tStart = first;
-                TimeSpan intervall = (last - first).Divide(numberOfBeats - 1);
+                double additionalBeats = GetDouble(0);
+                if (double.IsNaN(additionalBeats)) return;
+                
+                TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+                TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
 
-                for (int i = 0; i < numberOfBeats; i++)
-                    otherBeats.Add(tStart + intervall.Multiply(i));
+                List<TimeSpan> beatsToEvenOut = Beats.GetBeats(tBegin, tEnd).ToList();
+
+                List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+
+                TimeSpan first = beatsToEvenOut.Min();
+                TimeSpan last = beatsToEvenOut.Max();
+
+                int numberOfBeats = (int) (beatsToEvenOut.Count + additionalBeats);
+
+                if (numberOfBeats > 1)
+                {
+                    TimeSpan tStart = first;
+                    TimeSpan intervall = (last - first).Divide(numberOfBeats - 1);
+
+                    for (int i = 0; i < numberOfBeats; i++)
+                        otherBeats.Add(tStart + intervall.Multiply(i));
+                }
+
+                SetAllBeats(otherBeats);
             }
-
-            SetAllBeats(otherBeats);
+            finally
+            {
+                if(wasPlaying)
+                    videoPlayer.Play();
+            }
         }
 
         private void mnuShowBeatDuration_Click(object sender, RoutedEventArgs e)
@@ -889,6 +927,9 @@ namespace ScriptPlayer.VideoSync
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            bool control = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+            bool shift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+
             bool handled = true;
             switch (e.Key)
             {
@@ -900,6 +941,31 @@ namespace ScriptPlayer.VideoSync
                             videoPlayer.Play();
                         break;
                     }
+                case Key.Left:
+                case Key.Right:
+                    {
+                        double multiplier = e.Key == Key.Right ? 1 : -1;
+
+                        if (control && shift)
+                            ShiftTime(TimeSpan.FromMilliseconds(multiplier * 100));
+                        else if (control)
+                            ShiftTime(BeatBarDuration.Multiply(multiplier));
+                        else if (shift)
+                            ShiftTime(TimeSpan.FromMilliseconds(multiplier * 20));
+                        else
+                            ShiftTime(TimeSpan.FromMilliseconds(multiplier * 1000));
+                        break;
+                    }
+                case Key.N:
+                {
+                    Normalize();
+                    break;
+                }
+                case Key.Delete:
+                {
+                    DeleteBeatsWithinMarkers();
+                    break;
+                }
                 default:
                     handled = false;
                     break;
@@ -924,6 +990,47 @@ namespace ScriptPlayer.VideoSync
             TimeSpan closest = Beats.OrderBy(b => Math.Abs(b.Ticks - timeSpan.Ticks)).First();
             Beats.Remove(closest);
 
+        }
+
+        private void mnuSetMarkerMode_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem menuItem = sender as MenuItem;
+            if (menuItem == null)
+                return;
+
+            TimeLineHeader header = FindPlacementTarget(menuItem) as TimeLineHeader;
+            if (header == null) return;
+
+            header.MarkerMode = (MarkerMode)menuItem.Tag;
+        }
+
+        private UIElement FindPlacementTarget(MenuItem sender)
+        {
+            DependencyObject currentElement = sender;
+            while (currentElement != null)
+            {
+                ContextMenu element = currentElement as ContextMenu;
+                if (element != null)
+                    return element.PlacementTarget;
+                currentElement = VisualTreeHelper.GetParent(currentElement);
+            }
+            return null;
+        }
+
+        private void BeatBar_OnTimeMouseRightDown(object sender, TimeSpan e)
+        {
+            SetMarker(1, e);
+            SetMarker(2, e);
+        }
+
+        private void BeatBar_OnTimeMouseRightMove(object sender, TimeSpan e)
+        {
+            SetMarker(2, e);
+        }
+
+        private void BeatBar_OnTimeMouseRightUp(object sender, TimeSpan e)
+        {
+            SetMarker(2, e);
         }
     }
 }
