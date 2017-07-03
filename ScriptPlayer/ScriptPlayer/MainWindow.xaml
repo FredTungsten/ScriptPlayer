@@ -45,6 +45,7 @@
         <DockPanel Background="White" LastChildFill="True" Name="PlayerControls" Grid.Row="2" Grid.ColumnSpan="2">
             <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" FontSize="20" Width="30" Height="30" FontFamily="Webdings" Content="4" Click="btnPlay_Click" DockPanel.Dock="Left"/>
             <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" FontSize="20" Width="30" Height="30" FontFamily="Webdings" Content=";" Click="btnPause_Click" DockPanel.Dock="Left"/>
+            <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" FontSize="20" Width="30" Height="30" FontFamily="Webdings" Content=":" Click="btnSkip_Click" DockPanel.Dock="Left"/>
 
             <TextBlock TextAlignment="Right" DockPanel.Dock="Right" Name="txtProgress" VerticalAlignment="Center" Width="90" Margin="0,0,8,0">
                 <TextBlock.Text>

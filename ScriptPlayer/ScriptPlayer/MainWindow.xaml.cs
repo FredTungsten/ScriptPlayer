@@ -419,9 +419,15 @@ namespace ScriptPlayer
             eventArgs.CurrentAction.Position = TransformPosition(eventArgs.CurrentAction.Position);
             eventArgs.NextAction.Position = TransformPosition(eventArgs.NextAction.Position);
 
+            TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
+            if (duration > TimeSpan.FromSeconds(20) && VideoPlayer.IsPlaying)
+            {
+                OverlayText.SetText($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(2));
+            }
+
 
             byte position = eventArgs.NextAction.Position;
-            TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
+            
             byte speed = SpeedPredictor.Predict((byte)Math.Abs(eventArgs.CurrentAction.Position - position), duration);
             SetLaunch(position, speed);
         }
@@ -723,6 +729,21 @@ namespace ScriptPlayer
                 OverlayText.SetText("Connected to Buttplug", TimeSpan.FromSeconds(1));
             else
                 OverlayText.SetText("Could not connect to Buttplug", TimeSpan.FromSeconds(2));
+        }
+
+        private void btnSkip_Click(object sender, RoutedEventArgs e)
+        {
+            var currentPosition = VideoPlayer.GetPosition();
+            ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition);
+            if (nextAction == null)
+                return;
+
+            TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(3);
+            if (skipTo < currentPosition)
+                return;
+
+            VideoPlayer.SetPosition(skipTo);
+            ShowPosition();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ScriptPlayer.Shared.Scripts
 {
@@ -105,6 +106,11 @@ namespace ScriptPlayer.Shared.Scripts
         public static void SetDelay(TimeSpan delay)
         {
             _delay = delay;
+        }
+
+        public ScriptAction FirstEventAfter(TimeSpan currentPosition)
+        {
+            return _actions.FirstOrDefault(a => a.TimeStamp > currentPosition);
         }
     }
 
