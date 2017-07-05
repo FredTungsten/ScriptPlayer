@@ -6,7 +6,7 @@
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Script Player" Height="350" Width="525" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico">
+        Title="Script Player" Height="493" Width="866" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="383*"/>
@@ -18,7 +18,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true"  MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" MouseDoubleClick="VideoPlayer_OnMouseDoubleClick" Grid.Row="1" x:Name="VideoPlayer" Grid.ColumnSpan="2"/>
+        <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true"  MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" MouseDoubleClick="VideoPlayer_OnMouseDoubleClick" Grid.Row="1" x:Name="VideoPlayer" Grid.ColumnSpan="2" MediaEnded="VideoPlayer_MediaEnded"/>
         <shared:OverlayText x:Name="OverlayText" Grid.Row="1" Margin="10" Grid.ColumnSpan="2"/>
         <Grid Name="Shade" Grid.Row="1" Grid.ColumnSpan="2">
             <Grid.RowDefinitions>
@@ -35,6 +35,9 @@
             <MenuItem Header="File">
                 <MenuItem Header="Open Video" Click="mnuOpenVideo_Click"/>
                 <MenuItem Header="Open Script" Click="mnuOpenScript_Click"/>
+                <Separator/>
+                <MenuItem Header="Add to Playlist" Click="mnuAddScripts_Click"/>
+                <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
             </MenuItem>
             <MenuItem Header="Devices">
                 <MenuItem Header="Connect Launch directly" Click="btnConnectLaunch_OnClick"/>
@@ -76,7 +79,7 @@
                 <TextBlock Margin="4" Text="{Binding SpeedMultiplier, StringFormat={}{0:f1}}" TextAlignment="Center"/>
 
                 <TextBlock Margin="4" Text="Min Command Delay" TextAlignment="Center"/>
-                <Slider Margin="4" Name="sldCommandDelay" Minimum="75" Maximum="200" Value="{Binding CommandDelay}"/>
+                <Slider Margin="4" Name="sldCommandDelay" Minimum="75" Maximum="200" Value="{Binding CommandDelay}" SmallChange="1"/>
                 <TextBlock Margin="4" Text="{Binding CommandDelay, StringFormat={}{0:f1}}" TextAlignment="Center"/>
 
                 <TextBlock Margin="4" Text="Test Patterns"></TextBlock>

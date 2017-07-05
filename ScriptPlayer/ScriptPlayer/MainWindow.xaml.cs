@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -22,8 +23,17 @@ namespace ScriptPlayer
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly DependencyProperty PlaylistProperty = DependencyProperty.Register(
+            "Playlist", typeof(ObservableCollection<PlaylistEntry>), typeof(MainWindow), new PropertyMetadata(default(ObservableCollection<PlaylistEntry>)));
+
+        public ObservableCollection<PlaylistEntry> Playlist
+        {
+            get { return (ObservableCollection<PlaylistEntry>) GetValue(PlaylistProperty); }
+            set { SetValue(PlaylistProperty, value); }
+        }
+
         public static readonly DependencyProperty CommandDelayProperty = DependencyProperty.Register(
-            "CommandDelay", typeof(double), typeof(MainWindow), new PropertyMetadata(default(double), OnCommandDelayPropertyChanged));
+            "CommandDelay", typeof(double), typeof(MainWindow), new PropertyMetadata(166.0, OnCommandDelayPropertyChanged));
 
         private static void OnCommandDelayPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -70,7 +80,7 @@ namespace ScriptPlayer
 
         private void OnVolumeChanged()
         {
-            OverlayText.SetText($"Volume: {Volume:f0}%", TimeSpan.FromSeconds(2));
+            OverlayText.SetText($"Volume: {Volume:f0}%", TimeSpan.FromSeconds(4));
         }
 
         public double Volume
@@ -114,6 +124,7 @@ namespace ScriptPlayer
 
         public MainWindow()
         {
+            Playlist = new ObservableCollection<PlaylistEntry>(); 
             _supportedScriptExtensions = ScriptLoaderManager.GetSupportedExtensions();
 
             InitializeComponent();
@@ -169,14 +180,24 @@ namespace ScriptPlayer
 
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
-            VideoPlayer.Play();
-            OverlayText.SetText("Play", TimeSpan.FromSeconds(1));
+            if (!String.IsNullOrWhiteSpace(_openVideo))
+            {
+                VideoPlayer.Play();
+                OverlayText.SetText("Play", TimeSpan.FromSeconds(2));
+            }
+            else if(Playlist.Count > 0)
+            {
+                LoadScript(Playlist[0].Fullname, true);
+            }
         }
 
         private void btnPause_Click(object sender, RoutedEventArgs e)
         {
-            VideoPlayer.Pause();
-            OverlayText.SetText("Pause", TimeSpan.FromSeconds(1));
+            if (!String.IsNullOrWhiteSpace(_openVideo))
+            {
+                VideoPlayer.Pause();
+                OverlayText.SetText("Pause", TimeSpan.FromSeconds(2));
+            }
         }
 
         private void SeekBar_OnSeek(object sender, double relative, TimeSpan absolute, int downmoveup)
@@ -230,6 +251,8 @@ namespace ScriptPlayer
             _openVideo = filename;
             VideoPlayer.Open(filename);
 
+            OverlayText.SetText($"Loaded {Path.GetFileName(filename)}", TimeSpan.FromSeconds(4));
+
             if (checkForScript)
                 TryFindMatchingScript(filename);
 
@@ -246,7 +269,7 @@ namespace ScriptPlayer
             {
                 string nameOnly = Path.GetFileName(scriptFile);
                 if (MessageBox.Show(this, $"Do you want to also load '{nameOnly}'?", "Also load Script?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                    LoadScript(scriptFile, false);
+                LoadScript(scriptFile, false);
             }
         }
 
@@ -259,8 +282,8 @@ namespace ScriptPlayer
             if (!String.IsNullOrWhiteSpace(videoFile))
             {
                 string nameOnly = Path.GetFileName(videoFile);
-                if (MessageBox.Show(this, $"Do you want to also load '{nameOnly}'?", "Also load Video?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                    LoadVideo(videoFile, false);
+                //if (MessageBox.Show(this, $"Do you want to also load '{nameOnly}'?", "Also load Video?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                LoadVideo(videoFile, false);
             }
         }
 
@@ -336,6 +359,8 @@ namespace ScriptPlayer
 
             LoadScript(loader, fileToLoad);
 
+            OverlayText.SetText($"Loaded {Path.GetFileName(fileToLoad)}", TimeSpan.FromSeconds(4));
+
             if (checkForVideo)
                 TryFindMatchingVideo(fileToLoad);
 
@@ -395,7 +420,7 @@ namespace ScriptPlayer
         {
             _scriptHandler = new ScriptHandler();
             _scriptHandler.ScriptActionRaised += ScriptHandlerOnScriptActionRaised;
-            _scriptHandler.Delay = TimeSpan.FromMilliseconds(-300);
+            _scriptHandler.Delay = TimeSpan.FromMilliseconds(0);
             _scriptHandler.SetTimesource(VideoPlayer.TimeSource);
         }
 
@@ -416,20 +441,17 @@ namespace ScriptPlayer
             if (eventArgs.NextAction == null)
                 return;
 
-            eventArgs.CurrentAction.Position = TransformPosition(eventArgs.CurrentAction.Position);
-            eventArgs.NextAction.Position = TransformPosition(eventArgs.NextAction.Position);
+            byte currentPosition = TransformPosition(eventArgs.CurrentAction.Position);
+            byte nextPosition = TransformPosition(eventArgs.NextAction.Position);
 
             TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
             if (duration > TimeSpan.FromSeconds(20) && VideoPlayer.IsPlaying)
             {
-                OverlayText.SetText($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(2));
+                OverlayText.SetText($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4));
             }
-
-
-            byte position = eventArgs.NextAction.Position;
             
-            byte speed = SpeedPredictor.Predict((byte)Math.Abs(eventArgs.CurrentAction.Position - position), duration);
-            SetLaunch(position, speed);
+            byte speed = SpeedPredictor.Predict((byte)Math.Abs(currentPosition - nextPosition), duration);
+            SetLaunch(nextPosition, speed);
         }
 
         Random _rng = new Random();
@@ -486,7 +508,7 @@ namespace ScriptPlayer
             _launch = device;
             _launch.Disconnected += LaunchOnDisconnected;
 
-            OverlayText.SetText("Launch Connected", TimeSpan.FromSeconds(1));
+            OverlayText.SetText("Launch Connected", TimeSpan.FromSeconds(8));
         }
 
         private void LaunchOnDisconnected(object sender, Exception exception)
@@ -494,7 +516,26 @@ namespace ScriptPlayer
             _launch.Disconnected -= LaunchOnDisconnected;
             _launch = null;
 
-            OverlayText.SetText("Launch Disconnected", TimeSpan.FromSeconds(1));
+            OverlayText.SetText("Launch Disconnected", TimeSpan.FromSeconds(8));
+        }
+
+        private void mnuAddScripts_Click(object sender, RoutedEventArgs e)
+        {
+            var formats = ScriptLoaderManager.GetFormats();
+
+            OpenFileDialog dialog = new OpenFileDialog
+            {
+                Filter = formats.BuildFilter(true),
+                FilterIndex = _lastScriptFilterIndex,
+                Multiselect = true
+            };
+
+            if (dialog.ShowDialog(this) != true) return;
+
+            foreach (string filename in dialog.FileNames)
+            {
+                Playlist.Add(new PlaylistEntry(filename));
+            }
         }
 
         private void mnuOpenScript_Click(object sender, RoutedEventArgs e)
@@ -692,7 +733,7 @@ namespace ScriptPlayer
 
         private void ShowPosition()
         {
-            OverlayText.SetText($@"{VideoPlayer.TimeSource.Progress:h\:mm\:ss} / {VideoPlayer.Duration:h\:mm\:ss}", TimeSpan.FromSeconds(1));
+            OverlayText.SetText($@"{VideoPlayer.TimeSource.Progress:h\:mm\:ss} / {VideoPlayer.Duration:h\:mm\:ss}", TimeSpan.FromSeconds(3));
         }
 
         private void TogglePlayback()
@@ -726,9 +767,9 @@ namespace ScriptPlayer
             bool success = await _connector.Connect();
 
             if (success)
-                OverlayText.SetText("Connected to Buttplug", TimeSpan.FromSeconds(1));
+                OverlayText.SetText("Connected to Buttplug", TimeSpan.FromSeconds(8));
             else
-                OverlayText.SetText("Could not connect to Buttplug", TimeSpan.FromSeconds(2));
+                OverlayText.SetText("Could not connect to Buttplug", TimeSpan.FromSeconds(8));
         }
 
         private void btnSkip_Click(object sender, RoutedEventArgs e)
@@ -744,6 +785,30 @@ namespace ScriptPlayer
 
             VideoPlayer.SetPosition(skipTo);
             ShowPosition();
+        }
+
+        private void mnuShowPlaylist_Click(object sender, RoutedEventArgs e)
+        {
+            PlaylistWindow playlist = new PlaylistWindow(Playlist);
+            playlist.EntrySelected += PlaylistOnEntrySelected;
+            playlist.Show();
+        }
+
+        private void PlaylistOnEntrySelected(object sender, PlaylistEntry playlistEntry)
+        {
+            LoadScript(playlistEntry.Fullname, true);
+        }
+
+        private void VideoPlayer_MediaEnded(object sender, EventArgs e)
+        {
+            var currentEntry = Playlist.FirstOrDefault(p => p.Fullname == _openScript);
+
+            if (currentEntry == null) return;
+
+            int currentIndex = Playlist.IndexOf(currentEntry);
+            var nextEntry = Playlist[(currentIndex + 1) % Playlist.Count];
+
+            LoadScript(nextEntry.Fullname, true);
         }
     }
 }

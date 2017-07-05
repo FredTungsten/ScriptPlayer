@@ -1,0 +1,23 @@
+﻿<Window x:Class="ScriptPlayer.PlaylistWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptPlayer"
+        mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="Playlist" Height="300" Width="300" WindowStyle="ToolWindow">
+    <Grid>
+        <ListBox Margin="10" ItemsSource="{Binding Entries}">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <EventSetter Event="MouseDoubleClick" Handler="EventSetter_OnHandler"></EventSetter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="local:PlaylistEntry">
+                    <TextBlock Text="{Binding Shortname}" ToolTip="{Binding Fullname}"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</Window>

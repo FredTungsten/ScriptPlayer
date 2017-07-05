@@ -65,6 +65,8 @@ namespace ScriptPlayer.Shared
             ((VideoPlayer)d).RefreshRect();
         }
 
+        public event EventHandler MediaEnded; 
+
         private void RefreshRect()
         {
             if (SampleRect.IsEmpty)
@@ -222,11 +224,17 @@ namespace ScriptPlayer.Shared
             _player = new MediaPlayer();
             _player.ScrubbingEnabled = true;
             _player.MediaOpened += PlayerOnMediaOpened;
+            _player.MediaEnded += PlayerOnMediaEnded;
 
             TimeSource = new MediaPlayerTimeSource(_player,
                 new DispatcherClock(Dispatcher, TimeSpan.FromMilliseconds(10)));
 
             VideoBrush = new DrawingBrush(new VideoDrawing { Player = _player, Rect = new Rect(0, 0, 1, 1) }) { Stretch = Stretch.Fill };
+        }
+
+        private void PlayerOnMediaEnded(object sender, EventArgs eventArgs)
+        {
+            OnMediaEnded();
         }
 
         private void PlayerOnMediaOpened(object sender, EventArgs e)
@@ -351,6 +359,11 @@ namespace ScriptPlayer.Shared
         {
             _scale = Math.Min(10, Math.Max(0.1, _scale + delta));
             ApplyTransform();
+        }
+
+        protected virtual void OnMediaEnded()
+        {
+            MediaEnded?.Invoke(this, EventArgs.Empty);
         }
     }
 
