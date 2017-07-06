@@ -63,7 +63,7 @@
         </DockPanel>
         <Grid shared:HideOnHover.IsActive="True" Width="140" Background="White" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1" VerticalAlignment="Stretch">
             <StackPanel>
-                <TextBlock Margin="4" HorizontalAlignment="Center" Text="DEBUG"/>
+                <TextBlock Margin="4" HorizontalAlignment="Center" Text="DEBUG and SETTINGS"/>
                 <Slider Margin="4" Name="sldDelay" Minimum="-200" Maximum="200" ValueChanged="sldDelay_OnValueChanged" />
                 <TextBlock Margin="4" Text="{Binding ElementName=sldDelay, Path=Value, StringFormat={}Script Delay: {0:f0}ms}"/>
                 <CheckBox Margin="4" Name="cckHeatMap" Checked="CckHeatMap_OnChecked" Unchecked="CckHeatMap_OnChecked">Show HeatMap</CheckBox>
