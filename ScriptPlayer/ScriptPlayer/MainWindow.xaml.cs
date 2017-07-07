@@ -777,7 +777,10 @@ namespace ScriptPlayer
             var currentPosition = VideoPlayer.GetPosition();
             ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition);
             if (nextAction == null)
+            {
+                OverlayText.SetText("No more Events available", TimeSpan.FromSeconds(4));
                 return;
+            }
 
             TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(3);
             if (skipTo < currentPosition)

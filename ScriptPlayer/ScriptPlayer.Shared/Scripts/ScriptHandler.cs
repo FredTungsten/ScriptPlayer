@@ -110,7 +110,7 @@ namespace ScriptPlayer.Shared.Scripts
 
         public ScriptAction FirstEventAfter(TimeSpan currentPosition)
         {
-            return _actions.FirstOrDefault(a => a.TimeStamp > currentPosition);
+            return _actions?.FirstOrDefault(a => a.TimeStamp > currentPosition);
         }
     }
 

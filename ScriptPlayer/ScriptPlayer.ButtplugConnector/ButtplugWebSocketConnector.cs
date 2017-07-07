@@ -83,6 +83,10 @@ namespace ScriptPlayer.ButtplugConnector
             {
                 return false;
             }
+            catch (Exception)
+            {
+                return false;
+            }
 
             StartReadQueue();
 
