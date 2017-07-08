@@ -26,6 +26,39 @@ namespace ScriptPlayer.VideoSync
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly DependencyProperty SpeedRatioModifierProperty = DependencyProperty.Register(
+            "SpeedRatioModifier", typeof(int), typeof(MainWindow), new PropertyMetadata(0, OnSpeedRatioModifierPropertyChanged));
+
+        private static void OnSpeedRatioModifierPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((MainWindow) d).SpeedRatioModifierChanged();
+        }
+
+        private void SpeedRatioModifierChanged()
+        {
+            double value = 1;
+            int modifier = SpeedRatioModifier;
+            while (modifier < 0)
+            {
+                value /= 2;
+                modifier++;
+            }
+
+            while (modifier > 0)
+            {
+                value *= 2;
+                modifier--;
+            }
+
+            videoPlayer.SpeedRatio = value;
+        }
+
+        public int SpeedRatioModifier
+        {
+            get { return (int) GetValue(SpeedRatioModifierProperty); }
+            set { SetValue(SpeedRatioModifierProperty, value); }
+        }
+
         public static readonly DependencyProperty PositionsProperty = DependencyProperty.Register(
             "Positions", typeof(PositionCollection), typeof(MainWindow), new PropertyMetadata(default(PositionCollection)));
 
@@ -833,7 +866,15 @@ namespace ScriptPlayer.VideoSync
                 return;
 
             BeatProject project = BeatProject.Load(dialog.FileName);
-            OpenVideo(project.VideoFile, true, false);
+
+            if (File.Exists(project.VideoFile))
+                OpenVideo(project.VideoFile, true, false);
+            else
+            {
+                string otherPath = ChangePath(dialog.FileName, project.VideoFile);
+                OpenVideo(otherPath, true, false);
+            }
+
             SetCondition(project.SampleCondition);
             BeatBarDuration = TimeSpan.FromSeconds(project.BeatBarDuration);
             BeatBarCenter = project.BeatBarMidpoint;
@@ -841,6 +882,14 @@ namespace ScriptPlayer.VideoSync
             Bookmarks = project.Bookmarks.Select(TimeSpan.FromTicks).ToList();
 
             _projectFile = dialog.FileName;
+        }
+
+        private string ChangePath(string path, string filename)
+        {
+            string directory = System.IO.Path.GetDirectoryName(path);
+            string file = Path.GetFileName(filename);
+
+            return Path.Combine(directory, file);
         }
 
         private void mnuSaveProject_Click(object sender, RoutedEventArgs e)
@@ -949,7 +998,7 @@ namespace ScriptPlayer.VideoSync
                         if (control && shift)
                             ShiftTime(TimeSpan.FromMilliseconds(multiplier * 100));
                         else if (control)
-                            ShiftTime(BeatBarDuration.Multiply(multiplier));
+                            ShiftTime(BeatBarDuration.Multiply(multiplier / 2.0));
                         else if (shift)
                             ShiftTime(TimeSpan.FromMilliseconds(multiplier * 20));
                         else
@@ -1031,6 +1080,32 @@ namespace ScriptPlayer.VideoSync
         private void BeatBar_OnTimeMouseRightUp(object sender, TimeSpan e)
         {
             SetMarker(2, e);
+        }
+
+        private void btnLoadBookmarks_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog()
+            {
+                Filter = "Log Files|*.log;*.txt|All Files|*.*"
+            };
+
+            if (dialog.ShowDialog(this) != true)
+                return;
+
+            string[] lines = File.ReadAllLines(dialog.FileName);
+
+            List<TimeSpan> newBookmarks = new List<TimeSpan>();
+
+            foreach (string line in lines)
+            {
+                TimeSpan t;
+                if(TimeSpan.TryParse(line, out t))
+                    newBookmarks.Add(t);
+            }
+
+            newBookmarks.Sort();
+
+            Bookmarks = newBookmarks;
         }
     }
 }

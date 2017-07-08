@@ -119,6 +119,7 @@
                 <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="31,10,0,0" TextWrapping="Wrap" Text="Sampler Rect" VerticalAlignment="Top" Width="143"/>
                 <Button Content="Reset to Samples" Grid.Column="1" HorizontalAlignment="Left" Margin="31,144,0,0" VerticalAlignment="Top" Width="159" Click="btnResetSamples_Click"/>
                 <Button Content="Reset Bookmarks" Grid.Column="1" HorizontalAlignment="Right" Margin="0,0,10,35" VerticalAlignment="Bottom" Width="180" Click="btnResetBookmarks_Click"/>
+                <Button Content="Load from Log" Grid.Column="1" HorizontalAlignment="Right" Margin="0,0,10,35" VerticalAlignment="Bottom" Width="180" Click="btnLoadBookmarks_Click"/>
             </Grid>
 
             <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
@@ -143,7 +144,7 @@
                     <TextBlock VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=Midpoint, StringFormat={}{0:f2}}"/>
                 </StackPanel>
 
-                <DockPanel Grid.Row="1" LastChildFill="False">
+                <DockPanel Grid.Row="1" LastChildFill="True">
                     <Button FontFamily="Webdings" Content="4" Click="btnPlay_Click" Width="30"/>
                     <Button FontFamily="Webdings" Content=";" Click="btnPause_Click" Width="30"/>
                     <Button FontFamily="Webdings" Content="9" Width="30" Click="btnPreviousBookmark_Click" Margin="10,0,0,0"/>
@@ -164,6 +165,7 @@
                     <Button Margin="0,0,0,0" Content="Del" Width="30" Click="btnDelete_Click"/>
                     <Button Margin="0,0,0,0" Content="+" Width="30" Click="btnAdd_Click"/>
                     <Button Margin="0,0,0,0" Content="N" Width="30" Click="btnNormalize_Click"/>
+                    <Slider SmallChange="1" LargeChange="1" Minimum="-3" Maximum="3" Value="{Binding SpeedRatioModifier}" HorizontalAlignment="Stretch"/>
                 </DockPanel>
 
                 <shared:SeekBar Grid.Row="2" Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}"/>

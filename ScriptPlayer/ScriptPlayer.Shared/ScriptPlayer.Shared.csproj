@@ -105,6 +105,7 @@
     <Compile Include="Elevation\RegistryHelper.cs" />
     <Compile Include="Elevation\RegistryKeyResult.cs" />
     <Compile Include="Elevation\RegistryValue.cs" />
+    <Compile Include="Flash.cs" />
     <Compile Include="FrameCapture.cs" />
     <Compile Include="FrameCaptureCollection.cs" />
     <Compile Include="HeatMapGenerator.cs" />

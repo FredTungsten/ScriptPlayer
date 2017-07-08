@@ -13,6 +13,25 @@ namespace ScriptPlayer.Shared
     /// </summary>
     public partial class VideoPlayer : UserControl, IDisposable
     {
+        public static readonly DependencyProperty SpeedRatioProperty = DependencyProperty.Register(
+            "SpeedRatio", typeof(double), typeof(VideoPlayer), new PropertyMetadata(1.0, OnSpeedPropertyChanged));
+
+        private static void OnSpeedPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((VideoPlayer) d).OnSpeedChanged();
+        }
+
+        private void OnSpeedChanged()
+        {
+            _player.SpeedRatio = SpeedRatio;
+        }
+
+        public double SpeedRatio
+        {
+            get { return (double) GetValue(SpeedRatioProperty); }
+            set { SetValue(SpeedRatioProperty, value); }
+        }
+
         public static readonly DependencyProperty VolumeProperty = DependencyProperty.Register(
             "Volume", typeof(double), typeof(VideoPlayer), new PropertyMetadata(100.0, OnVolumePropertyChanged));
 

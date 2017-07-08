@@ -127,6 +127,12 @@ namespace ScriptPlayer.Shared
             RecalculateThumbPositions();
         }
 
+        protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+        {
+            base.OnRenderSizeChanged(sizeInfo);
+            RecalculateThumbPositions();
+        }
+
         private void RecalculateThumbPositions()
         {
             if (ActualWidth <= 16) return;

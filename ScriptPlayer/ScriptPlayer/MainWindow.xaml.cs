@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -178,28 +179,6 @@ namespace ScriptPlayer
             }
         }
 
-        private void btnPlay_Click(object sender, RoutedEventArgs e)
-        {
-            if (!String.IsNullOrWhiteSpace(_openVideo))
-            {
-                VideoPlayer.Play();
-                OverlayText.SetText("Play", TimeSpan.FromSeconds(2));
-            }
-            else if(Playlist.Count > 0)
-            {
-                LoadScript(Playlist[0].Fullname, true);
-            }
-        }
-
-        private void btnPause_Click(object sender, RoutedEventArgs e)
-        {
-            if (!String.IsNullOrWhiteSpace(_openVideo))
-            {
-                VideoPlayer.Pause();
-                OverlayText.SetText("Pause", TimeSpan.FromSeconds(2));
-            }
-        }
-
         private void SeekBar_OnSeek(object sender, double relative, TimeSpan absolute, int downmoveup)
         {
             switch (downmoveup)
@@ -256,7 +235,7 @@ namespace ScriptPlayer
             if (checkForScript)
                 TryFindMatchingScript(filename);
 
-            VideoPlayer.Play();
+            Play();
         }
 
         private void TryFindMatchingScript(string filename)
@@ -426,6 +405,8 @@ namespace ScriptPlayer
 
         private void ScriptHandlerOnScriptActionRaised(object sender, ScriptActionEventArgs eventArgs)
         {
+            flash.Now();
+
             if (eventArgs.RawCurrentAction is RawScriptAction)
             {
                 HandleRawScriptAction(eventArgs.Cast<RawScriptAction>());
@@ -596,6 +577,8 @@ namespace ScriptPlayer
 
                 Grid.SetRow(Shade, 0);
                 Grid.SetRowSpan(Shade, 3);
+
+                Grid.SetRow(flash,2);
             }
             else
             {
@@ -612,6 +595,8 @@ namespace ScriptPlayer
 
                 Grid.SetRow(Shade, 1);
                 Grid.SetRowSpan(Shade, 1);
+
+                Grid.SetRow(flash, 1);
             }
         }
 
@@ -638,7 +623,35 @@ namespace ScriptPlayer
         protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
         {
             e.Handled = true;
-            Volume = Math.Min(100.0, Math.Max(0, 5 * ((int)(Volume / 5) + Math.Sign(e.Delta))));
+
+            if (e.Delta > 0)
+                VolumeUp();
+            else
+                VolumeDown();
+        }
+
+        private void VolumeDown()
+        {
+            int oldVolume = (int)Math.Round(Volume);
+            int newVolume = (int)(5.0 * Math.Floor(Volume / 5.0));
+            if (oldVolume == newVolume)
+                newVolume -= 5;
+
+            newVolume = Math.Min(100, Math.Max(0, newVolume));
+
+            Volume = newVolume;
+        }
+
+        private void VolumeUp()
+        {
+            int oldVolume = (int) Math.Round(Volume);
+            int newVolume = (int) (5.0 * Math.Ceiling(Volume / 5.0));
+            if (oldVolume == newVolume)
+                newVolume += 5;
+
+            newVolume = Math.Min(100, Math.Max(0, newVolume));
+
+            Volume = newVolume;
         }
 
         private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -673,6 +686,16 @@ namespace ScriptPlayer
                         ShowPosition();
                         break;
                     }
+                case Key.Up:
+                {
+                    VolumeUp();
+                    break;
+                }
+                case Key.Down:
+                {
+                    VolumeDown();
+                    break;
+                }
                 case Key.NumPad0:
                     {
 
@@ -739,9 +762,39 @@ namespace ScriptPlayer
         private void TogglePlayback()
         {
             if (VideoPlayer.IsPlaying)
-                VideoPlayer.Pause();
+                Pause();
             else
+                Play();
+        }
+
+        private void Pause()
+        {
+            if (!String.IsNullOrWhiteSpace(_openVideo))
+            {
+                VideoPlayer.Pause();
+                btnPlayPause.Content = "4";
+                OverlayText.SetText("Pause", TimeSpan.FromSeconds(2));
+            }
+        }
+
+        private void Play()
+        {
+            if (!String.IsNullOrWhiteSpace(_openVideo))
+            {
                 VideoPlayer.Play();
+                OverlayText.SetText("Play", TimeSpan.FromSeconds(2));
+                btnPlayPause.Content = ";";
+            }
+            else if (Playlist.Count > 0)
+            {
+                LoadScript(Playlist[0].Fullname, true);
+            }
+        }
+
+
+        private void btnPlayPause_Click(object sender, RoutedEventArgs e)
+        {
+            TogglePlayback();
         }
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
@@ -812,6 +865,30 @@ namespace ScriptPlayer
             var nextEntry = Playlist[(currentIndex + 1) % Playlist.Count];
 
             LoadScript(nextEntry.Fullname, true);
+        }
+
+        private void VideoPlayer_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (cckLogMarkers.IsChecked != true)
+                return;
+
+            try
+            {
+                if (String.IsNullOrWhiteSpace(_openVideo))
+                    return;
+
+                var position = VideoPlayer.GetPosition();
+
+                var logFile = Path.ChangeExtension(_openVideo, ".log");
+
+                var line = position.ToString("hh\\:mm\\:ss");
+
+                File.AppendAllLines(logFile, new[]{line});
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
         }
     }
 }
