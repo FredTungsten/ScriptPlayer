@@ -787,7 +787,7 @@ namespace ScriptPlayer.VideoSync
 
             string content = JsonConvert.SerializeObject(script);
 
-            File.WriteAllText(filename, content, Encoding.UTF8);
+            File.WriteAllText(filename, content, new UTF8Encoding(false));
         }
 
         private void btnResetSamples_Click(object sender, RoutedEventArgs e)

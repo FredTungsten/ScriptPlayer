@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace ScriptPlayer.Shared.Scripts
@@ -9,7 +10,7 @@ namespace ScriptPlayer.Shared.Scripts
     {
         public override List<ScriptAction> Load(Stream stream)
         {
-            using (StreamReader reader = new StreamReader(stream))
+            using (StreamReader reader = new StreamReader(stream, new UTF8Encoding(false)))
             {
                 string content = reader.ReadToEnd();
                 var file = JsonConvert.DeserializeObject<FunScriptFile>(content);
