@@ -21,7 +21,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true"  MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" MouseDoubleClick="VideoPlayer_OnMouseDoubleClick" Grid.Row="1" x:Name="VideoPlayer" Grid.ColumnSpan="2" MediaEnded="VideoPlayer_MediaEnded" MouseRightButtonDown="VideoPlayer_MouseRightButtonDown"/>
+        <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true"  MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" MouseDoubleClick="VideoPlayer_OnMouseDoubleClick" Grid.Row="1" x:Name="VideoPlayer" Grid.ColumnSpan="2" MediaEnded="VideoPlayer_MediaEnded" MouseRightButtonDown="VideoPlayer_MouseRightButtonDown" MediaOpened="VideoPlayer_MediaOpened"/>
 
         <shared:Flash Grid.ColumnSpan="2" Visibility="{Binding ElementName=cckFlash, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.Row="1" Grid.Column="0" Height="40" x:Name="flash" HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
             <shared:Flash.OpacityMask>

@@ -101,7 +101,7 @@ namespace ScriptPlayer.Shared
                 beatsPerSegment[index] = beatsPerSegment[index] + 1;
             }
 
-            int max = beatsPerSegment.Max();
+            int max = (int) (segmentLength.TotalSeconds * 5);
 
             var colors = beatsPerSegment
                 .Select(v => GetColorAtPosition(HeatMap2, v / (double) max)).ToArray();

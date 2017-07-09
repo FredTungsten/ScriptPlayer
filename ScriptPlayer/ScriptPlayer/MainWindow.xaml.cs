@@ -227,15 +227,15 @@ namespace ScriptPlayer
 
         private void LoadVideo(string filename, bool checkForScript)
         {
+            if (checkForScript)
+                TryFindMatchingScript(filename);
+
             _openVideo = filename;
             VideoPlayer.Open(filename);
 
             SetTitle(filename);
 
             OverlayText.SetText($"Loaded {Path.GetFileName(filename)}", TimeSpan.FromSeconds(4));
-
-            if (checkForScript)
-                TryFindMatchingScript(filename);
 
             Play();
         }
@@ -349,8 +349,6 @@ namespace ScriptPlayer
 
             if (checkForVideo)
                 TryFindMatchingVideo(fileToLoad);
-
-            UpdateHeatMap();
         }
 
         private void LoadScript(ScriptLoader loader, string fileName)
@@ -360,6 +358,7 @@ namespace ScriptPlayer
             _openScript = fileName;
 
             FindMaxPositions();
+            UpdateHeatMap();
         }
 
         private void FindMaxPositions()
@@ -397,7 +396,9 @@ namespace ScriptPlayer
             {
                 var timeStamps = _scriptHandler.GetScript().Select(s => s.TimeStamp).ToList();
                 int segments = Math.Max(20, (int)VideoPlayer.Duration.Divide(TimeSpan.FromSeconds(10)));
-                SeekBar.Background = HeatMapGenerator.Generate(timeStamps, TimeSpan.Zero, VideoPlayer.Duration, segments, true);
+                var heatmap = HeatMapGenerator.Generate(timeStamps, TimeSpan.Zero, VideoPlayer.Duration, segments, true, 0.1);
+                heatmap.Opacity = 0.8;
+                SeekBar.Background = heatmap;
             }
         }
 
@@ -428,7 +429,14 @@ namespace ScriptPlayer
         {
             if (eventArgs.NextAction == null)
             {
-                OverlayText.SetText("No more events available", TimeSpan.FromSeconds(4));
+                if (cckAutoSkip.IsChecked == true)
+                {
+                    LoadNextPlaylistEntry();
+                }
+                else
+                {
+                    OverlayText.SetText("No more events available", TimeSpan.FromSeconds(4));
+                }
                 return;
             }
 
@@ -637,7 +645,7 @@ namespace ScriptPlayer
             TogglePlayback();
         }
 
-        protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
+        protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
             e.Handled = true;
 
@@ -645,6 +653,11 @@ namespace ScriptPlayer
                 VolumeUp();
             else
                 VolumeDown();
+        }
+
+        protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
+        {
+            base.OnPreviewMouseWheel(e);
         }
 
         private void VolumeDown()
@@ -881,6 +894,11 @@ namespace ScriptPlayer
 
         private void VideoPlayer_MediaEnded(object sender, EventArgs e)
         {
+            LoadNextPlaylistEntry();
+        }
+
+        private void LoadNextPlaylistEntry()
+        {
             var currentEntry = Playlist.FirstOrDefault(p => p.Fullname == _openScript);
 
             if (currentEntry == null) return;
@@ -915,6 +933,16 @@ namespace ScriptPlayer
             {
                 Debug.WriteLine(ex.Message);
             }
+        }
+
+        private void VideoPlayer_MediaOpened(object sender, EventArgs e)
+        {
+            if (cckAutoSkip.IsChecked == true)
+            {
+                SkipToNextEvent();
+            }
+
+            UpdateHeatMap();
         }
     }
 }

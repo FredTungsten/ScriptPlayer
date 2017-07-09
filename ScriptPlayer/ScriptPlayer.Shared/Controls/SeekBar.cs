@@ -17,7 +17,7 @@ namespace ScriptPlayer.Shared
 
         static SeekBar()
         {
-            BackgroundProperty.OverrideMetadata(typeof(SeekBar), new FrameworkPropertyMetadata(Brushes.Black));
+            BackgroundProperty.OverrideMetadata(typeof(SeekBar), new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
         }
 
 
@@ -79,13 +79,14 @@ namespace ScriptPlayer.Shared
 
         protected override void OnRender(DrawingContext dc)
         {
+            dc.DrawRectangle(Brushes.Black, null, new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight)));
             dc.DrawRectangle(Background, null, new Rect(new Point(0,0), new Size(ActualWidth, ActualHeight)));
 
             if (Duration == TimeSpan.Zero) return;
 
             double linePosition = Progress.Divide(Duration) * ActualWidth;
 
-            dc.DrawRectangle(new LinearGradientBrush(HeatMapGenerator.GradientsSmoothFromColors(0.5, Color.FromArgb(0,0,0,0), Colors.Black, Color.FromArgb(0, 0, 0, 0)), new Point(0,0), new Point(1,0)), null, new Rect(linePosition-10,0,20, ActualHeight));
+            dc.DrawRectangle(new LinearGradientBrush(HeatMapGenerator.GradientsSmoothFromColors(0.5, Color.FromArgb(0,0,0,0), Color.FromArgb(150,0,0,0), Color.FromArgb(0, 0, 0, 0)), new Point(0,0), new Point(1,0)), null, new Rect(linePosition-10,0,20, ActualHeight));
 
             dc.DrawLine(new Pen(Brushes.White, 1), new Point(linePosition,0), new Point(linePosition, ActualHeight));
         }
