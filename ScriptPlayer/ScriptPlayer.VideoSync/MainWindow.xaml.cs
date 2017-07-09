@@ -990,6 +990,16 @@ namespace ScriptPlayer.VideoSync
             bool handled = true;
             switch (e.Key)
             {
+                case Key.PageDown:
+                {
+                    GotoNextBookMark();
+                    break;
+                }
+                case Key.PageUp:
+                {
+                    GotoPreviousBookMark();
+                    break;
+                }
                 case Key.Space:
                     {
                         if (videoPlayer.IsPlaying)
@@ -1052,6 +1062,28 @@ namespace ScriptPlayer.VideoSync
 
             if (handled)
                 e.Handled = true;
+        }
+
+        private void GotoNextBookMark()
+        {
+            var pos = videoPlayer.GetPosition();
+            if (!Bookmarks.Any(t => t > pos))
+                return;
+
+            TimeSpan bookmark = Bookmarks.First(t => t > pos);
+            lstBookmarks.SelectedItem = bookmark;
+            videoPlayer.SetPosition(bookmark);
+        }
+
+        private void GotoPreviousBookMark()
+        {
+            var pos = videoPlayer.GetPosition();
+            if (!Bookmarks.Any(t => t < pos))
+                return;
+
+            TimeSpan bookmark = Bookmarks.FindLast(t => t < pos);
+            lstBookmarks.SelectedItem = bookmark;
+            videoPlayer.SetPosition(bookmark);
         }
 
         public void SetTitle(string filePath)
@@ -1160,6 +1192,16 @@ namespace ScriptPlayer.VideoSync
             newBookmarks.Sort();
 
             Bookmarks = newBookmarks;
+        }
+
+        private void CckRTL_OnChecked(object sender, RoutedEventArgs e)
+        {
+            BeatBar.FlowDirection = FlowDirection.RightToLeft;
+        }
+
+        private void CckRTL_OnUnchecked(object sender, RoutedEventArgs e)
+        {
+            BeatBar.FlowDirection = FlowDirection.LeftToRight;
         }
     }
 }

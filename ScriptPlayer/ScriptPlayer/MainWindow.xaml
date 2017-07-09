@@ -75,10 +75,6 @@
             <Button ToolTip="Play / Pause" Name="btnPlayPause" Content="4" Click="btnPlayPause_Click"/>
             <Button ToolTip="Skip close to next event" Content="8" Click="btnSkip_Click"/>
 
-            <Separator Visibility="Collapsed"/>
-            <Button Content="9"  Visibility="Collapsed"/>
-            <Button Content=":"  Visibility="Collapsed"/>
-
             <TextBlock TextAlignment="Right" DockPanel.Dock="Right" Name="txtProgress" VerticalAlignment="Center" Width="90" Margin="0,0,8,0">
                 <TextBlock.Text>
                     <MultiBinding StringFormat="{}{0:h\:mm\:ss} / {1:h\:mm\:ss}">
@@ -87,7 +83,9 @@
                     </MultiBinding>
                 </TextBlock.Text>
             </TextBlock>
-            <Slider VerticalAlignment="Center" Width="50" Value="{Binding Volume, Mode=TwoWay}" Minimum="0" Maximum="100" DockPanel.Dock="Right" Style="{DynamicResource VolumeSliderStyle}" Margin="0,6"></Slider>
+            <Slider VerticalAlignment="Center" Margin="16,0" Width="50" Value="{Binding Volume, Mode=TwoWay}" Minimum="0" Maximum="100" DockPanel.Dock="Right" Style="{DynamicResource VolumeSliderStyle}"></Slider>
+            <Button ToolTip="Play next video in playlist" Content=":" DockPanel.Dock="Right" Click="btnNextVideo_Click"/>
+            <Button ToolTip="Play previous video in playlist" Content="9" DockPanel.Dock="Right" Click="btnPreviousVideo_Click"/>
             <shared:SeekBar Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Progress="{Binding ElementName=VideoPlayer, Path=TimeSource.Progress}" Duration="{Binding ElementName=VideoPlayer, Path=Duration}" Seek="SeekBar_OnSeek"/>
         </DockPanel>
         <Grid shared:HideOnHover.IsActive="True" Width="140" Background="White" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1" VerticalAlignment="Stretch">
@@ -152,6 +150,30 @@
         </Grid>
     </Grid>
 </Window>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

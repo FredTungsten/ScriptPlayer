@@ -79,8 +79,12 @@ namespace ScriptPlayer.Shared
 
         protected override void OnRender(DrawingContext dc)
         {
-            dc.DrawRectangle(Brushes.Black, null, new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight)));
-            dc.DrawRectangle(Background, null, new Rect(new Point(0,0), new Size(ActualWidth, ActualHeight)));
+            var rect = new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight));
+
+            dc.PushClip(new RectangleGeometry(rect));
+
+            dc.DrawRectangle(Brushes.Black, null, rect);
+            dc.DrawRectangle(Background, null, rect);
 
             if (Duration == TimeSpan.Zero) return;
 
@@ -89,6 +93,8 @@ namespace ScriptPlayer.Shared
             dc.DrawRectangle(new LinearGradientBrush(HeatMapGenerator.GradientsSmoothFromColors(0.5, Color.FromArgb(0,0,0,0), Color.FromArgb(150,0,0,0), Color.FromArgb(0, 0, 0, 0)), new Point(0,0), new Point(1,0)), null, new Rect(linePosition-10,0,20, ActualHeight));
 
             dc.DrawLine(new Pen(Brushes.White, 1), new Point(linePosition,0), new Point(linePosition, ActualHeight));
+
+            dc.Pop();
         }
 
         protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)

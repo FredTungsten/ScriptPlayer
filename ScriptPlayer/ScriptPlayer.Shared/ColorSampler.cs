@@ -253,6 +253,8 @@ namespace ScriptPlayer.Shared
 
         private bool CheckSample(byte r, byte g, byte b)
         {
+            if (Red == null) return false;
+
             if (!Red.IsAcceptableValue(r)) return false;
             if (!Green.IsAcceptableValue(g)) return false;
             if (!Blue.IsAcceptableValue(b)) return false;

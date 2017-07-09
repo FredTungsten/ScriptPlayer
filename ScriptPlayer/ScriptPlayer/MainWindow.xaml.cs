@@ -902,6 +902,18 @@ namespace ScriptPlayer
             LoadScript(nextEntry.Fullname, true);
         }
 
+        private void LoadPreviousPlaylistEntry()
+        {
+            var currentEntry = Playlist.FirstOrDefault(p => p.Fullname == _openScript);
+
+            if (currentEntry == null) return;
+
+            int currentIndex = Playlist.IndexOf(currentEntry);
+            var nextEntry = Playlist[(currentIndex - 1 + Playlist.Count) % Playlist.Count];
+
+            LoadScript(nextEntry.Fullname, true);
+        }
+
         private void VideoPlayer_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (cckLogMarkers.IsChecked != true)
@@ -1012,6 +1024,16 @@ namespace ScriptPlayer
         {
             PatternSource = PatternSource.Generator;
             StartPattern(new RandomPatternGenerator());
+        }
+
+        private void btnNextVideo_Click(object sender, RoutedEventArgs e)
+        {
+            LoadNextPlaylistEntry();
+        }
+
+        private void btnPreviousVideo_Click(object sender, RoutedEventArgs e)
+        {
+            LoadPreviousPlaylistEntry();
         }
     }
 
