@@ -6,7 +6,7 @@
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Script Player" Height="493" Width="866" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico">
+        Title="ScripPlayer" Height="493" Width="866" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></BooleanToVisibilityConverter>
     </Window.Resources>

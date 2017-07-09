@@ -230,12 +230,19 @@ namespace ScriptPlayer
             _openVideo = filename;
             VideoPlayer.Open(filename);
 
+            SetTitle(filename);
+
             OverlayText.SetText($"Loaded {Path.GetFileName(filename)}", TimeSpan.FromSeconds(4));
 
             if (checkForScript)
                 TryFindMatchingScript(filename);
 
             Play();
+        }
+
+        public void SetTitle(string filePath)
+        {
+            Title = "ScriptPlayer - " + Path.GetFileNameWithoutExtension(filePath);
         }
 
         private void TryFindMatchingScript(string filename)

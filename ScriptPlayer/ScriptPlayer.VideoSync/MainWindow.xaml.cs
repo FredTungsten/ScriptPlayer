@@ -419,6 +419,9 @@ namespace ScriptPlayer.VideoSync
         {
             _videoFile = videoFile;
             videoPlayer.Open(videoFile);
+
+            SetTitle(videoFile);
+
             if (play)
                 videoPlayer.Play();
 
@@ -1049,6 +1052,11 @@ namespace ScriptPlayer.VideoSync
 
             if (handled)
                 e.Handled = true;
+        }
+
+        public void SetTitle(string filePath)
+        {
+            Title = "ScriptPlayer Video Sync - " + Path.GetFileNameWithoutExtension(filePath);
         }
 
         private void BeatBar_OnTimeMouseDown(object sender, TimeSpan e)
