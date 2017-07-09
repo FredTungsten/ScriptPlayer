@@ -891,6 +891,8 @@ namespace ScriptPlayer
                 var line = position.ToString("hh\\:mm\\:ss");
 
                 File.AppendAllLines(logFile, new[]{line});
+
+                OverlayText.SetText("Logged marker at " + line, TimeSpan.FromSeconds(5));
             }
             catch(Exception ex)
             {
