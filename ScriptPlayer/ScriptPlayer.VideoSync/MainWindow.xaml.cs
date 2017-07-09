@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Remoting.Channels;
 using System.Text;
 using System.Windows;
@@ -911,39 +912,43 @@ namespace ScriptPlayer.VideoSync
             if (wasPlaying)
                 videoPlayer.Pause();
 
-            try
-            {
-                double additionalBeats = GetDouble(0);
-                if (double.IsNaN(additionalBeats)) return;
-                
-                TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
-                TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+            double additionalBeats = GetDouble(0);
+            if (double.IsNaN(additionalBeats)) return;
 
-                List<TimeSpan> beatsToEvenOut = Beats.GetBeats(tBegin, tEnd).ToList();
+            Normalize((int)additionalBeats);
 
-                List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+            if (wasPlaying)
+                videoPlayer.Play();
+        }
 
-                TimeSpan first = beatsToEvenOut.Min();
-                TimeSpan last = beatsToEvenOut.Max();
+        private void Normalize(int additionalBeats)
+        {
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
 
-                int numberOfBeats = (int) (beatsToEvenOut.Count + additionalBeats);
+            List<TimeSpan> beatsToEvenOut = Beats.GetBeats(tBegin, tEnd).ToList();
 
-                if (numberOfBeats > 1)
-                {
-                    TimeSpan tStart = first;
-                    TimeSpan intervall = (last - first).Divide(numberOfBeats - 1);
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
 
-                    for (int i = 0; i < numberOfBeats; i++)
-                        otherBeats.Add(tStart + intervall.Multiply(i));
-                }
+            if (beatsToEvenOut.Count < 2)
+                return;
 
-                SetAllBeats(otherBeats);
-            }
-            finally
-            {
-                if(wasPlaying)
-                    videoPlayer.Play();
-            }
+            TimeSpan first = beatsToEvenOut.Min();
+            TimeSpan last = beatsToEvenOut.Max();
+
+            int numberOfBeats = (int)(beatsToEvenOut.Count + additionalBeats);
+            if (numberOfBeats < 2)
+                numberOfBeats = 2;
+
+            TimeSpan tStart = first;
+            TimeSpan intervall = (last - first).Divide(numberOfBeats - 1);
+
+            for (int i = 0; i < numberOfBeats; i++)
+                otherBeats.Add(tStart + intervall.Multiply(i));
+
+            Fadeout.SetText(intervall.TotalMilliseconds.ToString("f0") + "ms", TimeSpan.FromSeconds(4));
+
+            SetAllBeats(otherBeats);
         }
 
         private void mnuShowBeatDuration_Click(object sender, RoutedEventArgs e)
@@ -1015,6 +1020,28 @@ namespace ScriptPlayer.VideoSync
                     DeleteBeatsWithinMarkers();
                     break;
                 }
+                case Key.Add:
+                {
+                    Normalize(1);
+                    break;
+                }
+                case Key.Subtract:
+                {
+                    Normalize(-1);
+                    break;
+                }
+                case Key.Enter:
+                {
+                    if (IsNumpadEnterKey(e))
+                    {
+                        Normalize(0);
+                    }
+                    else
+                    {
+                        handled = false;
+                    }
+                    break;
+                }
                 default:
                     handled = false;
                     break;
@@ -1039,6 +1066,25 @@ namespace ScriptPlayer.VideoSync
             TimeSpan closest = Beats.OrderBy(b => Math.Abs(b.Ticks - timeSpan.Ticks)).First();
             Beats.Remove(closest);
 
+        }
+
+        private static bool IsNumpadEnterKey(KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+                return false;
+
+            // To understand the following UGLY implementation please check this MSDN link. Suggested workaround to differentiate between the Return key and Enter key.
+            // https://social.msdn.microsoft.com/Forums/vstudio/en-US/b59e38f1-38a1-4da9-97ab-c9a648e60af5/whats-the-difference-between-keyenter-and-keyreturn?forum=wpf
+            try
+            {
+                return (bool)typeof(KeyEventArgs).InvokeMember("IsExtendedKey", BindingFlags.GetProperty | BindingFlags.NonPublic | BindingFlags.Instance, null, e, null);
+            }
+            catch (Exception ex)
+            {
+               
+            }
+
+            return false;
         }
 
         private void mnuSetMarkerMode_Click(object sender, RoutedEventArgs e)
