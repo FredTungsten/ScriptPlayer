@@ -122,7 +122,11 @@
                         <TextBlock Margin="0" Text="{Binding CommandDelay, StringFormat={}{0:f0} ms}" TextAlignment="Center"/>
                     </StackPanel>
                     
-                    <Separator></Separator>
+                    <StackPanel Margin="4" ToolTip="Will automatically skip command gaps of more than 10s.">
+                        <CheckBox Content="Auto-Skip Gaps" Name="cckAutoSkip"/>
+                    </StackPanel>
+                    
+                    <Separator/>
                         
                     <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Debug" FontSize="20"/>
                     <CheckBox Margin="4" Name="cckHeatMap" Checked="CckHeatMap_OnChecked" Unchecked="CckHeatMap_OnChecked">Show Heat Map</CheckBox>

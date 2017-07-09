@@ -427,15 +427,25 @@ namespace ScriptPlayer
         private void HandleFunScriptAction(ScriptActionEventArgs<FunScriptAction> eventArgs)
         {
             if (eventArgs.NextAction == null)
+            {
+                OverlayText.SetText("No more events available", TimeSpan.FromSeconds(4));
                 return;
+            }
 
             byte currentPosition = TransformPosition(eventArgs.CurrentAction.Position);
             byte nextPosition = TransformPosition(eventArgs.NextAction.Position);
 
             TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
-            if (duration > TimeSpan.FromSeconds(20) && VideoPlayer.IsPlaying)
+            if (duration > TimeSpan.FromSeconds(10) && VideoPlayer.IsPlaying)
             {
-                OverlayText.SetText($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4));
+                if (cckAutoSkip.IsChecked == true)
+                {
+                    SkipToNextEvent();
+                }
+                else
+                {
+                    OverlayText.SetText($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4));
+                }
             }
             
             byte speed = SpeedPredictor.Predict((byte)Math.Abs(currentPosition - nextPosition), duration);
@@ -761,9 +771,9 @@ namespace ScriptPlayer
             e.Handled = handled;
         }
 
-        private void ShowPosition()
+        private void ShowPosition(string prefix = "")
         {
-            OverlayText.SetText($@"{VideoPlayer.TimeSource.Progress:h\:mm\:ss} / {VideoPlayer.Duration:h\:mm\:ss}", TimeSpan.FromSeconds(3));
+            OverlayText.SetText($@"{prefix}{VideoPlayer.TimeSource.Progress:h\:mm\:ss} / {VideoPlayer.Duration:h\:mm\:ss}", TimeSpan.FromSeconds(3));
         }
 
         private void TogglePlayback()
@@ -834,20 +844,27 @@ namespace ScriptPlayer
 
         private void btnSkip_Click(object sender, RoutedEventArgs e)
         {
+            SkipToNextEvent();
+        }
+
+        private void SkipToNextEvent()
+        {
             var currentPosition = VideoPlayer.GetPosition();
             ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition);
             if (nextAction == null)
             {
-                OverlayText.SetText("No more Events available", TimeSpan.FromSeconds(4));
+                OverlayText.SetText("No more events available", TimeSpan.FromSeconds(4));
                 return;
             }
 
             TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(3);
+            TimeSpan duration = skipTo - currentPosition;
+
             if (skipTo < currentPosition)
                 return;
 
             VideoPlayer.SetPosition(skipTo);
-            ShowPosition();
+            ShowPosition($"Skipped {duration.TotalSeconds:f0}s - ");
         }
 
         private void mnuShowPlaylist_Click(object sender, RoutedEventArgs e)
