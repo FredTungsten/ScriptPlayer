@@ -166,7 +166,7 @@ namespace ScriptPlayer
 
         private async void TestPattern(TimeSpan delay, params byte[] positions)
         {
-            SetLaunch(positions[0], 20);
+            SetLaunch(positions[0], 20, false);
             await Task.Delay(300);
 
             for (int i = 1; i < positions.Length; i++)
