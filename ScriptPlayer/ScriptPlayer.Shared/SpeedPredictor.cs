@@ -35,5 +35,10 @@ namespace ScriptPlayer.Shared
             double speed = 25000 * Math.Pow(mil, -1.05);
             return Clamp(speed);
         }
+
+        public static byte Predict2(byte pFrom, byte pTo, TimeSpan duration)
+        {
+            return Predict2((byte) Math.Abs(pFrom - pTo), duration);
+        }
     }
 }

@@ -121,6 +121,7 @@
     <Compile Include="Controls\RangeSlider.xaml.cs">
       <DependentUpon>RangeSlider.xaml</DependentUpon>
     </Compile>
+    <Compile Include="RepeatingScriptActions.cs" />
     <Compile Include="SampleAnalyser.cs" />
     <Compile Include="Scripts\ScriptActionEventArgs.cs" />
     <Compile Include="Scripts\ScriptFileFormat.cs" />

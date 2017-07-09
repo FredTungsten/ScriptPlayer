@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,12 +25,21 @@ namespace ScriptPlayer
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly DependencyProperty PatternSourceProperty = DependencyProperty.Register(
+            "PatternSource", typeof(PatternSource), typeof(MainWindow), new PropertyMetadata(PatternSource.Video));
+
+        public PatternSource PatternSource
+        {
+            get { return (PatternSource) GetValue(PatternSourceProperty); }
+            set { SetValue(PatternSourceProperty, value); }
+        }
+
         public static readonly DependencyProperty PlaylistProperty = DependencyProperty.Register(
             "Playlist", typeof(ObservableCollection<PlaylistEntry>), typeof(MainWindow), new PropertyMetadata(default(ObservableCollection<PlaylistEntry>)));
 
         public ObservableCollection<PlaylistEntry> Playlist
         {
-            get { return (ObservableCollection<PlaylistEntry>) GetValue(PlaylistProperty); }
+            get { return (ObservableCollection<PlaylistEntry>)GetValue(PlaylistProperty); }
             set { SetValue(PlaylistProperty, value); }
         }
 
@@ -38,7 +48,7 @@ namespace ScriptPlayer
 
         private static void OnCommandDelayPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((MainWindow) d).CommandDelayChanged();
+            ((MainWindow)d).CommandDelayChanged();
         }
 
         private void CommandDelayChanged()
@@ -49,7 +59,7 @@ namespace ScriptPlayer
 
         public double CommandDelay
         {
-            get { return (double) GetValue(CommandDelayProperty); }
+            get { return (double)GetValue(CommandDelayProperty); }
             set { SetValue(CommandDelayProperty, value); }
         }
 
@@ -58,17 +68,8 @@ namespace ScriptPlayer
 
         public double SpeedMultiplier
         {
-            get { return (double) GetValue(SpeedMultiplierProperty); }
+            get { return (double)GetValue(SpeedMultiplierProperty); }
             set { SetValue(SpeedMultiplierProperty, value); }
-        }
-
-        public static readonly DependencyProperty RandomRangeProperty = DependencyProperty.Register(
-            "RandomRange", typeof(bool), typeof(MainWindow), new PropertyMetadata(default(bool)));
-
-        public bool RandomRange
-        {
-            get { return (bool)GetValue(RandomRangeProperty); }
-            set { SetValue(RandomRangeProperty, value); }
         }
 
         public static readonly DependencyProperty VolumeProperty = DependencyProperty.Register(
@@ -125,7 +126,7 @@ namespace ScriptPlayer
 
         public MainWindow()
         {
-            Playlist = new ObservableCollection<PlaylistEntry>(); 
+            Playlist = new ObservableCollection<PlaylistEntry>();
             _supportedScriptExtensions = ScriptLoaderManager.GetSupportedExtensions();
 
             InitializeComponent();
@@ -255,7 +256,7 @@ namespace ScriptPlayer
             {
                 string nameOnly = Path.GetFileName(scriptFile);
                 if (MessageBox.Show(this, $"Do you want to also load '{nameOnly}'?", "Also load Script?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                LoadScript(scriptFile, false);
+                    LoadScript(scriptFile, false);
             }
         }
 
@@ -413,6 +414,9 @@ namespace ScriptPlayer
 
         private void ScriptHandlerOnScriptActionRaised(object sender, ScriptActionEventArgs eventArgs)
         {
+            if (PatternSource != PatternSource.Video)
+                return;
+
             flash.Now();
 
             if (eventArgs.RawCurrentAction is RawScriptAction)
@@ -455,29 +459,18 @@ namespace ScriptPlayer
                     OverlayText.SetText($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4));
                 }
             }
-            
+
             byte speed = SpeedPredictor.Predict((byte)Math.Abs(currentPosition - nextPosition), duration);
             SetLaunch(nextPosition, speed);
         }
 
         Random _rng = new Random();
+        private PatternGenerator _pattern;
+        private Thread _repeaterThread;
 
         private byte TransformPosition(byte pos, byte inMin, byte inMax)
         {
             double relative = (double)(pos - inMin) / (inMax - inMin);
-
-            if (RandomRange)
-            {
-                if (relative > 0.5)
-                {
-                    relative = _rng.NextDouble() * 0.5 + 0.5;
-                }
-                else
-                {
-                    relative = _rng.NextDouble() * 0.5;
-                }
-            }
-
             relative = Math.Min(1, Math.Max(0, relative));
             byte absolute = (byte)(MinPosition + (MaxPosition - MinPosition) * relative);
             return SpeedPredictor.Clamp(absolute);
@@ -495,7 +488,7 @@ namespace ScriptPlayer
 
         private void SetLaunch(byte position, byte speed, bool requirePlaying = true)
         {
-            speed = (byte) Math.Min(99, Math.Max(0, speed * SpeedMultiplier));
+            speed = (byte)Math.Min(99, Math.Max(0, speed * SpeedMultiplier));
 
             if (VideoPlayer.IsPlaying || !requirePlaying)
             {
@@ -603,7 +596,7 @@ namespace ScriptPlayer
                 Grid.SetRow(Shade, 0);
                 Grid.SetRowSpan(Shade, 3);
 
-                Grid.SetRow(flash,2);
+                Grid.SetRow(flash, 2);
             }
             else
             {
@@ -674,8 +667,8 @@ namespace ScriptPlayer
 
         private void VolumeUp()
         {
-            int oldVolume = (int) Math.Round(Volume);
-            int newVolume = (int) (5.0 * Math.Ceiling(Volume / 5.0));
+            int oldVolume = (int)Math.Round(Volume);
+            int newVolume = (int)(5.0 * Math.Ceiling(Volume / 5.0));
             if (oldVolume == newVolume)
                 newVolume += 5;
 
@@ -717,15 +710,15 @@ namespace ScriptPlayer
                         break;
                     }
                 case Key.Up:
-                {
-                    VolumeUp();
-                    break;
-                }
+                    {
+                        VolumeUp();
+                        break;
+                    }
                 case Key.Down:
-                {
-                    VolumeDown();
-                    break;
-                }
+                    {
+                        VolumeDown();
+                        break;
+                    }
                 case Key.NumPad0:
                     {
 
@@ -925,11 +918,11 @@ namespace ScriptPlayer
 
                 var line = position.ToString("hh\\:mm\\:ss");
 
-                File.AppendAllLines(logFile, new[]{line});
+                File.AppendAllLines(logFile, new[] { line });
 
                 OverlayText.SetText("Logged marker at " + line, TimeSpan.FromSeconds(5));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
             }
@@ -944,5 +937,88 @@ namespace ScriptPlayer
 
             UpdateHeatMap();
         }
+
+        private void btnPatternFast_Click(object sender, RoutedEventArgs e)
+        {
+            PatternSource = PatternSource.Generator;
+            StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(200));
+        }
+        private void btnPatternSlow_Click(object sender, RoutedEventArgs e)
+        {
+            PatternSource = PatternSource.Generator;
+            StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(600));
+        }
+
+        private void StartRegularPattern(byte positionFrom, byte positionTo, TimeSpan intervall)
+        {
+            var pattern = new RepeatingPatternGenerator();
+
+            pattern.Add(positionFrom, intervall);
+            pattern.Add(positionTo, intervall);
+
+            StartPattern(pattern);
+        }
+
+        private void StartPattern(PatternGenerator generator)
+        {
+            StopPattern();
+
+            _pattern = generator;
+
+            _repeaterThread = new Thread(() =>
+            {
+                var enumerator = _pattern.Get();
+
+                while (enumerator.MoveNext())
+                {
+                    var transistion = enumerator.Current;
+
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        byte pFrom = TransformPosition(transistion.From, 0, 99);
+                        byte pTo = TransformPosition(transistion.To, 0, 99);
+                        byte speed = SpeedPredictor.Predict2(pFrom, pTo, transistion.Duration);
+                        SetLaunch(pTo, speed, false);
+                    }));
+                }
+
+            });
+            _repeaterThread.Start();
+        }
+
+        private void StopPattern()
+        {
+            if (_pattern != null)
+            {
+                _pattern.Stop();
+                _pattern = null;
+                _repeaterThread.Join();
+            }
+        }
+
+        private void btnPatternVideo_Click(object sender, RoutedEventArgs e)
+        {
+            PatternSource = PatternSource.Video;
+            StopPattern();
+        }
+
+        private void btnPatternNone_Click(object sender, RoutedEventArgs e)
+        {
+            PatternSource = PatternSource.None;
+            StopPattern();
+        }
+
+        private void btnPatternRandom_Click(object sender, RoutedEventArgs e)
+        {
+            PatternSource = PatternSource.Generator;
+            StartPattern(new RandomPatternGenerator());
+        }
+    }
+
+    public enum PatternSource
+    {
+        Video,
+        None,
+        Generator
     }
 }

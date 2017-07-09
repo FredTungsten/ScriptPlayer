@@ -8,7 +8,7 @@
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="ScripPlayer" Height="591" Width="954" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico">
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></BooleanToVisibilityConverter>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -127,7 +127,19 @@
                     </StackPanel>
                     
                     <Separator/>
-                        
+
+                    <StackPanel ToolTip="Defines the command source">
+                        <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Source" FontSize="20"/>
+
+                        <RadioButton Style="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}" HorizontalAlignment="Stretch" Content="Video" Checked="btnPatternVideo_Click" IsChecked="True"/>
+                        <RadioButton Style="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}" HorizontalAlignment="Stretch" Content="None" Checked="btnPatternNone_Click"/>
+                        <RadioButton Style="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}" HorizontalAlignment="Stretch" Content="Slow" Checked="btnPatternSlow_Click"/>
+                        <RadioButton Style="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}" HorizontalAlignment="Stretch" Content="Fast" Checked="btnPatternFast_Click"/>
+                        <RadioButton Style="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}" HorizontalAlignment="Stretch" Content="Random" Checked="btnPatternRandom_Click"/>
+                    </StackPanel>
+                    
+                    <Separator/>
+
                     <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Debug" FontSize="20"/>
                     <CheckBox Margin="4" Name="cckHeatMap" Checked="CckHeatMap_OnChecked" Unchecked="CckHeatMap_OnChecked">Show Heat Map</CheckBox>
                     <TextBlock Margin="4" Text="Test Patterns"/>

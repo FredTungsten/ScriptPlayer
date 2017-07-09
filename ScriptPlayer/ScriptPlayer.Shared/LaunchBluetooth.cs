@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.Advertisement;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
@@ -70,8 +71,11 @@ namespace ScriptPlayer.Shared
 
             Debug.WriteLine($"BLEWATCHER Found: {device.Name}, {device.DeviceId}");
 
+            bool foundAndConnected = false;
+
             try
             {
+                Thread.Sleep(3000);
                 // SERVICES!!
                 GattDeviceService service = (await device.GetGattServicesForUuidAsync(Launch.Uids.MainService))
                     .Services.FirstOrDefault();
@@ -101,12 +105,25 @@ namespace ScriptPlayer.Shared
 
                 Debug.WriteLine("Launch Initialized: " + init.ToString().ToUpper() + "!");
 
+                foundAndConnected = true;
                 OnDeviceFound(launch);
 
             }
             catch (Exception e)
             {
                 Debug.WriteLine("Exception: " + e.Message);
+                if (device != null)
+                {
+                    device.Dispose();
+                }
+            }
+            finally
+            {
+                if (!foundAndConnected)
+                {
+                    Debug.WriteLine("Connect failed, try again ...");
+                    Start();
+                }
             }
         }
 
