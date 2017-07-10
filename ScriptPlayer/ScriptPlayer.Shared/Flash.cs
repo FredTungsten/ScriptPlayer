@@ -22,7 +22,7 @@ namespace ScriptPlayer.Shared
         }
 
         public static readonly DependencyProperty ActiveColorProperty = DependencyProperty.Register(
-            "ActiveColor", typeof(Color), typeof(Flash), new PropertyMetadata(Colors.Black, OnActiveColorPropertyChanged));
+            "ActiveColor", typeof(Color), typeof(Flash), new PropertyMetadata(Colors.Transparent, OnActiveColorPropertyChanged));
 
         public Color ActiveColor
         {

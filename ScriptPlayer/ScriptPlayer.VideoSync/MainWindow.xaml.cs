@@ -1203,5 +1203,30 @@ namespace ScriptPlayer.VideoSync
         {
             BeatBar.FlowDirection = FlowDirection.LeftToRight;
         }
+
+        private void mnuShiftSelected_Click(object sender, RoutedEventArgs e)
+        {
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            double shiftBy = GetDouble(0.0);
+            if (Double.IsNaN(shiftBy))
+                return;
+
+            TimeSpan shift = TimeSpan.FromMilliseconds((int)shiftBy);
+
+            List<TimeSpan> beatsToEvenOut = Beats.GetBeats(tBegin, tEnd).Select(b => b + shift).ToList();
+
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+
+            SetAllBeats(otherBeats.Concat(beatsToEvenOut));
+
+            _marker1 += shift;
+            _marker2 += shift;
+
+
+            BeatBar.Marker1 = _marker1;
+            BeatBar.Marker2 = _marker2;
+        }
     }
 }

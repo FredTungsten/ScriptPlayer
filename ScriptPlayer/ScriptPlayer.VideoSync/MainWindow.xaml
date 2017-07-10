@@ -47,6 +47,7 @@
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="Shift" Click="mnuShift_Click"/>
+                <MenuItem Header="Shift Selected" Click="mnuShiftSelected_Click"/>
                 <MenuItem Header="Scale" Click="mnuScale_Click"/>
                 <MenuItem Header="Reset" Click="mnuReset_Click"/>
                 <Separator/>

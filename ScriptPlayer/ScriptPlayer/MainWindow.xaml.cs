@@ -1,16 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
-using ScriptPlayer.ButtplugConnector;
+using Buttplug.Client;
+using Buttplug.Core;
+using Buttplug.Core.Messages;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -118,7 +122,7 @@ namespace ScriptPlayer
         private Launch _launch;
         private LaunchBluetooth _launchConnect;
 
-        private ButtplugWebSocketConnector _connector;
+        private Buttplug.Client.ButtplugWSClient _connector;
 
         private bool _fullscreen;
         private Rect _windowPosition;
@@ -467,6 +471,7 @@ namespace ScriptPlayer
         Random _rng = new Random();
         private PatternGenerator _pattern;
         private Thread _repeaterThread;
+        private ButtplugClientDevice _device;
 
         private byte TransformPosition(byte pos, byte inMin, byte inMax)
         {
@@ -493,8 +498,17 @@ namespace ScriptPlayer
             if (VideoPlayer.IsPlaying || !requirePlaying)
             {
                 _launch?.EnqueuePosition(position, speed);
-                _connector?.SetPosition(position, speed);
+                SendToAllCapableDevice(position, speed);
             }
+        }
+
+        private async void SendToAllCapableDevice(byte position, byte speed)
+        {
+            if (_device == null || _connector == null)
+                return;
+
+            ButtplugMessage message = await _connector.SendDeviceMessage(_device, new FleshlightLaunchFW12Cmd(_device.Index, position, speed));
+            Debug.WriteLine(message.ToString());
         }
 
         private void btnConnectLaunch_OnClick(object sender, RoutedEventArgs e)
@@ -596,7 +610,8 @@ namespace ScriptPlayer
                 Grid.SetRow(Shade, 0);
                 Grid.SetRowSpan(Shade, 3);
 
-                Grid.SetRow(flash, 2);
+                Grid.SetRow(flash, 0);
+                Grid.SetRowSpan(flash, 3);
             }
             else
             {
@@ -615,6 +630,7 @@ namespace ScriptPlayer
                 Grid.SetRowSpan(Shade, 1);
 
                 Grid.SetRow(flash, 1);
+                Grid.SetRowSpan(flash, 1);
             }
         }
 
@@ -824,7 +840,12 @@ namespace ScriptPlayer
         {
             VideoPlayer.Pause();
             _launch?.Close();
-            _connector?.Disconnect();
+
+            try
+            {
+                _connector?.Disconnect();
+            }
+            catch { }
         }
 
         private void sldDelay_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -839,13 +860,42 @@ namespace ScriptPlayer
 
         private async void btnConnectButtplug_OnClick(object sender, RoutedEventArgs e)
         {
-            _connector = new ButtplugWebSocketConnector();
-            bool success = await _connector.Connect();
+            _connector = new ButtplugWSClient("ScriptPlayer");
+            await _connector.Connect(new Uri("ws://localhost:12345/buttplug"));
+            _connector.DeviceAdded += ConnectorOnDeviceAdded;
 
-            if (success)
-                OverlayText.SetText("Connected to Buttplug", TimeSpan.FromSeconds(8));
+            ButtplugClientDevice[] devices = null;
+
+            try
+            {
+                //await _connector.RequestDeviceList();
+                //devices = _connector.getDevices();
+            }
+            catch
+            {
+                
+            }
+
+            if (devices == null || devices.Length == 0)
+            {
+                await _connector.StartScanning();
+                OverlayText.SetText("Connected to Buttplug, scanning for devices", TimeSpan.FromSeconds(8));
+            }
             else
-                OverlayText.SetText("Could not connect to Buttplug", TimeSpan.FromSeconds(8));
+            {
+                _device = devices.First();
+                OverlayText.SetText("Connected to Buttplug, using " + _device.Name, TimeSpan.FromSeconds(8));
+            }
+            
+
+            
+        }
+
+        private void ConnectorOnDeviceAdded(object sender, DeviceEventArgs deviceEventArgs)
+        {
+            _device = deviceEventArgs.GetType().GetField("device", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(deviceEventArgs) as ButtplugClientDevice;
+
+            OverlayText.SetText("Buttplug found device " + _device.Name, TimeSpan.FromSeconds(8));
         }
 
         private void btnSkip_Click(object sender, RoutedEventArgs e)
@@ -856,7 +906,7 @@ namespace ScriptPlayer
         private void SkipToNextEvent()
         {
             var currentPosition = VideoPlayer.GetPosition();
-            ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition);
+            ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition - _scriptHandler.Delay);
             if (nextAction == null)
             {
                 OverlayText.SetText("No more events available", TimeSpan.FromSeconds(4));

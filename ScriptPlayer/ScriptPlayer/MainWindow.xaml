@@ -23,13 +23,8 @@
 
         <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true"  MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" MouseDoubleClick="VideoPlayer_OnMouseDoubleClick" Grid.Row="1" x:Name="VideoPlayer" Grid.ColumnSpan="2" MediaEnded="VideoPlayer_MediaEnded" MouseRightButtonDown="VideoPlayer_MouseRightButtonDown" MediaOpened="VideoPlayer_MediaOpened"/>
 
-        <shared:Flash Grid.ColumnSpan="2" Visibility="{Binding ElementName=cckFlash, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.Row="1" Grid.Column="0" Height="40" x:Name="flash" HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
-            <shared:Flash.OpacityMask>
-                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1" >
-                    <GradientStop Color="Transparent" Offset="0"/>
-                    <GradientStop Color="Black" Offset="1"/>
-                </LinearGradientBrush>
-            </shared:Flash.OpacityMask>
+        <shared:Flash Grid.ColumnSpan="2" Visibility="{Binding ElementName=cckFlash, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.Row="1" Grid.Column="0" x:Name="flash" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsHitTestVisible="False" Opacity="1">
+        
         </shared:Flash>
         <shared:OverlayText IsHitTestVisible="False" x:Name="OverlayText" Grid.Row="1" Margin="10" Grid.ColumnSpan="2" Grid.Column="0" />
 
