@@ -121,8 +121,9 @@ namespace ScriptPlayer.Shared
 
         private double LaunchToVibrator(byte speed)
         {
-            //1.0 doesn't work?
-            return Math.Min(0.9999, Math.Max(0.25, (speed+1.0) / 100.0));
+            double speedRelative = (speed+1) / 100.0;
+            double result = 0.25 + 0.75 * speedRelative;
+            return Math.Min(1.0, Math.Max(0.25, result));
         }
 
         private string LaunchToLovense(byte position, byte speed)
