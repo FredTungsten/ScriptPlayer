@@ -33,8 +33,8 @@ namespace ScriptPlayer
 
         private void Client_DeviceAddedOrRemoved(object sender, DeviceEventArgs deviceEventArgs)
         {
-            var device = GetPrivateField<ButtplugClientDevice>(deviceEventArgs, "device");
-            var action = GetPrivateField<DeviceEventArgs.DeviceAction>(deviceEventArgs, "action");
+            var device = DirtyHacks.GetPrivateField<ButtplugClientDevice>(deviceEventArgs, "device");
+            var action = DirtyHacks.GetPrivateField<DeviceEventArgs.DeviceAction>(deviceEventArgs, "action");
 
             switch (action)
             {
@@ -49,10 +49,7 @@ namespace ScriptPlayer
             }
         }
 
-        private T GetPrivateField<T>(object obj, string fieldName)
-        {
-            return (T)obj.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(obj);
-        }
+       
 
         public async Task<bool> Connect()
         {

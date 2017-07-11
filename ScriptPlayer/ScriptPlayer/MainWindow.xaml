@@ -49,7 +49,10 @@
             </MenuItem>
             <MenuItem Header="Devices">
                 <MenuItem Header="Connect Launch directly" Click="mnuConnectLaunch_OnClick"/>
-                <MenuItem Header="Connect via Buttplug" Click="mnuConnectButtplug_OnClick"/>
+                <MenuItem Header="Buttplug">
+                    <MenuItem Header="Connect to Buttplug" Click="mnuConnectButtplug_OnClick"/>
+                    <MenuItem Header="Scan for Devices" Click="mnuButtplugScan_OnClick"/>
+                </MenuItem>
             </MenuItem>
         </Menu>
 

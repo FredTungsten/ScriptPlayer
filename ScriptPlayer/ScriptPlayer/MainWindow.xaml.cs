@@ -472,7 +472,7 @@ namespace ScriptPlayer
         Random _rng = new Random();
         private PatternGenerator _pattern;
         private Thread _repeaterThread;
-        private ButtplugClientDevice _device;
+        //private ButtplugClientDevice _device;
 
         private byte TransformPosition(byte pos, byte inMin, byte inMax)
         {
@@ -901,11 +901,18 @@ namespace ScriptPlayer
             await _connector.Connect(new Uri("ws://localhost:12345/buttplug"));
             _connector.DeviceAdded += ConnectorOnDeviceAdded;
 
+            //Doesn't help either
+            await Task.Delay(3000);
+
+            //TODO - this one throws an Exception
+            await _connector.RequestDeviceList();
+
+            /*
             ButtplugClientDevice[] devices = null;
 
             try
             {
-                //await _connector.RequestDeviceList();
+                //
                 //devices = _connector.getDevices();
             }
             catch
@@ -922,10 +929,16 @@ namespace ScriptPlayer
             {
                 _device = devices.First();
                 OverlayText.SetText("Connected to Buttplug, using " + _device.Name, TimeSpan.FromSeconds(8));
-            }
-            
+            }*/
 
-            
+
+
+        }
+
+        private void ConnectorOnDeviceAdded(object sender, DeviceEventArgs e)
+        {
+            var device = DirtyHacks.GetPrivateField<ButtplugClientDevice>(e, "device");
+            OverlayText.SetText("Buttplug found a new device: " + device.Name, TimeSpan.FromSeconds(4));
         }
 
 
@@ -1115,6 +1128,11 @@ namespace ScriptPlayer
         private void btnPreviousVideo_Click(object sender, RoutedEventArgs e)
         {
             LoadPreviousPlaylistEntry();
+        }
+
+        private void mnuButtplugScan_OnClick(object sender, RoutedEventArgs e)
+        {
+            _connector.StartScanning();
         }
     }
 
