@@ -122,7 +122,8 @@ namespace ScriptPlayer
         private Launch _launch;
         private LaunchBluetooth _launchConnect;
 
-        private Buttplug.Client.ButtplugWSClient _connector;
+        private ButtplugWSClient _connector;
+        private int _lastPos = 100;
 
         private bool _fullscreen;
         private Rect _windowPosition;
@@ -171,13 +172,13 @@ namespace ScriptPlayer
 
         private async void TestPattern(TimeSpan delay, params byte[] positions)
         {
-            SetLaunch(positions[0], 20, false);
+            SetLaunch(positions[0], 20, delay, false);
             await Task.Delay(300);
 
             for (int i = 1; i < positions.Length; i++)
             {
                 byte speed = SpeedPredictor.Predict2((byte)Math.Abs(TransformPosition(positions[i - 1], 0, 99) - TransformPosition(positions[i], 0, 99)), delay);
-                SetLaunch(TransformPosition(positions[i], 0, 99), speed, false);
+                SetLaunch(TransformPosition(positions[i], 0, 99), speed, delay, false);
 
                 if (i + 1 < positions.Length)
                     await Task.Delay(delay);
@@ -465,7 +466,7 @@ namespace ScriptPlayer
             }
 
             byte speed = SpeedPredictor.Predict((byte)Math.Abs(currentPosition - nextPosition), duration);
-            SetLaunch(nextPosition, speed);
+            SetLaunch(nextPosition, speed, duration);
         }
 
         Random _rng = new Random();
@@ -488,27 +489,58 @@ namespace ScriptPlayer
 
         private void HandleRawScriptAction(ScriptActionEventArgs<RawScriptAction> eventArgs)
         {
-            SetLaunch(TransformPosition(eventArgs.CurrentAction.Position), eventArgs.CurrentAction.Speed);
+            SetLaunch(TransformPosition(eventArgs.CurrentAction.Position), eventArgs.CurrentAction.Speed,
+                (eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp) );
         }
 
-        private void SetLaunch(byte position, byte speed, bool requirePlaying = true)
+        private void SetLaunch(byte position, byte speed, TimeSpan duration, bool requirePlaying = true)
         {
             speed = (byte)Math.Min(99, Math.Max(0, speed * SpeedMultiplier));
 
             if (VideoPlayer.IsPlaying || !requirePlaying)
             {
                 _launch?.EnqueuePosition(position, speed);
-                SendToAllCapableDevice(position, speed);
+                SendToAllCapableDevice(position, speed, duration);
             }
         }
-
-        private async void SendToAllCapableDevice(byte position, byte speed)
+        private async void SendToAllCapableDevice(byte position, byte speed, TimeSpan duration)
         {
-            if (_device == null || _connector == null)
+            if(_connector == null)
+            {
                 return;
+            }
 
-            ButtplugMessage message = await _connector.SendDeviceMessage(_device, new FleshlightLaunchFW12Cmd(_device.Index, position, speed));
-            Debug.WriteLine(message.ToString());
+            foreach (var d in _connector.getDevices())
+            {
+                if (d.AllowedMessages.Contains("FleshlightLaunchFW12Cmd"))
+                {
+                    var message = await _connector.SendDeviceMessage(d, new FleshlightLaunchFW12Cmd(d.Index, speed, position, _connector.nextMsgId));
+                    Debug.WriteLine(message.ToString());
+                }
+                else if (d.AllowedMessages.Contains("SingleMotorVibrateCmd"))
+                {
+                    // Convert speed + position change into intensity (0-10) and time (ms)
+                    double intensity = Convert.ToDouble((uint)speed) / 100;
+                    int time = duration.Milliseconds;
+
+                    if (time > 900)
+                    {
+                        time = 900;
+                    }
+
+                    if (intensity < 0.15)
+                    {
+                        intensity = 0.15;
+                    }
+
+                    _connector.SendDeviceMessage(d, new SingleMotorVibrateCmd(d.Index, intensity, _connector.nextMsgId));
+                    Task.Run(() => {
+                        Thread.Sleep(time / 2);
+                        _connector.SendDeviceMessage(d, new SingleMotorVibrateCmd(d.Index, 0, _connector.nextMsgId));
+                    });
+                }
+                _lastPos = position;
+            }
         }
 
         private void btnConnectLaunch_OnClick(object sender, RoutedEventArgs e)
@@ -860,6 +892,11 @@ namespace ScriptPlayer
 
         private async void btnConnectButtplug_OnClick(object sender, RoutedEventArgs e)
         {
+            if (_connector != null)
+            {
+                await _connector.Disconnect();
+            }
+            
             _connector = new ButtplugWSClient("ScriptPlayer");
             await _connector.Connect(new Uri("ws://localhost:12345/buttplug"));
             _connector.DeviceAdded += ConnectorOnDeviceAdded;
@@ -1040,7 +1077,7 @@ namespace ScriptPlayer
                         byte pFrom = TransformPosition(transistion.From, 0, 99);
                         byte pTo = TransformPosition(transistion.To, 0, 99);
                         byte speed = SpeedPredictor.Predict2(pFrom, pTo, transistion.Duration);
-                        SetLaunch(pTo, speed, false);
+                        SetLaunch(pTo, speed, transistion.Duration, false);
                     }));
                 }
 
