@@ -12,9 +12,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
-using Buttplug.Client;
-using Buttplug.Core;
-using Buttplug.Core.Messages;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -34,7 +31,7 @@ namespace ScriptPlayer
 
         public PatternSource PatternSource
         {
-            get { return (PatternSource) GetValue(PatternSourceProperty); }
+            get { return (PatternSource)GetValue(PatternSourceProperty); }
             set { SetValue(PatternSourceProperty, value); }
         }
 
@@ -122,7 +119,7 @@ namespace ScriptPlayer
         private Launch _launch;
         private LaunchBluetooth _launchConnect;
 
-        private ButtplugWSClient _connector;
+        private ButtplugAdapter _connector;
         private int _lastPos = 100;
 
         private bool _fullscreen;
@@ -172,13 +169,36 @@ namespace ScriptPlayer
 
         private async void TestPattern(TimeSpan delay, params byte[] positions)
         {
-            SetLaunch(positions[0], 20, delay, false);
+            SetLaunch(
+                new DeviceCommandInformation
+                {
+                    Duration = delay,
+                    SpeedTransformed = 20,
+                    SpeedOriginal = 20,
+                    PositionFromOriginal = 0,
+                    PositionFromTransformed = 0,
+                    PositionToOriginal = positions[0],
+                    PositionToTransformed = TransformPosition(positions[0], 0, 99)
+                }
+            );
             await Task.Delay(300);
 
             for (int i = 1; i < positions.Length; i++)
             {
-                byte speed = SpeedPredictor.Predict2((byte)Math.Abs(TransformPosition(positions[i - 1], 0, 99) - TransformPosition(positions[i], 0, 99)), delay);
-                SetLaunch(TransformPosition(positions[i], 0, 99), speed, delay, false);
+
+                var info = new DeviceCommandInformation
+                {
+                    Duration = delay,
+                    PositionFromOriginal = positions[i - 1],
+                    PositionToOriginal = positions[i],
+                    PositionFromTransformed = TransformPosition(positions[i - 1], 0, 99),
+                    PositionToTransformed = TransformPosition(positions[i], 0, 99)
+                };
+
+                info.SpeedOriginal = SpeedPredictor.Predict2(info.PositionFromOriginal, info.PositionToOriginal, delay);
+                info.SpeedTransformed = SpeedPredictor.Predict2(info.PositionFromTransformed, info.PositionToTransformed, delay);
+
+                SetLaunch(info, false);
 
                 if (i + 1 < positions.Length)
                     await Task.Delay(delay);
@@ -424,11 +444,7 @@ namespace ScriptPlayer
 
             flash.Now();
 
-            if (eventArgs.RawCurrentAction is RawScriptAction)
-            {
-                HandleRawScriptAction(eventArgs.Cast<RawScriptAction>());
-            }
-            else if (eventArgs.RawCurrentAction is FunScriptAction)
+            if (eventArgs.RawCurrentAction is FunScriptAction)
             {
                 HandleFunScriptAction(eventArgs.Cast<FunScriptAction>());
             }
@@ -449,10 +465,26 @@ namespace ScriptPlayer
                 return;
             }
 
-            byte currentPosition = TransformPosition(eventArgs.CurrentAction.Position);
-            byte nextPosition = TransformPosition(eventArgs.NextAction.Position);
-
             TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
+            byte currentPositionTransformed = TransformPosition(eventArgs.CurrentAction.Position);
+            byte nextPositionTransformed = TransformPosition(eventArgs.NextAction.Position);
+
+            byte speedOriginal = SpeedPredictor.Predict((byte)Math.Abs(eventArgs.CurrentAction.Position - eventArgs.NextAction.Position), duration);
+            byte speedTransformed = SpeedPredictor.Predict((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed), duration);
+            speedTransformed = (byte)Math.Min(99, Math.Max(0, speedTransformed * SpeedMultiplier));
+
+
+            DeviceCommandInformation info = new DeviceCommandInformation
+            {
+                Duration = duration,
+                SpeedTransformed = speedTransformed,
+                SpeedOriginal = speedOriginal,
+                PositionFromTransformed = currentPositionTransformed,
+                PositionToTransformed = nextPositionTransformed,
+                PositionFromOriginal = eventArgs.CurrentAction.Position,
+                PositionToOriginal = eventArgs.NextAction.Position
+            };
+
             if (duration > TimeSpan.FromSeconds(10) && VideoPlayer.IsPlaying)
             {
                 if (cckAutoSkip.IsChecked == true)
@@ -465,11 +497,9 @@ namespace ScriptPlayer
                 }
             }
 
-            byte speed = SpeedPredictor.Predict((byte)Math.Abs(currentPosition - nextPosition), duration);
-            SetLaunch(nextPosition, speed, duration);
+            SetLaunch(info);
         }
 
-        Random _rng = new Random();
         private PatternGenerator _pattern;
         private Thread _repeaterThread;
         //private ButtplugClientDevice _device;
@@ -487,59 +517,12 @@ namespace ScriptPlayer
             return TransformPosition(pos, _minScriptPosition, _maxScriptPosition);
         }
 
-        private void HandleRawScriptAction(ScriptActionEventArgs<RawScriptAction> eventArgs)
+        private void SetLaunch(DeviceCommandInformation information, bool requirePlaying = true)
         {
-            SetLaunch(TransformPosition(eventArgs.CurrentAction.Position), eventArgs.CurrentAction.Speed,
-                (eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp) );
-        }
-
-        private void SetLaunch(byte position, byte speed, TimeSpan duration, bool requirePlaying = true)
-        {
-            speed = (byte)Math.Min(99, Math.Max(0, speed * SpeedMultiplier));
-
             if (VideoPlayer.IsPlaying || !requirePlaying)
             {
-                _launch?.EnqueuePosition(position, speed);
-                SendToAllCapableDevice(position, speed, duration);
-            }
-        }
-        private async void SendToAllCapableDevice(byte position, byte speed, TimeSpan duration)
-        {
-            if(_connector == null)
-            {
-                return;
-            }
-
-            foreach (var d in _connector.getDevices())
-            {
-                if (d.AllowedMessages.Contains("FleshlightLaunchFW12Cmd"))
-                {
-                    var message = await _connector.SendDeviceMessage(d, new FleshlightLaunchFW12Cmd(d.Index, speed, position, _connector.nextMsgId));
-                    Debug.WriteLine(message.ToString());
-                }
-                else if (d.AllowedMessages.Contains("SingleMotorVibrateCmd"))
-                {
-                    // Convert speed + position change into intensity (0-10) and time (ms)
-                    double intensity = Convert.ToDouble((uint)speed) / 100;
-                    int time = duration.Milliseconds;
-
-                    if (time > 900)
-                    {
-                        time = 900;
-                    }
-
-                    if (intensity < 0.15)
-                    {
-                        intensity = 0.15;
-                    }
-
-                    _connector.SendDeviceMessage(d, new SingleMotorVibrateCmd(d.Index, intensity, _connector.nextMsgId));
-                    Task.Run(() => {
-                        Thread.Sleep(time / 2);
-                        _connector.SendDeviceMessage(d, new SingleMotorVibrateCmd(d.Index, 0, _connector.nextMsgId));
-                    });
-                }
-                _lastPos = position;
+                _launch?.EnqueuePosition(information.PositionToTransformed, information.SpeedTransformed);
+                _connector?.Set(information);
             }
         }
 
@@ -894,51 +877,26 @@ namespace ScriptPlayer
         {
             if (_connector != null)
             {
-                await _connector.Disconnect();
+                await _connector?.Disconnect();
             }
-            
-            _connector = new ButtplugWSClient("ScriptPlayer");
-            await _connector.Connect(new Uri("ws://localhost:12345/buttplug"));
+
+            _connector = new ButtplugAdapter();
             _connector.DeviceAdded += ConnectorOnDeviceAdded;
 
-            //Doesn't help either
-            await Task.Delay(3000);
+            bool success = await _connector.Connect();
 
-            //TODO - this one throws an Exception
-            await _connector.RequestDeviceList();
-
-            /*
-            ButtplugClientDevice[] devices = null;
-
-            try
-            {
-                //
-                //devices = _connector.getDevices();
-            }
-            catch
-            {
-                
-            }
-
-            if (devices == null || devices.Length == 0)
-            {
-                await _connector.StartScanning();
-                OverlayText.SetText("Connected to Buttplug, scanning for devices", TimeSpan.FromSeconds(8));
-            }
+            if(success)
+                OverlayText.SetText("Connected to Buttplug", TimeSpan.FromSeconds(6000));
             else
             {
-                _device = devices.First();
-                OverlayText.SetText("Connected to Buttplug, using " + _device.Name, TimeSpan.FromSeconds(8));
-            }*/
-
-
-
+                _connector = null;
+                OverlayText.SetText("Could not connect to Buttplug", TimeSpan.FromSeconds(6000));
+            }
         }
 
-        private void ConnectorOnDeviceAdded(object sender, DeviceEventArgs e)
+        private void ConnectorOnDeviceAdded(object sender, string deviceName)
         {
-            var device = DirtyHacks.GetPrivateField<ButtplugClientDevice>(e, "device");
-            OverlayText.SetText("Buttplug found a new device: " + device.Name, TimeSpan.FromSeconds(4));
+            OverlayText.SetText("Device found: " + deviceName, TimeSpan.FromSeconds(5));
         }
 
 
@@ -1081,10 +1039,19 @@ namespace ScriptPlayer
 
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        byte pFrom = TransformPosition(transistion.From, 0, 99);
-                        byte pTo = TransformPosition(transistion.To, 0, 99);
-                        byte speed = SpeedPredictor.Predict2(pFrom, pTo, transistion.Duration);
-                        SetLaunch(pTo, speed, transistion.Duration, false);
+                        var info = new DeviceCommandInformation
+                        {
+                            Duration = transistion.Duration,
+                            PositionFromOriginal = transistion.From,
+                            PositionToOriginal = transistion.To,
+                            PositionFromTransformed = TransformPosition(transistion.From, 0, 99),
+                            PositionToTransformed = TransformPosition(transistion.To, 0, 99)
+                        };
+
+                        info.SpeedOriginal = SpeedPredictor.Predict2(info.PositionFromOriginal, info.PositionToOriginal, transistion.Duration);
+                        info.SpeedTransformed = SpeedPredictor.Predict2(info.PositionFromTransformed, info.PositionToTransformed, transistion.Duration);
+
+                        SetLaunch(info, false);
                     }));
                 }
 

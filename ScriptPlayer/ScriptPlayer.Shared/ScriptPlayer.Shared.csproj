@@ -31,8 +31,21 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Buttplug.Client, Version=0.0.0.377, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.Client.0.0.0.377-alpha\lib\net452\Buttplug.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Buttplug.Core, Version=0.0.0.377, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.Core.0.0.0.377-alpha\lib\net452\Buttplug.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="JetBrains.Annotations, Version=10.4.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
+      <HintPath>..\packages\JetBrains.Annotations.10.4.0\lib\net\JetBrains.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NJsonSchema, Version=9.2.5.0, Culture=neutral, PublicKeyToken=c2f9c3bdfae56102, processorArchitecture=MSIL">
+      <HintPath>..\packages\NJsonSchema.9.2.5\lib\net45\NJsonSchema.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -58,6 +71,7 @@
     <Compile Include="AnalysisParameters.cs" />
     <Compile Include="BeatCollection.cs" />
     <Compile Include="BlockingQueue.cs" />
+    <Compile Include="ButtplugAdapter.cs" />
     <Compile Include="ColorSampler.cs" />
     <Compile Include="Colors\HslConversion.cs" />
     <Compile Include="Controls\BeatBar.cs" />
@@ -97,9 +111,11 @@
     <Compile Include="Converters\PositionToMarginConverter.cs" />
     <Compile Include="Converters\TimeSpanToSecondsConverter.cs" />
     <Compile Include="Controls\GifPlayer.cs" />
+    <Compile Include="DeviceCommandInformation.cs" />
     <Compile Include="Dialogs\BeatPatternEditor.xaml.cs">
       <DependentUpon>BeatPatternEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DirtyHacks.cs" />
     <Compile Include="Elevation\PermissionChecker.cs" />
     <Compile Include="Elevation\PermissionCheckResult.cs" />
     <Compile Include="Elevation\RegistryHelper.cs" />
@@ -110,6 +126,7 @@
     <Compile Include="FrameCaptureCollection.cs" />
     <Compile Include="HeatMapGenerator.cs" />
     <Compile Include="HideOnHover.cs" />
+    <Compile Include="IDeviceController.cs" />
     <Compile Include="Launch.cs" />
     <Compile Include="LaunchBluetooth.cs" />
     <Compile Include="Metronome.cs" />
@@ -198,6 +215,7 @@
     <Resource Include="Images\LaunchBack.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,22 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Buttplug.Client;
 using Buttplug.Core.Messages;
 
-namespace ScriptPlayer
+namespace ScriptPlayer.Shared
 {
-    public interface IDeviceController
-    {
-        void Set(byte speed, byte position);
-    }
-
     public class ButtplugAdapter : IDeviceController
     {
-        private readonly ButtplugWSClient _client;
+        public event EventHandler<string> DeviceAdded;
+
+        private ButtplugWSClient _client;
         private readonly string _url;
 
         private List<ButtplugClientDevice> _devices;
@@ -24,11 +20,7 @@ namespace ScriptPlayer
         public ButtplugAdapter(string url = "ws://localhost:12345/buttplug")
         {
             _devices = new List<ButtplugClientDevice>();
-
             _url = url;
-            _client = new ButtplugWSClient("ScriptPlayer");
-            _client.DeviceAdded += Client_DeviceAddedOrRemoved;
-            _client.DeviceRemoved += Client_DeviceAddedOrRemoved;
         }
 
         private void Client_DeviceAddedOrRemoved(object sender, DeviceEventArgs deviceEventArgs)
@@ -40,6 +32,7 @@ namespace ScriptPlayer
             {
                 case DeviceEventArgs.DeviceAction.ADDED:
                     _devices.Add(device);
+                    OnDeviceAdded(device.Name);
                     break;
                 case DeviceEventArgs.DeviceAction.REMOVED:
                     _devices.RemoveAll(dev => dev.Index == device.Index);
@@ -49,51 +42,70 @@ namespace ScriptPlayer
             }
         }
 
-       
-
         public async Task<bool> Connect()
         {
-            await _client.Connect(new Uri(_url));
-            _devices = (await GetDeviceList()).ToList();
+            try
+            {
+                _client = new ButtplugWSClient("ScriptPlayer");
+                _client.DeviceAdded += Client_DeviceAddedOrRemoved;
+                _client.DeviceRemoved += Client_DeviceAddedOrRemoved;
 
-            return true;
+                await _client.Connect(new Uri(_url));
+                _devices = (await GetDeviceList()).ToList();
+
+                return true;
+            }
+            catch
+            {
+                _client = null;
+                return false;
+            }
         }
 
         private async Task<IEnumerable<ButtplugClientDevice>> GetDeviceList()
         {
             try
             {
-                //await _client.RequestDeviceList();
-                //devices = _client.getDevices();
+                //TODO Still not working?
+                await _client.RequestDeviceList();
+                //await Task.Delay(2000);
+                return _client.getDevices();
             }
             catch
             {
-
+                return new List<ButtplugClientDevice>();
             }
-
-            return new List<ButtplugClientDevice>();
         }
 
-        public async void Set(byte speed, byte position)
+        public async void Set(DeviceCommandInformation information)
         {
+            if (_client == null) return;
+
             var devices = _devices;
             foreach (ButtplugClientDevice device in devices)
             {
                 if (device.AllowedMessages.Contains(nameof(FleshlightLaunchFW12Cmd)))
                 {
-                    await _client.SendDeviceMessage(device, new FleshlightLaunchFW12Cmd(device.Index, speed, position));
+                    await _client.SendDeviceMessage(device, new FleshlightLaunchFW12Cmd(device.Index, information.SpeedTransformed, information.PositionToTransformed));
                 }
                 else if (device.AllowedMessages.Contains(nameof(KiirooCmd)))
                 {
-                    await _client.SendDeviceMessage(device, new KiirooCmd(device.Index, LaunchToKiiroo(position, 0, 4)));
+                    await _client.SendDeviceMessage(device, new KiirooCmd(device.Index, LaunchToKiiroo(information.PositionToOriginal, 0, 4)));
                 }
                 else if (device.AllowedMessages.Contains(nameof(SingleMotorVibrateCmd)))
                 {
-                    await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(speed)));
+                    await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.SpeedOriginal)));
+
+                    Task.Run(new Action(async () =>
+                    {
+                        TimeSpan duration = TimeSpan.FromMilliseconds(Math.Min(1000, information.Duration.TotalMilliseconds / 2.0));
+                        await Task.Delay(duration);
+                        await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, 0));
+                    }));
                 }
                 else if (device.AllowedMessages.Contains(nameof(VorzeA10CycloneCmd)))
                 {
-                    await _client.SendDeviceMessage(device, new VorzeA10CycloneCmd(device.Index, LaunchToVorze(speed), true));
+                    await _client.SendDeviceMessage(device, new VorzeA10CycloneCmd(device.Index, LaunchToVorze(information.SpeedOriginal), information.PositionToOriginal > information.PositionFromOriginal));
                 }
                 else if (device.AllowedMessages.Contains(nameof(LovenseCmd)))
                 {
@@ -109,7 +121,8 @@ namespace ScriptPlayer
 
         private double LaunchToVibrator(byte speed)
         {
-            return speed / 99.0;
+            //1.0 doesn't work?
+            return Math.Min(0.9999, Math.Max(0.25, (speed+1.0) / 100.0));
         }
 
         private string LaunchToLovense(byte position, byte speed)
@@ -124,6 +137,24 @@ namespace ScriptPlayer
             uint result = Math.Min(max, Math.Max(min, (uint)Math.Round(pos * (max - min) + min)));
 
             return result;
+        }
+
+        public async Task Disconnect()
+        {
+            if (_client == null) return;
+            _devices.Clear();
+            await _client.Disconnect();
+        }
+
+        public async Task StartScanning()
+        {
+            if (_client == null) return;
+            await _client.StartScanning();
+        }
+
+        protected virtual void OnDeviceAdded(string e)
+        {
+            DeviceAdded?.Invoke(this, e);
         }
     }
 }
