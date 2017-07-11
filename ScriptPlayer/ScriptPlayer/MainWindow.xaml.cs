@@ -507,11 +507,11 @@ namespace ScriptPlayer
             if (_device == null || _connector == null)
                 return;
 
-            ButtplugMessage message = await _connector.SendDeviceMessage(_device, new FleshlightLaunchFW12Cmd(_device.Index, position, speed));
+            ButtplugMessage message = await _connector.SendDeviceMessage(_device, new FleshlightLaunchFW12Cmd(_device.Index, speed, position));
             Debug.WriteLine(message.ToString());
         }
 
-        private void btnConnectLaunch_OnClick(object sender, RoutedEventArgs e)
+        private void mnuConnectLaunch_OnClick(object sender, RoutedEventArgs e)
         {
             _launchConnect.Start();
         }
@@ -858,7 +858,7 @@ namespace ScriptPlayer
             UpdateHeatMap();
         }
 
-        private async void btnConnectButtplug_OnClick(object sender, RoutedEventArgs e)
+        private async void mnuConnectButtplug_OnClick(object sender, RoutedEventArgs e)
         {
             _connector = new ButtplugWSClient("ScriptPlayer");
             await _connector.Connect(new Uri("ws://localhost:12345/buttplug"));
@@ -891,12 +891,6 @@ namespace ScriptPlayer
             
         }
 
-        private void ConnectorOnDeviceAdded(object sender, DeviceEventArgs deviceEventArgs)
-        {
-            _device = deviceEventArgs.GetType().GetField("device", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(deviceEventArgs) as ButtplugClientDevice;
-
-            OverlayText.SetText("Buttplug found device " + _device.Name, TimeSpan.FromSeconds(8));
-        }
 
         private void btnSkip_Click(object sender, RoutedEventArgs e)
         {

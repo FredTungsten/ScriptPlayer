@@ -48,8 +48,8 @@
                 <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
             </MenuItem>
             <MenuItem Header="Devices">
-                <MenuItem Header="Connect Launch directly" Click="btnConnectLaunch_OnClick"/>
-                <MenuItem Header="Connect via Buttplug" Click="btnConnectButtplug_OnClick"/>
+                <MenuItem Header="Connect Launch directly" Click="mnuConnectLaunch_OnClick"/>
+                <MenuItem Header="Connect via Buttplug" Click="mnuConnectButtplug_OnClick"/>
             </MenuItem>
         </Menu>
 
