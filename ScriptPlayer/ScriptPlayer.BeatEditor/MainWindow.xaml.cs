@@ -114,7 +114,7 @@ namespace LaunchControl.BeatEditor
             if (dialog.ShowDialog(this) != true) return;
 
             BeatProject project = BeatProject.Load(dialog.FileName);
-            if(project.VideoFile != VideoPlayer.OpenFile)
+            if(project.VideoFile != VideoPlayer.OpenedFile)
                 VideoPlayer.Open(project.VideoFile);
 
             timePanel.Children.Clear();
@@ -134,7 +134,7 @@ namespace LaunchControl.BeatEditor
             if (dialog.ShowDialog(this) != true) return;
 
             BeatProject project = new BeatProject();
-            project.VideoFile = VideoPlayer.OpenFile;
+            project.VideoFile = VideoPlayer.OpenedFile;
 
             foreach (BeatContainer container in timePanel.Children)
             {

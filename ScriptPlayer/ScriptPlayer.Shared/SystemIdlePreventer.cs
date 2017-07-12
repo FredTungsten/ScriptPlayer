@@ -2,7 +2,7 @@
 
 namespace ScriptPlayer.Shared
 {
-    public static class SystemIdelPreventer
+    public static class SystemIdlePreventer
     {
         public const uint ES_CONTINUOUS = 0x80000000;
         public const uint ES_SYSTEM_REQUIRED = 0x00000001;

@@ -56,18 +56,16 @@ namespace ScriptPlayer.Shared
 
         private static void OnHideMousePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VideoPlayer)d).UpdateMouse();
+            ((VideoPlayer)d).UpdateMouseHider();
         }
 
-        private void UpdateMouse()
+        private void UpdateMouseHider()
         {
-            SetMouse(!HideMouse);
+            _mouseHider.IsEnabled = HideMouse && IsPlaying;
+            _mouseHider.ResetTimer();
         }
 
-        private void SetMouse(bool visible)
-        {
-            Cursor = !visible ? Cursors.None : Cursors.Arrow;
-        }
+        private readonly MouseHider _mouseHider;
 
         public bool HideMouse
         {
@@ -162,13 +160,13 @@ namespace ScriptPlayer.Shared
             set { SetValue(TimeSourceProperty, value); }
         }
 
-        public static readonly DependencyProperty OpenFileProperty = DependencyProperty.Register(
-            "OpenFile", typeof(string), typeof(VideoPlayer), new PropertyMetadata(default(string)));
+        public static readonly DependencyProperty OpenedFileProperty = DependencyProperty.Register(
+            "OpenedFile", typeof(string), typeof(VideoPlayer), new PropertyMetadata(default(string)));
 
-        public string OpenFile
+        public string OpenedFile
         {
-            get { return (string)GetValue(OpenFileProperty); }
-            set { SetValue(OpenFileProperty, value); }
+            get { return (string)GetValue(OpenedFileProperty); }
+            set { SetValue(OpenedFileProperty, value); }
         }
 
         public Brush VideoBrush
@@ -180,68 +178,80 @@ namespace ScriptPlayer.Shared
         private MediaPlayer _player;
         private bool _down;
         private bool _isPlaying;
-        private DispatcherTimer _mouseTimer;
         private double _scale;
         private Point _offset;
 
+        public RelayCommand PlayCommand { get; }
+        public RelayCommand PauseCommand { get; }
+        public RelayCommand TogglePlayCommand { get; }
+
         public VideoPlayer()
         {
-            _mouseTimer = new DispatcherTimer(TimeSpan.FromSeconds(2), DispatcherPriority.Normal, MouseTimerOnElapsed, Dispatcher.CurrentDispatcher);
+            PlayCommand = new RelayCommand(Play, CanPlay);
+            PauseCommand = new RelayCommand(Pause, CanPause);
+            TogglePlayCommand = new RelayCommand(TogglePlay, CanTogglePlay);
+
+            _mouseHider =  new MouseHider(this);
+            
             InitializeComponent();
             InitializePlayer();
         }
 
-        private void MouseTimerOnElapsed(object sender, EventArgs eventArgs)
+        private void TogglePlay()
         {
-            _mouseTimer.Stop();
             if (IsPlaying)
-                SetMouse(false);
+                Pause();
+            else
+                Play();
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        private bool CanTogglePlay()
         {
-            ResetHideMouseTimer();
-            base.OnMouseMove(e);
+            if (IsPlaying)
+                return CanPause();
+            return CanPlay();
         }
 
-        private void ResetHideMouseTimer()
+        private bool CanPause()
         {
-            if (HideMouse)
-            {
-                SetMouse(true);
-                _mouseTimer.Stop();
-                _mouseTimer.Start();
-            }
+            return IsPlaying;
+        }
+
+        private bool CanPlay()
+        {
+            //TODO check for file loaded
+            return !IsPlaying;
         }
 
         public void Play()
         {
-            SystemIdelPreventer.Prevent(true);
             _player.Play();
-            _isPlaying = true;
-            //Fadeout.Animate("4");
+            SetIsPlaying(true);
+        }
 
-            ResetHideMouseTimer();
+        private void SetIsPlaying(bool isPlaying)
+        {
+            _isPlaying = isPlaying;
+            SystemIdlePreventer.Prevent(isPlaying);
+            CommandManager.InvalidateRequerySuggested();
+            UpdateMouseHider();
         }
 
         public void Pause()
         {
-            SystemIdelPreventer.Prevent(false);
             _player.Pause();
-            _isPlaying = false;
-            //Fadeout.Animate(";");
+            SetIsPlaying(false);
         }
 
         public void Open(string filename)
         {
-            OpenFile = filename;
+            OpenedFile = filename;
             _player.Open(new Uri(filename, UriKind.Absolute));
         }
 
         private void InitializePlayer()
         {
-            _player = new MediaPlayer();
-            _player.ScrubbingEnabled = true;
+            _player = new MediaPlayer {ScrubbingEnabled = true};
             _player.MediaOpened += PlayerOnMediaOpened;
             _player.MediaEnded += PlayerOnMediaEnded;
 
@@ -253,6 +263,7 @@ namespace ScriptPlayer.Shared
 
         private void PlayerOnMediaEnded(object sender, EventArgs eventArgs)
         {
+            SetIsPlaying(false);
             OnMediaEnded();
         }
 
@@ -383,18 +394,6 @@ namespace ScriptPlayer.Shared
         protected virtual void OnMediaEnded()
         {
             MediaEnded?.Invoke(this, EventArgs.Empty);
-        }
-    }
-
-    public struct Resolution
-    {
-        public int Horizontal { get; set; }
-        public int Vertical { get; set; }
-
-        public Resolution(int horizonal, int vertical)
-        {
-            Horizontal = horizonal;
-            Vertical = vertical;
         }
     }
 }
