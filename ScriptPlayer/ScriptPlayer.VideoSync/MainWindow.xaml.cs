@@ -918,13 +918,14 @@ namespace ScriptPlayer.VideoSync
             double additionalBeats = GetDouble(0);
             if (double.IsNaN(additionalBeats)) return;
 
-            Normalize((int)additionalBeats);
+            bool caps = Keyboard.IsKeyToggled(Key.CapsLock);
+            Normalize((int)additionalBeats, !caps);
 
             if (wasPlaying)
                 videoPlayer.Play();
         }
 
-        private void Normalize(int additionalBeats)
+        private void Normalize(int additionalBeats, bool trimToBeats = true)
         {
             TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
             TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
@@ -933,11 +934,11 @@ namespace ScriptPlayer.VideoSync
 
             List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
 
-            if (beatsToEvenOut.Count < 2)
+            if (beatsToEvenOut.Count < 2 && trimToBeats)
                 return;
 
-            TimeSpan first = beatsToEvenOut.Min();
-            TimeSpan last = beatsToEvenOut.Max();
+            TimeSpan first = trimToBeats? beatsToEvenOut.Min() : tBegin;
+            TimeSpan last = trimToBeats ? beatsToEvenOut.Max() : tEnd;
 
             int numberOfBeats = (int)(beatsToEvenOut.Count + additionalBeats);
             if (numberOfBeats < 2)
@@ -986,6 +987,7 @@ namespace ScriptPlayer.VideoSync
         {
             bool control = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
             bool shift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+            bool caps = Keyboard.IsKeyToggled(Key.CapsLock);
 
             bool handled = true;
             switch (e.Key)
@@ -1035,19 +1037,19 @@ namespace ScriptPlayer.VideoSync
                 }
                 case Key.Add:
                 {
-                    Normalize(1);
+                    Normalize(1, !caps);
                     break;
                 }
                 case Key.Subtract:
                 {
-                    Normalize(-1);
+                    Normalize(-1, !caps);
                     break;
                 }
                 case Key.Enter:
                 {
                     if (IsNumpadEnterKey(e))
                     {
-                        Normalize(0);
+                        Normalize(0, !caps);
                     }
                     else
                     {
@@ -1154,18 +1156,57 @@ namespace ScriptPlayer.VideoSync
 
         private void BeatBar_OnTimeMouseRightDown(object sender, TimeSpan e)
         {
-            SetMarker(1, e);
-            SetMarker(2, e);
+            if (KeepMarkerDuration())
+            {
+                TimeSpan currentDuration = TimeSpan.FromTicks(Math.Abs(_marker1.Ticks - _marker2.Ticks));
+
+                SetMarker(1, e);
+                SetMarker(2, e + currentDuration);
+            }
+            else
+            {
+                SetMarker(1, e);
+                SetMarker(2, e);
+            }   
         }
 
         private void BeatBar_OnTimeMouseRightMove(object sender, TimeSpan e)
         {
-            SetMarker(2, e);
+            if (KeepMarkerDuration())
+            {
+                TimeSpan currentDuration = TimeSpan.FromTicks(Math.Abs(_marker1.Ticks - _marker2.Ticks));
+
+                SetMarker(1, e);
+                SetMarker(2, e + currentDuration);
+            }
+            else
+            {
+                SetMarker(2, e);
+            }
         }
 
         private void BeatBar_OnTimeMouseRightUp(object sender, TimeSpan e)
         {
-            SetMarker(2, e);
+            if (KeepMarkerDuration())
+            {
+                TimeSpan currentDuration = TimeSpan.FromTicks(Math.Abs(_marker1.Ticks - _marker2.Ticks));
+
+                SetMarker(1, e);
+                SetMarker(2, e + currentDuration);
+            }
+            else
+            {
+                SetMarker(2, e);
+            }
+        }
+
+        private bool KeepMarkerDuration()
+        {
+            if (_marker1 == TimeSpan.MinValue) return false;
+            if (_marker2 == TimeSpan.MinValue) return false;
+            if (_marker1 == _marker2) return false;
+
+            return Keyboard.IsKeyToggled(Key.Scroll);
         }
 
         private void btnLoadBookmarks_Click(object sender, RoutedEventArgs e)

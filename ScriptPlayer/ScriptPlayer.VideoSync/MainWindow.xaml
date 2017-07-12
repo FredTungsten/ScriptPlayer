@@ -143,7 +143,7 @@
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="Beatbar Midpoint:"/>
                     <Slider VerticalAlignment="Center" Width="250" Minimum="0.1" Maximum="0.9" Value="{Binding BeatBarCenter, Mode=TwoWay}" SmallChange="0.01" LargeChange="0.1"/>
                     <TextBlock VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=Midpoint, StringFormat={}{0:f2}}"/>
-                    <CheckBox Name="cckRTL" Checked="CckRTL_OnChecked" Unchecked="CckRTL_OnUnchecked">RTL</CheckBox>
+                    <CheckBox VerticalAlignment="Center" Name="cckRTL" Checked="CckRTL_OnChecked" Unchecked="CckRTL_OnUnchecked">RTL</CheckBox>
                 </StackPanel>
 
                 <DockPanel Grid.Row="1" LastChildFill="True">
@@ -170,11 +170,18 @@
                     <Slider SmallChange="1" LargeChange="1" Minimum="-3" Maximum="3" Value="{Binding SpeedRatioModifier}" HorizontalAlignment="Stretch"/>
                 </DockPanel>
 
-                <shared:SeekBar Grid.Row="2" Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}"/>
-
-                <Rectangle Grid.Row="3" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="80" Stroke="Red" StrokeThickness="1" Fill="{Binding Sampler.PixelPreview}"/>
-                <shared:ColorSampleBar x:Name="colorSampleBar" Grid.Row="3" Margin="0,0,80,0" Samples="150" Sampler="{Binding Sampler}" TimeSource="{Binding ElementName=videoPlayer, Path=TimeSource}"/>
+                <TextBlock TextAlignment="Right" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Width="90" Margin="0,0,8,0">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0:h\:mm\:ss} / {1:h\:mm\:ss}">
+                            <Binding ElementName="videoPlayer" Path="TimeSource.Progress"/>
+                            <Binding ElementName="videoPlayer" Path="Duration"/>
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
                 
+                <shared:SeekBar Grid.Row="2" Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Margin="95,0,0,0"/>
+                <shared:ColorSampleBar x:Name="colorSampleBar" Grid.Row="3" Samples="150" Sampler="{Binding Sampler}" TimeSource="{Binding ElementName=videoPlayer, Path=TimeSource}" Margin="0,0,80,0"/>
+                <Rectangle Grid.Row="3" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="80" Stroke="Red" StrokeThickness="1" Fill="{Binding Sampler.PixelPreview}"/>
                 <shared:PositionBar LineColor="Lime" Background="Black" Height="50" Grid.Row="4" TotalDisplayedDuration="{Binding BeatBarDuration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Positions="{Binding Positions}"/>
             </Grid>
         </Grid>
