@@ -232,8 +232,8 @@ namespace ScriptPlayer.Shared
                 const double safeSpace = 30;
                 double y = ActualHeight / 2.0;
 
-                DrawLine(drawingContext, Colors.Red, new Point(-safeSpace, y),
-                    new Point(ActualWidth + safeSpace, y));
+                //DrawLine(drawingContext, Colors.Red, new Point(-safeSpace, y),
+                //    new Point(ActualWidth + safeSpace, y));
 
                 foreach (double pos in relativeBeatPositions)
                 {

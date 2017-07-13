@@ -1045,6 +1045,11 @@ namespace ScriptPlayer.VideoSync
                     Normalize(-1, !caps);
                     break;
                 }
+                case Key.F6:
+                {
+                    SnapToClosestBeat();
+                    break;
+                }
                 case Key.Enter:
                 {
                     if (IsNumpadEnterKey(e))
@@ -1064,6 +1069,11 @@ namespace ScriptPlayer.VideoSync
 
             if (handled)
                 e.Handled = true;
+        }
+
+        private void SnapToClosestBeat()
+        {
+            videoPlayer.SetPosition(GetClosestBeat(videoPlayer.GetPosition()));
         }
 
         private void GotoNextBookMark()
@@ -1105,9 +1115,14 @@ namespace ScriptPlayer.VideoSync
 
         private void RemoveClosestBeat(TimeSpan timeSpan)
         {
-            TimeSpan closest = Beats.OrderBy(b => Math.Abs(b.Ticks - timeSpan.Ticks)).First();
+            TimeSpan closest = GetClosestBeat(timeSpan);
             Beats.Remove(closest);
 
+        }
+
+        private TimeSpan GetClosestBeat(TimeSpan timeSpan)
+        {
+            return Beats.OrderBy(b => Math.Abs(b.Ticks - timeSpan.Ticks)).First();
         }
 
         private static bool IsNumpadEnterKey(KeyEventArgs e)
