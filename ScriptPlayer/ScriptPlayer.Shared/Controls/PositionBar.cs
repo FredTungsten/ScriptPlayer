@@ -175,11 +175,11 @@ namespace ScriptPlayer.Shared
         }
 
         public static readonly DependencyProperty TotalDisplayedDurationProperty = DependencyProperty.Register(
-            "TotalDisplayedDuration", typeof(double), typeof(PositionBar), new PropertyMetadata(5.0d, OnVisualPropertyChanged));
+            "TotalDisplayedDuration", typeof(TimeSpan), typeof(PositionBar), new PropertyMetadata(TimeSpan.FromSeconds(5), OnVisualPropertyChanged));
 
-        public double TotalDisplayedDuration
+        public TimeSpan TotalDisplayedDuration
         {
-            get { return (double)GetValue(TotalDisplayedDurationProperty); }
+            get { return (TimeSpan)GetValue(TotalDisplayedDurationProperty); }
             set { SetValue(TotalDisplayedDurationProperty, value); }
         }
 
@@ -216,25 +216,30 @@ namespace ScriptPlayer.Shared
 
             if (Positions != null)
             {
-                double timeFrom = Progress.TotalSeconds - Midpoint * TotalDisplayedDuration;
-                double timeTo = Progress.TotalSeconds + (1 - Midpoint) * TotalDisplayedDuration;
+                TimeSpan timeFrom = Progress - TotalDisplayedDuration.Multiply(Midpoint);
+                TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
 
-                List<TimedPosition> absoluteBeatPositions = Positions.GetPositions(TimeSpan.FromSeconds(timeFrom), TimeSpan.FromSeconds(timeTo)).ToList();
-                Func<TimedPosition, double> toLocal = b => (b.TimeStamp.TotalSeconds - timeFrom) / (timeTo - timeFrom) * ActualWidth;
+                List<TimedPosition> absoluteBeatPositions = Positions.GetPositions(timeFrom, timeTo).ToList();
+                double ToLocal(TimedPosition b) => (b.TimeStamp - timeFrom).Divide(timeTo - timeFrom) * ActualWidth;
 
-                if (absoluteBeatPositions.Count > 0)
+                List<Point> beatPoints = absoluteBeatPositions.Select(a => new Point(ToLocal(a),
+                    ActualHeight * (a.Position / 99.0))).ToList();
+
+                if (beatPoints.Count > 0)
                 {
-                    PathFigure figure = new PathFigure();
-                    figure.StartPoint = new Point(toLocal(absoluteBeatPositions[0]),
-                        ActualHeight * (absoluteBeatPositions[0].Position / 99.0));
+                    PathFigure figure = new PathFigure {StartPoint = beatPoints[0]};
 
-                    for (int i = 1; i < absoluteBeatPositions.Count; i++)
+                    for (int i = 1; i < beatPoints.Count; i++)
                     {
-                        figure.Segments.Add(new LineSegment(new Point(toLocal(absoluteBeatPositions[i]),
-                            ActualHeight * (absoluteBeatPositions[i].Position / 99.0)), true));
+                        figure.Segments.Add(new LineSegment(beatPoints[i], true));
                     }
 
                     drawingContext.DrawGeometry(null, new Pen(Brushes.Red, 1), new PathGeometry(new[] { figure }));
+
+                    for (int i = 0; i < beatPoints.Count; i++)
+                    {
+                        drawingContext.DrawEllipse(Brushes.Black, new Pen(Brushes.Red,1),beatPoints[i],4,4);
+                    }
                 }
             }
 

@@ -32,7 +32,7 @@ namespace ScriptPlayer.VideoSync
 
         private static void OnSpeedRatioModifierPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((MainWindow) d).SpeedRatioModifierChanged();
+            ((MainWindow)d).SpeedRatioModifierChanged();
         }
 
         private void SpeedRatioModifierChanged()
@@ -56,7 +56,7 @@ namespace ScriptPlayer.VideoSync
 
         public int SpeedRatioModifier
         {
-            get { return (int) GetValue(SpeedRatioModifierProperty); }
+            get { return (int)GetValue(SpeedRatioModifierProperty); }
             set { SetValue(SpeedRatioModifierProperty, value); }
         }
 
@@ -460,7 +460,7 @@ namespace ScriptPlayer.VideoSync
 
         private double GetDouble(double defaultValue)
         {
-            DoubleInputDialog dialog = new DoubleInputDialog(defaultValue){Owner = this};
+            DoubleInputDialog dialog = new DoubleInputDialog(defaultValue) { Owner = this };
             dialog.Owner = this;
             if (dialog.ShowDialog() != true)
                 return double.NaN;
@@ -768,7 +768,7 @@ namespace ScriptPlayer.VideoSync
             SaveAsFunscript(dialog.FileName);
         }
 
-        private void SaveAsFunscript(string filename)
+        private void SaveAsFunscript(string filename, int mode = 0)
         {
             FunScriptFile script = new FunScriptFile
             {
@@ -777,16 +777,93 @@ namespace ScriptPlayer.VideoSync
                 Version = new Version(1, 0)
             };
 
+            TimeSpan previous = TimeSpan.MinValue;
+            TimeSpan min = TimeSpan.FromMilliseconds(333);
+            TimeSpan max = TimeSpan.FromMilliseconds(2000);
             bool up = true;
             foreach (TimeSpan timestamp in Beats)
             {
-                up ^= true;
-
-                script.Actions.Add(new FunScriptAction
+                switch (mode)
                 {
-                    Position = (byte)(up ? 90 : 5),
-                    TimeStamp = timestamp
-                });
+                    case 0:
+                        {
+                            up ^= true;
+
+                            script.Actions.Add(new FunScriptAction
+                            {
+                                Position = (byte)(up ? 90 : 5),
+                                TimeStamp = timestamp
+                            });
+                            break;
+                        }
+                    case 1:
+                        {
+                            if (previous != TimeSpan.MinValue)
+                            {
+                                TimeSpan diff = timestamp - previous;
+                                if (diff > min && diff < max)
+                                {
+                                    TimeSpan inserted = (previous + timestamp).Divide(2);
+
+                                    up ^= true;
+
+                                    script.Actions.Add(new FunScriptAction
+                                    {
+                                        Position = (byte)(up ? 90 : 5),
+                                        TimeStamp = inserted
+                                    });
+                                }
+                            }
+
+                            up ^= true;
+
+                            script.Actions.Add(new FunScriptAction
+                            {
+                                Position = (byte)(up ? 90 : 5),
+                                TimeStamp = timestamp
+                            });
+
+                            previous = timestamp;
+                            break;
+                        }
+                    case 2:
+                        {
+                            if (previous != TimeSpan.MinValue)
+                            {
+                                TimeSpan diff = timestamp - previous;
+                                if (diff > min && diff < max)
+                                {
+                                    TimeSpan inserted1 = previous + TimeSpan.FromMilliseconds(166);
+                                    up ^= true;
+
+                                    script.Actions.Add(new FunScriptAction
+                                    {
+                                        Position = (byte)(up ? 90 : 5),
+                                        TimeStamp = inserted1
+                                    });
+
+                                    TimeSpan inserted = timestamp - TimeSpan.FromMilliseconds(166);
+
+                                    script.Actions.Add(new FunScriptAction
+                                    {
+                                        Position = (byte)(up ? 90 : 5),
+                                        TimeStamp = inserted
+                                    });
+                                }
+                            }
+
+                            up ^= true;
+
+                            script.Actions.Add(new FunScriptAction
+                            {
+                                Position = (byte)(up ? 90 : 5),
+                                TimeStamp = timestamp
+                            });
+
+                            previous = timestamp;
+                            break;
+                        }
+                }
             }
 
             string content = JsonConvert.SerializeObject(script);
@@ -859,7 +936,9 @@ namespace ScriptPlayer.VideoSync
             project.Save(filename);
             _projectFile = filename;
 
-            SaveAsFunscript(Path.ChangeExtension(_videoFile, "funscript"));
+            SaveAsFunscript(Path.ChangeExtension(_videoFile, "funscript"), 0);
+            SaveAsFunscript(Path.ChangeExtension(_videoFile, "fast1.funscript"), 1);
+            SaveAsFunscript(Path.ChangeExtension(_videoFile, "fast2.funscript"), 2);
             SaveAsBeatsFile(Path.ChangeExtension(_videoFile, "txt"));
         }
 
@@ -937,7 +1016,7 @@ namespace ScriptPlayer.VideoSync
             if (beatsToEvenOut.Count < 2 && trimToBeats)
                 return;
 
-            TimeSpan first = trimToBeats? beatsToEvenOut.Min() : tBegin;
+            TimeSpan first = trimToBeats ? beatsToEvenOut.Min() : tBegin;
             TimeSpan last = trimToBeats ? beatsToEvenOut.Max() : tEnd;
 
             int numberOfBeats = (int)(beatsToEvenOut.Count + additionalBeats);
@@ -993,15 +1072,15 @@ namespace ScriptPlayer.VideoSync
             switch (e.Key)
             {
                 case Key.PageDown:
-                {
-                    GotoNextBookMark();
-                    break;
-                }
+                    {
+                        GotoNextBookMark();
+                        break;
+                    }
                 case Key.PageUp:
-                {
-                    GotoPreviousBookMark();
-                    break;
-                }
+                    {
+                        GotoPreviousBookMark();
+                        break;
+                    }
                 case Key.Space:
                     {
                         if (videoPlayer.IsPlaying)
@@ -1026,42 +1105,42 @@ namespace ScriptPlayer.VideoSync
                         break;
                     }
                 case Key.N:
-                {
-                    Normalize();
-                    break;
-                }
+                    {
+                        Normalize();
+                        break;
+                    }
                 case Key.Delete:
-                {
-                    DeleteBeatsWithinMarkers();
-                    break;
-                }
+                    {
+                        DeleteBeatsWithinMarkers();
+                        break;
+                    }
                 case Key.Add:
-                {
-                    Normalize(1, !caps);
-                    break;
-                }
+                    {
+                        Normalize(1, !caps);
+                        break;
+                    }
                 case Key.Subtract:
-                {
-                    Normalize(-1, !caps);
-                    break;
-                }
+                    {
+                        Normalize(-1, !caps);
+                        break;
+                    }
                 case Key.F6:
-                {
-                    SnapToClosestBeat();
-                    break;
-                }
+                    {
+                        SnapToClosestBeat();
+                        break;
+                    }
                 case Key.Enter:
-                {
-                    if (IsNumpadEnterKey(e))
                     {
-                        Normalize(0, !caps);
+                        if (IsNumpadEnterKey(e))
+                        {
+                            Normalize(0, !caps);
+                        }
+                        else
+                        {
+                            handled = false;
+                        }
+                        break;
                     }
-                    else
-                    {
-                        handled = false;
-                    }
-                    break;
-                }
                 default:
                     handled = false;
                     break;
@@ -1138,7 +1217,7 @@ namespace ScriptPlayer.VideoSync
             }
             catch (Exception ex)
             {
-               
+
             }
 
             return false;
@@ -1182,7 +1261,7 @@ namespace ScriptPlayer.VideoSync
             {
                 SetMarker(1, e);
                 SetMarker(2, e);
-            }   
+            }
         }
 
         private void BeatBar_OnTimeMouseRightMove(object sender, TimeSpan e)
@@ -1241,7 +1320,7 @@ namespace ScriptPlayer.VideoSync
             foreach (string line in lines)
             {
                 TimeSpan t;
-                if(TimeSpan.TryParse(line, out t))
+                if (TimeSpan.TryParse(line, out t))
                     newBookmarks.Add(t);
             }
 

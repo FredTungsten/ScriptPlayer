@@ -469,6 +469,8 @@ namespace ScriptPlayer
             byte currentPositionTransformed = TransformPosition(eventArgs.CurrentAction.Position);
             byte nextPositionTransformed = TransformPosition(eventArgs.NextAction.Position);
 
+            if (currentPositionTransformed == nextPositionTransformed) return;
+
             byte speedOriginal = SpeedPredictor.Predict((byte)Math.Abs(eventArgs.CurrentAction.Position - eventArgs.NextAction.Position), duration);
             byte speedTransformed = SpeedPredictor.Predict((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed), duration);
             speedTransformed = (byte)Math.Min(99, Math.Max(0, speedTransformed * SpeedMultiplier));
@@ -1005,7 +1007,7 @@ namespace ScriptPlayer
         private void btnPatternFast_Click(object sender, RoutedEventArgs e)
         {
             PatternSource = PatternSource.Generator;
-            StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(200));
+            StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(50));
         }
         private void btnPatternSlow_Click(object sender, RoutedEventArgs e)
         {

@@ -79,6 +79,7 @@
                     <RowDefinition Height="9*"/>
                     <RowDefinition Height="5"/>
                     <RowDefinition Height="32"/>
+                    <RowDefinition Height="50"/>
                 </Grid.RowDefinitions>
 
                 <Rectangle Grid.Row="0" Grid.RowSpan="3" Fill="#ff202020"></Rectangle>
@@ -94,6 +95,10 @@
                         Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" 
                         LineColor="#FF00B9FF" LineWidth="8" 
                         TotalDisplayedDuration="{Binding BeatBarDuration}" Midpoint="{Binding BeatBarCenter}"/>
+
+                <shared:PositionBar Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
+                                    Midpoint="{Binding BeatBarCenter}"
+                    LineColor="Lime" Background="Black" Height="50" Grid.Row="3" TotalDisplayedDuration="{Binding BeatBarDuration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Positions="{Binding Positions}"/>
             </Grid>
 
             <Grid Grid.Column="1" Name="GridSideBar">
@@ -191,7 +196,6 @@
             <shared:SeekBar Grid.Row="3" Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Margin="95,0,0,0"/>
             <shared:ColorSampleBar x:Name="colorSampleBar" Grid.Row="4" Samples="150" Sampler="{Binding Sampler}" TimeSource="{Binding ElementName=videoPlayer, Path=TimeSource}" Margin="0,0,80,0"/>
             <Rectangle Grid.Row="4" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="80" Stroke="Red" StrokeThickness="1" Fill="{Binding Sampler.PixelPreview}"/>
-            <shared:PositionBar LineColor="Lime" Background="Black" Height="50" Grid.Row="5" TotalDisplayedDuration="{Binding BeatBarDuration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Positions="{Binding Positions}"/>
         </Grid>
     </Grid>
 </Window>
