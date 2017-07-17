@@ -38,6 +38,7 @@
                 <MenuItem Header="Load">
                     <MenuItem Header="beats.txt" Click="mnuLoad_Click"/>
                     <MenuItem Header="Funscript" Click="mnuLoadFun_Click" />
+                    <MenuItem Header="Convert Vorze" Click="mnuLoadVorze_Click" />
                 </MenuItem>
 
                 <MenuItem Header="Save As">

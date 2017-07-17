@@ -1363,5 +1363,104 @@ namespace ScriptPlayer.VideoSync
             BeatBar.Marker1 = _marker1;
             BeatBar.Marker2 = _marker2;
         }
+
+        private void mnuLoadVorze_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog {Filter = "Vorze Script|*.csv"};
+
+            if (dialog.ShowDialog(this) != true)
+                return;
+
+            VorzeScriptLoader loader = new VorzeScriptLoader();
+            var actions = loader.Load(dialog.FileName).Cast<VorzeScriptAction>().ToList();
+
+            var filteredActions = new List<VorzeScriptAction>();
+
+            foreach (var action in actions)
+            {
+                if(filteredActions.Count == 0)
+                    filteredActions.Add(action);
+                else if (filteredActions.Last().TimeStamp >= action.TimeStamp)
+                    continue;
+                else
+                    filteredActions.Add(action);
+            }
+
+            actions = filteredActions;
+
+            List<FunScriptAction> funActions = new List<FunScriptAction>();
+
+            for(int i = 0; i< actions.Count; i++)
+            {
+                int samePosition = 0;
+
+                for (int j = i + 1; j < actions.Count; j++)
+                {
+                    if (actions[j].Action == actions[i].Action)
+                        samePosition++;
+                    else
+                        break;
+                }
+
+                funActions.Add(new FunScriptAction
+                {
+                    Position = (byte) (actions[i].Action == 0 ? 95:5),
+                    TimeStamp = actions[i + samePosition].TimeStamp
+                });
+
+                /*for (int y = 0; y <= samePosition; y++)
+                {
+                    byte position;
+                    double progress = (y + 1.0) / (samePosition+1);
+
+                    if (actions[i].Action == 0)
+                    {
+                        position = (byte) (5.0 + 90.0 * progress);
+                    }
+                    else
+                    {
+                        position = (byte)(95 - 90.0 * progress);
+                    }
+
+                    funActions.Add(new FunScriptAction
+                    {
+                        Position = position,
+                        TimeStamp = actions[i+y].TimeStamp
+                    });
+
+            i += samePosition;
+                }*/
+
+
+            }
+
+            var pos = funActions.Select(s => new TimedPosition()
+            {
+                TimeStamp = s.TimeStamp,
+                Position = s.Position
+            });
+
+            Positions = new PositionCollection(pos);
+
+            SaveFileDialog dialog2 = new SaveFileDialog
+            {
+                Filter = "Funscript|*.funscript|All Files|*.*",
+                FileName = Path.GetFileNameWithoutExtension(_videoFile)
+            };
+
+            if (dialog2.ShowDialog(this) != true) return;
+
+            FunScriptFile script = new FunScriptFile
+            {
+                Inverted = false,
+                Range = 90,
+                Version = new Version(1, 0),
+                Actions = funActions
+            };
+
+            string content = JsonConvert.SerializeObject(script);
+
+            File.WriteAllText(dialog2.FileName, content, new UTF8Encoding(false));
+        }
     }
 }

@@ -55,7 +55,7 @@ namespace ScriptPlayer.Shared
 
                 return true;
             }
-            catch
+            catch(Exception e)
             {
                 _client = null;
                 return false;
@@ -86,15 +86,15 @@ namespace ScriptPlayer.Shared
             {
                 if (device.AllowedMessages.Contains(nameof(FleshlightLaunchFW12Cmd)))
                 {
-                    await _client.SendDeviceMessage(device, new FleshlightLaunchFW12Cmd(device.Index, information.SpeedTransformed, information.PositionToTransformed));
+                    var response = await _client.SendDeviceMessage(device, new FleshlightLaunchFW12Cmd(device.Index, information.SpeedTransformed, information.PositionToTransformed));
                 }
                 else if (device.AllowedMessages.Contains(nameof(KiirooCmd)))
                 {
-                    await _client.SendDeviceMessage(device, new KiirooCmd(device.Index, LaunchToKiiroo(information.PositionToOriginal, 0, 4)));
+                    var response = await _client.SendDeviceMessage(device, new KiirooCmd(device.Index, LaunchToKiiroo(information.PositionToOriginal, 0, 4)));
                 }
                 else if (device.AllowedMessages.Contains(nameof(SingleMotorVibrateCmd)))
                 {
-                    await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.SpeedOriginal)));
+                    var response = await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.SpeedOriginal)));
 
                     Task.Run(new Action(async () =>
                     {
@@ -105,7 +105,7 @@ namespace ScriptPlayer.Shared
                 }
                 else if (device.AllowedMessages.Contains(nameof(VorzeA10CycloneCmd)))
                 {
-                    await _client.SendDeviceMessage(device, new VorzeA10CycloneCmd(device.Index, LaunchToVorze(information.SpeedOriginal), information.PositionToOriginal > information.PositionFromOriginal));
+                    var response = await _client.SendDeviceMessage(device, new VorzeA10CycloneCmd(device.Index, LaunchToVorze(information.SpeedOriginal), information.PositionToOriginal > information.PositionFromOriginal));
                 }
                 else if (device.AllowedMessages.Contains(nameof(LovenseCmd)))
                 {
