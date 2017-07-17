@@ -26,7 +26,8 @@ namespace ScriptPlayer.Shared.Scripts
             var actions = new List<FunScriptAction>();
 
             TimeSpan previous = TimeSpan.MinValue;
-            TimeSpan ramp = TimeSpan.FromMilliseconds(166);
+            TimeSpan ramp = TimeSpan.FromMilliseconds(200
+                );
 
             bool up = true;
 
