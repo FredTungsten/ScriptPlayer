@@ -774,97 +774,9 @@ namespace ScriptPlayer.VideoSync
             {
                 Inverted = false,
                 Range = 90,
-                Version = new Version(1, 0)
+                Version = new Version(1, 0),
+                Actions = BeatsToFunScriptConverter.Convert(Beats)
             };
-
-            TimeSpan previous = TimeSpan.MinValue;
-            TimeSpan min = TimeSpan.FromMilliseconds(333);
-            TimeSpan max = TimeSpan.FromMilliseconds(2000);
-            bool up = true;
-            foreach (TimeSpan timestamp in Beats)
-            {
-                switch (mode)
-                {
-                    case 0:
-                        {
-                            up ^= true;
-
-                            script.Actions.Add(new FunScriptAction
-                            {
-                                Position = (byte)(up ? 90 : 5),
-                                TimeStamp = timestamp
-                            });
-                            break;
-                        }
-                    case 1:
-                        {
-                            if (previous != TimeSpan.MinValue)
-                            {
-                                TimeSpan diff = timestamp - previous;
-                                if (diff > min && diff < max)
-                                {
-                                    TimeSpan inserted = (previous + timestamp).Divide(2);
-
-                                    up ^= true;
-
-                                    script.Actions.Add(new FunScriptAction
-                                    {
-                                        Position = (byte)(up ? 90 : 5),
-                                        TimeStamp = inserted
-                                    });
-                                }
-                            }
-
-                            up ^= true;
-
-                            script.Actions.Add(new FunScriptAction
-                            {
-                                Position = (byte)(up ? 90 : 5),
-                                TimeStamp = timestamp
-                            });
-
-                            previous = timestamp;
-                            break;
-                        }
-                    case 2:
-                        {
-                            if (previous != TimeSpan.MinValue)
-                            {
-                                TimeSpan diff = timestamp - previous;
-                                if (diff > min && diff < max)
-                                {
-                                    TimeSpan inserted1 = previous + TimeSpan.FromMilliseconds(166);
-                                    up ^= true;
-
-                                    script.Actions.Add(new FunScriptAction
-                                    {
-                                        Position = (byte)(up ? 90 : 5),
-                                        TimeStamp = inserted1
-                                    });
-
-                                    TimeSpan inserted = timestamp - TimeSpan.FromMilliseconds(166);
-
-                                    script.Actions.Add(new FunScriptAction
-                                    {
-                                        Position = (byte)(up ? 90 : 5),
-                                        TimeStamp = inserted
-                                    });
-                                }
-                            }
-
-                            up ^= true;
-
-                            script.Actions.Add(new FunScriptAction
-                            {
-                                Position = (byte)(up ? 90 : 5),
-                                TimeStamp = timestamp
-                            });
-
-                            previous = timestamp;
-                            break;
-                        }
-                }
-            }
 
             string content = JsonConvert.SerializeObject(script);
 

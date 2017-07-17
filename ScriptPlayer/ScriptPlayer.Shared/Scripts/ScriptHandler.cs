@@ -10,10 +10,46 @@ namespace ScriptPlayer.Shared.Scripts
         private TimeSpan _lastTimestamp;
         private List<ScriptAction> _actions;
         private TimeSource _timesource;
+        private BeatsToFunScriptConverter.ConversionMode _conversionMode = BeatsToFunScriptConverter.ConversionMode.UpOrDown;
         private static TimeSpan _delay = TimeSpan.Zero;
+        private List<TimeSpan> _beats;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
 
         public TimeSpan Delay { get; set; }
+
+        public BeatsToFunScriptConverter.ConversionMode ConversionMode  
+        {
+            get { return _conversionMode; }
+            set
+            {
+                _conversionMode = value;
+                ConvertBeatFile();
+            }
+        }
+
+        private void SaveBeatFile()
+        {
+            if (_actions.FirstOrDefault() is BeatScriptAction)
+            {
+                _beats = _actions.Select(a => a.TimeStamp).ToList();
+            }
+            else
+            {
+                _beats = null;
+            }
+        }
+
+        private void ConvertBeatFile()
+        {
+            if (_beats == null)
+                return;
+
+            _actions = BeatsToFunScriptConverter.Convert(_beats, _conversionMode)
+                .OrderBy(a => a.TimeStamp)
+                .Cast<ScriptAction>()
+                .ToList();
+            ResetCache();
+        }
 
         public ScriptHandler()
         {
@@ -35,9 +71,13 @@ namespace ScriptPlayer.Shared.Scripts
 
         public void SetScript(IEnumerable<ScriptAction> script)
         {
-            _actions = new List<ScriptAction>(script);
-            _actions.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
+            var actions = new List<ScriptAction>(script);
+            actions.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
 
+            _actions = actions;
+            
+            SaveBeatFile();
+            ConvertBeatFile();
             ResetCache();
         }
 

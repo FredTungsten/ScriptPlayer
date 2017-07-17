@@ -31,11 +31,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Buttplug.Client, Version=0.0.0.402, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Buttplug.Client.0.0.0.402-alpha\lib\net452\Buttplug.Client.dll</HintPath>
+    <Reference Include="Buttplug.Client, Version=0.0.0.404, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.Client.0.0.0.404-alpha\lib\net452\Buttplug.Client.dll</HintPath>
     </Reference>
-    <Reference Include="Buttplug.Core, Version=0.0.0.402, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Buttplug.Core.0.0.0.402-alpha\lib\net452\Buttplug.Core.dll</HintPath>
+    <Reference Include="Buttplug.Core, Version=0.0.0.404, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.Core.0.0.0.404-alpha\lib\net452\Buttplug.Core.dll</HintPath>
     </Reference>
     <Reference Include="JetBrains.Annotations, Version=10.4.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\packages\JetBrains.Annotations.10.4.0\lib\net\JetBrains.Annotations.dll</HintPath>
@@ -112,6 +112,7 @@
     <Compile Include="Controls\VideoPlayer.xaml.cs">
       <DependentUpon>VideoPlayer.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\ConversionModeToNameConverter.cs" />
     <Compile Include="Converters\PositionToMarginConverter.cs" />
     <Compile Include="Converters\TimeSpanToSecondsConverter.cs" />
     <Compile Include="Controls\GifPlayer.cs" />
@@ -146,6 +147,7 @@
     <Compile Include="RelayCommand.cs" />
     <Compile Include="RepeatingScriptActions.cs" />
     <Compile Include="SampleAnalyser.cs" />
+    <Compile Include="Scripts\BeatsToFunScriptConverter.cs" />
     <Compile Include="Scripts\ScriptActionEventArgs.cs" />
     <Compile Include="Scripts\ScriptFileFormat.cs" />
     <Compile Include="Scripts\ScriptFileFormatCollection.cs" />

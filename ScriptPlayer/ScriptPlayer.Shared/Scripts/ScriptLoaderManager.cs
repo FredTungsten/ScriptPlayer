@@ -16,6 +16,7 @@ namespace ScriptPlayer.Shared.Scripts
             RegisterLoader<VorzeScriptLoader>();
             RegisterLoader<RawScriptLoader>();
             RegisterLoader<FunScriptLoader>();
+            RegisterLoader<BeatFileLoader>();
         }
 
         public static void RegisterLoader<T>() where T : ScriptLoader, new()
@@ -60,4 +61,27 @@ namespace ScriptPlayer.Shared.Scripts
             return null;
         }
     }
+
+    public class BeatFileLoader : ScriptLoader
+    {
+        public override List<ScriptAction> Load(Stream stream)
+        {
+            BeatCollection beats = BeatCollection.Load(stream);
+
+            return beats.Select(beat => new BeatScriptAction
+            {
+                TimeStamp = beat
+            }).Cast<ScriptAction>().ToList();
+        }
+
+        public override List<ScriptFileFormat> GetSupportedFormats()
+        {
+            return new List<ScriptFileFormat>
+            {
+                new ScriptFileFormat("Beat File", "txt", "beats")
+            };
+        }
+    }
+
+    public class BeatScriptAction : ScriptAction { }
 }

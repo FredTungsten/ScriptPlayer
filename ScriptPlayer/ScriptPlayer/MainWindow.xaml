@@ -4,11 +4,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
+        xmlns:converters="clr-namespace:ScriptPlayer.Shared.Converters;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="ScripPlayer" Height="591" Width="954" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:ConversionModeToNameConverter x:Key="ConversionConverter"/>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -49,7 +51,13 @@
             </MenuItem>
             <MenuItem Header="Devices">
                 <MenuItem Header="Connect Launch directly" Click="mnuConnectLaunch_OnClick"/>
-                <MenuItem Header="Buttplug">
+                <MenuItem>
+                    <MenuItem.Header>
+                        <TextBlock>
+                            <Run Text="Buttplug "/>
+                            <Run Text="{Binding ButtplugApiVersion}"/>
+                        </TextBlock>
+                    </MenuItem.Header>
                     <MenuItem Header="Connect to Buttplug" Click="mnuConnectButtplug_OnClick"/>
                     <MenuItem Header="Scan for Devices" Click="mnuButtplugScan_OnClick"/>
                 </MenuItem>
@@ -121,6 +129,15 @@
                     <StackPanel Margin="4" ToolTip="Will automatically skip command gaps of more than 10s.">
                         <CheckBox Content="Auto-Skip Gaps" Name="cckAutoSkip"/>
                     </StackPanel>
+                    
+                    <ComboBox ItemsSource="{Binding ConversionModes}" SelectedItem="{Binding ConversionMode}">  
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={StaticResource ConversionConverter}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    
                     
                     <Separator/>
 

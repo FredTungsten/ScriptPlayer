@@ -5,8 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
         mc:Ignorable="d"
-        Title="ButtplugConnectionSettingsDialog" Height="300" Width="300">
+        DataContext="{Binding RelativeSource={RelativeSource Self}}" 
+        Title="Connection Settings" Height="108.686" Width="288.559" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" Loaded="Window_Loaded">
     <Grid>
-        
+        <TextBox Name="txtUrl" Height="23" Margin="10,10,10,0" TextWrapping="Wrap" Text="{Binding Url}" VerticalAlignment="Top"/>
+        <Button IsDefault="True" Content="Ok" Click="btnOk_Click" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75"/>
+        <Button IsCancel="True" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
+
     </Grid>
 </Window>

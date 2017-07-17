@@ -12,6 +12,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
+using Buttplug.Client;
+using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -26,6 +28,15 @@ namespace ScriptPlayer
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly DependencyProperty ButtplugApiVersionProperty = DependencyProperty.Register(
+            "ButtplugApiVersion", typeof(string), typeof(MainWindow), new PropertyMetadata(default(string)));
+
+        public string ButtplugApiVersion
+        {
+            get { return (string) GetValue(ButtplugApiVersionProperty); }
+            set { SetValue(ButtplugApiVersionProperty, value); }
+        }
+
         public static readonly DependencyProperty PatternSourceProperty = DependencyProperty.Register(
             "PatternSource", typeof(PatternSource), typeof(MainWindow), new PropertyMetadata(PatternSource.Video));
 
@@ -110,6 +121,35 @@ namespace ScriptPlayer
             set { SetValue(MaxPositionProperty, value); }
         }
 
+        public static readonly DependencyProperty ConversionModeProperty = DependencyProperty.Register(
+            "ConversionMode", typeof(BeatsToFunScriptConverter.ConversionMode), typeof(MainWindow), new PropertyMetadata(BeatsToFunScriptConverter.ConversionMode.UpOrDown, OnConversionModePropertyChanged));
+
+        private static void OnConversionModePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((MainWindow) d).OnConversionModeChanged();
+        }
+
+        private void OnConversionModeChanged()
+        {
+            _scriptHandler.ConversionMode = ConversionMode;
+            UpdateHeatMap();
+        }
+
+        public BeatsToFunScriptConverter.ConversionMode ConversionMode
+        {
+            get { return (BeatsToFunScriptConverter.ConversionMode) GetValue(ConversionModeProperty); }
+            set { SetValue(ConversionModeProperty, value); }
+        }
+
+        public static readonly DependencyProperty ConversionModesProperty = DependencyProperty.Register(
+            "ConversionModes", typeof(List<BeatsToFunScriptConverter.ConversionMode>), typeof(MainWindow), new PropertyMetadata(default(List<BeatsToFunScriptConverter.ConversionMode>)));
+
+        public List<BeatsToFunScriptConverter.ConversionMode> ConversionModes
+        {
+            get { return (List<BeatsToFunScriptConverter.ConversionMode>) GetValue(ConversionModesProperty); }
+            set { SetValue(ConversionModesProperty, value); }
+        }
+
         private string _openVideo;
         private string _openScript;
 
@@ -130,6 +170,9 @@ namespace ScriptPlayer
         {
             Playlist = new ObservableCollection<PlaylistEntry>();
             _supportedScriptExtensions = ScriptLoaderManager.GetSupportedExtensions();
+            ConversionModes = Enum.GetValues(typeof(BeatsToFunScriptConverter.ConversionMode)).Cast<BeatsToFunScriptConverter.ConversionMode>().ToList();
+
+            ButtplugApiVersion = GetButtplugApiVersion();
 
             InitializeComponent();
 
@@ -139,6 +182,16 @@ namespace ScriptPlayer
             cmbPattern.Items.Add("SawTooth Down");
             cmbPattern.Items.Add("Stairs Up");
             cmbPattern.Items.Add("Stairs Down");
+        }
+
+        private string GetButtplugApiVersion()
+        {
+            string location = typeof(ButtplugWSClient).Assembly.Location;
+            if (string.IsNullOrWhiteSpace(location))
+                return "?";
+
+            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(location);
+            return fileVersionInfo.ProductVersion;
         }
 
         private void btnTestPattern_Click(object sender, RoutedEventArgs e)
@@ -882,17 +935,26 @@ namespace ScriptPlayer
                 await _connector?.Disconnect();
             }
 
-            _connector = new ButtplugAdapter();
+            ButtplugConnectionSettingsDialog dialog = new ButtplugConnectionSettingsDialog
+            {
+                Url= "ws://localhost:12345/buttplug",
+                Owner = this,
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            _connector = new ButtplugAdapter(dialog.Url);
             _connector.DeviceAdded += ConnectorOnDeviceAdded;
 
             bool success = await _connector.Connect();
 
             if(success)
-                OverlayText.SetText("Connected to Buttplug", TimeSpan.FromSeconds(6000));
+                OverlayText.SetText("Connected to Buttplug", TimeSpan.FromSeconds(6));
             else
             {
                 _connector = null;
-                OverlayText.SetText("Could not connect to Buttplug", TimeSpan.FromSeconds(6000));
+                OverlayText.SetText("Could not connect to Buttplug", TimeSpan.FromSeconds(6));
             }
         }
 

@@ -1,15 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
-using System.Threading;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Buttplug.Client;
 using Buttplug.Core.Messages;
+using JetBrains.Annotations;
 
 namespace ScriptPlayer.Shared
 {
-    public class ButtplugAdapter : IDeviceController
+    public class ButtplugAdapter : IDeviceController, INotifyPropertyChanged
     {
+        public List<ButtplugClientDevice> Devices
+        {
+            get { return _devices.ToList(); }
+            private set
+            {
+                if (_devices == value)
+                    return;
+                _devices = value;
+                OnPropertyChanged();
+            }
+        }
+
         public event EventHandler<string> DeviceAdded;
 
         private ButtplugWSClient _client;
@@ -19,7 +33,7 @@ namespace ScriptPlayer.Shared
 
         public ButtplugAdapter(string url = "ws://localhost:12345/buttplug")
         {
-            _devices = new List<ButtplugClientDevice>();
+            Devices = new List<ButtplugClientDevice>();
             _url = url;
         }
 
@@ -32,10 +46,12 @@ namespace ScriptPlayer.Shared
             {
                 case DeviceEventArgs.DeviceAction.ADDED:
                     _devices.Add(device);
+                    OnPropertyChanged(nameof(Devices));
                     OnDeviceAdded(device.Name);
                     break;
                 case DeviceEventArgs.DeviceAction.REMOVED:
                     _devices.RemoveAll(dev => dev.Index == device.Index);
+                    OnPropertyChanged(nameof(Devices));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -51,7 +67,7 @@ namespace ScriptPlayer.Shared
                 _client.DeviceRemoved += Client_DeviceAddedOrRemoved;
 
                 await _client.Connect(new Uri(_url));
-                _devices = (await GetDeviceList()).ToList();
+                Devices = (await GetDeviceList()).ToList();
 
                 return true;
             }
@@ -81,7 +97,7 @@ namespace ScriptPlayer.Shared
         {
             if (_client == null) return;
 
-            var devices = _devices;
+            var devices = _devices.ToList();
             foreach (ButtplugClientDevice device in devices)
             {
                 if (device.AllowedMessages.Contains(nameof(FleshlightLaunchFW12Cmd)))
@@ -96,12 +112,14 @@ namespace ScriptPlayer.Shared
                 {
                     var response = await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.SpeedOriginal)));
 
+#pragma warning disable CS4014
                     Task.Run(new Action(async () =>
                     {
                         TimeSpan duration = TimeSpan.FromMilliseconds(Math.Min(1000, information.Duration.TotalMilliseconds / 2.0));
                         await Task.Delay(duration);
                         await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, 0));
                     }));
+#pragma warning restore CS4014
                 }
                 else if (device.AllowedMessages.Contains(nameof(VorzeA10CycloneCmd)))
                 {
@@ -144,6 +162,7 @@ namespace ScriptPlayer.Shared
         {
             if (_client == null) return;
             _devices.Clear();
+            OnPropertyChanged(nameof(Devices));
             await _client.Disconnect();
         }
 
@@ -156,6 +175,14 @@ namespace ScriptPlayer.Shared
         protected virtual void OnDeviceAdded(string e)
         {
             DeviceAdded?.Invoke(this, e);
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

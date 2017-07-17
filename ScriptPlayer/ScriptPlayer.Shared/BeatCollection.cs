@@ -100,7 +100,13 @@ namespace ScriptPlayer.Shared
 
         public static BeatCollection Load(string filename)
         {
-            using (var reader = File.OpenText(filename))
+            using(FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                return Load(stream);
+        }
+
+        public static BeatCollection Load(Stream stream)
+        {
+            using (var reader = new StreamReader(stream))
             {
                 List<TimeSpan> beats = new List<TimeSpan>();
                 while (!reader.EndOfStream)
