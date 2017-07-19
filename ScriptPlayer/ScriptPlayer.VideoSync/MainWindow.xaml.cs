@@ -848,9 +848,7 @@ namespace ScriptPlayer.VideoSync
             project.Save(filename);
             _projectFile = filename;
 
-            SaveAsFunscript(Path.ChangeExtension(_videoFile, "funscript"), 0);
-            SaveAsFunscript(Path.ChangeExtension(_videoFile, "fast1.funscript"), 1);
-            SaveAsFunscript(Path.ChangeExtension(_videoFile, "fast2.funscript"), 2);
+            SaveAsFunscript(Path.ChangeExtension(_videoFile, "funscript"));
             SaveAsBeatsFile(Path.ChangeExtension(_videoFile, "txt"));
         }
 
