@@ -62,11 +62,12 @@ namespace ScriptPlayer.Shared
         {
             try
             {
-                _client = new ButtplugWSClient("ScriptPlayer");
-                _client.DeviceAdded += Client_DeviceAddedOrRemoved;
-                _client.DeviceRemoved += Client_DeviceAddedOrRemoved;
+                var client = new ButtplugWSClient("ScriptPlayer");
+                client.DeviceAdded += Client_DeviceAddedOrRemoved;
+                client.DeviceRemoved += Client_DeviceAddedOrRemoved;
 
-                await _client.Connect(new Uri(_url));
+                await client.Connect(new Uri(_url));
+                _client = client;
                 Devices = (await GetDeviceList()).ToList();
 
                 return true;
