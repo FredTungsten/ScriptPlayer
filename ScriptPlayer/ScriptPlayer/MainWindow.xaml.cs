@@ -1163,7 +1163,7 @@ namespace ScriptPlayer
 
         private void mnuButtplugScan_OnClick(object sender, RoutedEventArgs e)
         {
-            _connector.StartScanning();
+            _connector?.StartScanning();
         }
     }
 
