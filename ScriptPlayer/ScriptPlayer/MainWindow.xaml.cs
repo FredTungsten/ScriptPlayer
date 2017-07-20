@@ -16,6 +16,7 @@ using Buttplug.Client;
 using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
+using ScriptPlayer.ViewModels;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
@@ -44,15 +45,6 @@ namespace ScriptPlayer
         {
             get { return (PatternSource)GetValue(PatternSourceProperty); }
             set { SetValue(PatternSourceProperty, value); }
-        }
-
-        public static readonly DependencyProperty PlaylistProperty = DependencyProperty.Register(
-            "Playlist", typeof(ObservableCollection<PlaylistEntry>), typeof(MainWindow), new PropertyMetadata(default(ObservableCollection<PlaylistEntry>)));
-
-        public ObservableCollection<PlaylistEntry> Playlist
-        {
-            get { return (ObservableCollection<PlaylistEntry>)GetValue(PlaylistProperty); }
-            set { SetValue(PlaylistProperty, value); }
         }
 
         public static readonly DependencyProperty CommandDelayProperty = DependencyProperty.Register(
@@ -150,8 +142,16 @@ namespace ScriptPlayer
             set { SetValue(ConversionModesProperty, value); }
         }
 
+        public static readonly DependencyProperty OpenedScriptProperty = DependencyProperty.Register(
+            "OpenedScript", typeof(string), typeof(MainWindow), new PropertyMetadata(default(string)));
+
+        public string OpenedScript
+        {
+            get { return (string) GetValue(OpenedScriptProperty); }
+            set { SetValue(OpenedScriptProperty, value); }
+        }
+
         private string _openVideo;
-        private string _openScript;
 
         private bool _wasPlaying;
         private ScriptHandler _scriptHandler;
@@ -168,7 +168,9 @@ namespace ScriptPlayer
 
         public MainWindow()
         {
-            Playlist = new ObservableCollection<PlaylistEntry>();
+            Playlist = new PlaylistViewModel();
+            Playlist.PlayEntry += PlaylistOnPlayEntry;
+
             _supportedScriptExtensions = ScriptLoaderManager.GetSupportedExtensions();
             ConversionModes = Enum.GetValues(typeof(BeatsToFunScriptConverter.ConversionMode)).Cast<BeatsToFunScriptConverter.ConversionMode>().ToList();
 
@@ -183,6 +185,13 @@ namespace ScriptPlayer
             cmbPattern.Items.Add("Stairs Up");
             cmbPattern.Items.Add("Stairs Down");
         }
+
+        private void PlaylistOnPlayEntry(object sender, PlaylistEntry playlistEntry)
+        {
+            LoadScript(playlistEntry.Fullname, true);
+        }
+
+        public PlaylistViewModel Playlist { get; set; }
 
         private string GetButtplugApiVersion()
         {
@@ -366,16 +375,16 @@ namespace ScriptPlayer
 
         private bool VideoAndScriptNamesMatch()
         {
-            if (String.IsNullOrWhiteSpace(_openScript))
+            if (String.IsNullOrWhiteSpace(OpenedScript))
                 return false;
 
             if (String.IsNullOrWhiteSpace(_openVideo))
                 return false;
 
-            if (Path.GetDirectoryName(_openScript) != Path.GetDirectoryName(_openVideo))
+            if (Path.GetDirectoryName(OpenedScript) != Path.GetDirectoryName(_openVideo))
                 return false;
 
-            return Path.GetFileNameWithoutExtension(_openScript).Equals(Path.GetFileNameWithoutExtension(_openVideo));
+            return Path.GetFileNameWithoutExtension(OpenedScript).Equals(Path.GetFileNameWithoutExtension(_openVideo));
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -434,7 +443,7 @@ namespace ScriptPlayer
         {
             var actions = loader.Load(fileName);
             _scriptHandler.SetScript(actions);
-            _openScript = fileName;
+            OpenedScript = fileName;
 
             FindMaxPositions();
             UpdateHeatMap();
@@ -509,7 +518,7 @@ namespace ScriptPlayer
             {
                 if (cckAutoSkip.IsChecked == true)
                 {
-                    LoadNextPlaylistEntry();
+                    Playlist.PlayNextEntry.Execute(OpenedScript);
                 }
                 else
                 {
@@ -617,7 +626,7 @@ namespace ScriptPlayer
 
             foreach (string filename in dialog.FileNames)
             {
-                Playlist.Add(new PlaylistEntry(filename));
+                Playlist.AddEntry(new PlaylistEntry(filename));
             }
         }
 
@@ -894,9 +903,9 @@ namespace ScriptPlayer
                 OverlayText.SetText("Play", TimeSpan.FromSeconds(2));
                 btnPlayPause.Content = ";";
             }
-            else if (Playlist.Count > 0)
+            else if (Playlist.EntryCount > 0)
             {
-                LoadScript(Playlist[0].Fullname, true);
+                LoadScript(Playlist.FirstEntry().Fullname, true);
             }
         }
 
@@ -992,42 +1001,12 @@ namespace ScriptPlayer
         private void mnuShowPlaylist_Click(object sender, RoutedEventArgs e)
         {
             PlaylistWindow playlist = new PlaylistWindow(Playlist);
-            playlist.EntrySelected += PlaylistOnEntrySelected;
             playlist.Show();
-        }
-
-        private void PlaylistOnEntrySelected(object sender, PlaylistEntry playlistEntry)
-        {
-            LoadScript(playlistEntry.Fullname, true);
         }
 
         private void VideoPlayer_MediaEnded(object sender, EventArgs e)
         {
-            LoadNextPlaylistEntry();
-        }
-
-        private void LoadNextPlaylistEntry()
-        {
-            var currentEntry = Playlist.FirstOrDefault(p => p.Fullname == _openScript);
-
-            if (currentEntry == null) return;
-
-            int currentIndex = Playlist.IndexOf(currentEntry);
-            var nextEntry = Playlist[(currentIndex + 1) % Playlist.Count];
-
-            LoadScript(nextEntry.Fullname, true);
-        }
-
-        private void LoadPreviousPlaylistEntry()
-        {
-            var currentEntry = Playlist.FirstOrDefault(p => p.Fullname == _openScript);
-
-            if (currentEntry == null) return;
-
-            int currentIndex = Playlist.IndexOf(currentEntry);
-            var nextEntry = Playlist[(currentIndex - 1 + Playlist.Count) % Playlist.Count];
-
-            LoadScript(nextEntry.Fullname, true);
+            Playlist.PlayNextEntry.Execute(OpenedScript);
         }
 
         private void VideoPlayer_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -1149,16 +1128,6 @@ namespace ScriptPlayer
         {
             PatternSource = PatternSource.Generator;
             StartPattern(new RandomPatternGenerator());
-        }
-
-        private void btnNextVideo_Click(object sender, RoutedEventArgs e)
-        {
-            LoadNextPlaylistEntry();
-        }
-
-        private void btnPreviousVideo_Click(object sender, RoutedEventArgs e)
-        {
-            LoadPreviousPlaylistEntry();
         }
 
         private void mnuButtplugScan_OnClick(object sender, RoutedEventArgs e)

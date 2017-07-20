@@ -81,7 +81,9 @@
     <Compile Include="Dialogs\ButtplugConnectionSettingsDialog.xaml.cs">
       <DependentUpon>ButtplugConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\PlaylistEntry.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\PlaylistViewModel.cs" />
     <Page Include="Dialogs\ButtplugConnectionSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -90,8 +90,8 @@
                 </TextBlock.Text>
             </TextBlock>
             <Slider VerticalAlignment="Center" Margin="16,0" Width="50" Value="{Binding Volume, Mode=TwoWay}" Minimum="0" Maximum="100" DockPanel.Dock="Right" Style="{DynamicResource VolumeSliderStyle}"></Slider>
-            <Button ToolTip="Play next video in playlist" Content=":" DockPanel.Dock="Right" Click="btnNextVideo_Click"/>
-            <Button ToolTip="Play previous video in playlist" Content="9" DockPanel.Dock="Right" Click="btnPreviousVideo_Click"/>
+            <Button Command="{Binding Playlist.PlayNextEntry}" CommandParameter="{Binding OpenedScript}" ToolTip="Play next video in playlist" Content=":" DockPanel.Dock="Right" />
+            <Button Command="{Binding Playlist.PlayPreviousEntry}" CommandParameter="{Binding OpenedScript}" ToolTip="Play previous video in playlist" Content="9" DockPanel.Dock="Right"/>
             <shared:SeekBar Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Progress="{Binding ElementName=VideoPlayer, Path=TimeSource.Progress}" Duration="{Binding ElementName=VideoPlayer, Path=Duration}" Seek="SeekBar_OnSeek"/>
         </DockPanel>
         <Grid shared:HideOnHover.IsActive="True" Width="140" Background="White" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1" VerticalAlignment="Stretch">

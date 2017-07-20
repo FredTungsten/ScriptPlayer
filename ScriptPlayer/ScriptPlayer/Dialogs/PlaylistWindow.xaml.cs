@@ -1,52 +1,39 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using ScriptPlayer.ViewModels;
 
-namespace ScriptPlayer
+namespace ScriptPlayer.Dialogs
 {
     /// <summary>
     /// Interaction logic for PlaylistWindow.xaml
     /// </summary>
     public partial class PlaylistWindow : Window
     {
-        public event EventHandler<PlaylistEntry> EntrySelected; 
+        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
+            "ViewModel", typeof(PlaylistViewModel), typeof(PlaylistWindow), new PropertyMetadata(default(PlaylistViewModel)));
 
-        public static readonly DependencyProperty EntriesProperty = DependencyProperty.Register(
-            "Entries", typeof(ObservableCollection<PlaylistEntry>), typeof(PlaylistWindow), new PropertyMetadata(default(ObservableCollection<PlaylistEntry>)));
-
-        public ObservableCollection<PlaylistEntry> Entries
+        public PlaylistViewModel ViewModel
         {
-            get { return (ObservableCollection<PlaylistEntry>) GetValue(EntriesProperty); }
-            set { SetValue(EntriesProperty, value); }
+            get { return (PlaylistViewModel) GetValue(ViewModelProperty); }
+            set { SetValue(ViewModelProperty, value); }
         }
-        public PlaylistWindow(ObservableCollection<PlaylistEntry> entries)
+
+        public PlaylistWindow(PlaylistViewModel viewmodel)
         {
-            Entries = entries;
+            ViewModel = viewmodel;
             InitializeComponent();
         }
 
-        protected virtual void OnEntrySelected(PlaylistEntry e)
+        private void PlaylistEntry_DoubleClicked(object sender, MouseButtonEventArgs e)
         {
-            EntrySelected?.Invoke(this, e);
-        }
+            ListBoxItem item = sender as ListBoxItem;
+            PlaylistEntry entry = item?.DataContext as PlaylistEntry;
+            if (entry == null)
+                return;
 
-        private void EventSetter_OnHandler(object sender, MouseButtonEventArgs e)
-        {
-            OnEntrySelected(((ListBoxItem)sender).DataContext as PlaylistEntry);
+            ViewModel.RequestPlayEntry(entry);
         }
-    }
-
-    public class PlaylistEntry
-    {
-        public PlaylistEntry(string filename)
-        {
-            Fullname = filename;
-            Shortname = System.IO.Path.GetFileNameWithoutExtension(filename);
-        }
-
-        public string Shortname { get; set; }
-        public string Fullname { get; set; }
     }
 }
