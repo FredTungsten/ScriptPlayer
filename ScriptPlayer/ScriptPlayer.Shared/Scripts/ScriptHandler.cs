@@ -10,14 +10,14 @@ namespace ScriptPlayer.Shared.Scripts
         private TimeSpan _lastTimestamp;
         private List<ScriptAction> _actions;
         private TimeSource _timesource;
-        private BeatsToFunScriptConverter.ConversionMode _conversionMode = BeatsToFunScriptConverter.ConversionMode.UpOrDown;
+        private ConversionMode _conversionMode = ConversionMode.UpOrDown;
         private static TimeSpan _delay = TimeSpan.Zero;
         private List<TimeSpan> _beats;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
 
         public TimeSpan Delay { get; set; }
 
-        public BeatsToFunScriptConverter.ConversionMode ConversionMode  
+        public ConversionMode ConversionMode  
         {
             get { return _conversionMode; }
             set

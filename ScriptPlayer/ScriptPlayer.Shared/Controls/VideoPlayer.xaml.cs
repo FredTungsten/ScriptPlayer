@@ -72,7 +72,16 @@ namespace ScriptPlayer.Shared
             get { return (bool)GetValue(HideMouseProperty); }
             set { SetValue(HideMouseProperty, value); }
         }
-        public bool IsPlaying => _isPlaying;
+
+        public static readonly DependencyProperty IsPlayingProperty = DependencyProperty.Register(
+            "IsPlaying", typeof(bool), typeof(VideoPlayer), new PropertyMetadata(default(bool)));
+
+        public bool IsPlaying
+        {
+            get { return (bool) GetValue(IsPlayingProperty); }
+            protected set { SetValue(IsPlayingProperty, value); }
+        }
+        
 
         public static readonly DependencyProperty SampleRectProperty = DependencyProperty.Register(
             "SampleRect", typeof(Rect), typeof(VideoPlayer), new PropertyMetadata(Rect.Empty, OnSampleRectPropertyChanged));
@@ -177,7 +186,7 @@ namespace ScriptPlayer.Shared
 
         private MediaPlayer _player;
         private bool _down;
-        private bool _isPlaying;
+        
         private double _scale;
         private Point _offset;
 
@@ -231,7 +240,7 @@ namespace ScriptPlayer.Shared
 
         private void SetIsPlaying(bool isPlaying)
         {
-            _isPlaying = isPlaying;
+            IsPlaying = isPlaying;
             SystemIdlePreventer.Prevent(isPlaying);
             CommandManager.InvalidateRequerySuggested();
             UpdateMouseHider();

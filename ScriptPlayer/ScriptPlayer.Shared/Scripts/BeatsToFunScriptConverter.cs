@@ -6,19 +6,21 @@ using System.Threading.Tasks;
 
 namespace ScriptPlayer.Shared.Scripts
 {
+    public enum ConversionMode
+    {
+        /// <summary>
+        /// One beat up, next beat down
+        /// </summary>
+        UpOrDown,
+        DownFast,
+        DownCenter,
+        UpFast,
+        UpCenter
+    }
+
     public static class BeatsToFunScriptConverter
     {
-        public enum ConversionMode
-        {
-            /// <summary>
-            /// One beat up, next beat down
-            /// </summary>
-            UpOrDown,
-            DownFast,
-            DownCenter,
-            UpFast,
-            UpCenter
-        }
+        
 
         public static List<FunScriptAction> Convert(IEnumerable<TimeSpan> timestamps, ConversionMode mode)
         {

@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using ScriptPlayer.Shared.Scripts;
@@ -14,17 +10,17 @@ namespace ScriptPlayer.Shared.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            switch ((BeatsToFunScriptConverter.ConversionMode) value)
+            switch ((ConversionMode)value)
             {
-                case BeatsToFunScriptConverter.ConversionMode.UpOrDown:
+                case ConversionMode.UpOrDown:
                     return "Up / Down";
-                case BeatsToFunScriptConverter.ConversionMode.DownFast:
+                case ConversionMode.DownFast:
                     return "Down (Fast)";
-                case BeatsToFunScriptConverter.ConversionMode.DownCenter:
+                case ConversionMode.DownCenter:
                     return "Down (Centered)";
-                case BeatsToFunScriptConverter.ConversionMode.UpFast:
+                case ConversionMode.UpFast:
                     return "Up (Fast)";
-                case BeatsToFunScriptConverter.ConversionMode.UpCenter:
+                case ConversionMode.UpCenter:
                     return "Up (Centered)";
                 default:
                     throw new ArgumentOutOfRangeException(nameof(value), value, null);

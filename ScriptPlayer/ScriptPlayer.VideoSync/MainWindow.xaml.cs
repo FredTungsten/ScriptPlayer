@@ -775,7 +775,7 @@ namespace ScriptPlayer.VideoSync
                 Inverted = false,
                 Range = 90,
                 Version = new Version(1, 0),
-                Actions = BeatsToFunScriptConverter.Convert(Beats, BeatsToFunScriptConverter.ConversionMode.UpOrDown)
+                Actions = BeatsToFunScriptConverter.Convert(Beats, ConversionMode.UpOrDown)
             };
 
             string content = JsonConvert.SerializeObject(script);

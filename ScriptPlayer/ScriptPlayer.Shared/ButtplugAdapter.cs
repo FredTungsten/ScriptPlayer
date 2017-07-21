@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -24,6 +25,8 @@ namespace ScriptPlayer.Shared
             }
         }
 
+        public const string DefaultUrl = "ws://localhost:12345/buttplug";
+
         public event EventHandler<string> DeviceAdded;
 
         private ButtplugWSClient _client;
@@ -31,7 +34,7 @@ namespace ScriptPlayer.Shared
 
         private List<ButtplugClientDevice> _devices;
 
-        public ButtplugAdapter(string url = "ws://localhost:12345/buttplug")
+        public ButtplugAdapter(string url = DefaultUrl)
         {
             Devices = new List<ButtplugClientDevice>();
             _url = url;
@@ -133,6 +136,20 @@ namespace ScriptPlayer.Shared
             }
         }
 
+        public async void Stop()
+        {
+            if (_client == null) return;
+
+            var devices = _devices.ToList();
+            foreach (ButtplugClientDevice device in devices)
+            {
+                if (device.AllowedMessages.Contains(nameof(StopDeviceCmd)))
+                {
+                    var response = await _client.SendDeviceMessage(device, new StopDeviceCmd(device.Index));
+                }
+            }
+        }
+
         private uint LaunchToVorze(byte speed)
         {
             return speed;
@@ -184,6 +201,16 @@ namespace ScriptPlayer.Shared
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public static string GetButtplugApiVersion()
+        {
+            string location = typeof(ButtplugWSClient).Assembly.Location;
+            if (string.IsNullOrWhiteSpace(location))
+                return "?";
+
+            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(location);
+            return fileVersionInfo.ProductVersion;
         }
     }
 }

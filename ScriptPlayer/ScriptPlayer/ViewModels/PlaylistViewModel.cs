@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using JetBrains.Annotations;
-using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 
 namespace ScriptPlayer.ViewModels
