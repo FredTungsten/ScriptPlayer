@@ -815,8 +815,7 @@ namespace ScriptPlayer.ViewModels
         {
             List<TimeSpan> timeStamps = _scriptHandler.GetScript().Select(s => s.TimeStamp).ToList();
             int segments = Math.Max(20, (int) VideoPlayer.Duration.Divide(TimeSpan.FromSeconds(10)));
-            Brush heatmap = HeatMapGenerator.Generate(timeStamps, TimeSpan.Zero, VideoPlayer.Duration, segments, true,
-                0.1);
+            Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, VideoPlayer.Duration);
             heatmap.Opacity = 0.8;
             HeatMap = heatmap;
         }

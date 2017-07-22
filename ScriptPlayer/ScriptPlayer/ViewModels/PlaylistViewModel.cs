@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -14,6 +15,7 @@ namespace ScriptPlayer.ViewModels
         private ObservableCollection<PlaylistEntry> _entries;
         private bool _shuffle;
         private PlaylistEntry _selectedEntry;
+        private bool _repeat;
 
         public ObservableCollection<PlaylistEntry> Entries
         {
@@ -21,9 +23,28 @@ namespace ScriptPlayer.ViewModels
             set
             {
                 if (Equals(value, _entries)) return;
+                UpdateEntryEvents(_entries, value);
                 _entries = value;
+                CommandManager.InvalidateRequerySuggested();
                 OnPropertyChanged();
             }
+        }
+
+        private void UpdateEntryEvents(ObservableCollection<PlaylistEntry> oldValue, ObservableCollection<PlaylistEntry> newValue)
+        {
+            if (oldValue != null)
+            {
+                oldValue.CollectionChanged -= EntriesChanged;
+            }
+            if (newValue != null)
+            {
+                newValue.CollectionChanged += EntriesChanged;
+            }
+        }
+
+        private void EntriesChanged(object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
+        {
+            CommandManager.InvalidateRequerySuggested();
         }
 
         public bool Shuffle
@@ -33,6 +54,19 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _shuffle) return;
                 _shuffle = value;
+                CommandManager.InvalidateRequerySuggested();
+                OnPropertyChanged();
+            }
+        }
+
+        public bool Repeat
+        {
+            get { return _repeat; }
+            set
+            {
+                if (value == _repeat) return;
+                _repeat = value;
+                CommandManager.InvalidateRequerySuggested();
                 OnPropertyChanged();
             }
         }
@@ -69,9 +103,43 @@ namespace ScriptPlayer.ViewModels
 
         private bool CanPlayPreviousEntry(string currentFile)
         {
-            return Entries.Count > 0;
+            if (Entries.Count == 0)
+                return false;
+
+            if (Repeat)
+                return true;
+
+            var currentEntry = Entries.FirstOrDefault(p => p.Fullname == currentFile);
+            if (currentEntry == null)
+                return false;
+
+            if (Shuffle)
+                return Entries.Count > 1;
+
+            int index = Entries.IndexOf(currentEntry);
+
+            return index > 0;
         }
 
+        private bool CanPlayNextEntry(string currentFile)
+        {
+            if (Entries.Count == 0)
+                return false;
+
+            if (Repeat)
+                return true;
+
+            var currentEntry = Entries.FirstOrDefault(p => p.Fullname == currentFile);
+            if (currentEntry == null)
+                return true;
+
+            if (Shuffle)
+                return Entries.Count > 1;
+
+            int index = Entries.IndexOf(currentEntry);
+
+            return index < Entries.Count -1;
+        }
         private void ExecutePlayPreviousEntry(string currentFile)
         {
             if (!CanPlayPreviousEntry(currentFile))
@@ -82,11 +150,6 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             OnPlayEntry(entry);
-        }
-
-        private bool CanPlayNextEntry(string currentFile)
-        {
-            return Entries.Count > 0;
         }
 
         private void ExecutePlayNextEntry(string currentFile)
@@ -120,6 +183,8 @@ namespace ScriptPlayer.ViewModels
                 SelectedEntry = Entries[Entries.Count - 1];
             else
                 SelectedEntry = null;
+
+            CommandManager.InvalidateRequerySuggested();
         }
 
         private bool CanMoveSelectedEntryUp()
@@ -174,37 +239,69 @@ namespace ScriptPlayer.ViewModels
 
         public PlaylistEntry GetNextEntry(string currentEntryFile)
         {
+            if(Shuffle)
+                return AnythingButThis(currentEntryFile);
+
             var currentEntry = Entries.FirstOrDefault(p => p.Fullname == currentEntryFile);
 
             if (currentEntry == null)
                 return FirstEntry();
 
             int currentIndex = Entries.IndexOf(currentEntry);
-            var nextEntry = Entries[(currentIndex + 1) % Entries.Count];
 
-            SelectedEntry = nextEntry;
+            if (currentIndex == Entries.Count - 1)
+            {
+                return Repeat ? Entries.First() : null;
+            }
+
+            var nextEntry = Entries[currentIndex + 1];
 
             return nextEntry;
         }
 
         public PlaylistEntry GetPreviousEntry(string currentEntryFile)
         {
+            if (Shuffle)
+                return AnythingButThis(currentEntryFile);
+
             var currentEntry = Entries.FirstOrDefault(p => p.Fullname == currentEntryFile);
 
             if (currentEntry == null)
                 return FirstEntry();
 
             int currentIndex = Entries.IndexOf(currentEntry);
-            var previousEntry = Entries[(currentIndex +Entries.Count - 1) % Entries.Count];
 
-            SelectedEntry = previousEntry;
+            if(currentIndex == 0)
+            {
+                return Repeat ? Entries.Last() : null;
+            }
+
+            var previousEntry = Entries[currentIndex - 1];
 
             return previousEntry;
         }
 
-        protected virtual void OnPlayEntry(PlaylistEntry e)
+        readonly Random _rng = new Random();
+
+        private PlaylistEntry AnythingButThis(string currentEntryFile)
         {
-            PlayEntry?.Invoke(this, e);
+            if (Entries.Count == 0)
+                return null;
+            if (Entries.Count == 1)
+                return Entries.Single();
+
+            var currentEntry = Entries.FirstOrDefault(p => p.Fullname == currentEntryFile);
+            var otherEntries = Entries.ToList();
+            if(currentEntry != null)
+                otherEntries.Remove(currentEntry);
+
+            return otherEntries[_rng.Next(0, otherEntries.Count)];
+        }
+
+        protected virtual void OnPlayEntry(PlaylistEntry entry)
+        {
+            SelectedEntry = entry;
+            PlayEntry?.Invoke(this, entry);
         }
 
 

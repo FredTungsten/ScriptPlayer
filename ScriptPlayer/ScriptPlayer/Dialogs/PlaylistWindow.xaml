@@ -3,11 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:dialogs="clr-namespace:ScriptPlayer.Dialogs"
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
+        xmlns:fa="clr-namespace:FontAwesome.Net;assembly=FontAwesome.Net"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Title="Playlist" Height="300" Width="300" WindowStyle="ToolWindow">
     <Window.Resources>
+        <FontFamily x:Key="FontAwesome">pack://application:,,,/FontAwesome.Net;component/Fonts/#FontAwesome</FontFamily>
         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"></Style>
         <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}"></Style>
     </Window.Resources>
@@ -24,8 +25,20 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Button Command="{Binding MoveSelectedEntryDown}" FontFamily="WingDings" Content="ê" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="75" Height="20"/>
-        <Button Command="{Binding MoveSelectedEntryUp}" FontFamily="WingDings" Content="é" HorizontalAlignment="Left" Margin="90,0,0,10" VerticalAlignment="Bottom" Width="75" Height="20"/>
-        <Button Command="{Binding RemoveSelectedEntry}" Content="X" HorizontalAlignment="Left" Margin="170,0,0,10" VerticalAlignment="Bottom" Width="75"/>
+        <Grid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button ToolTip="Move Down" Command="{Binding MoveSelectedEntryDown}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_arrow_down}" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <Button ToolTip="Move Up" Command="{Binding MoveSelectedEntryUp}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_arrow_up}" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <Button ToolTip="Remove" Command="{Binding RemoveSelectedEntry}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_times}" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <CheckBox ToolTip="Shuffle" IsChecked="{Binding Shuffle}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_random}" Grid.Column="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <CheckBox ToolTip="Repeat" IsChecked="{Binding Repeat}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_repeat}" Grid.Column="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        </Grid>
     </Grid>
 </Window>
