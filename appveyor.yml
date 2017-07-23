@@ -53,7 +53,7 @@ assembly_info:
 #  disable_publish_on_pr: true
 
 before_build:
-  - nuget restore
+  - nuget restore ScriptPlayer\ScriptPlayer.sln
 build:
   parallel: true
   project: ScriptPlayer\ScriptPlayer.sln
