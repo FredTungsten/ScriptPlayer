@@ -287,10 +287,5 @@ namespace ScriptPlayer
             PlaylistWindow playlist = new PlaylistWindow(ViewModel.Playlist);
             playlist.Show();
         }
-
-        private void btnTestPattern_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.ExecuteSelectedTestPattern();
-        }
     }
 }
