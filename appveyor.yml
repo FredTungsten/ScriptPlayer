@@ -1,0 +1,62 @@
+branches:
+  only:
+    - master
+
+configuration:
+  - Debug
+  - Release
+
+image: Visual Studio 2017
+
+skip_commits:
+  files:
+    - README.md
+
+skip_branch_with_pr: true
+  
+# Taken from https://boblokerse.github.io/2015/11/03/GitVersion-versioning-made-easy-and-dry/
+install:
+  - ver
+  - ps: choco install -y -r --no-progress resharper-clt.portable
+  - ps: choco install -y -r --no-progress fxcop
+  - ps: choco install -y -r --no-progress InnoSetup
+  - ps: |
+      function gitVersion() {
+        $env:newhash=git rev-parse HEAD
+        $env:shorthash=git rev-parse --short HEAD
+        If ($env:appveyor_repo_tag -eq $TRUE) {
+          $env:newVersion=$env:appveyor_repo_tag_name
+          $env:appveyor_info_version=$env:appveyor_repo_tag_name
+        } Else {
+          $gitVersion=git describe --tags --abbrev=0 $env:APPVEYOR_REPO_BRANCH
+          $env:newVersion="$gitVersion.$env:APPVEYOR_BUILD_NUMBER"
+          $env:appveyor_info_version="$env:newVersion-alpha"
+        }      
+        $env:appveyor_build_version="$env:newVersion"
+        appveyor UpdateBuild -Version "$env:newVersion"
+        write-host "Using hash for build version: $env:newhash"
+        write-host "Update appveyor build version to: $env:appveyor_build_version"
+        write-host "Update appveyor info version to: $env:appveyor_info_version"
+      }
+      gitVersion      
+      
+# patch the assembly version, but only in our own directories
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: $(appveyor_build_version)
+  assembly_file_version: $(appveyor_build_version)
+  assembly_informational_version: $(appveyor_info_version)
+
+# Automatically register private account and/or project AppVeyor NuGet feeds.
+nuget:
+  account_feed: true
+  project_feed: true
+  disable_publish_on_pr: true
+
+before_build:
+  - nuget restore
+build:
+  parallel: true
+  project: ScriptPlayer.sln
+  publish_nuget: false
