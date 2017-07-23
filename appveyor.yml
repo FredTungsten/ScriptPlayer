@@ -58,3 +58,7 @@ build:
   parallel: true
   project: ScriptPlayer\ScriptPlayer.sln
   publish_nuget: false
+after_build:
+  - ps: set PATH=%PATH%;"C:\\Program Files (x86)\\Inno Setup 5"
+  - ps: iscc scriptplayer-installer.iss   
+  - ps: Push-AppveyorArtifact installer\scriptplayer-installer.exe -FileName ScriptPlayer-$env:CONFIGURATION-$env:APPVEYOR_BUILD_VERSION.exe
