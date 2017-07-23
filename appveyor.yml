@@ -17,8 +17,6 @@ skip_branch_with_pr: true
 # Taken from https://boblokerse.github.io/2015/11/03/GitVersion-versioning-made-easy-and-dry/
 install:
   - ver
-  - ps: choco install -y -r --no-progress resharper-clt.portable
-  - ps: choco install -y -r --no-progress fxcop
   - ps: choco install -y -r --no-progress InnoSetup
   - ps: |
       function gitVersion() {
@@ -49,13 +47,13 @@ assembly_info:
   assembly_informational_version: $(appveyor_info_version)
 
 # Automatically register private account and/or project AppVeyor NuGet feeds.
-nuget:
-  account_feed: true
-  project_feed: true
-  disable_publish_on_pr: true
+#nuget:
+#  account_feed: true
+#  project_feed: true
+#  disable_publish_on_pr: true
 
-before_build:
-  - nuget restore
+#before_build:
+#  - nuget restore
 build:
   parallel: true
   project: ScriptPlayer.sln
