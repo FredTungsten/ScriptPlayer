@@ -27,9 +27,9 @@ OutputDir=.\installer
 ;LicenseFile=LICENSE
 
 [Files]
-Source: "ScriptPlayer\bin\{#Configuration}\ScriptPlayer.exe"; DestDir: "{app}"
-Source: "ScriptPlayer\bin\{#Configuration}\*.dll"; DestDir: "{app}"
-Source: "ScriptPlayer\bin\{#Configuration}\*.config"; DestDir: "{app}"
+Source: "ScriptPlayer\ScriptPlayer\bin\{#Configuration}\ScriptPlayer.exe"; DestDir: "{app}"
+Source: "ScriptPlayer\ScriptPlayer\bin\{#Configuration}\*.dll"; DestDir: "{app}"
+Source: "ScriptPlayer\ScriptPlayer\bin\{#Configuration}\*.config"; DestDir: "{app}"
 ;Source: "Readme.md"; DestDir: "{app}"; DestName: "Readme.txt"; Flags: isreadme
 ;Source: "LICENSE"; DestDir: "{app}"; DestName: "License.txt"
 
