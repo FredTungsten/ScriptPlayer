@@ -20,6 +20,23 @@ namespace ScriptPlayer.Shared
             BackgroundProperty.OverrideMetadata(typeof(SeekBar), new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
         }
 
+        public static readonly DependencyProperty OverlayProperty = DependencyProperty.Register(
+            "Overlay", typeof(Brush), typeof(SeekBar), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public Brush Overlay
+        {
+            get { return (Brush) GetValue(OverlayProperty); }
+            set { SetValue(OverlayProperty, value); }
+        }
+
+        public static readonly DependencyProperty OverlayOpacityProperty = DependencyProperty.Register(
+            "OverlayOpacity", typeof(Brush), typeof(SeekBar), new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public Brush OverlayOpacity
+        {
+            get { return (Brush) GetValue(OverlayOpacityProperty); }
+            set { SetValue(OverlayOpacityProperty, value); }
+        }
 
         public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
             "Progress", typeof(TimeSpan), typeof(SeekBar), new PropertyMetadata(default(TimeSpan), OnVisualPropertyChanged));
@@ -83,15 +100,20 @@ namespace ScriptPlayer.Shared
 
             dc.PushClip(new RectangleGeometry(rect));
 
-            dc.DrawRectangle(Brushes.Black, null, rect);
             dc.DrawRectangle(Background, null, rect);
+            dc.PushOpacityMask(OverlayOpacity);
+
+            dc.DrawRectangle(Overlay, null, rect);
+
+            dc.Pop();
 
             if (Duration == TimeSpan.Zero) return;
 
             double linePosition = Progress.Divide(Duration) * ActualWidth;
 
-            dc.DrawRectangle(new LinearGradientBrush(HeatMapGenerator.GradientsSmoothFromColors(0.5, Color.FromArgb(0,0,0,0), Color.FromArgb(150,0,0,0), Color.FromArgb(0, 0, 0, 0)), new Point(0,0), new Point(1,0)), null, new Rect(linePosition-10,0,20, ActualHeight));
+            //dc.DrawRectangle(new LinearGradientBrush(HeatMapGenerator.GradientsSmoothFromColors(0.5, Color.FromArgb(0,0,0,0), Color.FromArgb(150,0,0,0), Color.FromArgb(0, 0, 0, 0)), new Point(0,0), new Point(1,0)), null, new Rect(linePosition-10,0,20, ActualHeight));
 
+            dc.DrawLine(new Pen(Brushes.Black, 3), new Point(linePosition, 0), new Point(linePosition, ActualHeight));
             dc.DrawLine(new Pen(Brushes.White, 1), new Point(linePosition,0), new Point(linePosition, ActualHeight));
 
             dc.Pop();

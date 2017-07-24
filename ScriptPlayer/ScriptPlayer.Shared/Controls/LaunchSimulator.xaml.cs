@@ -28,8 +28,8 @@ namespace ScriptPlayer.Shared
             set { SetValue(PositionChangesPerSecondProperty, value); }
         }
 
-        private double _targetPosition;
-        private double _targetSpeed;
+        //private double _targetPosition;
+        //private double _targetSpeed;
 
         public LaunchSimulator()
         {

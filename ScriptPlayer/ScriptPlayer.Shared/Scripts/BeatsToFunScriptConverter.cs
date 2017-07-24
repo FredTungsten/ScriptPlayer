@@ -20,8 +20,6 @@ namespace ScriptPlayer.Shared.Scripts
 
     public static class BeatsToFunScriptConverter
     {
-        
-
         public static List<FunScriptAction> Convert(IEnumerable<TimeSpan> timestamps, ConversionMode mode)
         {
             var beats = timestamps.ToList();

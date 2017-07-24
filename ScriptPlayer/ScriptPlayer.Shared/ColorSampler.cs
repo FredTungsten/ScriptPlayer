@@ -130,7 +130,7 @@ namespace ScriptPlayer.Shared
 
             Color average = SampleCondition.GetAverageColor(rgbPixels);
 
-            if (!_colorsByTime.Any(i => i.Item1 == timestamp))
+            if (_colorsByTime.All(i => i.Item1 != timestamp))
             {
                 _colorsByTime.Add(new Tuple<TimeSpan, Color>(timestamp, average));
 

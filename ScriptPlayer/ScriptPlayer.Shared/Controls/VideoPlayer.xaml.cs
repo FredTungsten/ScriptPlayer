@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading;
 
 namespace ScriptPlayer.Shared
 {
@@ -160,6 +159,8 @@ namespace ScriptPlayer.Shared
             set { SetValue(DurationProperty, value); }
         }
 
+        protected Resolution ActualResolution { get; set; }
+
         public static readonly DependencyProperty TimeSourceProperty = DependencyProperty.Register(
             "TimeSource", typeof(TimeSource), typeof(VideoPlayer), new PropertyMetadata(default(TimeSource)));
 
@@ -189,6 +190,18 @@ namespace ScriptPlayer.Shared
         
         private double _scale;
         private Point _offset;
+        private bool _sideBySide;
+
+        public bool SideBySide
+        {
+            get { return _sideBySide; }
+            set
+            {
+                _sideBySide = value;
+                UpdateVideoBrush();
+                UpdateResolution();
+            }
+        }
 
         public RelayCommand PlayCommand { get; }
         public RelayCommand PauseCommand { get; }
@@ -267,7 +280,30 @@ namespace ScriptPlayer.Shared
             TimeSource = new MediaPlayerTimeSource(_player,
                 new DispatcherClock(Dispatcher, TimeSpan.FromMilliseconds(10)));
 
-            VideoBrush = new DrawingBrush(new VideoDrawing { Player = _player, Rect = new Rect(0, 0, 1, 1) }) { Stretch = Stretch.Fill };
+            UpdateVideoBrush();
+        }
+
+        private void UpdateVideoBrush()
+        {
+            if (_player == null)
+                return;
+
+            Rect rect = new Rect(0, 0, 1, 1);
+
+            if(SideBySide)
+                rect = new Rect(0,0,0.5,1);
+
+            VideoBrush = new DrawingBrush(
+                new VideoDrawing
+                {
+                    Player = _player,
+                    Rect = rect,
+                    
+                })
+            {
+                Stretch = Stretch.Fill,
+                Viewbox = rect
+            };
         }
 
         private void PlayerOnMediaEnded(object sender, EventArgs eventArgs)
@@ -279,8 +315,14 @@ namespace ScriptPlayer.Shared
         private void PlayerOnMediaOpened(object sender, EventArgs e)
         {
             Duration = _player.NaturalDuration.TimeSpan;
-            Resolution = new Resolution(_player.NaturalVideoWidth, _player.NaturalVideoHeight);
+            ActualResolution = new Resolution(_player.NaturalVideoWidth, _player.NaturalVideoHeight);
+            UpdateResolution();
             OnMediaOpened();
+        }
+
+        private void UpdateResolution()
+        {
+            Resolution = !SideBySide ? ActualResolution : new Resolution(ActualResolution.Horizontal / 2, ActualResolution.Vertical);
         }
 
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

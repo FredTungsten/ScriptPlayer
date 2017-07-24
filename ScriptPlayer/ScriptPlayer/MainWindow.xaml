@@ -110,12 +110,18 @@
             <Button Command="{Binding Playlist.PlayNextEntry}" CommandParameter="{Binding OpenedScript}" ToolTip="Play next video in playlist" Content=":" DockPanel.Dock="Right" />
             <Button Command="{Binding Playlist.PlayPreviousEntry}" CommandParameter="{Binding OpenedScript}" ToolTip="Play previous video in playlist" Content="9" DockPanel.Dock="Right"/>
             <shared:SeekBar Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Progress="{Binding ElementName=VideoPlayer, Path=TimeSource.Progress}" Duration="{Binding ElementName=VideoPlayer, Path=Duration}" Seek="SeekBar_OnSeek">
+                <shared:SeekBar.OverlayOpacity>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#20000000" Offset="0"/>
+                        <GradientStop Offset="1" Color="#cc000000"/>
+                    </LinearGradientBrush>
+                </shared:SeekBar.OverlayOpacity>
                 <shared:SeekBar.Style>
                     <Style TargetType="{x:Type shared:SeekBar}">
-                        <Setter Property="Background" Value="Black"/>
+                        <Setter Property="Overlay" Value="Transparent"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding ElementName=CckHeatMap, Path=IsChecked}" Value="True">
-                                <Setter Property="Background" Value="{Binding HeatMap}"/>
+                                <Setter Property="Overlay" Value="{Binding HeatMap}"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>

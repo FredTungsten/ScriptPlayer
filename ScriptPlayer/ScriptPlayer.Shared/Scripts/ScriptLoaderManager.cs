@@ -13,10 +13,11 @@ namespace ScriptPlayer.Shared.Scripts
 
         static ScriptLoaderManager()
         {
-            RegisterLoader<VorzeScriptLoader>();
-            RegisterLoader<RawScriptLoader>();
+            //RegisterLoader<VorzeScriptLoader>();
+            //RegisterLoader<RawScriptLoader>();
             RegisterLoader<FunScriptLoader>();
             RegisterLoader<BeatFileLoader>();
+            RegisterLoader<VirtualRealPornScriptLoader>();
         }
 
         public static void RegisterLoader<T>() where T : ScriptLoader, new()
@@ -41,9 +42,9 @@ namespace ScriptPlayer.Shared.Scripts
             return new ScriptFileFormatCollection(LoaderByFileFormat.Keys);
         }
 
-        public static ScriptLoader GetLoader(ScriptFileFormat format)
+        public static ScriptLoader[] GetLoaders(ScriptFileFormat[] formats)
         {
-            return LoaderByFileFormat[format];
+            return formats.Select(format => LoaderByFileFormat[format]).ToArray();
         }
 
         public static string[] GetSupportedExtensions()
@@ -51,14 +52,11 @@ namespace ScriptPlayer.Shared.Scripts
             return Loaders.SelectMany(l => l.GetSupportedFormats().SelectMany(f => f.Extensions)).ToArray();
         }
 
-        public static ScriptLoader GetLoader(string filename)
+        public static ScriptLoader[] GetLoaders(string filename)
         {
             string extension = Path.GetExtension(filename).TrimStart('.').ToLower();
-            foreach(ScriptLoader loader in Loaders)
-                if (loader.GetSupportedFormats().Any(f => f.Extensions.Contains(extension)))
-                    return loader;
-
-            return null;
+            return Loaders.Where(loader => loader.GetSupportedFormats().Any(f => f.Extensions.Contains(extension)))
+                .ToArray();
         }
     }
 

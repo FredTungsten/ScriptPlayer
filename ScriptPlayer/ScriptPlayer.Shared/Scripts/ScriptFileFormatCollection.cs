@@ -7,16 +7,16 @@ namespace ScriptPlayer.Shared.Scripts
 {
     public class ScriptFileFormatCollection
     { 
-        private List<ScriptFileFormat> _list;
+        private readonly List<ScriptFileFormat> _list;
         private bool _includeAll;
         private bool _includeAny;
 
-        public ScriptFileFormat GetFormat(int selectedIndex, string filename)
+        public ScriptFileFormat[] GetFormats(int selectedIndex, string filename)
         {
             string extension = Path.GetExtension(filename).TrimStart('.').ToLower();
 
             if ((_includeAll && selectedIndex == 0) || (selectedIndex < 0))
-                return GetFormatByExtension(extension);
+                return GetFormatsByExtension(extension);
 
             if(_includeAll)
                 selectedIndex--;
@@ -24,12 +24,12 @@ namespace ScriptPlayer.Shared.Scripts
             if(selectedIndex >= _list.Count)
                 throw new ArgumentException("A ScriptFileFormat with the specified selectedIndex does not exist!", nameof(selectedIndex));
 
-            return _list[selectedIndex];
+            return new[]{_list[selectedIndex]};
         }
 
-        private ScriptFileFormat GetFormatByExtension(string extension)
+        private ScriptFileFormat[] GetFormatsByExtension(string extension)
         {
-            return _list.FirstOrDefault(f => f.Extensions.Contains(extension, StringComparer.OrdinalIgnoreCase));
+            return _list.Where(f => f.Extensions.Contains(extension, StringComparer.OrdinalIgnoreCase)).ToArray();
         }
 
         public string BuildFilter(bool includeAll)

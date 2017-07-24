@@ -148,6 +148,7 @@
     <Compile Include="RepeatingScriptActions.cs" />
     <Compile Include="SampleAnalyser.cs" />
     <Compile Include="Scripts\BeatsToFunScriptConverter.cs" />
+    <Compile Include="Scripts\IniReader.cs" />
     <Compile Include="Scripts\ScriptActionEventArgs.cs" />
     <Compile Include="Scripts\ScriptFileFormat.cs" />
     <Compile Include="Scripts\ScriptFileFormatCollection.cs" />
@@ -160,6 +161,7 @@
     <Compile Include="Scripts\ScriptAction.cs" />
     <Compile Include="Converters\StringToVersionConverter.cs" />
     <Compile Include="Scripts\ScriptLoaderManager.cs" />
+    <Compile Include="Scripts\VirtualRealPornScriptReader.cs" />
     <Compile Include="Scripts\VorzeScriptAction.cs" />
     <Compile Include="Scripts\VorzeScriptLoader.cs" />
     <Compile Include="Sounds\SoundResources.cs" />

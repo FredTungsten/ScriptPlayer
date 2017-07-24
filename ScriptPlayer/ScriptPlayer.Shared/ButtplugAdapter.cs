@@ -75,7 +75,7 @@ namespace ScriptPlayer.Shared
 
                 return true;
             }
-            catch(Exception e)
+            catch(Exception)
             {
                 _client = null;
                 return false;

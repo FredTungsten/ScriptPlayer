@@ -230,7 +230,7 @@ namespace ScriptPlayer.Shared
             return roundedTimeSpan;
 
             //Even Int64 isn't enought ....
-            long timeSpanTicksMs = (frameIndex * DurationNumerator * (TimeSpan.TicksPerSecond / TimeSpan.TicksPerMillisecond) ) / (TotalFramesInVideo * DurationDenominator);
+            /*long timeSpanTicksMs = (frameIndex * DurationNumerator * (TimeSpan.TicksPerSecond / TimeSpan.TicksPerMillisecond) ) / (TotalFramesInVideo * DurationDenominator);
             TimeSpan timestamp = TimeSpan.FromTicks(timeSpanTicksMs * TimeSpan.TicksPerMillisecond);
 
             if (Math.Abs((timestamp - roundedTimeSpan).TotalSeconds) > 0.1)
@@ -238,7 +238,7 @@ namespace ScriptPlayer.Shared
                 Debug.Write("oO!");
             }
 
-            return timestamp;
+            return timestamp;*/
         }
     }
 }

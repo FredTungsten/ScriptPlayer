@@ -514,8 +514,9 @@ namespace ScriptPlayer.ViewModels
                 while (enumerator.MoveNext())
                 {
                     PatternGenerator.PositionTransistion transistion = enumerator.Current;
-
-                    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                    var app = Application.Current;
+                    if (app == null) break;
+                    app.Dispatcher.BeginInvoke(new Action(() =>
                     {
                         DeviceCommandInformation info = new DeviceCommandInformation
                         {
@@ -635,6 +636,8 @@ namespace ScriptPlayer.ViewModels
                     Positions = new byte[] {99, 80, 90, 70, 80, 60, 70, 50, 60, 40, 50, 30, 40, 20, 30, 10, 20, 0}
                 }
             };
+
+            SelectedTestPattern = TestPatterns.FirstOrDefault();
         }
 
         private async void TestPattern(TestPatternDefinition pattern)
@@ -653,7 +656,7 @@ namespace ScriptPlayer.ViewModels
                     PositionToOriginal = positions[0],
                     PositionToTransformed = TransformPosition(positions[0], 0, 99)
                 }
-            );
+            , false);
             await Task.Delay(300);
 
             for (int i = 1; i < positions.Length; i++)
@@ -764,11 +767,11 @@ namespace ScriptPlayer.ViewModels
 
         private void LoadScript(string fileToLoad, bool checkForVideo)
         {
-            ScriptLoader loader = ScriptLoaderManager.GetLoader(fileToLoad);
-            if (loader == null)
+            ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(fileToLoad);
+            if (loaders == null)
                 return;
 
-            LoadScript(loader, fileToLoad);
+            LoadScript(loaders, fileToLoad);
 
             OnRequestOverlay($"Loaded {Path.GetFileName(fileToLoad)}", TimeSpan.FromSeconds(4));
 
@@ -776,9 +779,30 @@ namespace ScriptPlayer.ViewModels
                 TryFindMatchingVideo(fileToLoad);
         }
 
-        private void LoadScript(ScriptLoader loader, string fileName)
+        private void LoadScript(ScriptLoader[] loaders, string fileName)
         {
-            List<ScriptAction> actions = loader.Load(fileName);
+            List<ScriptAction> actions = null;
+
+            foreach (ScriptLoader loader in loaders)
+            {
+                try
+                {
+                    actions = loader.Load(fileName);
+                    if (actions == null)
+                        continue;
+                    if (actions.Count == 0)
+                        continue;
+
+                    break;
+                }
+                catch (Exception)
+                {
+                    //try another loader
+                }
+            }
+
+            if (actions == null) return;
+
             _scriptHandler.SetScript(actions);
             OpenedScript = fileName;
 
@@ -814,9 +838,7 @@ namespace ScriptPlayer.ViewModels
         private void UpdateHeatMap()
         {
             List<TimeSpan> timeStamps = _scriptHandler.GetScript().Select(s => s.TimeStamp).ToList();
-            int segments = Math.Max(20, (int) VideoPlayer.Duration.Divide(TimeSpan.FromSeconds(10)));
             Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, VideoPlayer.Duration);
-            heatmap.Opacity = 0.8;
             HeatMap = heatmap;
         }
 
@@ -1049,11 +1071,11 @@ namespace ScriptPlayer.ViewModels
             if (file == null)
                 return;
 
-            ScriptFileFormat format = formats.GetFormat(_lastScriptFilterIndex - 1, file);
+            ScriptFileFormat[] format = formats.GetFormats(_lastScriptFilterIndex - 1, file);
 
-            ScriptLoader loader = ScriptLoaderManager.GetLoader(format);
+            ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(format);
 
-            LoadScript(loader, file);
+            LoadScript(loaders, file);
 
             TryFindMatchingVideo(file);
 

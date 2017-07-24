@@ -260,6 +260,7 @@ namespace ScriptPlayer
                 }
                 case Key.NumPad7:
                 {
+                    VideoPlayer.SideBySide ^= true;
                     break;
                 }
                 case Key.NumPad8:

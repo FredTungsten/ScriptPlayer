@@ -229,8 +229,8 @@ namespace ScriptPlayer.Shared
                 IEnumerable<double> relativeBeatPositions =
                     absoluteBeatPositions.Select(b => (b - timeFrom).Divide(timeTo - timeFrom));
 
-                const double safeSpace = 30;
-                double y = ActualHeight / 2.0;
+                //const double safeSpace = 30;
+                //double y = ActualHeight / 2.0;
 
                 //DrawLine(drawingContext, Colors.Red, new Point(-safeSpace, y),
                 //    new Point(ActualWidth + safeSpace, y));
