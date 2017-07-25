@@ -75,6 +75,7 @@ namespace ScriptPlayer.ViewModels
         private double _volume = 50;
 
         private bool _wasPlaying;
+        private bool _loaded;
 
         public MainViewModel()
         {
@@ -89,6 +90,14 @@ namespace ScriptPlayer.ViewModels
             InitializeTestPatterns();
             InitializeLaunchFinder();
             InitializeScriptHandler();
+        }
+
+        public void Load()
+        {
+            if (_loaded)
+                return;
+
+            _loaded = true;
             CheckForArguments();
         }
 

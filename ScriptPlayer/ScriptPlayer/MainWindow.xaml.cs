@@ -44,6 +44,8 @@ namespace ScriptPlayer
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.VideoPlayer = VideoPlayer;
+
+            ViewModel.Load();
         }
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
