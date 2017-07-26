@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ScriptPlayer.Shared.Scripts
 {
@@ -26,8 +24,7 @@ namespace ScriptPlayer.Shared.Scripts
             var actions = new List<FunScriptAction>();
 
             TimeSpan previous = TimeSpan.MinValue;
-            TimeSpan ramp = TimeSpan.FromMilliseconds(200
-                );
+            TimeSpan centerLimit = TimeSpan.MaxValue;
 
             bool up = true;
 
@@ -37,13 +34,27 @@ namespace ScriptPlayer.Shared.Scripts
             switch (mode)
             {
                 case ConversionMode.UpOrDown:
+                    centerLimit = TimeSpan.Zero;
+                    positionDown = 95;
+                    positionUp = 5;
+                    break;
                 case ConversionMode.DownFast:
+                    centerLimit = TimeSpan.FromMilliseconds(180);
+                    positionDown = 95;
+                    positionUp = 5;
+                    break;
                 case ConversionMode.DownCenter:
+                    centerLimit = TimeSpan.FromMilliseconds(2000);
                     positionDown = 95;
                     positionUp = 5;
                     break;
                 case ConversionMode.UpFast:
+                    centerLimit = TimeSpan.FromMilliseconds(180);
+                    positionDown = 5;
+                    positionUp = 95;
+                    break;
                 case ConversionMode.UpCenter:
+                    centerLimit = TimeSpan.FromMilliseconds(2000);
                     positionDown = 5;
                     positionUp = 95;
                     break;
@@ -68,42 +79,23 @@ namespace ScriptPlayer.Shared.Scripts
                         }
                     case ConversionMode.UpCenter:
                     case ConversionMode.DownCenter:
-                        {
-                            if (previous != TimeSpan.MinValue)
-                            {
-                                actions.Add(new FunScriptAction
-                                {
-                                    Position = positionDown,
-                                    TimeStamp = (previous + timestamp).Divide(2)
-                                });
-                            }
-
-                            actions.Add(new FunScriptAction
-                            {
-                                Position = positionUp,
-                                TimeStamp = timestamp
-                            });
-
-
-                            break;
-                        }
                     case ConversionMode.UpFast:
                     case ConversionMode.DownFast:
                         {
                             if (previous != TimeSpan.MinValue)
                             {
-                                if (timestamp - previous >= ramp.Multiply(2))
+                                if (timestamp - previous >= centerLimit.Multiply(2))
                                 {
                                     actions.Add(new FunScriptAction
                                     {
                                         Position = positionDown,
-                                        TimeStamp = previous + ramp
+                                        TimeStamp = previous + centerLimit
                                     });
 
                                     actions.Add(new FunScriptAction
                                     {
                                         Position = positionDown,
-                                        TimeStamp = timestamp - ramp
+                                        TimeStamp = timestamp - centerLimit
                                     });
                                 }
                                 else

@@ -121,5 +121,10 @@ namespace ScriptPlayer.Shared
                 return new BeatCollection(beats);
             }
         }
+
+        public void Sort()
+        {
+            _beats.Sort();
+        }
     }
 }

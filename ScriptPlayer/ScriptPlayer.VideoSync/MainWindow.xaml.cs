@@ -6,7 +6,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Remoting.Channels;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -250,6 +249,7 @@ namespace ScriptPlayer.VideoSync
         {
             Debug.WriteLine(positionTotalSeconds);
             Beats.Add(positionTotalSeconds);
+            Beats.Sort();
         }
 
 
@@ -728,8 +728,7 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuLoadFun_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Funscript|*.funscript";
+            OpenFileDialog dialog = new OpenFileDialog {Filter = "Funscript|*.funscript"};
 
             if (dialog.ShowDialog(this) != true)
                 return;
@@ -744,15 +743,6 @@ namespace ScriptPlayer.VideoSync
             });
 
             Positions = new PositionCollection(pos);
-
-            //OpenFileDialog dialog = new OpenFileDialog();
-            //dialog.Filter = "Raw Script|*.raw";
-
-            //if (dialog.ShowDialog(this) != true)
-            //    return;
-
-            //RawScriptLoader loader = new RawScriptLoader();
-            //loader.Load(dialog.FileName);
         }
 
         private void mnuSaveFunscript_Click(object sender, RoutedEventArgs e)
@@ -1097,7 +1087,10 @@ namespace ScriptPlayer.VideoSync
             if ((Keyboard.Modifiers & ModifierKeys.Control) != 0)
                 RemoveClosestBeat(e);
             else
+            {
                 Beats.Add(e);
+                Beats.Sort();
+            }
 
             BeatBar.InvalidateVisual();
         }
@@ -1106,7 +1099,6 @@ namespace ScriptPlayer.VideoSync
         {
             TimeSpan closest = GetClosestBeat(timeSpan);
             Beats.Remove(closest);
-
         }
 
         private TimeSpan GetClosestBeat(TimeSpan timeSpan)
@@ -1317,31 +1309,6 @@ namespace ScriptPlayer.VideoSync
                     Position = (byte) (actions[i].Action == 0 ? 95:5),
                     TimeStamp = actions[i + samePosition].TimeStamp
                 });
-
-                /*for (int y = 0; y <= samePosition; y++)
-                {
-                    byte position;
-                    double progress = (y + 1.0) / (samePosition+1);
-
-                    if (actions[i].Action == 0)
-                    {
-                        position = (byte) (5.0 + 90.0 * progress);
-                    }
-                    else
-                    {
-                        position = (byte)(95 - 90.0 * progress);
-                    }
-
-                    funActions.Add(new FunScriptAction
-                    {
-                        Position = position,
-                        TimeStamp = actions[i+y].TimeStamp
-                    });
-
-            i += samePosition;
-                }*/
-
-
             }
 
             var pos = funActions.Select(s => new TimedPosition()
