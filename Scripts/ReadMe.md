@@ -1,3 +1,3 @@
-## Script are now in a separate Repo!
+## Scripts are now in a separate repository!
 
 https://github.com/FredTungsten/Scripts
