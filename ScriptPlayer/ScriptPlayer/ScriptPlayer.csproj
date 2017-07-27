@@ -83,6 +83,9 @@
     <Compile Include="Dialogs\ButtplugConnectionSettingsDialog.xaml.cs">
       <DependentUpon>ButtplugConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\ScriptDownloadDialog.xaml.cs">
+      <DependentUpon>ScriptDownloadDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\VersionDialog.xaml.cs">
       <DependentUpon>VersionDialog.xaml</DependentUpon>
     </Compile>
@@ -91,6 +94,10 @@
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\PlaylistViewModel.cs" />
     <Page Include="Dialogs\ButtplugConnectionSettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\ScriptDownloadDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
