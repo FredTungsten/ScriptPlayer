@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
@@ -7,6 +9,7 @@ using System.Windows.Input;
 using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
+using Application = System.Windows.Application;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
@@ -24,7 +27,7 @@ namespace ScriptPlayer
 
         public MainViewModel ViewModel
         {
-            get { return (MainViewModel) GetValue(ViewModelProperty); }
+            get { return (MainViewModel)GetValue(ViewModelProperty); }
             set { SetValue(ViewModelProperty, value); }
         }
 
@@ -83,7 +86,7 @@ namespace ScriptPlayer
 
         private void ViewModelOnRequestMessageBox(object sender, MessageBoxEventArgs e)
         {
-            e.Result = MessageBox.Show(this, e.Text, e.Text, e.Buttons, e.Icon);
+            e.Result = MessageBox.Show(this, e.Text, e.Title, e.Buttons, e.Icon);
             e.Handled = true;
         }
 
@@ -192,94 +195,94 @@ namespace ScriptPlayer
             switch (e.Key)
             {
                 case Key.Enter:
-                {
-                    ToggleFullscreen();
-                    break;
-                }
-                case Key.Escape:
-                {
-                    SetFullscreen(false);
-                    break;
-                }
-                case Key.Space:
-                {
-                    ViewModel.TogglePlayback();
-                    break;
-                }
-                case Key.Left:
-                {
-                    ViewModel.ShiftPosition(TimeSpan.FromSeconds(-5));
-                    break;
-                }
-                case Key.Right:
-                {
-                    ViewModel.ShiftPosition(TimeSpan.FromSeconds(5));
+                    {
+                        ToggleFullscreen();
                         break;
-                }
+                    }
+                case Key.Escape:
+                    {
+                        SetFullscreen(false);
+                        break;
+                    }
+                case Key.Space:
+                    {
+                        ViewModel.TogglePlayback();
+                        break;
+                    }
+                case Key.Left:
+                    {
+                        ViewModel.ShiftPosition(TimeSpan.FromSeconds(-5));
+                        break;
+                    }
+                case Key.Right:
+                    {
+                        ViewModel.ShiftPosition(TimeSpan.FromSeconds(5));
+                        break;
+                    }
                 case Key.Up:
-                {
-                    ViewModel.VolumeUp();
-                    break;
-                }
+                    {
+                        ViewModel.VolumeUp();
+                        break;
+                    }
                 case Key.Down:
-                {
-                    ViewModel.VolumeDown();
-                    break;
-                }
+                    {
+                        ViewModel.VolumeDown();
+                        break;
+                    }
                 case Key.NumPad0:
-                {
+                    {
 
-                    break;
-                }
+                        break;
+                    }
                 case Key.NumPad1:
-                {
-                    VideoPlayer.ChangeZoom(-0.02);
-                    break;
-                }
+                    {
+                        VideoPlayer.ChangeZoom(-0.02);
+                        break;
+                    }
                 case Key.NumPad2:
-                {
-                    VideoPlayer.Move(new Point(0, 1));
-                    break;
-                }
+                    {
+                        VideoPlayer.Move(new Point(0, 1));
+                        break;
+                    }
                 case Key.NumPad3:
-                {
-                    break;
-                }
+                    {
+                        break;
+                    }
                 case Key.NumPad4:
-                {
-                    VideoPlayer.Move(new Point(-1, 0));
-                    break;
-                }
+                    {
+                        VideoPlayer.Move(new Point(-1, 0));
+                        break;
+                    }
                 case Key.NumPad5:
-                {
-                    VideoPlayer.ResetTransform();
-                    break;
-                }
+                    {
+                        VideoPlayer.ResetTransform();
+                        break;
+                    }
                 case Key.NumPad6:
-                {
-                    VideoPlayer.Move(new Point(1, 0));
-                    break;
-                }
+                    {
+                        VideoPlayer.Move(new Point(1, 0));
+                        break;
+                    }
                 case Key.NumPad7:
-                {
-                    VideoPlayer.SideBySide ^= true;
-                    break;
-                }
+                    {
+                        VideoPlayer.SideBySide ^= true;
+                        break;
+                    }
                 case Key.NumPad8:
-                {
-                    VideoPlayer.Move(new Point(0, -1));
-                    break;
-                }
+                    {
+                        VideoPlayer.Move(new Point(0, -1));
+                        break;
+                    }
                 case Key.NumPad9:
                     VideoPlayer.ChangeZoom(0.02);
-                {
-                    break;
-                }
+                    {
+                        break;
+                    }
                 default:
-                {
-                    handled = false;
-                    break;
-                }
+                    {
+                        handled = false;
+                        break;
+                    }
             }
 
             e.Handled = handled;
@@ -287,8 +290,37 @@ namespace ScriptPlayer
 
         private void mnuShowPlaylist_Click(object sender, RoutedEventArgs e)
         {
-            PlaylistWindow playlist = new PlaylistWindow(ViewModel.Playlist);
-            playlist.Show();
+            ShowPlaylist();
+        }
+
+        private void ShowPlaylist()
+        {
+            var existing = Application.Current.Windows.OfType<PlaylistWindow>().FirstOrDefault();
+
+            if (existing == null || !existing.IsLoaded)
+            {
+                PlaylistWindow playlist = new PlaylistWindow(ViewModel.Playlist);
+                playlist.Show();
+            }
+            else
+            {
+                if (existing.WindowState == WindowState.Minimized)
+                    existing.WindowState = WindowState.Normal;
+
+                existing.Activate();
+                existing.Focus();
+            }
+        }
+
+        private void mnuVersion_Click(object sender, RoutedEventArgs e)
+        {
+            VersionDialog dialog = new VersionDialog(){Owner = this};
+            dialog.ShowDialog();
+        }
+
+        private void mnuDocs_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("https://github.com/FredTungsten/ScriptPlayer/wiki");
         }
     }
 }

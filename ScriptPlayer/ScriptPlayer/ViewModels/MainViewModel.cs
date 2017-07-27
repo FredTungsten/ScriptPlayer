@@ -69,7 +69,7 @@ namespace ScriptPlayer.ViewModels
 
         private List<TestPatternDefinition> _testPatterns;
 
-        private string _title;
+        private string _title = "";
         private VideoPlayer _videoPlayer;
 
         private double _volume = 50;
@@ -774,21 +774,7 @@ namespace ScriptPlayer.ViewModels
                 LoadScript(fileToLoad, true);
         }
 
-        private void LoadScript(string fileToLoad, bool checkForVideo)
-        {
-            ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(fileToLoad);
-            if (loaders == null)
-                return;
-
-            LoadScript(loaders, fileToLoad);
-
-            OnRequestOverlay($"Loaded {Path.GetFileName(fileToLoad)}", TimeSpan.FromSeconds(4));
-
-            if (checkForVideo)
-                TryFindMatchingVideo(fileToLoad);
-        }
-
-        private void LoadScript(ScriptLoader[] loaders, string fileName)
+        private bool LoadScript(ScriptLoader[] loaders, string fileName)
         {
             List<ScriptAction> actions = null;
 
@@ -810,13 +796,15 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
-            if (actions == null) return;
+            if (actions == null) return false;
 
             _scriptHandler.SetScript(actions);
             OpenedScript = fileName;
 
             FindMaxPositions();
             UpdateHeatMap();
+
+            return true;
         }
 
         private void FindMaxPositions()
@@ -1050,7 +1038,9 @@ namespace ScriptPlayer.ViewModels
                 Buttons = buttons,
                 Handled = false,
                 Icon = icon,
-                Result = MessageBoxResult.None
+                Result = MessageBoxResult.None,
+                Text = text,
+                Title = title
             };
 
             RequestMessageBox?.Invoke(this, e);
@@ -1084,11 +1074,46 @@ namespace ScriptPlayer.ViewModels
 
             ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(format);
 
-            LoadScript(loaders, file);
+            if (!LoadScript(loaders, file))
+            {
+                ScriptLoader[] otherLoaders = ScriptLoaderManager.GetAllLoaders().Except(loaders).ToArray();
+                if (!LoadScript(otherLoaders, file))
+                {
+                    OnRequestMessageBox($"The script file '{file}' could not be loaded!", "Load Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    return;
+                }
+            }
 
             TryFindMatchingVideo(file);
 
             UpdateHeatMap();
+        }
+
+        //TODO: Maybe merge some code with OpenScript()?
+        private void LoadScript(string file, bool checkForVideo)
+        {
+            ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(file);
+            if (loaders == null)
+                return;
+
+            if (!LoadScript(loaders, file))
+            {
+                ScriptLoader[] otherLoaders = ScriptLoaderManager.GetAllLoaders().Except(loaders).ToArray();
+                if (!LoadScript(otherLoaders, file))
+                {
+                    OnRequestMessageBox($"The script file '{file}' could not be loaded!", "Load Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    return;
+                }
+            }
+
+            OnRequestOverlay($"Loaded {Path.GetFileName(file)}", TimeSpan.FromSeconds(4));
+
+            if (checkForVideo)
+                TryFindMatchingVideo(file);
         }
 
         public void ConnectLaunchDirectly()

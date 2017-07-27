@@ -58,6 +58,11 @@ namespace ScriptPlayer.Shared.Scripts
             return Loaders.Where(loader => loader.GetSupportedFormats().Any(f => f.Extensions.Contains(extension)))
                 .ToArray();
         }
+
+        public static ScriptLoader[] GetAllLoaders()
+        {
+            return Loaders.ToArray();
+        }
     }
 
     public class BeatFileLoader : ScriptLoader

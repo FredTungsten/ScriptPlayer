@@ -53,6 +53,9 @@
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.11\lib\net45\NLog.dll</HintPath>
     </Reference>
+    <Reference Include="Octokit, Version=0.24.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Octokit.0.24.0\lib\net45\Octokit.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -80,11 +83,18 @@
     <Compile Include="Dialogs\ButtplugConnectionSettingsDialog.xaml.cs">
       <DependentUpon>ButtplugConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\VersionDialog.xaml.cs">
+      <DependentUpon>VersionDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PatternSource.cs" />
     <Compile Include="ViewModels\PlaylistEntry.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\PlaylistViewModel.cs" />
     <Page Include="Dialogs\ButtplugConnectionSettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\VersionDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -143,6 +153,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="ScriptPlayerIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\ScriptPlayerIcon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,0 +1,21 @@
+﻿<Window x:Class="ScriptPlayer.Dialogs.VersionDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
+        mc:Ignorable="d" Loaded="VersionDialog_OnLoaded"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="Version" Height="254.873" Width="383.898" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
+    <Grid>
+        <Image HorizontalAlignment="Left" Height="159" Margin="10,10,0,0" VerticalAlignment="Top" Width="100" Source="/ScriptPlayer;component/IMages/ScriptPlayerIcon.png"/>
+        <TextBlock HorizontalAlignment="Left" Margin="115,10,0,0" TextWrapping="Wrap" Text="ScriptPlayer" VerticalAlignment="Top" Width="167"/>
+        <TextBlock HorizontalAlignment="Left" Margin="115,31,0,0" TextWrapping="Wrap" Text="Installed Version:" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="115,52,0,0" TextWrapping="Wrap" Text="Latest Version:" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="245,31,0,0" TextWrapping="Wrap" Text="{Binding InstalledVersion}" VerticalAlignment="Top" Width="121"/>
+        <TextBlock HorizontalAlignment="Left" Margin="245,52,0,0" TextWrapping="Wrap" Text="{Binding LatestVersion}" VerticalAlignment="Top" Width="121"/>
+        <Button Name="btnDownload" Content="Download" Click="btnDownload_Click" Margin="115,0,10,10" VerticalAlignment="Bottom" Height="29" IsEnabled="False"/>
+        <TextBlock Name="txtVersion" HorizontalAlignment="Left" Margin="115,94,0,0" TextWrapping="Wrap" Text="Determining Version ..." VerticalAlignment="Top" Width="251" TextAlignment="Center"/>
+        <Button Name="btnCheckAgain" Click="btnCheckAgain_OnClick" Content="Check Again (Include Pre-Releases)" Margin="116,0,10,44" Height="29" VerticalAlignment="Bottom"/>
+    </Grid>
+</Window>

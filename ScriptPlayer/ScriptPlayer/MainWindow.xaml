@@ -9,7 +9,17 @@
         xmlns:scriptPlayer="clr-namespace:ScriptPlayer"
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
-        Title="{Binding Path=Title, StringFormat={}ScriptPlayer - {0}}" Height="591" Width="954" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico">
+        Height="591" Width="954" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico">
+    <Window.Style>
+        <Style TargetType="Window">
+            <Setter Property="Title" Value="{Binding Path=Title, StringFormat={}ScriptPlayer - {0}}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=Title}" Value="">
+                    <Setter Property="Title" Value="ScriptPlayer"/>        
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Style>
     <!--<Window.InputBindings>
         <KeyBinding Key="Space" Command="{Binding TogglePlaybackCommand}"/>
         <KeyBinding Key="Up" Command="{Binding VolumeUpCommand}"/>
@@ -66,6 +76,10 @@
                     <MenuItem Header="Connect to Buttplug" Command="{Binding ConnectButtplugCommand}"/>
                     <MenuItem Header="Scan for Devices" Command="{Binding StartScanningButtplugCommand}"/>
                 </MenuItem>
+            </MenuItem>
+            <MenuItem Header="Help">
+                <MenuItem Header="Documentation (Online)" Click="mnuDocs_Click"/>
+                <MenuItem Header="About / Check for new Version" Click="mnuVersion_Click"/>
             </MenuItem>
         </Menu>
 
