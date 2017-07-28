@@ -4,9 +4,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
-        mc:Ignorable="d"
-        Title="ScriptDownloadDialog" Height="300" Width="300">
+        mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="Download Scripts" Height="300" Width="300">
     <Grid>
-        
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" Margin="0,0,0,39">
+            <ItemsControl ItemsSource="{Binding Scripts}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:ScriptViewModel}">
+                        <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding Name}" ToolTip="{Binding DownloadUrl}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        <Button IsEnabled="false" Content="Download" HorizontalAlignment="Left" Margin="10,0,0,7" VerticalAlignment="Bottom" Width="272"/>
     </Grid>
 </Window>

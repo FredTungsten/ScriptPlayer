@@ -61,6 +61,8 @@
                 <MenuItem Header="Open Video" Command="{Binding OpenVideoCommand}"/>
                 <MenuItem Header="Open Script" Command="{Binding OpenScriptCommand}"/>
                 <Separator/>
+                <MenuItem Header="Download Script" Click="mnuDownloadScript_Click"/>
+                <Separator/>
                 <MenuItem Header="Add to Playlist" Command="{Binding AddScriptsToPlaylistCommand}"/>
                 <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
             </MenuItem>
