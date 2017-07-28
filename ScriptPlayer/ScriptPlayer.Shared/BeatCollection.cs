@@ -88,7 +88,7 @@ namespace ScriptPlayer.Shared
 
         public void Save(string filename)
         {
-            using (var stream = File.OpenWrite(filename))
+            using (var stream = new FileStream(filename, FileMode.Create, FileAccess.Write))
             {
                 using (TextWriter writer = new StreamWriter(stream))
                 {
