@@ -164,6 +164,15 @@
                         </DockPanel>
                     </StackPanel>
 
+                    <StackPanel Margin="4" ToolTip="Minimum and maximum speed of the Launch.">
+                        <TextBlock Margin="0" HorizontalAlignment="Center" Text="Speed"/>
+                        <shared:RangeSlider Margin="0,4" Minimum="0" Maximum="99" LowerValue="{Binding MinSpeed, Mode=TwoWay}" UpperValue="{Binding MaxSpeed, Mode=TwoWay}"/>
+                        <DockPanel LastChildFill="False">
+                            <TextBlock Margin="4,0" Text="{Binding MinSpeed}" DockPanel.Dock="Left"/>
+                            <TextBlock Margin="4,0" Text="{Binding MaxSpeed}" DockPanel.Dock="Right"/>
+                        </DockPanel>
+                    </StackPanel>
+
                     <StackPanel Margin="4" ToolTip="Static multiplier that is applied after the automatic speed detection.">
                         <TextBlock Margin="0" Text="Speed Multiplier" TextAlignment="Center"/>
                         <Slider Margin="0,4" Minimum="0.5" Maximum="2.0" Value="{Binding SpeedMultiplier}"/>

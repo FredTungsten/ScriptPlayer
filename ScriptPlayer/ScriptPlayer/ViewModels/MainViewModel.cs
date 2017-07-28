@@ -76,6 +76,8 @@ namespace ScriptPlayer.ViewModels
 
         private bool _wasPlaying;
         private bool _loaded;
+        private byte _minSpeed = 20;
+        private byte _maxSpeed = 95;
 
         public MainViewModel()
         {
@@ -132,6 +134,28 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _minPosition) return;
                 _minPosition = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public byte MinSpeed
+        {
+            get => _minSpeed;
+            set
+            {
+                if (value == _minSpeed) return;
+                _minSpeed = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public byte MaxSpeed
+        {
+            get => _maxSpeed;
+            set
+            {
+                if (value == _maxSpeed) return;
+                _maxSpeed = value;
                 OnPropertyChanged();
             }
         }
@@ -538,8 +562,8 @@ namespace ScriptPlayer.ViewModels
 
                         info.SpeedOriginal = SpeedPredictor.Predict2(info.PositionFromOriginal, info.PositionToOriginal,
                             transistion.Duration);
-                        info.SpeedTransformed = SpeedPredictor.Predict2(info.PositionFromTransformed,
-                            info.PositionToTransformed, transistion.Duration);
+                        info.SpeedTransformed = ClampSpeed(SpeedPredictor.Predict2(info.PositionFromTransformed,
+                            info.PositionToTransformed, transistion.Duration));
 
                         SetDevices(info, false);
                     }));
@@ -680,8 +704,7 @@ namespace ScriptPlayer.ViewModels
                 };
 
                 info.SpeedOriginal = SpeedPredictor.Predict2(info.PositionFromOriginal, info.PositionToOriginal, delay);
-                info.SpeedTransformed =
-                    SpeedPredictor.Predict2(info.PositionFromTransformed, info.PositionToTransformed, delay);
+                info.SpeedTransformed = ClampSpeed(SpeedPredictor.Predict2(info.PositionFromTransformed, info.PositionToTransformed, delay));
 
                 SetDevices(info, false);
 
@@ -878,8 +901,9 @@ namespace ScriptPlayer.ViewModels
                     (byte) Math.Abs(eventArgs.CurrentAction.Position - eventArgs.NextAction.Position), duration);
             byte speedTransformed =
                 SpeedPredictor.Predict((byte) Math.Abs(currentPositionTransformed - nextPositionTransformed), duration);
-            speedTransformed = (byte) Math.Min(99, Math.Max(0, speedTransformed * SpeedMultiplier));
+            speedTransformed = ClampSpeed(speedTransformed * SpeedMultiplier);
 
+            Debug.WriteLine($"{nextPositionTransformed} @ {speedTransformed}");
 
             DeviceCommandInformation info = new DeviceCommandInformation
             {
@@ -900,7 +924,11 @@ namespace ScriptPlayer.ViewModels
 
             SetDevices(info);
         }
-        //private ButtplugClientDevice _device;
+
+        private byte ClampSpeed(double speed)
+        {
+            return (byte) Math.Min(MaxSpeed, Math.Max(MinSpeed, speed));
+        }
 
         private byte TransformPosition(byte pos, byte inMin, byte inMax)
         {
