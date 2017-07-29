@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -30,57 +28,67 @@ namespace ScriptPlayer.Shared
 
         private void AddChild(UIElement element)
         {
-            _children.Add(element);
+            if (element == null)
+                return;
 
-            OnVisualChildrenChanged(element, null);
+            if (!_children.Contains(element))
+            {
+                _children.Add(element);
 
-            InvalidateMeasure();
-            InvalidateArrange();
+                OnVisualChildrenChanged(element, null);
+
+                InvalidateMeasure();
+                InvalidateArrange();
+            }
         }
 
         private void RemoveChild(UIElement element)
         {
-            _children.Remove(element);
+            if (element == null)
+                return;
 
-            OnVisualChildrenChanged(null,element);
+            if (_children.Contains(element))
+            {
+                _children.Remove(element);
 
-            InvalidateMeasure();
-            InvalidateArrange();
+                OnVisualChildrenChanged(null, element);
+
+                InvalidateMeasure();
+                InvalidateArrange();
+            }
         }
 
         private readonly List<Notification> _notifications = new List<Notification>();
 
         public void AddNotification(object content, TimeSpan duration, string group = null)
         {
-            if (group != null)
+            Notification existing = null;
+
+            if(!string.IsNullOrWhiteSpace(group))
+                existing = _notifications.FirstOrDefault(n => String.Equals(n.Group, group, StringComparison.InvariantCultureIgnoreCase));
+
+
+            if (existing != null)
             {
-                Notification existing = null;
+                existing.Content = content;
 
-                if(!String.IsNullOrWhiteSpace(group))
-                    existing = _notifications.FirstOrDefault(n => String.Equals(n.Group, group, StringComparison.InvariantCultureIgnoreCase));
-
-                if (existing != null)
+                VanishingContainer container = GetContainer(existing);
+                container.Vanish(duration);
+            }
+            else
+            {
+                var newNotification = new Notification
                 {
-                    existing.Content = content;
+                    Group = group,
+                    Content = content
+                };
 
-                    VanishingContainer container = GetContainer(existing);
-                    container.Vanish(duration);
-                }
-                else
-                {
-                    var newNotification = new Notification
-                    {
-                        Group = group,
-                        Content = content
-                    };
+                _notifications.Add(newNotification);
 
-                    _notifications.Add(newNotification);
-
-                    VanishingContainer control = new VanishingContainer { Content = newNotification };
-                    control.Gone += ControlOnGone;
-                    AddChild(control);
-                    control.Vanish(duration);
-                }
+                VanishingContainer control = new VanishingContainer { Content = newNotification };
+                control.Gone += ControlOnGone;
+                AddChild(control);
+                control.Vanish(duration);
             }
         }
 
@@ -136,7 +144,7 @@ namespace ScriptPlayer.Shared
 
         public object Content
         {
-            get { return _content; }
+            get => _content;
             set
             {
                 if (value == _content) return;

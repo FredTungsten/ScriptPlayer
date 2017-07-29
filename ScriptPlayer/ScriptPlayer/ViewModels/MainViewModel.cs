@@ -178,7 +178,7 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value.Equals(_volume)) return;
                 _volume = value;
-                OnRequestOverlay($"Volume: {Volume:f0}%", TimeSpan.FromSeconds(4));
+                OnRequestOverlay($"Volume: {Volume:f0}%", TimeSpan.FromSeconds(4), "Volume");
                 OnPropertyChanged();
             }
         }
@@ -903,7 +903,7 @@ namespace ScriptPlayer.ViewModels
                 SpeedPredictor.Predict((byte) Math.Abs(currentPositionTransformed - nextPositionTransformed), duration);
             speedTransformed = ClampSpeed(speedTransformed * SpeedMultiplier);
 
-            Debug.WriteLine($"{nextPositionTransformed} @ {speedTransformed}");
+            //Debug.WriteLine($"{nextPositionTransformed} @ {speedTransformed}");
 
             DeviceCommandInformation info = new DeviceCommandInformation
             {

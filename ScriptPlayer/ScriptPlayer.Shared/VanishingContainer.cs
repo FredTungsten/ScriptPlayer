@@ -28,10 +28,13 @@ namespace ScriptPlayer.Shared
 
             var totalDuration = duration + TimeSpan.FromMilliseconds(250);
 
-            _animation = new DoubleAnimationUsingKeyFrames();
-            _animation.Duration = new Duration(totalDuration);
-            _animation.RepeatBehavior = new RepeatBehavior(1);
-            _animation.FillBehavior = FillBehavior.Stop;
+            _animation = new DoubleAnimationUsingKeyFrames
+            {
+                Duration = new Duration(totalDuration),
+                RepeatBehavior = new RepeatBehavior(1),
+                FillBehavior = FillBehavior.Stop
+            };
+
             _animation.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.Zero)));
             _animation.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromTimeSpan(duration)));
             _animation.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(totalDuration)));
@@ -44,7 +47,6 @@ namespace ScriptPlayer.Shared
 
         private void StoryboardOnCompleted(object sender, EventArgs eventArgs)
         {
-            Debug.WriteLine("Animation finished! Content: " + Content);
             OnGone();
         }
 
