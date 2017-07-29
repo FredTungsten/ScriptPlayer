@@ -58,7 +58,7 @@ namespace ScriptPlayer
 
         private void ViewModelOnRequestOverlay(object sender, string text, TimeSpan timeSpan, string designation)
         {
-            OverlayText.SetText(text, timeSpan);
+            Notifications.AddNotification(text, timeSpan, designation);
         }
 
         private void SeekBar_OnSeek(object sender, double relative, TimeSpan absolute, int downmoveup)
@@ -135,11 +135,8 @@ namespace ScriptPlayer
                 HideOnHover.SetIsActive(MnuMain, true);
                 HideOnHover.SetIsActive(PlayerControls, true);
 
-                Grid.SetRow(VideoPlayer, 0);
-                Grid.SetRowSpan(VideoPlayer, 3);
-
-                Grid.SetRow(Shade, 0);
-                Grid.SetRowSpan(Shade, 3);
+                Grid.SetRow(GridVideo, 0);
+                Grid.SetRowSpan(GridVideo, 3);
             }
             else
             {
@@ -151,11 +148,8 @@ namespace ScriptPlayer
                 HideOnHover.SetIsActive(MnuMain, false);
                 HideOnHover.SetIsActive(PlayerControls, false);
 
-                Grid.SetRow(VideoPlayer, 1);
-                Grid.SetRowSpan(VideoPlayer, 1);
-
-                Grid.SetRow(Shade, 1);
-                Grid.SetRowSpan(Shade, 1);
+                Grid.SetRow(GridVideo, 1);
+                Grid.SetRowSpan(GridVideo, 1);
             }
         }
 

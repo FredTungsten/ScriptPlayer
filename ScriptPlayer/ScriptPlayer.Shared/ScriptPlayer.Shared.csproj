@@ -112,6 +112,7 @@
     <Compile Include="Controls\VideoPlayer.xaml.cs">
       <DependentUpon>VideoPlayer.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\BooleanInverter.cs" />
     <Compile Include="Converters\ConversionModeToNameConverter.cs" />
     <Compile Include="Converters\PositionToMarginConverter.cs" />
     <Compile Include="Converters\TimeSpanToSecondsConverter.cs" />
@@ -137,6 +138,7 @@
     <Compile Include="Metronome.cs" />
     <Compile Include="MetronomeAudio.cs" />
     <Compile Include="MouseHider.cs" />
+    <Compile Include="NotificationList.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Controls\SeekBar.cs" />
@@ -174,6 +176,7 @@
     <Compile Include="TimeSource\TimeSource.cs" />
     <Compile Include="TimeSpanExtensions.cs" />
     <Compile Include="Scripts\ScriptLoader.cs" />
+    <Compile Include="VanishingContainer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Sounds\2.wav" />

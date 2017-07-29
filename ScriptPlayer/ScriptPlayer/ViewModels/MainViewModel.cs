@@ -445,7 +445,7 @@ namespace ScriptPlayer.ViewModels
 
             Title = Path.GetFileNameWithoutExtension(filename);
 
-            OnRequestOverlay($"Loaded {Path.GetFileName(filename)}", TimeSpan.FromSeconds(4));
+            OnRequestOverlay($"Loaded {Path.GetFileName(filename)}", TimeSpan.FromSeconds(4), "VideoLoaded");
 
             Play();
         }
@@ -455,7 +455,7 @@ namespace ScriptPlayer.ViewModels
             if (!string.IsNullOrWhiteSpace(_openVideo))
             {
                 VideoPlayer.Play();
-                OnRequestOverlay("Play", TimeSpan.FromSeconds(2));
+                OnRequestOverlay("Play", TimeSpan.FromSeconds(2), "Playback");
                 //btnPlayPause.Content = ";";
             }
             else if (Playlist.EntryCount > 0)
@@ -479,7 +479,7 @@ namespace ScriptPlayer.ViewModels
                 StopDevices();
                 VideoPlayer.Pause();
                 //btnPlayPause.Content = "4";
-                OnRequestOverlay("Pause", TimeSpan.FromSeconds(2));
+                OnRequestOverlay("Pause", TimeSpan.FromSeconds(2), "Playback");
             }
         }
 
@@ -719,7 +719,7 @@ namespace ScriptPlayer.ViewModels
             _launch = device;
             _launch.Disconnected += LaunchOnDisconnected;
 
-            OnRequestOverlay("Launch Connected", TimeSpan.FromSeconds(8));
+            OnRequestOverlay("Launch Connected", TimeSpan.FromSeconds(8), "Launch");
         }
 
         private void LaunchOnDisconnected(object sender, Exception exception)
@@ -727,7 +727,7 @@ namespace ScriptPlayer.ViewModels
             _launch.Disconnected -= LaunchOnDisconnected;
             _launch = null;
 
-            OnRequestOverlay("Launch Disconnected", TimeSpan.FromSeconds(8));
+            OnRequestOverlay("Launch Disconnected", TimeSpan.FromSeconds(8), "Launch");
         }
 
         private void PlaylistOnPlayEntry(object sender, PlaylistEntry playlistEntry)
@@ -886,7 +886,7 @@ namespace ScriptPlayer.ViewModels
                 if (AutoSkip)
                     Playlist.PlayNextEntry.Execute(OpenedScript);
                 else
-                    OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4));
+                    OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
                 return;
             }
 
@@ -920,7 +920,7 @@ namespace ScriptPlayer.ViewModels
                 if (AutoSkip)
                     SkipToNextEvent();
                 else
-                    OnRequestOverlay($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4));
+                    OnRequestOverlay($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4), "Events");
 
             SetDevices(info);
         }
@@ -1022,7 +1022,7 @@ namespace ScriptPlayer.ViewModels
 
                 string line = position.ToString("hh\\:mm\\:ss");
                 File.AppendAllLines(logFile, new[] {line});
-                OnRequestOverlay("Logged marker at " + line, TimeSpan.FromSeconds(5));
+                OnRequestOverlay("Logged marker at " + line, TimeSpan.FromSeconds(5), "Log");
             }
             catch (Exception ex)
             {
@@ -1036,7 +1036,7 @@ namespace ScriptPlayer.ViewModels
             ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition - _scriptHandler.Delay);
             if (nextAction == null)
             {
-                OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4));
+                OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
                 return;
             }
 
@@ -1138,7 +1138,7 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
-            OnRequestOverlay($"Loaded {Path.GetFileName(file)}", TimeSpan.FromSeconds(4));
+            OnRequestOverlay($"Loaded {Path.GetFileName(file)}", TimeSpan.FromSeconds(4), "ScriptLoaded");
 
             if (checkForVideo)
                 TryFindMatchingVideo(file);
@@ -1182,7 +1182,7 @@ namespace ScriptPlayer.ViewModels
         private void ShowPosition(string prefix = "")
         {
             OnRequestOverlay($@"{prefix}{VideoPlayer.TimeSource.Progress:h\:mm\:ss} / {VideoPlayer.Duration:h\:mm\:ss}",
-                TimeSpan.FromSeconds(3));
+                TimeSpan.FromSeconds(3), "Position");
         }
 
         public void StartScanningButtplug()
@@ -1206,18 +1206,18 @@ namespace ScriptPlayer.ViewModels
 
             if (success)
             {
-                OnRequestOverlay("Connected to Buttplug", TimeSpan.FromSeconds(6));
+                OnRequestOverlay("Connected to Buttplug", TimeSpan.FromSeconds(6), "Buttplug");
             }
             else
             {
                 _connector = null;
-                OnRequestOverlay("Could not connect to Buttplug", TimeSpan.FromSeconds(6));
+                OnRequestOverlay("Could not connect to Buttplug", TimeSpan.FromSeconds(6), "Buttplug");
             }
         }
 
         private void ConnectorOnDeviceAdded(object sender, string deviceName)
         {
-            OnRequestOverlay("Device found: " + deviceName, TimeSpan.FromSeconds(5));
+            OnRequestOverlay("Device found: " + deviceName, TimeSpan.FromSeconds(5), "Buttplug");
         }
 
         protected virtual string OnRequestButtplugUrl(string defaultValue)
