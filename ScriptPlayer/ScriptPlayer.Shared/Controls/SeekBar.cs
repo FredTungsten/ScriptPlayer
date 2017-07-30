@@ -111,6 +111,8 @@ namespace ScriptPlayer.Shared
 
             double linePosition = Progress.Divide(Duration) * ActualWidth;
 
+            linePosition = Math.Round(linePosition - 0.5)+0.5;
+
             //dc.DrawRectangle(new LinearGradientBrush(HeatMapGenerator.GradientsSmoothFromColors(0.5, Color.FromArgb(0,0,0,0), Color.FromArgb(150,0,0,0), Color.FromArgb(0, 0, 0, 0)), new Point(0,0), new Point(1,0)), null, new Rect(linePosition-10,0,20, ActualHeight));
 
             dc.DrawLine(new Pen(Brushes.Black, 3), new Point(linePosition, 0), new Point(linePosition, ActualHeight));

@@ -62,6 +62,15 @@ namespace ScriptPlayer.Shared
 
         public void AddNotification(object content, TimeSpan duration, string group = null)
         {
+            if (!CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    AddNotification(content, duration, group);
+                }));
+                return;
+            }
+
             Notification existing = null;
 
             if(!string.IsNullOrWhiteSpace(group))
