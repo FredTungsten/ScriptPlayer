@@ -152,6 +152,14 @@ namespace ScriptPlayer.Shared.Scripts
         {
             return _actions?.FirstOrDefault(a => a.TimeStamp > currentPosition);
         }
+
+        public TimeSpan GetDuration()
+        {
+            if (_actions == null)
+                return TimeSpan.Zero;
+
+            return _actions.Max(a => a.TimeStamp);
+        }
     }
 
     public class ScriptActionEventArgs : EventArgs

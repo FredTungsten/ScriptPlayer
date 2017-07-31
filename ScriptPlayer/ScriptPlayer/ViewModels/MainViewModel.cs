@@ -8,11 +8,15 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
+using FMUtils.KeyboardHook;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
+using Application = System.Windows.Application;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -78,6 +82,9 @@ namespace ScriptPlayer.ViewModels
         private bool _loaded;
         private byte _minSpeed = 20;
         private byte _maxSpeed = 95;
+        private Hook _hook;
+        private bool _blindMode;
+        private TimeSource _timeSource;
 
         public MainViewModel()
         {
@@ -94,13 +101,92 @@ namespace ScriptPlayer.ViewModels
             InitializeScriptHandler();
         }
 
+        private void BlindModeChanged()
+        {
+            if(TimeSource != null)
+                TimeSource.Pause();
+
+            if (BlindMode)
+            {
+                TimeSource = new ManualTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                    TimeSpan.FromMilliseconds(10)));
+                RefreshManualDuration();
+            }
+            else
+            {
+                TimeSource = VideoPlayer.TimeSource;
+            }
+        }
+
+        private void RefreshManualDuration()
+        {
+            if(TimeSource is ManualTimeSource source)
+                source.SetDuration(_scriptHandler.GetDuration().Add(TimeSpan.FromSeconds(5)));
+        }
+
+        private void TimeSourceChanged()
+        {
+            _scriptHandler.SetTimesource(TimeSource);
+        }
+
         public void Load()
         {
             if (_loaded)
                 return;
 
             _loaded = true;
+            HookUpMediaKeys();
             CheckForArguments();
+        }
+
+        private void HookUpMediaKeys()
+        {
+            _hook = new Hook("ScriptPlayer");
+            _hook.KeyDownEvent += Hook_KeyDownEvent;
+        }
+
+        private void Hook_KeyDownEvent(KeyboardHookEventArgs e)
+        {
+            switch (e.Key)
+            {
+                case Keys.Play:
+                    Play();
+                    break;
+                case Keys.Pause:
+                    Pause();
+                    break;
+                case Keys.MediaPlayPause:
+                    TogglePlayback();
+                    break;
+                case Keys.MediaNextTrack:
+                    if(BlindMode)
+                        TimeSource.SetPosition(TimeSource.Progress + TimeSpan.FromMilliseconds(50));
+                    else
+                        PlayNextPlaylistEntry();
+                    break;
+                case Keys.MediaPreviousTrack:
+                    if (BlindMode)
+                        TimeSource.SetPosition(TimeSource.Progress - TimeSpan.FromMilliseconds(50));
+                    else
+                        PlayPreviousPlaylistEntry();
+                    break;
+                case Keys.MediaStop:
+                    Pause();
+                    TimeSource.SetPosition(TimeSpan.Zero);
+                    break;
+            }
+        }
+
+        public TimeSource TimeSource
+        {
+            get => _timeSource;
+            protected set
+            {
+                if (Equals(value, _timeSource)) return;
+                _timeSource = value;
+                TimeSourceChanged();
+                OnPropertyChanged();
+            }
         }
 
         public ConversionMode ConversionMode
@@ -225,6 +311,18 @@ namespace ScriptPlayer.ViewModels
                 if (value == _patternSource) return;
                 _patternSource = value;
                 UpdatePattern(_patternSource);
+                OnPropertyChanged();
+            }
+        }
+
+        public bool BlindMode
+        {
+            get => _blindMode;
+            set
+            {
+                if (value == _blindMode) return;
+                _blindMode = value;
+                BlindModeChanged();
                 OnPropertyChanged();
             }
         }
@@ -397,13 +495,14 @@ namespace ScriptPlayer.ViewModels
                 oldValue.MediaEnded -= VideoPlayer_MediaEnded;
                 oldValue.MouseRightButtonDown -= VideoPlayer_MouseRightButtonDown;
             }
+
             if (newValue != null)
             {
                 newValue.MediaOpened += VideoPlayer_MediaOpened;
                 newValue.MediaEnded += VideoPlayer_MediaEnded;
                 newValue.MouseRightButtonDown += VideoPlayer_MouseRightButtonDown;
 
-                _scriptHandler.SetTimesource(newValue.TimeSource);
+                TimeSource = newValue.TimeSource;
             }
         }
 
@@ -441,7 +540,9 @@ namespace ScriptPlayer.ViewModels
                 TryFindMatchingScript(filename);
 
             _openVideo = filename;
-            VideoPlayer.Open(filename);
+
+            if(!BlindMode)
+                VideoPlayer.Open(filename);
 
             Title = Path.GetFileNameWithoutExtension(filename);
 
@@ -452,9 +553,9 @@ namespace ScriptPlayer.ViewModels
 
         private void Play()
         {
-            if (!string.IsNullOrWhiteSpace(_openVideo))
+            if (EntryLoaded())
             {
-                VideoPlayer.Play();
+                TimeSource.Play();
                 OnRequestOverlay("Play", TimeSpan.FromSeconds(2), "Playback");
                 //btnPlayPause.Content = ";";
             }
@@ -464,9 +565,17 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        private bool EntryLoaded()
+        {
+            if (BlindMode)
+                return !string.IsNullOrWhiteSpace(_openedScript);
+
+            return !string.IsNullOrWhiteSpace(_openVideo);
+        }
+
         public void TogglePlayback()
         {
-            if (VideoPlayer.IsPlaying)
+            if (TimeSource.IsPlaying)
                 Pause();
             else
                 Play();
@@ -474,10 +583,10 @@ namespace ScriptPlayer.ViewModels
 
         private void Pause()
         {
-            if (!string.IsNullOrWhiteSpace(_openVideo))
+            if (EntryLoaded())
             {
                 StopDevices();
-                VideoPlayer.Pause();
+                TimeSource.Pause();
                 //btnPlayPause.Content = "4";
                 OnRequestOverlay("Pause", TimeSpan.FromSeconds(2), "Playback");
             }
@@ -619,7 +728,8 @@ namespace ScriptPlayer.ViewModels
             TogglePlaybackCommand = new RelayCommand(TogglePlayback);
             VolumeUpCommand = new RelayCommand(VolumeUp);
             VolumeDownCommand = new RelayCommand(VolumeDown);
-            ExecuteSelectedTestPatternCommand = new RelayCommand(ExecuteSelectedTestPattern, CanExecuteSelectedTestPattern);
+            ExecuteSelectedTestPatternCommand =
+                new RelayCommand(ExecuteSelectedTestPattern, CanExecuteSelectedTestPattern);
         }
 
         private bool CanExecuteSelectedTestPattern()
@@ -689,7 +799,7 @@ namespace ScriptPlayer.ViewModels
                     PositionToOriginal = positions[0],
                     PositionToTransformed = TransformPosition(positions[0], 0, 99)
                 }
-            , false);
+                , false);
             await Task.Delay(300);
 
             for (int i = 1; i < positions.Length; i++)
@@ -704,7 +814,9 @@ namespace ScriptPlayer.ViewModels
                 };
 
                 info.SpeedOriginal = SpeedPredictor.Predict2(info.PositionFromOriginal, info.PositionToOriginal, delay);
-                info.SpeedTransformed = ClampSpeed(SpeedPredictor.Predict2(info.PositionFromTransformed, info.PositionToTransformed, delay));
+                info.SpeedTransformed =
+                    ClampSpeed(SpeedPredictor.Predict2(info.PositionFromTransformed, info.PositionToTransformed,
+                        delay));
 
                 SetDevices(info, false);
 
@@ -751,17 +863,20 @@ namespace ScriptPlayer.ViewModels
             switch (downmoveup)
             {
                 case 0:
-                    _wasPlaying = VideoPlayer.IsPlaying;
-                    VideoPlayer.Pause();
-                    VideoPlayer.SetPosition(absolute);
+                    _wasPlaying = TimeSource.IsPlaying;
+                    TimeSource.Pause();
+                    TimeSource.SetPosition(absolute);
+                    ShowPosition();
                     break;
                 case 1:
-                    VideoPlayer.SetPosition(absolute);
+                    TimeSource.SetPosition(absolute);
+                    ShowPosition();
                     break;
                 case 2:
-                    VideoPlayer.SetPosition(absolute);
+                    TimeSource.SetPosition(absolute);
                     if (_wasPlaying)
-                        VideoPlayer.Play();
+                        TimeSource.Play();
+                    ShowPosition();
                     break;
             }
         }
@@ -822,6 +937,7 @@ namespace ScriptPlayer.ViewModels
             if (actions == null) return false;
 
             _scriptHandler.SetScript(actions);
+            RefreshManualDuration();
             OpenedScript = fileName;
 
             FindMaxPositions();
@@ -858,7 +974,7 @@ namespace ScriptPlayer.ViewModels
         private void UpdateHeatMap()
         {
             List<TimeSpan> timeStamps = _scriptHandler.GetScript().Select(s => s.TimeStamp).ToList();
-            Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, VideoPlayer.Duration);
+            Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, TimeSource.Duration);
             HeatMap = heatmap;
         }
 
@@ -884,7 +1000,7 @@ namespace ScriptPlayer.ViewModels
             if (eventArgs.NextAction == null)
             {
                 if (AutoSkip)
-                    Playlist.PlayNextEntry.Execute(OpenedScript);
+                    Playlist.PlayNextEntryCommand.Execute(OpenedScript);
                 else
                     OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
                 return;
@@ -916,7 +1032,7 @@ namespace ScriptPlayer.ViewModels
                 PositionToOriginal = eventArgs.NextAction.Position
             };
 
-            if (duration > TimeSpan.FromSeconds(10) && VideoPlayer.IsPlaying)
+            if (duration > TimeSpan.FromSeconds(10) && TimeSource.IsPlaying)
                 if (AutoSkip)
                     SkipToNextEvent();
                 else
@@ -945,7 +1061,7 @@ namespace ScriptPlayer.ViewModels
 
         private void SetDevices(DeviceCommandInformation information, bool requirePlaying = true)
         {
-            if (VideoPlayer.IsPlaying || !requirePlaying)
+            if (TimeSource.IsPlaying || !requirePlaying)
             {
                 _launch?.EnqueuePosition(information.PositionToTransformed, information.SpeedTransformed);
                 _connector?.Set(information);
@@ -1002,7 +1118,17 @@ namespace ScriptPlayer.ViewModels
         private void VideoPlayer_MediaEnded(object sender, EventArgs e)
         {
             StopDevices();
-            Playlist.PlayNextEntry.Execute(OpenedScript);
+            PlayNextPlaylistEntry();
+        }
+
+        private void PlayNextPlaylistEntry()
+        {
+            Playlist.PlayNextEntryCommand.Execute(OpenedScript);
+        }
+
+        private void PlayPreviousPlaylistEntry()
+        {
+            Playlist.PlayPreviousEntryCommand.Execute(OpenedScript);
         }
 
         private void VideoPlayer_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -1015,12 +1141,12 @@ namespace ScriptPlayer.ViewModels
                 if (string.IsNullOrWhiteSpace(_openVideo))
                     return;
 
-                TimeSpan position = VideoPlayer.GetPosition();
+                TimeSpan position = TimeSource.Progress;
                 string logFile = Path.ChangeExtension(_openVideo, ".log");
                 if (logFile == null)
                     return;
 
-                string line = position.ToString("hh\\:mm\\:ss");
+                string line = position.ToString("hh\\:mm\\:ss\\.fff");
                 File.AppendAllLines(logFile, new[] {line});
                 OnRequestOverlay("Logged marker at " + line, TimeSpan.FromSeconds(5), "Log");
             }
@@ -1032,7 +1158,7 @@ namespace ScriptPlayer.ViewModels
 
         public void SkipToNextEvent()
         {
-            TimeSpan currentPosition = VideoPlayer.GetPosition();
+            TimeSpan currentPosition = TimeSource.Progress;
             ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition - _scriptHandler.Delay);
             if (nextAction == null)
             {
@@ -1046,7 +1172,7 @@ namespace ScriptPlayer.ViewModels
             if (skipTo < currentPosition)
                 return;
 
-            VideoPlayer.SetPosition(skipTo);
+            TimeSource.SetPosition(skipTo);
             ShowPosition($"Skipped {duration.TotalSeconds:f0}s - ");
         }
 
@@ -1175,13 +1301,13 @@ namespace ScriptPlayer.ViewModels
 
         public void ShiftPosition(TimeSpan timeSpan)
         {
-            VideoPlayer.SetPosition(VideoPlayer.GetPosition() + timeSpan);
+            TimeSource.SetPosition(TimeSource.Progress + timeSpan);
             ShowPosition();
         }
 
         private void ShowPosition(string prefix = "")
         {
-            OnRequestOverlay($@"{prefix}{VideoPlayer.TimeSource.Progress:h\:mm\:ss} / {VideoPlayer.Duration:h\:mm\:ss}",
+            OnRequestOverlay($@"{prefix}{TimeSource.Progress:h\:mm\:ss} / {TimeSource.Duration:h\:mm\:ss}",
                 TimeSpan.FromSeconds(3), "Position");
         }
 

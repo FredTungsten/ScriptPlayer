@@ -83,22 +83,22 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public RelayCommand<string> PlayNextEntry { get; set; }
-        public RelayCommand<string> PlayPreviousEntry { get; set; }
-        public RelayCommand MoveSelectedEntryUp { get; set; }
-        public RelayCommand MoveSelectedEntryDown { get; set; }
-        public RelayCommand RemoveSelectedEntry { get; set; }
+        public RelayCommand<string> PlayNextEntryCommand { get; set; }
+        public RelayCommand<string> PlayPreviousEntryCommand { get; set; }
+        public RelayCommand MoveSelectedEntryUpCommand { get; set; }
+        public RelayCommand MoveSelectedEntryDownCommand { get; set; }
+        public RelayCommand RemoveSelectedEntryCommand { get; set; }
         public int EntryCount => Entries.Count;
 
         public PlaylistViewModel()
         {
             Entries = new ObservableCollection<PlaylistEntry>();
 
-            MoveSelectedEntryDown = new RelayCommand(ExecuteMoveSelectedEntryDown, CanMoveSelectedEntryDown);
-            MoveSelectedEntryUp = new RelayCommand(ExecuteMoveSelectedEntryUp, CanMoveSelectedEntryUp);
-            RemoveSelectedEntry = new RelayCommand(ExecuteRemoveSelectedEntry, CanRemoveSelectedEntry);
-            PlayNextEntry = new RelayCommand<string>(ExecutePlayNextEntry, CanPlayNextEntry);
-            PlayPreviousEntry = new RelayCommand<string>(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
+            MoveSelectedEntryDownCommand = new RelayCommand(ExecuteMoveSelectedEntryDown, CanMoveSelectedEntryDown);
+            MoveSelectedEntryUpCommand = new RelayCommand(ExecuteMoveSelectedEntryUp, CanMoveSelectedEntryUp);
+            RemoveSelectedEntryCommand = new RelayCommand(ExecuteRemoveSelectedEntry, CanRemoveSelectedEntry);
+            PlayNextEntryCommand = new RelayCommand<string>(ExecutePlayNextEntry, CanPlayNextEntry);
+            PlayPreviousEntryCommand = new RelayCommand<string>(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
         }
 
         private bool CanPlayPreviousEntry(string currentFile)

@@ -219,7 +219,7 @@ namespace ScriptPlayer.Shared
             InitializePlayer();
         }
 
-        private void TogglePlay()
+        public void TogglePlay()
         {
             if (IsPlaying)
                 Pause();

@@ -61,6 +61,7 @@
       <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETCore\v4.5\System.Runtime.WindowsRuntime.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
@@ -171,8 +172,9 @@
     <Compile Include="SystemIdlePreventer.cs" />
     <Compile Include="TimeSource\CompositionTargetClock.cs" />
     <Compile Include="TimeSource\DispatcherClock.cs" />
-    <Compile Include="TimeSource\LocalTimeSource.cs" />
+    <Compile Include="TimeSource\ManualTimeSource.cs" />
     <Compile Include="TimeSource\MediaPlayerTimeSource.cs" />
+    <Compile Include="TimeSource\ISampleClock.cs" />
     <Compile Include="TimeSource\TimeSource.cs" />
     <Compile Include="TimeSpanExtensions.cs" />
     <Compile Include="Scripts\ScriptLoader.cs" />

@@ -34,9 +34,9 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Button ToolTip="Move Down" Command="{Binding MoveSelectedEntryDown}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_arrow_down}" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-            <Button ToolTip="Move Up" Command="{Binding MoveSelectedEntryUp}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_arrow_up}" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-            <Button ToolTip="Remove" Command="{Binding RemoveSelectedEntry}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_times}" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <Button ToolTip="Move Down" Command="{Binding MoveSelectedEntryDownCommand}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_arrow_down}" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <Button ToolTip="Move Up" Command="{Binding MoveSelectedEntryUpCommand}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_arrow_up}" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <Button ToolTip="Remove" Command="{Binding RemoveSelectedEntryCommand}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_times}" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
             <CheckBox ToolTip="Shuffle" IsChecked="{Binding Shuffle}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_random}" Grid.Column="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
             <CheckBox ToolTip="Repeat" IsChecked="{Binding Repeat}" FontFamily="{StaticResource FontAwesome}" Content="{x:Static fa:FontAwesome.fa_repeat}" Grid.Column="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
         </Grid>

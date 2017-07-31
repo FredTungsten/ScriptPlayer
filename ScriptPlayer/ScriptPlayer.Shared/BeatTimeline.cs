@@ -78,7 +78,7 @@ namespace ScriptPlayer.Shared
             GenerateBeatGroups();
 
             BindingOperations.SetBinding(this, ProgressProperty,
-                new Binding("TimeSource.Progress") {RelativeSource = RelativeSource.Self});
+                new Binding("ITimeSource.Progress") {RelativeSource = RelativeSource.Self});
         }
 
         private List<BeatGroup> _beatGroups;

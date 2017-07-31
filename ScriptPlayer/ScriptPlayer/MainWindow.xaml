@@ -81,6 +81,9 @@
                     <MenuItem Header="Scan for Devices" Command="{Binding StartScanningButtplugCommand}"/>
                 </MenuItem>
             </MenuItem>
+            <MenuItem Header="Experimental">
+                <MenuItem Header="Blind Mode" IsCheckable="True" IsChecked="{Binding BlindMode}"/>
+            </MenuItem>
             <MenuItem Header="Help">
                 <MenuItem Header="Documentation (Online)" Click="mnuDocs_Click"/>
                 <MenuItem Header="About / Check for new Version" Click="mnuVersion_Click"/>
@@ -107,7 +110,7 @@
                     <Style TargetType="Button" BasedOn="{StaticResource FlatButton}">
                         <Setter Property="Content" Value="4"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding ElementName=VideoPlayer, Path=IsPlaying}" Value="True">
+                            <DataTrigger Binding="{Binding Path=TimeSource.IsPlaying}" Value="True">
                                 <Setter Property="Content" Value=";"/>
                             </DataTrigger>
                         </Style.Triggers>
@@ -119,15 +122,15 @@
             <TextBlock TextAlignment="Right" DockPanel.Dock="Right" VerticalAlignment="Center" Width="90" Margin="0,0,8,0">
                 <TextBlock.Text>
                     <MultiBinding StringFormat="{}{0:h\:mm\:ss} / {1:h\:mm\:ss}">
-                        <Binding ElementName="VideoPlayer" Path="TimeSource.Progress"/>
-                        <Binding ElementName="VideoPlayer" Path="Duration"/>
+                        <Binding Path="TimeSource.Progress"/>
+                        <Binding Path="TimeSource.Duration"/>
                     </MultiBinding>
                 </TextBlock.Text>
             </TextBlock>
             <Slider VerticalAlignment="Center" Margin="16,0" Width="50" Value="{Binding Volume, Mode=TwoWay}" Minimum="0" Maximum="100" DockPanel.Dock="Right" Style="{DynamicResource VolumeSliderStyle}"></Slider>
-            <Button Command="{Binding Playlist.PlayNextEntry}" CommandParameter="{Binding OpenedScript}" ToolTip="Play next video in playlist" Content=":" DockPanel.Dock="Right" />
-            <Button Command="{Binding Playlist.PlayPreviousEntry}" CommandParameter="{Binding OpenedScript}" ToolTip="Play previous video in playlist" Content="9" DockPanel.Dock="Right"/>
-            <shared:SeekBar SnapsToDevicePixels="True" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Progress="{Binding ElementName=VideoPlayer, Path=TimeSource.Progress}" Duration="{Binding ElementName=VideoPlayer, Path=Duration}" Seek="SeekBar_OnSeek">
+            <Button Command="{Binding Playlist.PlayNextEntryCommand}" CommandParameter="{Binding OpenedScript}" ToolTip="Play next video in playlist" Content=":" DockPanel.Dock="Right" />
+            <Button Command="{Binding Playlist.PlayPreviousEntryCommand}" CommandParameter="{Binding OpenedScript}" ToolTip="Play previous video in playlist" Content="9" DockPanel.Dock="Right"/>
+            <shared:SeekBar SnapsToDevicePixels="True" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Progress="{Binding Path=TimeSource.Progress}" Duration="{Binding Path=TimeSource.Duration}" Seek="SeekBar_OnSeek">
                 <shared:SeekBar.OverlayOpacity>
                     <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                         <GradientStop Color="#20000000" Offset="0"/>

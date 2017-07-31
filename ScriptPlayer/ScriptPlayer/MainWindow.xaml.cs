@@ -37,7 +37,14 @@ namespace ScriptPlayer
 
         public MainWindow()
         {
+            Closed += OnClosed;
             ViewModel = new MainViewModel();
+        }
+        
+
+        private void OnClosed(object sender, EventArgs eventArgs)
+        {
+            
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -47,7 +54,6 @@ namespace ScriptPlayer
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.VideoPlayer = VideoPlayer;
-
             ViewModel.Load();
         }
 
@@ -107,6 +113,9 @@ namespace ScriptPlayer
 
         private void VideoPlayer_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            if (e.ChangedButton != MouseButton.Left)
+                return;
+
             ToggleFullscreen();
         }
 
@@ -268,8 +277,8 @@ namespace ScriptPlayer
                         break;
                     }
                 case Key.NumPad9:
-                    VideoPlayer.ChangeZoom(0.02);
                     {
+                        VideoPlayer.ChangeZoom(0.02);
                         break;
                     }
                 default:
