@@ -5,7 +5,8 @@ namespace ScriptPlayer.Shared
 {
     public abstract class TimeSource : DependencyObject
     {
-        public event EventHandler<TimeSpan> ProgressChanged; 
+        public event EventHandler<TimeSpan> ProgressChanged;
+        public event EventHandler<TimeSpan> DurationChanged;
 
         private static readonly DependencyPropertyKey ProgressPropertyKey = DependencyProperty.RegisterReadOnly(
             "Progress", typeof (TimeSpan), typeof (TimeSource), new PropertyMetadata(default(TimeSpan), OnProgressChangedCallback));
@@ -24,7 +25,12 @@ namespace ScriptPlayer.Shared
         }
 
         private static readonly DependencyPropertyKey DurationPropertyKey = DependencyProperty.RegisterReadOnly(
-            "Duration", typeof(TimeSpan), typeof(TimeSource), new PropertyMetadata(default(TimeSpan)));
+            "Duration", typeof(TimeSpan), typeof(TimeSource), new PropertyMetadata(default(TimeSpan), OnDurationChangedCollback));
+
+        private static void OnDurationChangedCollback(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((TimeSource)d).OnDurationChanged((TimeSpan)e.NewValue);
+        }
 
         public DependencyProperty DurationProperty = DurationPropertyKey.DependencyProperty;
 
@@ -54,5 +60,10 @@ namespace ScriptPlayer.Shared
         public abstract void Pause();
         public abstract void TogglePlayback();
         public abstract void SetPosition(TimeSpan position);
+
+        protected virtual void OnDurationChanged(TimeSpan e)
+        {
+            DurationChanged?.Invoke(this, e);
+        }
     }
 }

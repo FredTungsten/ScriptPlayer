@@ -127,6 +127,7 @@ namespace ScriptPlayer.ViewModels
         private void TimeSourceChanged()
         {
             _scriptHandler.SetTimesource(TimeSource);
+            UpdateHeatMap();
         }
 
         public void Load()
@@ -183,10 +184,25 @@ namespace ScriptPlayer.ViewModels
             protected set
             {
                 if (Equals(value, _timeSource)) return;
+                HandleTimeSourceEvents(_timeSource, value);
                 _timeSource = value;
                 TimeSourceChanged();
                 OnPropertyChanged();
             }
+        }
+
+        private void HandleTimeSourceEvents(TimeSource oldValue, TimeSource newValue)
+        {
+            if (oldValue != null)
+                oldValue.DurationChanged -= TimeSourceOnDurationChanged;
+
+            if (newValue != null)
+                newValue.DurationChanged += TimeSourceOnDurationChanged;
+        }
+
+        private void TimeSourceOnDurationChanged(object sender, TimeSpan timeSpan)
+        {
+            UpdateHeatMap();
         }
 
         public ConversionMode ConversionMode
