@@ -1,0 +1,14 @@
+﻿<Window x:Class="ScriptPlayer.Indexer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptPlayer.Indexer"
+        mc:Ignorable="d"
+        Title="Script Indexer" Height="77.119" Width="395.975" WindowStyle="ToolWindow">
+    <Grid>
+        <TextBox Name="txtPath" Height="23" Margin="10,10,90,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
+        <Button Content="Go" Click="btnIndex_Clicked" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="75" Height="23"/>
+
+    </Grid>
+</Window>

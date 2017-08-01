@@ -328,9 +328,9 @@ namespace ScriptPlayer
 
         private void mnuDownloadScript_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("https://github.com/FredTungsten/Scripts");
-            //ScriptDownloadDialog dialog = new ScriptDownloadDialog(){Owner = this};
-            //dialog.ShowDialog();
+            //Process.Start("https://github.com/FredTungsten/Scripts");
+            ScriptDownloadDialog dialog = new ScriptDownloadDialog(){Owner = this};
+            dialog.ShowDialog();
         }
     }
 }

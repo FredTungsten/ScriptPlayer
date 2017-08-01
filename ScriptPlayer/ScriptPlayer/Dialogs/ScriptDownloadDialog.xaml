@@ -16,6 +16,6 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
-        <Button IsEnabled="false" Content="Download" HorizontalAlignment="Left" Margin="10,0,0,7" VerticalAlignment="Bottom" Width="272"/>
+        <Button Name="btnDownload" Click="BtnDownload_OnClick" IsEnabled="false" Content="Download" Margin="10,0,10,7" VerticalAlignment="Bottom"/>
     </Grid>
 </Window>

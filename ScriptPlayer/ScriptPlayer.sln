@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer.VideoSync", "S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer.WebPlayer", "ScriptPlayer.WebPlayer\ScriptPlayer.WebPlayer.csproj", "{2574F603-4B6C-4A30-BFDD-E3BC09EEDFDF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer.Indexer", "ScriptPlayer.Indexer\ScriptPlayer.Indexer.csproj", "{A52023B7-FA63-4B66-A54E-8F64D2499CDA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_Ubuntu|Any CPU = Debug_Ubuntu|Any CPU
@@ -193,6 +195,38 @@ Global
 		{2574F603-4B6C-4A30-BFDD-E3BC09EEDFDF}.Release|x64.Build.0 = Release|Any CPU
 		{2574F603-4B6C-4A30-BFDD-E3BC09EEDFDF}.Release|x86.ActiveCfg = Release|Any CPU
 		{2574F603-4B6C-4A30-BFDD-E3BC09EEDFDF}.Release|x86.Build.0 = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug_Ubuntu|ARM.ActiveCfg = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug_Ubuntu|ARM.Build.0 = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug_Ubuntu|x64.ActiveCfg = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug_Ubuntu|x64.Build.0 = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug_Ubuntu|x86.ActiveCfg = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug_Ubuntu|x86.Build.0 = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug|ARM.Build.0 = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug|x64.Build.0 = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Debug|x86.Build.0 = Debug|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release_Ubuntu|ARM.ActiveCfg = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release_Ubuntu|ARM.Build.0 = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release_Ubuntu|x64.ActiveCfg = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release_Ubuntu|x64.Build.0 = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release_Ubuntu|x86.ActiveCfg = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release_Ubuntu|x86.Build.0 = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release|ARM.ActiveCfg = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release|ARM.Build.0 = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release|x64.ActiveCfg = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release|x64.Build.0 = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release|x86.ActiveCfg = Release|Any CPU
+		{A52023B7-FA63-4B66-A54E-8F64D2499CDA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
