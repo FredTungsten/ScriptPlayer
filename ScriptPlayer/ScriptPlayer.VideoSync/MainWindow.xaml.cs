@@ -11,7 +11,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using ScriptPlayer.Shared;
@@ -162,9 +161,6 @@ namespace ScriptPlayer.VideoSync
             set { SetValue(DurationProperty, value); }
         }
 
-        private RenderTargetBitmap _bitmap;
-        private DrawingVisual _drawing;
-
         public static readonly DependencyProperty BeatsProperty = DependencyProperty.Register(
             "Beats", typeof(BeatCollection), typeof(MainWindow), new PropertyMetadata(default(BeatCollection)));
 
@@ -187,9 +183,6 @@ namespace ScriptPlayer.VideoSync
 
         public static readonly DependencyProperty PixelPreviewProperty = DependencyProperty.Register(
             "PixelPreview", typeof(Brush), typeof(MainWindow), new PropertyMetadata(default(Brush)));
-
-        private bool _active;
-        private bool _up;
 
         public Brush PixelPreview
         {
@@ -269,8 +262,8 @@ namespace ScriptPlayer.VideoSync
             switch (downMoveUp)
             {
                 case 0:
-                    _wasplaying = videoPlayer.IsPlaying;
-                    videoPlayer.Pause();
+                    _wasplaying = videoPlayer.TimeSource.IsPlaying;
+                    videoPlayer.TimeSource.Pause();
                     videoPlayer.SetPosition(absolute);
                     break;
                 case 1:
@@ -279,19 +272,19 @@ namespace ScriptPlayer.VideoSync
                 case 2:
                     videoPlayer.SetPosition(absolute);
                     if (_wasplaying)
-                        videoPlayer.Play();
+                        videoPlayer.TimeSource.Play();
                     break;
             }
         }
 
         private void btnPause_Click(object sender, RoutedEventArgs e)
         {
-            videoPlayer.Pause();
+            videoPlayer.TimeSource.Pause();
         }
 
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
-            videoPlayer.Play();
+            videoPlayer.TimeSource.Play();
         }
 
         private void mnuClear_Click(object sender, RoutedEventArgs e)
@@ -423,7 +416,7 @@ namespace ScriptPlayer.VideoSync
             SetTitle(videoFile);
 
             if (play)
-                videoPlayer.Play();
+                videoPlayer.TimeSource.Play();
 
             if (resetFileNames)
             {
@@ -758,7 +751,7 @@ namespace ScriptPlayer.VideoSync
             SaveAsFunscript(dialog.FileName);
         }
 
-        private void SaveAsFunscript(string filename, int mode = 0)
+        private void SaveAsFunscript(string filename)
         {
             FunScriptFile script = new FunScriptFile
             {
@@ -869,7 +862,7 @@ namespace ScriptPlayer.VideoSync
 
         private string ChangePath(string path, string filename)
         {
-            string directory = System.IO.Path.GetDirectoryName(path);
+            string directory = Path.GetDirectoryName(path);
             string file = Path.GetFileName(filename);
 
             return Path.Combine(directory, file);
@@ -890,9 +883,9 @@ namespace ScriptPlayer.VideoSync
 
         private void Normalize()
         {
-            bool wasPlaying = videoPlayer.IsPlaying;
+            bool wasPlaying = videoPlayer.TimeSource.IsPlaying;
             if (wasPlaying)
-                videoPlayer.Pause();
+                videoPlayer.TimeSource.Pause();
 
             double additionalBeats = GetDouble(0);
             if (double.IsNaN(additionalBeats)) return;
@@ -901,7 +894,7 @@ namespace ScriptPlayer.VideoSync
             Normalize((int)additionalBeats, !caps);
 
             if (wasPlaying)
-                videoPlayer.Play();
+                videoPlayer.TimeSource.Play();
         }
 
         private void Normalize(int additionalBeats, bool trimToBeats = true)
@@ -919,7 +912,7 @@ namespace ScriptPlayer.VideoSync
             TimeSpan first = trimToBeats ? beatsToEvenOut.Min() : tBegin;
             TimeSpan last = trimToBeats ? beatsToEvenOut.Max() : tEnd;
 
-            int numberOfBeats = (int)(beatsToEvenOut.Count + additionalBeats);
+            int numberOfBeats = beatsToEvenOut.Count + additionalBeats;
             if (numberOfBeats < 2)
                 numberOfBeats = 2;
 
@@ -983,10 +976,10 @@ namespace ScriptPlayer.VideoSync
                     }
                 case Key.Space:
                     {
-                        if (videoPlayer.IsPlaying)
-                            videoPlayer.Pause();
+                        if (videoPlayer.TimeSource.IsPlaying)
+                            videoPlayer.TimeSource.Pause();
                         else
-                            videoPlayer.Play();
+                            videoPlayer.TimeSource.Play();
                         break;
                     }
                 case Key.Left:
@@ -1119,7 +1112,7 @@ namespace ScriptPlayer.VideoSync
             }
             catch (Exception ex)
             {
-
+                Debug.WriteLine(ex.Message);
             }
 
             return false;
@@ -1274,11 +1267,11 @@ namespace ScriptPlayer.VideoSync
                 return;
 
             VorzeScriptLoader loader = new VorzeScriptLoader();
-            var actions = loader.Load(dialog.FileName).Cast<VorzeScriptAction>().ToList();
+            List<VorzeScriptAction> actions = loader.Load(dialog.FileName).Cast<VorzeScriptAction>().ToList();
 
-            var filteredActions = new List<VorzeScriptAction>();
+            List<VorzeScriptAction> filteredActions = new List<VorzeScriptAction>();
 
-            foreach (var action in actions)
+            foreach (VorzeScriptAction action in actions)
             {
                 if(filteredActions.Count == 0)
                     filteredActions.Add(action);

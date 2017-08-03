@@ -481,7 +481,7 @@ namespace ScriptPlayer.ViewModels
 
         public void Dispose()
         {
-            _videoPlayer?.Pause();
+            _videoPlayer?.TimeSource.Pause();
             _videoPlayer?.Dispose();
             _launch?.Close();
 

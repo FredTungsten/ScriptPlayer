@@ -60,7 +60,7 @@ namespace ScriptPlayer.Shared
 
         private void UpdateMouseHider()
         {
-            _mouseHider.IsEnabled = HideMouse && IsPlaying;
+            _mouseHider.IsEnabled = HideMouse && TimeSource.IsPlaying;
             _mouseHider.ResetTimer();
         }
 
@@ -71,16 +71,6 @@ namespace ScriptPlayer.Shared
             get { return (bool)GetValue(HideMouseProperty); }
             set { SetValue(HideMouseProperty, value); }
         }
-
-        public static readonly DependencyProperty IsPlayingProperty = DependencyProperty.Register(
-            "IsPlaying", typeof(bool), typeof(VideoPlayer), new PropertyMetadata(default(bool)));
-
-        public bool IsPlaying
-        {
-            get { return (bool) GetValue(IsPlayingProperty); }
-            protected set { SetValue(IsPlayingProperty, value); }
-        }
-        
 
         public static readonly DependencyProperty SampleRectProperty = DependencyProperty.Register(
             "SampleRect", typeof(Rect), typeof(VideoPlayer), new PropertyMetadata(Rect.Empty, OnSampleRectPropertyChanged));
@@ -203,66 +193,19 @@ namespace ScriptPlayer.Shared
             }
         }
 
-        public RelayCommand PlayCommand { get; }
-        public RelayCommand PauseCommand { get; }
-        public RelayCommand TogglePlayCommand { get; }
-
         public VideoPlayer()
         {
-            PlayCommand = new RelayCommand(Play, CanPlay);
-            PauseCommand = new RelayCommand(Pause, CanPause);
-            TogglePlayCommand = new RelayCommand(TogglePlay, CanTogglePlay);
-
             _mouseHider =  new MouseHider(this);
             
             InitializeComponent();
             InitializePlayer();
         }
 
-        public void TogglePlay()
-        {
-            if (IsPlaying)
-                Pause();
-            else
-                Play();
-        }
-
-        private bool CanTogglePlay()
-        {
-            if (IsPlaying)
-                return CanPause();
-            return CanPlay();
-        }
-
-        private bool CanPause()
-        {
-            return IsPlaying;
-        }
-
-        private bool CanPlay()
-        {
-            //TODO check for file loaded
-            return !IsPlaying;
-        }
-
-        public void Play()
-        {
-            _player.Play();
-            SetIsPlaying(true);
-        }
-
         private void SetIsPlaying(bool isPlaying)
         {
-            IsPlaying = isPlaying;
             SystemIdlePreventer.Prevent(isPlaying);
             CommandManager.InvalidateRequerySuggested();
             UpdateMouseHider();
-        }
-
-        public void Pause()
-        {
-            _player.Pause();
-            SetIsPlaying(false);
         }
 
         public void Open(string filename)
@@ -280,7 +223,14 @@ namespace ScriptPlayer.Shared
             TimeSource = new MediaPlayerTimeSource(_player,
                 new DispatcherClock(Dispatcher, TimeSpan.FromMilliseconds(10)));
 
+            TimeSource.IsPlayingChanged += TimeSourceOnIsPlayingChanged;
+
             UpdateVideoBrush();
+        }
+
+        private void TimeSourceOnIsPlayingChanged(object sender, bool isPlaying)
+        {
+            SetIsPlaying(isPlaying);
         }
 
         private void UpdateVideoBrush()

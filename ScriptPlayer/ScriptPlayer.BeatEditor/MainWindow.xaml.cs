@@ -32,7 +32,7 @@ namespace LaunchControl.BeatEditor
             if (dialog.ShowDialog(this) != true) return;
 
             VideoPlayer.Open(dialog.FileName);
-            VideoPlayer.Play();
+            VideoPlayer.TimeSource.Play();
         }
 
         private void SeekBar_OnSeek(object sender, double relative, TimeSpan absolute, int downmoveup)
@@ -50,12 +50,12 @@ namespace LaunchControl.BeatEditor
 
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
-            VideoPlayer.Play();
+            VideoPlayer.TimeSource.Play();
         }
 
         private void btnPause_Click(object sender, RoutedEventArgs e)
         {
-            VideoPlayer.Pause();
+            VideoPlayer.TimeSource.Pause();
         }
 
         private void VideoPlayer_MediaOpened(object sender, EventArgs e)

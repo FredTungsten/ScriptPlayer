@@ -7,6 +7,7 @@ namespace ScriptPlayer.Shared
     {
         public event EventHandler<TimeSpan> ProgressChanged;
         public event EventHandler<TimeSpan> DurationChanged;
+        public event EventHandler<bool> IsPlayingChanged; 
 
         private static readonly DependencyPropertyKey ProgressPropertyKey = DependencyProperty.RegisterReadOnly(
             "Progress", typeof (TimeSpan), typeof (TimeSource), new PropertyMetadata(default(TimeSpan), OnProgressChangedCallback));
@@ -46,7 +47,12 @@ namespace ScriptPlayer.Shared
         }
 
         private static readonly DependencyPropertyKey IsPlayingPropertyKey = DependencyProperty.RegisterReadOnly(
-            "IsPlaying", typeof(bool), typeof(TimeSource), new PropertyMetadata(default(bool)));
+            "IsPlaying", typeof(bool), typeof(TimeSource), new PropertyMetadata(default(bool), OnIsPlayingPropertyChanged));
+
+        private static void OnIsPlayingPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((TimeSource) d).OnIsPlayingChanged((bool) e.NewValue);
+        }
 
         public DependencyProperty IsPlayingProperty = IsPlayingPropertyKey.DependencyProperty;
 
@@ -64,6 +70,11 @@ namespace ScriptPlayer.Shared
         protected virtual void OnDurationChanged(TimeSpan e)
         {
             DurationChanged?.Invoke(this, e);
+        }
+
+        protected virtual void OnIsPlayingChanged(bool e)
+        {
+            IsPlayingChanged?.Invoke(this, e);
         }
     }
 }
