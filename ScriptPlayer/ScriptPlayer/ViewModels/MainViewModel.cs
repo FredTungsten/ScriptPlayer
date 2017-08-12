@@ -724,6 +724,16 @@ namespace ScriptPlayer.ViewModels
                 case PatternSource.Fast:
                     StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(50));
                     break;
+                case PatternSource.ZigZag:
+                    var zigzag = new RepeatingPatternGenerator();
+                    zigzag.Add(99, TimeSpan.FromMilliseconds(200));
+                    zigzag.Add(50, TimeSpan.FromMilliseconds(200));
+                    zigzag.Add(99, TimeSpan.FromMilliseconds(200));
+                    zigzag.Add(0, TimeSpan.FromMilliseconds(200));
+                    zigzag.Add(50, TimeSpan.FromMilliseconds(200));
+                    zigzag.Add(0, TimeSpan.FromMilliseconds(200));
+                    StartPattern(zigzag);
+                    break;
                 case PatternSource.Random:
                     StartPattern(new RandomPatternGenerator());
                     break;
@@ -861,6 +871,8 @@ namespace ScriptPlayer.ViewModels
         private void PlaylistOnPlayEntry(object sender, PlaylistEntry playlistEntry)
         {
             LoadScript(playlistEntry.Fullname, true);
+
+            Play();
         }
 
         [NotifyPropertyChangedInvocator]

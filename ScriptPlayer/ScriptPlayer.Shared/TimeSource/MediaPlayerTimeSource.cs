@@ -13,13 +13,20 @@ namespace ScriptPlayer.Shared
         {
             _player = player;
             _player.MediaOpened += PlayerOnMediaOpened;
+            _player.MediaEnded += PlayerOnMediaEnded;
             _clock = clock;
             _clock.Tick += ClockOnTick;
+        }
+
+        private void PlayerOnMediaEnded(object sender, EventArgs eventArgs)
+        {
+            IsPlaying = false;
         }
 
         private void PlayerOnMediaOpened(object sender, EventArgs eventArgs)
         {
             Duration = _player.NaturalDuration.TimeSpan;
+            _player.Play();
         }
 
         private void ClockOnTick(object sender, EventArgs eventArgs)
@@ -32,7 +39,7 @@ namespace ScriptPlayer.Shared
             if (IsPlaying)
                 return;
 
-            IsPlaying = true;
+             IsPlaying = true;
             _player.Play();
         }
 

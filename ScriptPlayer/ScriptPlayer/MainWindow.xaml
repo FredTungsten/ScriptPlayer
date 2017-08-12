@@ -219,6 +219,7 @@
                             <RadioButton IsChecked="{Binding Path=PatternSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:PatternSource.Slow}}" Content="Slow"/>
                             <RadioButton IsChecked="{Binding Path=PatternSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:PatternSource.Fast}}" Content="Fast"/>
                             <RadioButton IsChecked="{Binding Path=PatternSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:PatternSource.Random}}" Content="Random" />
+                            <RadioButton IsChecked="{Binding Path=PatternSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:PatternSource.ZigZag}}" Content="Zig-Zag" />
                         </StackPanel>
 
                         <Separator/>

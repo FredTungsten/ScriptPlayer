@@ -6,6 +6,7 @@ namespace ScriptPlayer
         None,
         Slow,
         Fast,
-        Random
+        Random,
+        ZigZag
     }
 }
