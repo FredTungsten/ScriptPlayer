@@ -97,6 +97,27 @@ namespace ScriptPlayer.Shared
             }
         }
 
+        public async void Set(IntermediateCommandInformation information)
+        {
+            if (_client == null) return;
+
+            var devices = _devices.ToList();
+            foreach (ButtplugClientDevice device in devices)
+            {
+                if (device.AllowedMessages.Contains(nameof(SingleMotorVibrateCmd)))
+                {
+                    double speedFrom = LaunchToVibrator(information.DeviceInformation.PositionFromOriginal);
+                    double speedTo = LaunchToVibrator(information.DeviceInformation.PositionToOriginal);
+
+                    double speed = Math.Min(1,
+                        Math.Max(0, speedFrom * (1 - information.Progress) + speedTo * information.Progress));
+
+                    var response = await _client.SendDeviceMessage(device,
+                        new SingleMotorVibrateCmd(device.Index, speed));
+                }
+            }
+        }
+
         public async void Set(DeviceCommandInformation information)
         {
             if (_client == null) return;
@@ -114,8 +135,9 @@ namespace ScriptPlayer.Shared
                 }
                 else if (device.AllowedMessages.Contains(nameof(SingleMotorVibrateCmd)))
                 {
-                    var response = await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.SpeedOriginal)));
+                    var response = await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.PositionFromOriginal)));
 
+                    /*
 #pragma warning disable CS4014
                     Task.Run(new Action(async () =>
                     {
@@ -124,6 +146,7 @@ namespace ScriptPlayer.Shared
                         await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, 0));
                     }));
 #pragma warning restore CS4014
+*/
                 }
                 else if (device.AllowedMessages.Contains(nameof(VorzeA10CycloneCmd)))
                 {
@@ -155,11 +178,14 @@ namespace ScriptPlayer.Shared
             return speed;
         }
 
-        private double LaunchToVibrator(byte speed)
+        private double LaunchToVibrator(byte position)
         {
-            double speedRelative = (speed+1) / 100.0;
-            double result = 0.25 + 0.75 * speedRelative;
-            return Math.Min(1.0, Math.Max(0.25, result));
+            const double max = 1.0;
+            const double min = 0.1;
+
+            double speedRelative = 1.0 - ((position + 1) / 100.0);
+            double result = min + (max-min) * speedRelative;
+            return Math.Min(max, Math.Max(min, result));
         }
 
         private string LaunchToLovense(byte position, byte speed)

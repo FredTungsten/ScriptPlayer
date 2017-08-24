@@ -14,6 +14,7 @@ namespace ScriptPlayer.Shared.Scripts
         private static TimeSpan _delay = TimeSpan.Zero;
         private List<TimeSpan> _beats;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
+        public event EventHandler<IntermediateScriptActionEventArgs> IntermediateScriptActionRaised;
 
         public TimeSpan Delay { get; set; }
 
@@ -59,6 +60,11 @@ namespace ScriptPlayer.Shared.Scripts
         protected virtual void OnScriptActionRaised(ScriptActionEventArgs e)
         {
             ScriptActionRaised?.Invoke(this, e);
+        }
+
+        protected virtual void OnIntermediateScriptActionRaised(IntermediateScriptActionEventArgs e)
+        {
+            IntermediateScriptActionRaised?.Invoke(this, e);
         }
 
         public IEnumerable<ScriptAction> GetScript()
@@ -136,6 +142,19 @@ namespace ScriptPlayer.Shared.Scripts
 
                 OnScriptActionRaised(args);
             }
+            else if (_lastIndex >= 0 && _lastIndex < _actions.Count - 1)
+            {
+                TimeSpan previous = GetTimestamp(_lastIndex);
+                TimeSpan next = GetTimestamp(_lastIndex + 1);
+
+                double progress = (newTimeSpan - previous).Divide(next - previous);
+
+                if (progress >= 0.0 && progress <= 1.0)
+                {
+                    IntermediateScriptActionEventArgs args = new IntermediateScriptActionEventArgs(_actions[_lastIndex],_actions[_lastIndex + 1], progress);
+                    OnIntermediateScriptActionRaised(args);
+                }
+            }
         }
 
         private TimeSpan GetTimestamp(int i)
@@ -159,6 +178,25 @@ namespace ScriptPlayer.Shared.Scripts
                 return TimeSpan.Zero;
 
             return _actions.Max(a => a.TimeStamp);
+        }
+    }
+
+    public class IntermediateScriptActionEventArgs : EventArgs
+    {
+        public double Progress;
+        public ScriptAction RawPreviousAction;
+        public ScriptAction RawNextAction;
+
+        public IntermediateScriptActionEventArgs(ScriptAction previous, ScriptAction next, double progress)
+        {
+            RawPreviousAction = previous;
+            RawNextAction = next;
+            Progress = progress;
+        }
+
+        public IntermediateScriptActionEventArgs<T> Cast<T>() where T : ScriptAction
+        {
+            return new IntermediateScriptActionEventArgs<T>(RawPreviousAction as T, RawNextAction as T, Progress);
         }
     }
 

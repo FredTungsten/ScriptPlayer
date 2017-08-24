@@ -14,4 +14,10 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan Duration;
     }
+
+    public class IntermediateCommandInformation
+    {
+        public DeviceCommandInformation DeviceInformation;
+        public double Progress;
+    }
 }

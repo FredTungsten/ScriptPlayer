@@ -7,8 +7,17 @@ namespace ScriptPlayer.Shared.Scripts
         public T NextAction => (T)RawNextAction;
 
         public ScriptActionEventArgs(T previous, T current, T next) : base(previous, current, next)
-        {}
+        { }
 
         public ScriptActionEventArgs(T current) : this(null, current, null) { }
+    }
+
+    public class IntermediateScriptActionEventArgs<T> : IntermediateScriptActionEventArgs where T : ScriptAction
+    {
+        public T PreviousAction => (T)RawPreviousAction;
+        public T NextAction => (T)RawNextAction;
+
+        public IntermediateScriptActionEventArgs(T previous, T next, double progress) : base(previous, next, progress)
+        { }
     }
 }

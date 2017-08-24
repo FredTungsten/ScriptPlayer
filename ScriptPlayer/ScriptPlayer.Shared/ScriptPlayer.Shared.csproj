@@ -83,6 +83,7 @@
     <Compile Include="BeatGroup.cs" />
     <Compile Include="BeatPattern.cs" />
     <Compile Include="BeatTimeline.cs" />
+    <Compile Include="Controls\PointExtensions.cs" />
     <Compile Include="Controls\PositionBar.cs" />
     <Compile Include="Controls\BeatBar2.cs" />
     <Compile Include="Controls\BeatContainer.xaml.cs">
@@ -107,7 +108,9 @@
     <Compile Include="Controls\OverlayText.xaml.cs">
       <DependentUpon>OverlayText.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\PositionCollection.cs" />
     <Compile Include="Controls\Resolution.cs" />
+    <Compile Include="Controls\TimedPosition.cs" />
     <Compile Include="Controls\TimeLineHeader.cs" />
     <Compile Include="Controls\TimePanel.cs" />
     <Compile Include="Controls\TimeScale.cs" />

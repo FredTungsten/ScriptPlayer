@@ -194,6 +194,7 @@ namespace ScriptPlayer.VideoSync
         {
             Bookmarks = new List<TimeSpan>();
             SetAllBeats(new BeatCollection());
+            Positions = new PositionCollection();
             InitializeComponent();
         }
 
@@ -290,6 +291,7 @@ namespace ScriptPlayer.VideoSync
         private void mnuClear_Click(object sender, RoutedEventArgs e)
         {
             Beats.Clear();
+            Positions.Clear();
         }
 
         private void mnuSaveBeats_Click(object sender, RoutedEventArgs e)
@@ -753,12 +755,19 @@ namespace ScriptPlayer.VideoSync
 
         private void SaveAsFunscript(string filename)
         {
+            if (Positions == null)
+                return;
+
             FunScriptFile script = new FunScriptFile
             {
                 Inverted = false,
                 Range = 90,
                 Version = new Version(1, 0),
-                Actions = BeatsToFunScriptConverter.Convert(Beats, ConversionMode.UpOrDown)
+                Actions = Positions.Select(p => new FunScriptAction
+                {
+                    Position = p.Position,
+                    TimeStamp = p.TimeStamp
+                }).ToList()
             };
 
             string content = JsonConvert.SerializeObject(script);
@@ -1034,6 +1043,21 @@ namespace ScriptPlayer.VideoSync
                         }
                         break;
                     }
+                case Key.NumPad1:
+                {
+                    AddPositionNow(0);
+                    break;
+                }
+                case Key.NumPad2:
+                {
+                    AddPositionNow(50);
+                    break;
+                }
+                case Key.NumPad3:
+                {
+                    AddPositionNow(99);
+                    break;
+                }
                 default:
                     handled = false;
                     break;
@@ -1041,6 +1065,19 @@ namespace ScriptPlayer.VideoSync
 
             if (handled)
                 e.Handled = true;
+        }
+
+        private void AddPositionNow(byte position)
+        {
+            TimeSpan timeSpan = videoPlayer.GetPosition();
+            if(Positions == null)
+                Positions = new PositionCollection();
+
+            Positions.Add(new TimedPosition
+            {
+                Position = position,
+                TimeStamp = timeSpan
+            });
         }
 
         private void SnapToClosestBeat()
@@ -1331,6 +1368,17 @@ namespace ScriptPlayer.VideoSync
             string content = JsonConvert.SerializeObject(script);
 
             File.WriteAllText(dialog2.FileName, content, new UTF8Encoding(false));
+        }
+
+        private void mnuBeatsToPositions_Click(object sender, RoutedEventArgs e)
+        {
+            var funscript = BeatsToFunScriptConverter.Convert(Beats, ConversionMode.UpOrDown);
+
+            Positions = new PositionCollection(funscript.Select(f => new TimedPosition
+            {
+                Position = f.Position,
+                TimeStamp = f.TimeStamp
+            }));
         }
     }
 }

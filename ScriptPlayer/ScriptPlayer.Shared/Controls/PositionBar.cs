@@ -1,150 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace ScriptPlayer.Shared
 {
-    public struct TimedPosition
-    {
-        public TimeSpan TimeStamp;
-        public byte Position;
-    }
-
-    public class PositionCollection : ICollection<TimedPosition>
-    {
-        private readonly List<TimedPosition> _positions;
-
-        private static CultureInfo _culture = new CultureInfo("en-us");
-        public PositionCollection()
-        {
-            _positions = new List<TimedPosition>();
-        }
-
-        public PositionCollection(IEnumerable<TimedPosition> beats)
-        {
-            _positions = new List<TimedPosition>(beats);
-            _positions.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
-        }
-
-        public TimedPosition this[int index]
-        {
-            get => _positions[index];
-        }
-
-        public bool Remove(TimedPosition item)
-        {
-            return _positions.Remove(item);
-        }
-
-        public int Count => _positions.Count;
-        public bool IsReadOnly => false;
-
-        public IEnumerable<TimedPosition> GetPositions(TimeSpan timestampFrom, TimeSpan timestampTo)
-        {
-            int minIndex = 0;
-            int maxIndex = _positions.Count - 1;
-
-            int leftBounds = FindLastEarlierThan(minIndex, maxIndex, timestampFrom);
-
-            if (leftBounds != -1)
-            {
-                int rightBounds = FindFirstLaterThan(leftBounds, maxIndex, timestampTo);
-
-                if (rightBounds != -1)
-                    return _positions.Skip(leftBounds).Take(rightBounds - leftBounds + 1);
-                else
-                    return _positions.Skip(leftBounds);
-            }
-            else
-            {
-                int rightBounds = FindFirstLaterThan(0, maxIndex, timestampTo);
-                return _positions.Take(rightBounds + 1);
-            }
-        }
-
-        private int FindFirstLaterThan(int minIndex, int maxIndex, TimeSpan timestampTo)
-        {
-            for (int i = minIndex; i <= maxIndex; i++)
-            {
-                if (_positions[i].TimeStamp >= timestampTo)
-                    return i;
-            }
-
-            return -1;
-        }
-
-        private int FindLastEarlierThan(int minIndex, int maxIndex, TimeSpan t)
-        {
-            int l = minIndex;
-            int r = maxIndex;
-
-            while (l <= r)
-            {
-                int m = (l + r) / 2;
-
-                if (_positions[m].TimeStamp > t)
-                {
-                    if (m > minIndex)
-                        if (_positions[m - 1].TimeStamp <= t)
-                            return m - 1;
-
-                    r = m - 1;
-                }
-                else
-                {
-                    if (m < maxIndex)
-                        if (_positions[m + 1].TimeStamp > t)
-                            return m;
-
-                    l = m + 1;
-                }
-            }
-
-            //No element found
-            return -1;
-        }
-
-        public void Add(TimedPosition beat)
-        {
-            _positions.Add(beat);
-        }
-
-        public void Clear()
-        {
-            _positions.Clear();
-        }
-
-        public bool Contains(TimedPosition item)
-        {
-            return _positions.Contains(item);
-        }
-
-        public void CopyTo(TimedPosition[] array, int arrayIndex)
-        {
-            _positions.CopyTo(array, arrayIndex);
-        }
-
-        public IEnumerator<TimedPosition> GetEnumerator()
-        {
-            return _positions.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public PositionCollection Duplicate()
-        {
-            return new PositionCollection(_positions);
-        }
-    }
-
     public class PositionBar : Control
     {
         public static readonly DependencyProperty LineColorProperty = DependencyProperty.Register(
@@ -195,6 +58,10 @@ namespace ScriptPlayer.Shared
         public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
             "Progress", typeof(TimeSpan), typeof(PositionBar), new PropertyMetadata(default(TimeSpan), OnVisualPropertyChanged));
 
+        private bool _down;
+        private Point _mousePos;
+        private TimedPosition _position;
+
         private static void OnVisualPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((PositionBar)d).InvalidateVisual();
@@ -206,13 +73,126 @@ namespace ScriptPlayer.Shared
             set { SetValue(ProgressProperty, value); }
         }
 
+        protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            _mousePos = e.GetPosition(this);
+
+            TimeSpan timeFrom = Progress - TotalDisplayedDuration.Multiply(Midpoint);
+            TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
+
+            List<TimedPosition> absoluteBeatPositions = Positions.GetPositions(timeFrom, timeTo).ToList();
+
+            double minDist = double.MaxValue;
+            TimedPosition closest = null;
+
+            foreach (TimedPosition position in absoluteBeatPositions)
+            {
+                double distance = GetPointFromPosition(position).DistanceTo(_mousePos);
+                if (distance < minDist)
+                {
+                    closest = position;
+                    minDist = distance;
+                }
+            }
+
+            if (closest == null) return;
+
+            if (minDist > 20) return;
+
+            _position = closest;
+            _down = true;
+            
+            CaptureMouse();
+        }
+
+        protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+        {
+            if (!_down) return;
+
+            _down = false;
+            _mousePos = e.GetPosition(this);
+            UpdateSelectedPosition();
+            InvalidateVisual();
+
+            ReleaseMouseCapture();
+        }
+
+        private void UpdateSelectedPosition()
+        {
+            TimedPosition pos = GetPositionFromPoint(_mousePos);
+            _position.TimeStamp = pos.TimeStamp;
+            _position.Position = pos.Position;
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            if (!_down) return;
+
+            _mousePos = e.GetPosition(this);
+            UpdateSelectedPosition();
+            InvalidateVisual();
+        }
+
+        private Point GetPointFromPosition(TimedPosition position)
+        {
+            
+
+            double x = PositionToX(position.TimeStamp);
+            double y = PositionToY(position.Position);
+
+            return new Point(x,y);
+        }
+
+        private double PositionToX(TimeSpan timeStamp)
+        {
+            return (timeStamp - (Progress - TotalDisplayedDuration.Multiply(Midpoint))).Divide(TotalDisplayedDuration) * ActualWidth;
+        }
+
+        private double PositionToY(byte position)
+        {
+            return ActualHeight * ((99.0 - position) / 99.0);
+        }
+
+        private TimedPosition GetPositionFromPoint(Point point)
+        {
+            TimeSpan timestamp = XToPosition(point.X);
+            byte position = YToPosition(point.Y);
+            position = Math.Min((byte)99, Math.Max((byte)0, position));
+
+            return new TimedPosition
+            {
+                TimeStamp = timestamp,
+                Position = position
+            };
+        }
+
+        private TimeSpan XToPosition(double x)
+        {
+            return TotalDisplayedDuration.Multiply(x / ActualWidth) + (Progress - TotalDisplayedDuration.Multiply(Midpoint));
+        }
+
+        private byte YToPosition(double y)
+        {
+            return (byte)(Math.Min(ActualHeight, Math.Max(0, ActualHeight - y)) / ActualHeight * 99.0);
+        }
+
         protected override void OnRender(DrawingContext drawingContext)
         {
+            if (_down)
+            {
+                UpdateSelectedPosition();
+            }
+
+            Pen redPen = new Pen(Brushes.Red, 1);
             Rect fullRect = new Rect(new Point(), new Size(ActualWidth, ActualHeight));
 
             drawingContext.PushClip(new RectangleGeometry(fullRect));
 
             drawingContext.DrawRectangle(Background, null, fullRect);
+
+            double midPointX = ActualWidth * Midpoint;
+
+            drawingContext.DrawLine(redPen, new Point(midPointX, 0), new Point(midPointX, ActualHeight));
 
             if (Positions != null)
             {
@@ -220,10 +200,9 @@ namespace ScriptPlayer.Shared
                 TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
 
                 List<TimedPosition> absoluteBeatPositions = Positions.GetPositions(timeFrom, timeTo).ToList();
-                double ToLocal(TimedPosition b) => (b.TimeStamp - timeFrom).Divide(timeTo - timeFrom) * ActualWidth;
+                //double ToLocal(TimedPosition b) => (b.TimeStamp - timeFrom).Divide(timeTo - timeFrom) * ActualWidth;
 
-                List<Point> beatPoints = absoluteBeatPositions.Select(a => new Point(ToLocal(a),
-                    ActualHeight * (a.Position / 99.0))).ToList();
+                List<Point> beatPoints = absoluteBeatPositions.Select(GetPointFromPosition).ToList();
 
                 if (beatPoints.Count > 0)
                 {
@@ -234,22 +213,16 @@ namespace ScriptPlayer.Shared
                         figure.Segments.Add(new LineSegment(beatPoints[i], true));
                     }
 
-                    drawingContext.DrawGeometry(null, new Pen(Brushes.Red, 1), new PathGeometry(new[] { figure }));
+                    drawingContext.DrawGeometry(null, redPen, new PathGeometry(new[] {figure}));
 
                     for (int i = 0; i < beatPoints.Count; i++)
                     {
-                        drawingContext.DrawEllipse(Brushes.Black, new Pen(Brushes.Red,1),beatPoints[i],4,4);
+                        drawingContext.DrawEllipse(Brushes.Black, redPen, beatPoints[i], 4, 4);
                     }
                 }
             }
 
             drawingContext.Pop();
-        }
-
-        private void DrawLine(DrawingContext drawingContext, Color primary, Point pFrom, Point pTo, double lineWidth = 4)
-        {
-            drawingContext.DrawLine(new Pen(new SolidColorBrush(primary) { Opacity = 0.5 }, lineWidth) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
-            drawingContext.DrawLine(new Pen(new SolidColorBrush(Colors.White) { Opacity = 1.0 }, 2) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
         }
     }
 }

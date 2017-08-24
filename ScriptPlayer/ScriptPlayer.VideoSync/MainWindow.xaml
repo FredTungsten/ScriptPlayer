@@ -35,12 +35,13 @@
                 <MenuItem Header="Analyse Samples" Click="mnuAnalyseSamples_Click"/>
                 <MenuItem Header="Clear" Click="mnuClear_Click"/>
                 <Separator/>
+                <MenuItem Header="Convert Beats to Positions" Click="mnuBeatsToPositions_Click"/>
+                <Separator/>
                 <MenuItem Header="Load">
                     <MenuItem Header="beats.txt" Click="mnuLoad_Click"/>
                     <MenuItem Header="Funscript" Click="mnuLoadFun_Click" />
                     <MenuItem Header="Convert Vorze" Click="mnuLoadVorze_Click" />
                 </MenuItem>
-
                 <MenuItem Header="Save As">
                     <MenuItem Header="beats.txt" Click="mnuSaveBeats_Click"/>
                     <MenuItem Header="kiiroo.js" Click="mnuSaveKiiroo_Click"/>

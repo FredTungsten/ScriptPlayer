@@ -1011,7 +1011,54 @@ namespace ScriptPlayer.ViewModels
         {
             _scriptHandler = new ScriptHandler();
             _scriptHandler.ScriptActionRaised += ScriptHandlerOnScriptActionRaised;
+            _scriptHandler.IntermediateScriptActionRaised += ScriptHandlerOnIntermediateScriptActionRaised;
             _scriptHandler.Delay = TimeSpan.FromMilliseconds(0);
+        }
+
+        private void ScriptHandlerOnIntermediateScriptActionRaised(object sender, IntermediateScriptActionEventArgs eventArgs)
+        {
+            if (PatternSource != PatternSource.Video)
+                return;
+
+            if (eventArgs.RawPreviousAction is FunScriptAction)
+                HandleIntermediateFunScriptAction(eventArgs.Cast<FunScriptAction>());
+        }
+
+        private void HandleIntermediateFunScriptAction(IntermediateScriptActionEventArgs<FunScriptAction> eventArgs)
+        {
+            TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.PreviousAction.TimeStamp;
+            byte currentPositionTransformed = TransformPosition(eventArgs.PreviousAction.Position);
+            byte nextPositionTransformed = TransformPosition(eventArgs.NextAction.Position);
+
+            if (currentPositionTransformed == nextPositionTransformed) return;
+
+            byte speedOriginal =
+                SpeedPredictor.Predict(
+                    (byte)Math.Abs(eventArgs.PreviousAction.Position - eventArgs.NextAction.Position), duration);
+            byte speedTransformed =
+                SpeedPredictor.Predict((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed), duration);
+            speedTransformed = ClampSpeed(speedTransformed * SpeedMultiplier);
+
+            //Debug.WriteLine($"{nextPositionTransformed} @ {speedTransformed}");
+
+            DeviceCommandInformation info = new DeviceCommandInformation
+            {
+                Duration = duration,
+                SpeedTransformed = speedTransformed,
+                SpeedOriginal = speedOriginal,
+                PositionFromTransformed = currentPositionTransformed,
+                PositionToTransformed = nextPositionTransformed,
+                PositionFromOriginal = eventArgs.PreviousAction.Position,
+                PositionToOriginal = eventArgs.NextAction.Position
+            };
+
+            IntermediateCommandInformation intermediateInfo = new IntermediateCommandInformation
+            {
+                DeviceInformation = info,
+                Progress = eventArgs.Progress
+            };
+
+            SetDevices(intermediateInfo);
         }
 
         private void ScriptHandlerOnScriptActionRaised(object sender, ScriptActionEventArgs eventArgs)
@@ -1093,6 +1140,14 @@ namespace ScriptPlayer.ViewModels
             {
                 _launch?.EnqueuePosition(information.PositionToTransformed, information.SpeedTransformed);
                 _connector?.Set(information);
+            }
+        }
+
+        private void SetDevices(IntermediateCommandInformation intermediateInfo, bool requirePlaying = true)
+        {
+            if (TimeSource.IsPlaying || !requirePlaying)
+            {
+                _connector?.Set(intermediateInfo);
             }
         }
 
