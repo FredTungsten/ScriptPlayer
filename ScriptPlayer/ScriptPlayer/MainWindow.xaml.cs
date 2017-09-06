@@ -44,7 +44,7 @@ namespace ScriptPlayer
 
         private void OnClosed(object sender, EventArgs eventArgs)
         {
-            
+            ViewModel.Unload();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

@@ -12,8 +12,10 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Xml.Serialization;
 using FMUtils.KeyboardHook;
 using JetBrains.Annotations;
+using Newtonsoft.Json.Linq;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 using Application = System.Windows.Application;
@@ -85,6 +87,7 @@ namespace ScriptPlayer.ViewModels
         private Hook _hook;
         private bool _blindMode;
         private TimeSource _timeSource;
+        private bool _showHeatMap;
 
         public MainViewModel()
         {
@@ -99,6 +102,50 @@ namespace ScriptPlayer.ViewModels
             InitializeTestPatterns();
             InitializeLaunchFinder();
             InitializeScriptHandler();
+
+            LoadSettings();
+        }
+
+        private void LoadSettings()
+        {
+            Settings settings = Settings.FromFile(GetSettingsFile());
+            if (settings != null)
+            {
+                MinSpeed = settings.MinSpeed;
+                MaxSpeed = settings.MaxSpeed;
+                MinPosition = settings.MinPosition;
+                MaxPosition = settings.MaxPosition;
+                ScriptDelay = TimeSpan.FromMilliseconds(settings.ScriptDelay);
+                SpeedMultiplier = settings.SpeedMultiplier;
+                CommandDelay = TimeSpan.FromMilliseconds(settings.CommandDelay);
+                AutoSkip = settings.AutoSkip;
+                ConversionMode = settings.ConversionMode;
+                ShowHeatMap = settings.ShowHeatMap;
+                LogMarkers = settings.LogMarkers;
+            }
+        }
+
+        private void SaveSettings()
+        {
+            Settings settings = new Settings();
+            settings.MinSpeed = MinSpeed;
+            settings.MaxSpeed = MaxSpeed;
+            settings.MinPosition = MinPosition;
+            settings.MaxPosition = MaxPosition;
+            settings.SpeedMultiplier = SpeedMultiplier;
+            settings.AutoSkip = AutoSkip;
+            settings.ConversionMode = ConversionMode;
+            settings.ShowHeatMap = ShowHeatMap;
+            settings.LogMarkers = LogMarkers;
+            settings.ScriptDelay = ScriptDelay.TotalMilliseconds;
+            settings.CommandDelay = CommandDelay.TotalMilliseconds;
+
+            settings.Save(GetSettingsFile());
+        }
+
+        private string GetSettingsFile()
+        {
+            return Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\Settings.xml");
         }
 
         private void BlindModeChanged()
@@ -385,6 +432,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (Equals(value, _testPatterns)) return;
                 _testPatterns = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowHeatMap
+        {
+            get => _showHeatMap;
+            set
+            {
+                if (value == _showHeatMap) return;
+                _showHeatMap = value;
                 OnPropertyChanged();
             }
         }
@@ -1001,6 +1059,9 @@ namespace ScriptPlayer.ViewModels
 
         private void UpdateHeatMap()
         {
+            if (TimeSource == null)
+                return;
+
             List<TimeSpan> timeStamps = _scriptHandler.GetScript().Select(s => s.TimeStamp).ToList();
             Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, TimeSource.Duration);
             HeatMap = heatmap;
@@ -1447,6 +1508,11 @@ namespace ScriptPlayer.ViewModels
         {
             TestPattern(SelectedTestPattern);
         }
+
+        public void Unload()
+        {
+            SaveSettings();
+        }
     }
 
     public class ButtplugUrlRequestEventArgs : EventArgs
@@ -1482,5 +1548,57 @@ namespace ScriptPlayer.ViewModels
         public string Name { get; set; }
         public TimeSpan Duration { get; set; }
         public byte[] Positions { get; set; }
+    }
+
+    public class Settings
+    {
+        public Byte MinPosition { get; set; }
+        public Byte MaxPosition { get; set; }
+        public byte MinSpeed { get; set; }
+        public byte MaxSpeed { get; set; }
+        public double ScriptDelay { get; set; }
+        public double SpeedMultiplier { get; set; }
+        public double CommandDelay { get; set; }
+        public bool AutoSkip { get; set; }
+        public ConversionMode ConversionMode { get; set; }
+        public bool ShowHeatMap { get; set; }
+        public bool LogMarkers { get; set; }
+
+        public static Settings FromFile(string filename)
+        {
+            try
+            {
+                using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(Settings));
+                    return serializer.Deserialize(stream) as Settings;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                return null;
+            }
+        }
+
+        public void Save(string filename)
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(filename);
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                using (FileStream stream = new FileStream(filename, FileMode.Create, FileAccess.Write))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(Settings));
+                    serializer.Serialize(stream, this);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+            }
+        }
     }
 }

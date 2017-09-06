@@ -62,8 +62,8 @@
             <MenuItem Header="File">
                 <MenuItem Header="Open Video" Command="{Binding OpenVideoCommand}"/>
                 <MenuItem Header="Open Script" Command="{Binding OpenScriptCommand}"/>
-                <Separator/>
-                <MenuItem Header="Download Script" Click="mnuDownloadScript_Click"/>
+                <!--<Separator/>
+                <MenuItem Header="Download Script" Click="mnuDownloadScript_Click"/>-->
                 <Separator/>
                 <MenuItem Header="Add to Playlist" Command="{Binding AddScriptsToPlaylistCommand}"/>
                 <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
@@ -141,7 +141,7 @@
                     <Style TargetType="{x:Type shared:SeekBar}">
                         <Setter Property="Overlay" Value="Transparent"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding ElementName=CckHeatMap, Path=IsChecked}" Value="True">
+                            <DataTrigger Binding="{Binding ShowHeatMap}" Value="True">
                                 <Setter Property="Overlay" Value="{Binding HeatMap}"/>
                             </DataTrigger>
                         </Style.Triggers>
@@ -225,7 +225,7 @@
                         <Separator/>
 
                         <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Debug" FontSize="20"/>
-                        <CheckBox Margin="4" Name="CckHeatMap">Show Heat Map</CheckBox>
+                        <CheckBox Margin="4" IsChecked="{Binding ShowHeatMap}">Show Heat Map</CheckBox>
                         <TextBlock Margin="4" Text="Test Patterns"/>
                         <ComboBox ItemsSource="{Binding TestPatterns}" SelectedItem="{Binding SelectedTestPattern}" DisplayMemberPath="Name" Margin="4" />
                         <Button Command="{Binding ExecuteSelectedTestPatternCommand}" Margin="4,0,4,4" Content="Execute Pattern" VerticalAlignment="Top"/>
