@@ -95,9 +95,15 @@
       <DependentUpon>VersionDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="PatternSource.cs" />
+    <Compile Include="ViewModels\ButtplugUrlRequestEventArgs.cs" />
+    <Compile Include="ViewModels\MessageBoxEventArgs.cs" />
     <Compile Include="ViewModels\PlaylistEntry.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\PlaylistViewModel.cs" />
+    <Compile Include="ViewModels\PositionFilterMode.cs" />
+    <Compile Include="ViewModels\RequestFileEventArgs.cs" />
+    <Compile Include="ViewModels\Settings.cs" />
+    <Compile Include="ViewModels\TestPatternDefinition.cs" />
     <Page Include="Dialogs\ButtplugConnectionSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

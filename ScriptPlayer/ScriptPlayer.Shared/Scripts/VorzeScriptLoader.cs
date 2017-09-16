@@ -5,6 +5,15 @@ using System.Linq;
 
 namespace ScriptPlayer.Shared.Scripts
 {
+    public class VorzeScriptToFunscriptLoader : VorzeScriptLoader
+    {
+        public override List<ScriptAction> Load(Stream stream)
+        {
+            List<VorzeScriptAction> vorzeActions = base.Load(stream).Cast<VorzeScriptAction>().ToList();
+            return VorzeToFunscriptConverter.Convert(vorzeActions).Cast<ScriptAction>().ToList();
+        }
+    }
+
     public class VorzeScriptLoader : ScriptLoader
     {
         public override List<ScriptAction> Load(Stream stream)
@@ -18,7 +27,7 @@ namespace ScriptPlayer.Shared.Scripts
                     string line = reader.ReadLine();
                     if (line == null) break;
 
-                    int[] parameters = line.Split(',').Select(int.Parse).ToArray();
+                    int[] parameters = line.Split(new []{','},StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
                     actions.Add(new VorzeScriptAction
                     {
                         TimeStamp = TimeSpan.FromMilliseconds(100.0 * parameters[0]),
@@ -35,7 +44,7 @@ namespace ScriptPlayer.Shared.Scripts
         {
             return new List<ScriptFileFormat>
             {
-                new ScriptFileFormat("Vorze Script", "csv")
+                new ScriptFileFormat("Vorze Script (beta)", "csv")
             };
         }
     }

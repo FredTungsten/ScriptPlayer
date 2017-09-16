@@ -1,6 +1,6 @@
+"use strict";
 //Run the Webpack task runner to pack it,
 //Compiled Version should be @ dist/webbundle.js
-"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /* Imports */
 const buttplug_1 = require("buttplug");

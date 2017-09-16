@@ -18,6 +18,7 @@ namespace ScriptPlayer.Shared.Scripts
             RegisterLoader<FunScriptLoader>();
             RegisterLoader<BeatFileLoader>();
             RegisterLoader<VirtualRealPornScriptLoader>();
+            RegisterLoader<VorzeScriptToFunscriptLoader>();
         }
 
         public static void RegisterLoader<T>() where T : ScriptLoader, new()

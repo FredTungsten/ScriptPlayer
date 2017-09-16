@@ -12,10 +12,8 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using System.Xml.Serialization;
 using FMUtils.KeyboardHook;
 using JetBrains.Annotations;
-using Newtonsoft.Json.Linq;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 using Application = System.Windows.Application;
@@ -88,6 +86,30 @@ namespace ScriptPlayer.ViewModels
         private bool _blindMode;
         private TimeSource _timeSource;
         private bool _showHeatMap;
+        private PositionFilterMode _filterMode = PositionFilterMode.FullRange;
+        private double _filterRange = 0.5;
+
+        public double FilterRange
+        {
+            get { return _filterRange; }
+            set
+            {
+                if (value.Equals(_filterRange)) return;
+                _filterRange = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public PositionFilterMode FilterMode
+        {
+            get { return _filterMode; }
+            set
+            {
+                if (value == _filterMode) return;
+                _filterMode = value;
+                OnPropertyChanged();
+            }
+        }
 
         public MainViewModel()
         {
@@ -122,6 +144,8 @@ namespace ScriptPlayer.ViewModels
                 ConversionMode = settings.ConversionMode;
                 ShowHeatMap = settings.ShowHeatMap;
                 LogMarkers = settings.LogMarkers;
+                FilterMode = settings.FilterMode;
+                FilterRange = settings.FilterRange;
             }
         }
 
@@ -139,6 +163,8 @@ namespace ScriptPlayer.ViewModels
             settings.LogMarkers = LogMarkers;
             settings.ScriptDelay = ScriptDelay.TotalMilliseconds;
             settings.CommandDelay = CommandDelay.TotalMilliseconds;
+            settings.FilterMode = FilterMode;
+            settings.FilterRange = FilterRange;
 
             settings.Save(GetSettingsFile());
         }
@@ -150,8 +176,7 @@ namespace ScriptPlayer.ViewModels
 
         private void BlindModeChanged()
         {
-            if(TimeSource != null)
-                TimeSource.Pause();
+            TimeSource?.Pause();
 
             if (BlindMode)
             {
@@ -167,7 +192,7 @@ namespace ScriptPlayer.ViewModels
 
         private void RefreshManualDuration()
         {
-            if(TimeSource is ManualTimeSource source)
+            if (TimeSource is ManualTimeSource source)
                 source.SetDuration(_scriptHandler.GetDuration().Add(TimeSpan.FromSeconds(5)));
         }
 
@@ -207,7 +232,7 @@ namespace ScriptPlayer.ViewModels
                     TogglePlayback();
                     break;
                 case Keys.MediaNextTrack:
-                    if(BlindMode)
+                    if (BlindMode)
                         TimeSource.SetPosition(TimeSource.Progress + TimeSpan.FromMilliseconds(50));
                     else
                         PlayNextPlaylistEntry();
@@ -615,7 +640,7 @@ namespace ScriptPlayer.ViewModels
 
             _openVideo = filename;
 
-            if(!BlindMode)
+            if (!BlindMode)
                 VideoPlayer.Open(filename);
 
             Title = Path.GetFileNameWithoutExtension(filename);
@@ -727,11 +752,14 @@ namespace ScriptPlayer.ViewModels
             {
                 IEnumerator<PatternGenerator.PositionTransistion> enumerator = _pattern.Get();
 
+                var app = Application.Current;
+                if (app == null) return;
+
                 while (enumerator.MoveNext())
                 {
                     PatternGenerator.PositionTransistion transistion = enumerator.Current;
-                    var app = Application.Current;
-                    if (app == null) break;
+                    if (transistion == null) break;
+
                     app.Dispatcher.BeginInvoke(new Action(() =>
                     {
                         DeviceCommandInformation info = new DeviceCommandInformation
@@ -739,8 +767,8 @@ namespace ScriptPlayer.ViewModels
                             Duration = transistion.Duration,
                             PositionFromOriginal = transistion.From,
                             PositionToOriginal = transistion.To,
-                            PositionFromTransformed = TransformPosition(transistion.From, 0, 99),
-                            PositionToTransformed = TransformPosition(transistion.To, 0, 99)
+                            PositionFromTransformed = TransformPosition(transistion.From, 0, 99, DateTime.Now.TimeOfDay.TotalSeconds),
+                            PositionToTransformed = TransformPosition(transistion.To, 0, 99, DateTime.Now.TimeOfDay.TotalSeconds)
                         };
 
                         info.SpeedOriginal = SpeedPredictor.Predict2(info.PositionFromOriginal, info.PositionToOriginal,
@@ -881,7 +909,7 @@ namespace ScriptPlayer.ViewModels
                     PositionFromOriginal = 0,
                     PositionFromTransformed = 0,
                     PositionToOriginal = positions[0],
-                    PositionToTransformed = TransformPosition(positions[0], 0, 99)
+                    PositionToTransformed = TransformPosition(positions[0], 0, 99, DateTime.Now.TimeOfDay.TotalSeconds)
                 }
                 , false);
             await Task.Delay(300);
@@ -893,8 +921,8 @@ namespace ScriptPlayer.ViewModels
                     Duration = delay,
                     PositionFromOriginal = positions[i - 1],
                     PositionToOriginal = positions[i],
-                    PositionFromTransformed = TransformPosition(positions[i - 1], 0, 99),
-                    PositionToTransformed = TransformPosition(positions[i], 0, 99)
+                    PositionFromTransformed = TransformPosition(positions[i - 1], 0, 99, DateTime.Now.TimeOfDay.TotalSeconds),
+                    PositionToTransformed = TransformPosition(positions[i], 0, 99, DateTime.Now.TimeOfDay.TotalSeconds + delay.TotalSeconds)
                 };
 
                 info.SpeedOriginal = SpeedPredictor.Predict2(info.PositionFromOriginal, info.PositionToOriginal, delay);
@@ -1014,9 +1042,9 @@ namespace ScriptPlayer.ViewModels
 
                     break;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    //try another loader
+                    Debug.WriteLine("Loader {0} failed to open {1}: {2}", loader.GetType().Name, Path.GetFileName(fileName), e.Message);
                 }
             }
 
@@ -1088,8 +1116,8 @@ namespace ScriptPlayer.ViewModels
         private void HandleIntermediateFunScriptAction(IntermediateScriptActionEventArgs<FunScriptAction> eventArgs)
         {
             TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.PreviousAction.TimeStamp;
-            byte currentPositionTransformed = TransformPosition(eventArgs.PreviousAction.Position);
-            byte nextPositionTransformed = TransformPosition(eventArgs.NextAction.Position);
+            byte currentPositionTransformed = TransformPosition(eventArgs.PreviousAction.Position, eventArgs.PreviousAction.TimeStamp);
+            byte nextPositionTransformed = TransformPosition(eventArgs.NextAction.Position, eventArgs.NextAction.TimeStamp);
 
             if (currentPositionTransformed == nextPositionTransformed) return;
 
@@ -1143,56 +1171,110 @@ namespace ScriptPlayer.ViewModels
             }
 
             TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
-            byte currentPositionTransformed = TransformPosition(eventArgs.CurrentAction.Position);
-            byte nextPositionTransformed = TransformPosition(eventArgs.NextAction.Position);
+            byte currentPositionTransformed = TransformPosition(eventArgs.CurrentAction.Position, eventArgs.CurrentAction.TimeStamp);
+            byte nextPositionTransformed = TransformPosition(eventArgs.NextAction.Position, eventArgs.NextAction.TimeStamp);
 
-            if (currentPositionTransformed == nextPositionTransformed) return;
-
-            byte speedOriginal =
-                SpeedPredictor.Predict(
-                    (byte) Math.Abs(eventArgs.CurrentAction.Position - eventArgs.NextAction.Position), duration);
-            byte speedTransformed =
-                SpeedPredictor.Predict((byte) Math.Abs(currentPositionTransformed - nextPositionTransformed), duration);
-            speedTransformed = ClampSpeed(speedTransformed * SpeedMultiplier);
-
-            //Debug.WriteLine($"{nextPositionTransformed} @ {speedTransformed}");
-
-            DeviceCommandInformation info = new DeviceCommandInformation
+            if (currentPositionTransformed != nextPositionTransformed)
             {
-                Duration = duration,
-                SpeedTransformed = speedTransformed,
-                SpeedOriginal = speedOriginal,
-                PositionFromTransformed = currentPositionTransformed,
-                PositionToTransformed = nextPositionTransformed,
-                PositionFromOriginal = eventArgs.CurrentAction.Position,
-                PositionToOriginal = eventArgs.NextAction.Position
-            };
+
+                byte speedOriginal =
+                    SpeedPredictor.Predict(
+                        (byte)Math.Abs(eventArgs.CurrentAction.Position - eventArgs.NextAction.Position), duration);
+                byte speedTransformed =
+                    SpeedPredictor.Predict((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed),
+                        duration);
+                speedTransformed = ClampSpeed(speedTransformed * SpeedMultiplier);
+
+                DeviceCommandInformation info = new DeviceCommandInformation
+                {
+                    Duration = duration,
+                    SpeedTransformed = speedTransformed,
+                    SpeedOriginal = speedOriginal,
+                    PositionFromTransformed = currentPositionTransformed,
+                    PositionToTransformed = nextPositionTransformed,
+                    PositionFromOriginal = eventArgs.CurrentAction.Position,
+                    PositionToOriginal = eventArgs.NextAction.Position
+                };
+
+                SetDevices(info);
+            }
 
             if (duration > TimeSpan.FromSeconds(10) && TimeSource.IsPlaying)
+            {
                 if (AutoSkip)
                     SkipToNextEvent();
                 else
                     OnRequestOverlay($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4), "Events");
-
-            SetDevices(info);
+            }
         }
 
         private byte ClampSpeed(double speed)
         {
-            return (byte) Math.Min(MaxSpeed, Math.Max(MinSpeed, speed));
+            return (byte)Math.Min(MaxSpeed, Math.Max(MinSpeed, speed));
         }
 
-        private byte TransformPosition(byte pos, byte inMin, byte inMax)
+        private byte TransformPosition(byte pos, byte inMin, byte inMax, double timestamp)
         {
-            double relative = (double) (pos - inMin) / (inMax - inMin);
+            double relative = (double)(pos - inMin) / (inMax - inMin);
             relative = Math.Min(1, Math.Max(0, relative));
-            byte absolute = (byte) (MinPosition + (MaxPosition - MinPosition) * relative);
+
+            byte minPosition = MinPosition;
+            byte maxPosition = MaxPosition;
+
+            const double secondsPercycle = 10.0;
+            double cycle = timestamp / secondsPercycle;
+            double range = FilterRange;
+
+            switch (FilterMode)
+            {
+                case PositionFilterMode.FullRange:
+                    break;
+                case PositionFilterMode.Top:
+                    GetRange(ref minPosition, ref maxPosition, range, 1.0);
+                    break;
+                case PositionFilterMode.Middle:
+                    GetRange(ref minPosition, ref maxPosition, range, 0.5);
+                    break;
+                case PositionFilterMode.Bottom:
+                    GetRange(ref minPosition, ref maxPosition, range, 0);
+                    break;
+                case PositionFilterMode.SineWave:
+                    {
+                        double factor = (1 + Math.Sin(cycle * Math.PI * 2.0)) / 2.0;
+                        GetRange(ref minPosition, ref maxPosition, range, factor);
+                        break;
+                    }
+                case PositionFilterMode.TopBottom:
+                    {
+                        double progress = cycle - Math.Floor(cycle);
+                        double factor = progress >= 0.5 ? 1 : 0;
+                        GetRange(ref minPosition, ref maxPosition, range, factor);
+                        break;
+                    }
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            range = (byte)(maxPosition - minPosition);
+
+            byte absolute = (byte)(minPosition + range * relative);
+
             return SpeedPredictor.Clamp(absolute);
         }
 
-        private byte TransformPosition(byte pos)
+        private void GetRange(ref byte minPosition, ref byte maxPosition, double range, double factor)
         {
-            return TransformPosition(pos, _minScriptPosition, _maxScriptPosition);
+            double actualRange = (maxPosition - minPosition) * (1.0 - range);
+            double newMin = minPosition + actualRange * factor;
+            double newMax = maxPosition - actualRange * (1 - factor);
+
+            minPosition = (byte)newMin;
+            maxPosition = (byte)newMax;
+        }
+
+        private byte TransformPosition(byte pos, TimeSpan timeStamp)
+        {
+            return TransformPosition(pos, _minScriptPosition, _maxScriptPosition, timeStamp.TotalSeconds);
         }
 
         private void SetDevices(DeviceCommandInformation information, bool requirePlaying = true)
@@ -1291,7 +1373,7 @@ namespace ScriptPlayer.ViewModels
                     return;
 
                 string line = position.ToString("hh\\:mm\\:ss\\.fff");
-                File.AppendAllLines(logFile, new[] {line});
+                File.AppendAllLines(logFile, new[] { line });
                 OnRequestOverlay("Logged marker at " + line, TimeSpan.FromSeconds(5), "Log");
             }
             catch (Exception ex)
@@ -1421,8 +1503,8 @@ namespace ScriptPlayer.ViewModels
 
         public void VolumeDown()
         {
-            int oldVolume = (int) Math.Round(Volume);
-            int newVolume = (int) (5.0 * Math.Floor(Volume / 5.0));
+            int oldVolume = (int)Math.Round(Volume);
+            int newVolume = (int)(5.0 * Math.Floor(Volume / 5.0));
             if (oldVolume == newVolume)
                 newVolume -= 5;
 
@@ -1433,8 +1515,8 @@ namespace ScriptPlayer.ViewModels
 
         public void VolumeUp()
         {
-            int oldVolume = (int) Math.Round(Volume);
-            int newVolume = (int) (5.0 * Math.Ceiling(Volume / 5.0));
+            int oldVolume = (int)Math.Round(Volume);
+            int newVolume = (int)(5.0 * Math.Ceiling(Volume / 5.0));
             if (oldVolume == newVolume)
                 newVolume += 5;
 
@@ -1512,93 +1594,6 @@ namespace ScriptPlayer.ViewModels
         public void Unload()
         {
             SaveSettings();
-        }
-    }
-
-    public class ButtplugUrlRequestEventArgs : EventArgs
-    {
-        public string Url { get; set; }
-        public bool Handled { get; set; }
-    }
-
-    public class RequestFileEventArgs : EventArgs
-    {
-        public string Filter { get; set; }
-        public int FilterIndex { get; set; }
-        public bool Handled { get; set; }
-        public bool MultiSelect { get; set; }
-        public string SelectedFile { get; set; }
-        public string[] SelectedFiles { get; set; }
-    }
-
-    public class MessageBoxEventArgs : EventArgs
-    {
-        public string Text { get; set; }
-        public string Title { get; set; }
-        public MessageBoxImage Icon { get; set; }
-
-        public MessageBoxButton Buttons { get; set; }
-
-        public MessageBoxResult Result { get; set; }
-        public bool Handled { get; set; }
-    }
-
-    public class TestPatternDefinition
-    {
-        public string Name { get; set; }
-        public TimeSpan Duration { get; set; }
-        public byte[] Positions { get; set; }
-    }
-
-    public class Settings
-    {
-        public Byte MinPosition { get; set; }
-        public Byte MaxPosition { get; set; }
-        public byte MinSpeed { get; set; }
-        public byte MaxSpeed { get; set; }
-        public double ScriptDelay { get; set; }
-        public double SpeedMultiplier { get; set; }
-        public double CommandDelay { get; set; }
-        public bool AutoSkip { get; set; }
-        public ConversionMode ConversionMode { get; set; }
-        public bool ShowHeatMap { get; set; }
-        public bool LogMarkers { get; set; }
-
-        public static Settings FromFile(string filename)
-        {
-            try
-            {
-                using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
-                {
-                    XmlSerializer serializer = new XmlSerializer(typeof(Settings));
-                    return serializer.Deserialize(stream) as Settings;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e);
-                return null;
-            }
-        }
-
-        public void Save(string filename)
-        {
-            try
-            {
-                string dir = Path.GetDirectoryName(filename);
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
-
-                using (FileStream stream = new FileStream(filename, FileMode.Create, FileAccess.Write))
-                {
-                    XmlSerializer serializer = new XmlSerializer(typeof(Settings));
-                    serializer.Serialize(stream, this);
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e);
-            }
         }
     }
 }
