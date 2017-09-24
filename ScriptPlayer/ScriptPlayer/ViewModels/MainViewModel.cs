@@ -88,6 +88,18 @@ namespace ScriptPlayer.ViewModels
         private bool _showHeatMap;
         private PositionFilterMode _filterMode = PositionFilterMode.FullRange;
         private double _filterRange = 0.5;
+        private List<Range> _filterRanges;
+
+        public List<Range> FilterRanges
+        {
+            get { return _filterRanges; }
+            set
+            {
+                if (Equals(value, _filterRanges)) return;
+                _filterRanges = value;
+                OnPropertyChanged();
+            }
+        }
 
         public double FilterRange
         {
@@ -96,6 +108,7 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value.Equals(_filterRange)) return;
                 _filterRange = value;
+                UpdateFilter();
                 OnPropertyChanged();
             }
         }
@@ -107,6 +120,7 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _filterMode) return;
                 _filterMode = value;
+                UpdateFilter();
                 OnPropertyChanged();
             }
         }
@@ -308,6 +322,7 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _minPosition) return;
                 _minPosition = value;
+                UpdateFilter();
                 OnPropertyChanged();
             }
         }
@@ -341,8 +356,25 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _maxPosition) return;
                 _maxPosition = value;
+                UpdateFilter();
                 OnPropertyChanged();
             }
+        }
+
+        private void UpdateFilter()
+        {
+            List<Range> newRange = new List<Range>();
+
+            for (double i = 0; i < 10; i += 0.1)
+            {
+                newRange.Add(new Range
+                {
+                    Min = TransformPosition(0, MinPosition, MaxPosition, i) / 99.0,
+                    Max = TransformPosition(255, MinPosition, MaxPosition, i) / 99.0
+                });
+            }
+
+            FilterRanges = newRange;
         }
 
         public double Volume

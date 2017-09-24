@@ -192,6 +192,7 @@
                             </Grid>
                             <Slider Margin="0,4" Minimum="0.1" Maximum="0.9" Value="{Binding FilterRange}" ToolTip="Filter Range"/>
                             <TextBlock Margin="4,0" Text="{Binding FilterRange, StringFormat={}{0:p0}}" HorizontalAlignment="Stretch" TextAlignment="Center"/>
+                            <shared:RangePreview Ranges="{Binding FilterRanges}" HorizontalAlignment="Stretch" Height="80"/>
                         </StackPanel>
                         <Separator/>
                         <StackPanel Margin="4" ToolTip="Minimum and maximum speed of the Launch.">
