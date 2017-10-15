@@ -169,6 +169,8 @@ namespace ScriptPlayer.Shared
 
         protected override void OnRender(DrawingContext drawingContext)
         {
+            bool numbers = Keyboard.IsKeyToggled(Key.NumLock);
+
             #region Background
 
             Rect fullRect = new Rect(new Point(), new Size(ActualWidth, ActualHeight));
@@ -222,22 +224,24 @@ namespace ScriptPlayer.Shared
 
             if (Beats != null)
             {
-                
-
                 List<TimeSpan> absoluteBeatPositions = Beats.GetBeats(timeFrom, timeTo).ToList();
 
-                IEnumerable<double> relativeBeatPositions =
-                    absoluteBeatPositions.Select(b => (b - timeFrom).Divide(timeTo - timeFrom));
-
-                //const double safeSpace = 30;
-                //double y = ActualHeight / 2.0;
-
-                //DrawLine(drawingContext, Colors.Red, new Point(-safeSpace, y),
-                //    new Point(ActualWidth + safeSpace, y));
-
-                foreach (double pos in relativeBeatPositions)
+                if(absoluteBeatPositions.Count > 0)
                 {
-                    DrawLine(drawingContext, LineColor, new Point(pos * ActualWidth, -5), new Point(pos * ActualWidth, ActualHeight + 5), LineWidth);
+                    int startingIndex = Beats.IndexOf(absoluteBeatPositions.First());
+                    int index = startingIndex;
+
+                    List<double> relativeBeatPositions = absoluteBeatPositions.Select(b => (b - timeFrom).Divide(timeTo - timeFrom)).ToList();
+
+                    foreach (double pos in relativeBeatPositions)
+                    {
+                        int loopIndex = index % 8;
+
+                        DrawLine(drawingContext, loopIndex == 0 ? Colors.Red : LineColor, new Point(pos * ActualWidth, -5),
+                            new Point(pos * ActualWidth, ActualHeight + 5), LineWidth);
+
+                        index++;
+                    }
                 }
             }
 

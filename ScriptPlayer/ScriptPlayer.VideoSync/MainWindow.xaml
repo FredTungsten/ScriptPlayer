@@ -5,17 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         xmlns:converters="clr-namespace:ScriptPlayer.Shared.Converters;assembly=ScriptPlayer.Shared"
+        xmlns:converters1="clr-namespace:ScriptPlayer.VideoSync.Converters"
+        xmlns:m="clr-namespace:ScriptPlayer.VideoSync.Extensions"
 
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="ScriptPlayer Video Sync" Height="767" Width="1127" Icon="ScriptPlayerEditorIcon.ico" PreviewKeyDown="Window_PreviewKeyDown">
     <Window.Resources>
         <converters:TimeSpanToSecondsConverter x:Key="TimeSpanConverter"/>
+        <converters1:ParameterToBooleanConverter x:Key="ParameterToBooleanConverter"/>
     </Window.Resources>
     <Grid Name="MainGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="200"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Menu x:Name="menu">
@@ -40,7 +43,8 @@
                 <MenuItem Header="Load">
                     <MenuItem Header="beats.txt" Click="mnuLoad_Click"/>
                     <MenuItem Header="Funscript" Click="mnuLoadFun_Click" />
-                    <MenuItem Header="Convert Vorze" Click="mnuLoadVorze_Click" />
+                    <MenuItem Header="Vorze" Click="mnuLoadVorze_Click" />
+                    <MenuItem Header="OTT" Click="mnuLoadOtt_Click" />
                 </MenuItem>
                 <MenuItem Header="Save As">
                     <MenuItem Header="beats.txt" Click="mnuSaveBeats_Click"/>
@@ -76,21 +80,22 @@
                 <ColumnDefinition Width="200"/>
             </Grid.ColumnDefinitions>
 
-            <Grid Name="videoGrid">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="9*"/>
-                    <RowDefinition Height="5"/>
-                    <RowDefinition Height="32"/>
-                    <RowDefinition Height="50"/>
-                </Grid.RowDefinitions>
+            <HeaderedContentControl Header="Video">
+                <Grid Name="videoGrid">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="9*"/>
+                        <RowDefinition Height="5"/>
+                        <RowDefinition Height="32"/>
+                        <RowDefinition Height="50"/>
+                    </Grid.RowDefinitions>
 
-                <Rectangle Grid.Row="0" Grid.RowSpan="3" Fill="#ff202020"></Rectangle>
-                <shared:VideoPlayer Grid.Row="0" Grid.RowSpan="3" x:Name="videoPlayer" MediaOpened="VideoPlayer_OnMediaOpened" Loaded="videoPlayer_Loaded" VideoMouseDown="videoPlayer_VideoMouseDown" VideoMouseUp="VideoPlayer_OnVideoMouseUp" Margin="0,0,0,40"/>
-                <shared:OverlayText Grid.Row="0" IsHitTestVisible="False" Margin="0,0,0,32" Name="Fadeout"/>
+                    <Rectangle Grid.Row="0" Grid.RowSpan="3" Fill="#ff202020"></Rectangle>
+                    <shared:VideoPlayer Grid.Row="0" Grid.RowSpan="3" x:Name="videoPlayer" MediaOpened="VideoPlayer_OnMediaOpened" Loaded="videoPlayer_Loaded" VideoMouseDown="videoPlayer_VideoMouseDown" VideoMouseUp="VideoPlayer_OnVideoMouseUp" Margin="0,0,0,40"/>
+                    <shared:OverlayText Grid.Row="0" IsHitTestVisible="False" Margin="0,0,0,32" Name="Fadeout"/>
 
-                <GridSplitter shared:HideOnHover.IsActive="True" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    <GridSplitter Name="GridSplitter" shared:HideOnHover.IsActive="True" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
-                <shared:BeatBar2 Grid.Row="2" TimeMouseRightDown="BeatBar_OnTimeMouseRightDown" TimeMouseRightMove="BeatBar_OnTimeMouseRightMove" TimeMouseRightUp="BeatBar_OnTimeMouseRightUp"
+                    <shared:BeatBar2 Grid.Row="2" TimeMouseRightDown="BeatBar_OnTimeMouseRightDown" TimeMouseRightMove="BeatBar_OnTimeMouseRightMove" TimeMouseRightUp="BeatBar_OnTimeMouseRightUp"
                         TimeMouseDown="BeatBar_OnTimeMouseDown" Opacity="1" VerticalAlignment="Stretch" 
                         Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
                         x:Name="BeatBar" Background="Transparent" Beats="{Binding Beats}" 
@@ -98,80 +103,88 @@
                         LineColor="#FF00B9FF" LineWidth="8" 
                         TotalDisplayedDuration="{Binding BeatBarDuration}" Midpoint="{Binding BeatBarCenter}"/>
 
-                <shared:PositionBar Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
+                    <shared:PositionBar Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
                                     Midpoint="{Binding BeatBarCenter}"
                     LineColor="Lime" Background="Black" Height="50" Grid.Row="3" TotalDisplayedDuration="{Binding BeatBarDuration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Positions="{Binding Positions}"/>
-            </Grid>
+                </Grid>
+            </HeaderedContentControl>
 
             <Grid Grid.Column="1" Name="GridSideBar">
-                <TextBlock  HorizontalAlignment="Left" Margin="10,34,0,0" TextWrapping="Wrap" Text="X" VerticalAlignment="Top"/>
-                <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,32,0,0" TextWrapping="Wrap" Text="{Binding SampleX}" VerticalAlignment="Top" Width="162"/>
-                <TextBlock  HorizontalAlignment="Left" Margin="10,62,0,0" TextWrapping="Wrap" Text="Y" VerticalAlignment="Top"/>
-                <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,60,0,0" TextWrapping="Wrap" Text="{Binding SampleY}" VerticalAlignment="Top" Width="162"/>
-                <TextBlock  HorizontalAlignment="Left" Margin="10,90,0,0" TextWrapping="Wrap" Text="W" VerticalAlignment="Top"/>
-                <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,88,0,0" TextWrapping="Wrap" Text="{Binding SampleW}" VerticalAlignment="Top" Width="162"/>
-                <TextBlock  HorizontalAlignment="Left" Margin="10,118,0,0" TextWrapping="Wrap" Text="H" VerticalAlignment="Top"/>
-                <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,116,0,0" TextWrapping="Wrap" Text="{Binding SampleH}" VerticalAlignment="Top" Width="162"/>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                <ListBox Name="lstBookmarks"  ItemsSource="{Binding Bookmarks}" Margin="10,169,10,85" ItemStringFormat="{}{0:hh\:mm\:ss\.fff}">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="{x:Type ListBoxItem}">
-                            <EventSetter Event="MouseDoubleClick" Handler="Bookmark_DoubleClick"></EventSetter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                </ListBox>
-                <Button Content="Add Bookmark"  HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="180" Click="btnAddBookmark_Click"/>
-                <TextBlock  HorizontalAlignment="Left" Margin="31,10,0,0" TextWrapping="Wrap" Text="Sampler Rect" VerticalAlignment="Top" Width="143"/>
-                <Button Content="Reset to Samples"  HorizontalAlignment="Left" Margin="10,144,0,0" VerticalAlignment="Top" Width="180" Click="btnResetSamples_Click"/>
-                <Button Content="Reset Bookmarks"  HorizontalAlignment="Right" Margin="0,0,10,35" VerticalAlignment="Bottom" Width="180" Click="btnResetBookmarks_Click"/>
-                <Button Content="Load from Log"  HorizontalAlignment="Right" Margin="0,0,10,60" VerticalAlignment="Bottom" Width="180" Click="btnLoadBookmarks_Click"/>
+                    <HeaderedContentControl Header="Capture Rect">
+                        <Grid Name="GridSampleRect">
+                            <TextBlock  HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="X" VerticalAlignment="Top"/>
+                            <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,8,0,0" TextWrapping="Wrap" Text="{Binding SampleX}" VerticalAlignment="Top" Width="162"/>
+                            <TextBlock  HorizontalAlignment="Left" Margin="10,38,0,0" TextWrapping="Wrap" Text="Y" VerticalAlignment="Top"/>
+                            <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,36,0,0" TextWrapping="Wrap" Text="{Binding SampleY}" VerticalAlignment="Top" Width="162"/>
+                            <TextBlock  HorizontalAlignment="Left" Margin="10,66,0,0" TextWrapping="Wrap" Text="W" VerticalAlignment="Top"/>
+                            <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,64,0,0" TextWrapping="Wrap" Text="{Binding SampleW}" VerticalAlignment="Top" Width="162"/>
+                            <TextBlock  HorizontalAlignment="Left" Margin="10,94,0,0" TextWrapping="Wrap" Text="H" VerticalAlignment="Top"/>
+                            <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,92,0,0" TextWrapping="Wrap" Text="{Binding SampleH}" VerticalAlignment="Top" Width="162"/>
+                            <Button Content="Reset to Samples"  HorizontalAlignment="Stretch" Margin="10,120,10,10" VerticalAlignment="Top" Click="btnResetSamples_Click"/>
+                        </Grid>
+                    </HeaderedContentControl>
 
+                    <HeaderedContentControl Grid.Row="1" Header="Bookmarks">
+                        <Grid>
+                            <ListBox Name="lstBookmarks"  ItemsSource="{Binding Bookmarks}" Margin="10,10,10,85" ItemStringFormat="{}{0:hh\:mm\:ss\.fff}">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="{x:Type ListBoxItem}">
+                                        <EventSetter Event="MouseDoubleClick" Handler="Bookmark_DoubleClick"></EventSetter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                            <Button Content="Add Bookmark"  HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="180" Click="btnAddBookmark_Click"/>
+                            <Button Content="Reset Bookmarks"  HorizontalAlignment="Right" Margin="0,0,10,35" VerticalAlignment="Bottom" Width="180" Click="btnResetBookmarks_Click"/>
+                            <Button Content="Load from Log"  HorizontalAlignment="Right" Margin="0,0,10,60" VerticalAlignment="Bottom" Width="180" Click="btnLoadBookmarks_Click"/>
+                        </Grid>
+                    </HeaderedContentControl>
+
+                </Grid>
             </Grid>
         </Grid>
 
         <Grid Grid.Row="2">
-
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <shared:TimeLineHeader Height="52" Grid.Row="0" VerticalAlignment="Stretch" Marker="{Binding ElementName=videoPlayer, Path=TimeSource.Progress, Mode=OneWay}">
-                <shared:TimeLineHeader.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Center" Tag="{x:Static shared:MarkerMode.Center}" Click="mnuSetMarkerMode_Click"/>
-                        <MenuItem Header="Out of bounds recenter"  Tag="{x:Static shared:MarkerMode.OutOfBoundsRecenter}" Click="mnuSetMarkerMode_Click"/>
-                        <MenuItem Header="Out of bounds jump" Tag="{x:Static shared:MarkerMode.OutOfBoundsJump}" Click="mnuSetMarkerMode_Click"/>
-                        <MenuItem Header="None" Tag="{x:Static shared:MarkerMode.None}" Click="mnuSetMarkerMode_Click"/>
-                    </ContextMenu>
-                </shared:TimeLineHeader.ContextMenu>
-            </shared:TimeLineHeader>
-
-            <StackPanel Orientation="Horizontal" Grid.Row="1">
-                <TextBlock VerticalAlignment="Center" Text="Beatbar Duration:"/>
-                <Slider VerticalAlignment="Center" Width="250" Minimum="2" Maximum="15" Value="{Binding BeatBarDuration, Mode=TwoWay, Converter={StaticResource TimeSpanConverter}}" 
+            <HeaderedContentControl Header="Beatbar Settings" Grid.Row="1">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="Beatbar Duration:"/>
+                    <Slider VerticalAlignment="Center" Width="250" Minimum="2" Maximum="15" Value="{Binding BeatBarDuration, Mode=TwoWay, Converter={StaticResource TimeSpanConverter}}" 
                         SmallChange="0.01" LargeChange="0.01"/>
-                <TextBlock VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=TotalDisplayedDuration, StringFormat={}{0:f1}}"/>
-                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="Beatbar Midpoint:"/>
-                <Slider VerticalAlignment="Center" Width="250" Minimum="0.1" Maximum="0.9" Value="{Binding BeatBarCenter, Mode=TwoWay}" SmallChange="0.01" LargeChange="0.01"/>
-                <TextBlock VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=Midpoint, StringFormat={}{0:f2}}"/>
-                <CheckBox VerticalAlignment="Center" Name="cckRTL" Checked="CckRTL_OnChecked" Unchecked="CckRTL_OnUnchecked">RTL</CheckBox>
-            </StackPanel>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=TotalDisplayedDuration, StringFormat={}{0:f1}}"/>
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="Beatbar Midpoint:"/>
+                    <Slider VerticalAlignment="Center" Width="250" Minimum="0.1" Maximum="0.9" Value="{Binding BeatBarCenter, Mode=TwoWay}" SmallChange="0.01" LargeChange="0.01"/>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=Midpoint, StringFormat={}{0:f2}}"/>
+                    <CheckBox VerticalAlignment="Center" Name="cckRTL" Checked="CckRTL_OnChecked" Unchecked="CckRTL_OnUnchecked">Right to Left</CheckBox>
+                </StackPanel>
+            </HeaderedContentControl>
 
-            <DockPanel Grid.Row="2" LastChildFill="True">
-                <Button FontFamily="Webdings" Content="4" Click="btnPlay_Click" Width="30"/>
-                <Button FontFamily="Webdings" Content=";" Click="btnPause_Click" Width="30"/>
-                <Button FontFamily="Webdings" Content="9" Width="30" Click="btnPreviousBookmark_Click" Margin="10,0,0,0"/>
-                <Button FontFamily="Webdings" Content="7" Width="30" Click="btnBeatBarDurationBack_Click"/>
-                <Button FontFamily="Webdings" Content="7" Width="30" Click="btnSecondBack_Click"/>
-                <Button FontFamily="Webdings" Content="3" Width="30" Click="btnFrameBack_Click"/>
-                <Button FontFamily="Webdings" Content="4" Width="30" Click="btnFrameForward_Click"/>
-                <Button FontFamily="Webdings" Content="8" Width="30" Click="btnSecondForward_Click"/>
-                <Button FontFamily="Webdings" Content="8" Width="30" Click="btnBeatbarDurationForward_Click"/>
+            <HeaderedContentControl Grid.Row="2" Header="Playback">
+                <DockPanel LastChildFill="True" Height="30">
+                    <Button FontFamily="Webdings" Content="4" Click="btnPlay_Click" Width="30"/>
+                    <Button FontFamily="Webdings" Content=";" Click="btnPause_Click" Width="30"/>
+                    <Button FontFamily="Webdings" Content="9" Width="30" Click="btnPreviousBookmark_Click" Margin="10,0,0,0"/>
+                    <Button FontFamily="Webdings" Content="7" Width="30" Click="btnBeatBarDurationBack_Click"/>
+                    <Button FontFamily="Webdings" Content="7" Width="30" Click="btnSecondBack_Click"/>
+                    <Button FontFamily="Webdings" Content="3" Width="30" Click="btnFrameBack_Click"/>
+                    <Button FontFamily="Webdings" Content="4" Width="30" Click="btnFrameForward_Click"/>
+                    <Button FontFamily="Webdings" Content="8" Width="30" Click="btnSecondForward_Click"/>
+                    <Button FontFamily="Webdings" Content="8" Width="30" Click="btnBeatbarDurationForward_Click"/>
+
+                    <!-- 
                 <Button FontFamily="Webdings" Content=":" Width="30" Click="btnNextBookmark_Click"/>
                 <Button Margin="10,0,0,0" Content="SFB" Width="30" Click="btnStretchFromBegin_Click"/>
                 <Button Content="SFE" Width="30" Click="btnStretchFromEnd_Click"/>
@@ -183,24 +196,74 @@
                 <Button Margin="0,0,0,0" Content="Del" Width="30" Click="btnDelete_Click"/>
                 <Button Margin="0,0,0,0" Content="+" Width="30" Click="btnAdd_Click"/>
                 <Button Margin="0,0,0,0" Content="N" Width="30" Click="btnNormalize_Click"/>
-                <Slider SmallChange="1" LargeChange="1" Minimum="-3" Maximum="3" Value="{Binding SpeedRatioModifier}" HorizontalAlignment="Stretch"/>
-            </DockPanel>
+                -->
 
-            <TextBlock TextAlignment="Right" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left" Width="90" Margin="0,0,8,0">
-                <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0:h\:mm\:ss} / {1:h\:mm\:ss}">
-                        <Binding ElementName="videoPlayer" Path="TimeSource.Progress"/>
-                        <Binding ElementName="videoPlayer" Path="Duration"/>
-                    </MultiBinding>
-                </TextBlock.Text>
-            </TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Resources>
+                            <Style TargetType="RadioButton" BasedOn="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}">
+                                <Setter Property="Width" Value="30"/>
+                                <Setter Property="Height" Value="30"/>
+                            </Style>
+                        </StackPanel.Resources>
+                        <TextBlock Margin="2,0" VerticalAlignment="Center">Playback Speed:</TextBlock>
+                        <RadioButton Content="1/4" IsChecked="{Binding Mode=TwoWay, Path=SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 0.25}}"/>
+                        <RadioButton Content="1/3" IsChecked="{Binding Mode=TwoWay, Path= SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 0.3333}}"/>
+                        <RadioButton Content="1/2" IsChecked="{Binding Mode=TwoWay, Path= SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 0.5}}"/>
+                        <RadioButton Content="1" IsChecked="{Binding Mode=TwoWay, Path= SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 1.0}}"/>
+                        <RadioButton Content="1.5" IsChecked="{Binding Mode=TwoWay, Path= SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 1.5}}"/>
+                        <RadioButton Content="2" IsChecked="{Binding Mode=TwoWay, Path= SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 2.0}}"/>
+                        <RadioButton Content="3" IsChecked="{Binding Mode=TwoWay, Path= SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 3.0}}"/>
+                        <RadioButton Content="4" IsChecked="{Binding Mode=TwoWay, Path= SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 4.0}}"/>
+                    </StackPanel>
+                    <!--<Slider SmallChange="1" LargeChange="1" Minimum="-3" Maximum="3" Value="{Binding SpeedRatioModifier}" HorizontalAlignment="Stretch"/>-->
+                </DockPanel>
+            </HeaderedContentControl>
 
-            <shared:SeekBar Grid.Row="3" Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Margin="95,0,0,0"/>
-            <shared:ColorSampleBar x:Name="colorSampleBar" Grid.Row="4" Samples="150" Sampler="{Binding Sampler}" TimeSource="{Binding ElementName=videoPlayer, Path=TimeSource}" Margin="0,0,80,0"/>
-            <Rectangle Grid.Row="4" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="80" Stroke="Red" StrokeThickness="1" Fill="{Binding Sampler.PixelPreview}"/>
+            <HeaderedContentControl Grid.Row="3" Header="Position">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock TextAlignment="Right"  VerticalAlignment="Center" HorizontalAlignment="Left" Width="90" Margin="0,0,8,0">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0:h\:mm\:ss} / {1:h\:mm\:ss}">
+                                <Binding ElementName="videoPlayer" Path="TimeSource.Progress"/>
+                                <Binding ElementName="videoPlayer" Path="Duration"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                    <shared:SeekBar  Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Margin="95,0,0,0"/>
+
+                    <shared:TimeLineHeader Height="52" Grid.Row="1" VerticalAlignment="Stretch" Marker="{Binding ElementName=videoPlayer, Path=TimeSource.Progress, Mode=OneWay}">
+                        <shared:TimeLineHeader.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Center" Tag="{x:Static shared:MarkerMode.Center}" Click="mnuSetMarkerMode_Click"/>
+                                <MenuItem Header="Out of bounds recenter"  Tag="{x:Static shared:MarkerMode.OutOfBoundsRecenter}" Click="mnuSetMarkerMode_Click"/>
+                                <MenuItem Header="Out of bounds jump" Tag="{x:Static shared:MarkerMode.OutOfBoundsJump}" Click="mnuSetMarkerMode_Click"/>
+                                <MenuItem Header="None" Tag="{x:Static shared:MarkerMode.None}" Click="mnuSetMarkerMode_Click"/>
+                            </ContextMenu>
+                        </shared:TimeLineHeader.ContextMenu>
+                    </shared:TimeLineHeader>
+                </Grid>
+            </HeaderedContentControl>
+            <HeaderedContentControl Header="Color Sampler"  Grid.Row="4">
+                <Grid>
+                    <shared:ColorSampleBar Height="30" x:Name="colorSampleBar" Samples="150" Sampler="{Binding Sampler}" TimeSource="{Binding ElementName=videoPlayer, Path=TimeSource}" Margin="0,0,80,0"/>
+                    <Rectangle VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="80" Stroke="Red" StrokeThickness="1" Fill="{Binding Sampler.PixelPreview}"/>
+                </Grid>
+            </HeaderedContentControl>
+
         </Grid>
     </Grid>
 </Window>
+
+
+
+
+
+
+
 
 
 

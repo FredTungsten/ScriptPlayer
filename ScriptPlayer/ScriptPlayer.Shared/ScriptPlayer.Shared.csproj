@@ -161,6 +161,7 @@
     <Compile Include="SampleAnalyser.cs" />
     <Compile Include="Scripts\BeatsToFunScriptConverter.cs" />
     <Compile Include="Scripts\IniReader.cs" />
+    <Compile Include="Scripts\OneTouchScriptLoader.cs" />
     <Compile Include="Scripts\ScriptActionEventArgs.cs" />
     <Compile Include="Scripts\ScriptFileFormat.cs" />
     <Compile Include="Scripts\ScriptFileFormatCollection.cs" />

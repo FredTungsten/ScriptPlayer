@@ -126,5 +126,10 @@ namespace ScriptPlayer.Shared
         {
             _beats.Sort();
         }
+
+        public int IndexOf(TimeSpan timestamp)
+        {
+            return _beats.IndexOf(timestamp);
+        }
     }
 }

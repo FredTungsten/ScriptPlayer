@@ -18,8 +18,15 @@ namespace ScriptPlayer.Shared
 
         public PositionCollection(IEnumerable<TimedPosition> beats)
         {
-            _positions = new List<TimedPosition>(beats);
-            _positions.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
+            if (beats == null)
+            {
+                _positions = new List<TimedPosition>();
+            }
+            else
+            {
+                _positions = new List<TimedPosition>(beats);
+                _positions.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
+            }
         }
 
         public TimedPosition this[int index]

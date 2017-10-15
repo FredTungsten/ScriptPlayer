@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Script Indexer" Height="77.119" Width="395.975" WindowStyle="ToolWindow">
     <Grid>
-        <TextBox Name="txtPath" Height="23" Margin="10,10,90,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
+        <TextBox Name="txtPath" Height="23" Margin="10,10,90,0" TextWrapping="Wrap" Text="G:\Coding\Git\Repos\Scripts" VerticalAlignment="Top"/>
         <Button Content="Go" Click="btnIndex_Clicked" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="75" Height="23"/>
 
     </Grid>

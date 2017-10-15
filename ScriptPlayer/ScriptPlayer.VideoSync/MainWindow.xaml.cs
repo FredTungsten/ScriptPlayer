@@ -26,7 +26,7 @@ namespace ScriptPlayer.VideoSync
     public partial class MainWindow : Window
     {
         public static readonly DependencyProperty SpeedRatioModifierProperty = DependencyProperty.Register(
-            "SpeedRatioModifier", typeof(int), typeof(MainWindow), new PropertyMetadata(0, OnSpeedRatioModifierPropertyChanged));
+            "SpeedRatioModifier", typeof(double), typeof(MainWindow), new PropertyMetadata(1.0d, OnSpeedRatioModifierPropertyChanged));
 
         private static void OnSpeedRatioModifierPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -35,26 +35,12 @@ namespace ScriptPlayer.VideoSync
 
         private void SpeedRatioModifierChanged()
         {
-            double value = 1;
-            int modifier = SpeedRatioModifier;
-            while (modifier < 0)
-            {
-                value /= 2;
-                modifier++;
-            }
-
-            while (modifier > 0)
-            {
-                value *= 2;
-                modifier--;
-            }
-
-            videoPlayer.SpeedRatio = value;
+            videoPlayer.SpeedRatio = SpeedRatioModifier;
         }
 
-        public int SpeedRatioModifier
+        public double SpeedRatioModifier
         {
-            get { return (int)GetValue(SpeedRatioModifierProperty); }
+            get { return (double)GetValue(SpeedRatioModifierProperty); }
             set { SetValue(SpeedRatioModifierProperty, value); }
         }
 
@@ -453,9 +439,12 @@ namespace ScriptPlayer.VideoSync
             Beats = _originalBeats.Duplicate();
         }
 
-        private double GetDouble(double defaultValue)
+        private double GetDouble(double defaultValue, string title = null)
         {
             DoubleInputDialog dialog = new DoubleInputDialog(defaultValue) { Owner = this };
+            if (!String.IsNullOrWhiteSpace(title))
+                dialog.Title = title;
+
             dialog.Owner = this;
             if (dialog.ShowDialog() != true)
                 return double.NaN;
@@ -723,7 +712,7 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuLoadFun_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog {Filter = "Funscript|*.funscript"};
+            OpenFileDialog dialog = new OpenFileDialog { Filter = "Funscript|*.funscript" };
 
             if (dialog.ShowDialog(this) != true)
                 return;
@@ -835,7 +824,8 @@ namespace ScriptPlayer.VideoSync
                 BeatBarDuration = BeatBar.TotalDisplayedDuration.TotalSeconds,
                 BeatBarMidpoint = BeatBar.Midpoint,
                 Beats = Beats.Select(b => b.Ticks).ToList(),
-                Bookmarks = Bookmarks.Select(b => b.Ticks).ToList()
+                Bookmarks = Bookmarks.Select(b => b.Ticks).ToList(),
+                Positions = Positions.ToList()
             };
             project.Save(filename);
             _projectFile = filename;
@@ -865,6 +855,7 @@ namespace ScriptPlayer.VideoSync
             BeatBarCenter = project.BeatBarMidpoint;
             Beats = new BeatCollection(project.Beats.Select(TimeSpan.FromTicks));
             Bookmarks = project.Bookmarks.Select(TimeSpan.FromTicks).ToList();
+            Positions = new PositionCollection(project.Positions);
 
             _projectFile = dialog.FileName;
         }
@@ -896,7 +887,9 @@ namespace ScriptPlayer.VideoSync
             if (wasPlaying)
                 videoPlayer.TimeSource.Pause();
 
-            double additionalBeats = GetDouble(0);
+            int selectedBeats = GetSelectedBeats().Count;
+
+            double additionalBeats = GetDouble(0, $"{selectedBeats} beats selected");
             if (double.IsNaN(additionalBeats)) return;
 
             bool caps = Keyboard.IsKeyToggled(Key.CapsLock);
@@ -908,10 +901,10 @@ namespace ScriptPlayer.VideoSync
 
         private void Normalize(int additionalBeats, bool trimToBeats = true)
         {
+            List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
+
             TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
             TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
-
-            List<TimeSpan> beatsToEvenOut = Beats.GetBeats(tBegin, tEnd).ToList();
 
             List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
 
@@ -934,6 +927,14 @@ namespace ScriptPlayer.VideoSync
             Fadeout.SetText(intervall.TotalMilliseconds.ToString("f0") + "ms", TimeSpan.FromSeconds(4));
 
             SetAllBeats(otherBeats);
+        }
+
+        private List<TimeSpan> GetSelectedBeats()
+        {
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            return Beats.GetBeats(tBegin, tEnd).ToList();
         }
 
         private void mnuShowBeatDuration_Click(object sender, RoutedEventArgs e)
@@ -966,6 +967,18 @@ namespace ScriptPlayer.VideoSync
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (GridSampleRect.IsKeyboardFocusWithin)
+            {
+                switch (e.Key)
+                {
+                    case Key.Escape:
+                        GridSplitter.Focus();
+                        break;
+                }
+
+                return;
+            }
+
             bool control = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
             bool shift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
             bool caps = Keyboard.IsKeyToggled(Key.CapsLock);
@@ -1026,6 +1039,11 @@ namespace ScriptPlayer.VideoSync
                         Normalize(-1, !caps);
                         break;
                     }
+                case Key.F3:
+                    {
+                        FindShortestBeatLongerThanPrevious();
+                        break;
+                    }
                 case Key.F6:
                     {
                         SnapToClosestBeat();
@@ -1044,20 +1062,20 @@ namespace ScriptPlayer.VideoSync
                         break;
                     }
                 case Key.NumPad1:
-                {
-                    AddPositionNow(0);
-                    break;
-                }
+                    {
+                        AddPositionNow(0);
+                        break;
+                    }
                 case Key.NumPad2:
-                {
-                    AddPositionNow(50);
-                    break;
-                }
+                    {
+                        AddPositionNow(50);
+                        break;
+                    }
                 case Key.NumPad3:
-                {
-                    AddPositionNow(99);
-                    break;
-                }
+                    {
+                        AddPositionNow(99);
+                        break;
+                    }
                 default:
                     handled = false;
                     break;
@@ -1067,10 +1085,36 @@ namespace ScriptPlayer.VideoSync
                 e.Handled = true;
         }
 
+        TimeSpan _previouslyShortest = TimeSpan.MaxValue;
+
+        private void FindShortestBeatLongerThanPrevious()
+        {
+            if (Beats == null) return;
+            if (Beats.Count < 2) return;
+
+            TimeSpan shortest = TimeSpan.MaxValue;
+            TimeSpan position = TimeSpan.Zero;
+
+            for (int i = 0; i < Beats.Count - 1; i++)
+            {
+                TimeSpan duration = Beats[i + 1] - Beats[i];
+                if ((duration <= shortest) && ((duration > _previouslyShortest) ||(_previouslyShortest == TimeSpan.MaxValue)))
+                {
+                    shortest = duration;
+                    position = Beats[i];
+                }
+            }
+
+            _previouslyShortest = shortest;
+
+            videoPlayer.SetPosition(position);
+            Fadeout.SetText(shortest.TotalMilliseconds.ToString("f0") + "ms", TimeSpan.FromSeconds(3));            
+        }
+
         private void AddPositionNow(byte position)
         {
             TimeSpan timeSpan = videoPlayer.GetPosition();
-            if(Positions == null)
+            if (Positions == null)
                 Positions = new PositionCollection();
 
             Positions.Add(new TimedPosition
@@ -1298,7 +1342,7 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuLoadVorze_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog {Filter = "Vorze Script|*.csv"};
+            OpenFileDialog dialog = new OpenFileDialog { Filter = "Vorze Script|*.csv" };
 
             if (dialog.ShowDialog(this) != true)
                 return;
@@ -1316,6 +1360,7 @@ namespace ScriptPlayer.VideoSync
 
             Positions = new PositionCollection(pos);
 
+            /*
             SaveFileDialog dialog2 = new SaveFileDialog
             {
                 Filter = "Funscript|*.funscript|All Files|*.*",
@@ -1335,6 +1380,7 @@ namespace ScriptPlayer.VideoSync
             string content = JsonConvert.SerializeObject(script);
 
             File.WriteAllText(dialog2.FileName, content, new UTF8Encoding(false));
+            */
         }
 
         private void mnuBeatsToPositions_Click(object sender, RoutedEventArgs e)
@@ -1346,6 +1392,25 @@ namespace ScriptPlayer.VideoSync
                 Position = f.Position,
                 TimeStamp = f.TimeStamp
             }));
+        }
+
+        private void mnuLoadOtt_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog { Filter = "One Touch Script|*.ott" };
+
+            if (dialog.ShowDialog(this) != true)
+                return;
+
+            OneTouchScriptLoader loader = new OneTouchScriptLoader();
+            List<FunScriptAction> actions = loader.Load(dialog.FileName).Cast<FunScriptAction>().ToList();
+
+            var pos = actions.Select(s => new TimedPosition
+            {
+                TimeStamp = s.TimeStamp,
+                Position = s.Position
+            });
+
+            Positions = new PositionCollection(pos);
         }
     }
 }

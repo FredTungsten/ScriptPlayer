@@ -3,6 +3,46 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+         <Style TargetType="HeaderedContentControl">
+             <Setter Property="Template">
+                 <Setter.Value>
+                     <ControlTemplate TargetType="HeaderedContentControl">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Padding="2" HorizontalAlignment="Stretch" TextAlignment="Center" Text="{TemplateBinding Header}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Background" Value="CornflowerBlue"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=HeaderedContentControl}, Path=IsKeyboardFocusWithin}" Value="True">
+                                                <Setter Property="Background" Value="Orange"/>
+                                                <Setter Property="Foreground" Value="Black"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <Border Grid.Row="1" BorderThickness="1,0,1,1">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="CornflowerBlue"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=HeaderedContentControl}, Path=IsKeyboardFocusWithin}" Value="True">
+                                                <Setter Property="BorderBrush" Value="Orange"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <ContentControl Content="{TemplateBinding Content}"></ContentControl>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                 </Setter.Value>
+             </Setter>
+         </Style>
     </Application.Resources>
 </Application>

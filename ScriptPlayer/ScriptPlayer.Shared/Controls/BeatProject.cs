@@ -16,6 +16,8 @@ namespace ScriptPlayer.Shared
         public List<long> Beats { get; set; }
         public List<long> Bookmarks { get; set; }
 
+        public List<TimedPosition> Positions { get; set; }
+
         public BeatProject()
         {
             Segments = new List<BeatSegment>();

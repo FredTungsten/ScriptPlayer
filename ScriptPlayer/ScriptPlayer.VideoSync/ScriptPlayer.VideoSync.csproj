@@ -135,6 +135,7 @@
     <Compile Include="AudioTests.xaml.cs">
       <DependentUpon>AudioTests.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\ParameterToBooleanConverter.cs" />
     <Compile Include="Dialogs\ColorPicker.xaml.cs">
       <DependentUpon>ColorPicker.xaml</DependentUpon>
     </Compile>
@@ -156,6 +157,7 @@
     <Compile Include="Dialogs\VisualTrackerDialog.xaml.cs">
       <DependentUpon>VisualTrackerDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Extensions\DoubleMarkup.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Page Include="AudioTests.xaml">
       <SubType>Designer</SubType>
