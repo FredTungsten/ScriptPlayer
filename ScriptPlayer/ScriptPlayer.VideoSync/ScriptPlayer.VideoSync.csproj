@@ -135,6 +135,7 @@
     <Compile Include="AudioTests.xaml.cs">
       <DependentUpon>AudioTests.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\DirectInputControl.cs" />
     <Compile Include="Converters\ParameterToBooleanConverter.cs" />
     <Compile Include="Dialogs\ColorPicker.xaml.cs">
       <DependentUpon>ColorPicker.xaml</DependentUpon>
@@ -153,6 +154,9 @@
     </Compile>
     <Compile Include="Dialogs\MocktestDialog.xaml.cs">
       <DependentUpon>MocktestDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\PatternFillOptionsDialog.xaml.cs">
+      <DependentUpon>PatternFillOptionsDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\VisualTrackerDialog.xaml.cs">
       <DependentUpon>VisualTrackerDialog.xaml</DependentUpon>
@@ -196,6 +200,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\MocktestDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\PatternFillOptionsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

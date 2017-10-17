@@ -1,0 +1,27 @@
+﻿<Window x:Class="ScriptPlayer.VideoSync.Dialogs.PatternFillOptionsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptPlayer.VideoSync.Dialogs"
+        mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="Pattern Fill Options" Height="291.102" Width="300">
+    <Grid>
+        <ItemsControl Margin="10,10,10,35" ItemsSource="{Binding Beats}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Vertical"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type local:IndexedBoolean}">
+                    <CheckBox IsChecked="{Binding Value}" Content="{Binding Caption}" IsEnabled="{Binding CanEdit}"/>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button IsDefault="True" Click="btnOk_Click" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75"/>
+        <Button IsCancel="True" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
+        <Button Content="+" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="21" Click="Button_Click"/>
+        <Button Content="-" HorizontalAlignment="Left" Margin="36,0,0,10" Width="21" Height="20" VerticalAlignment="Bottom" Click="Button_Click_1"/>
+    </Grid>
+</Window>

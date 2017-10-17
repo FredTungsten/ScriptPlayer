@@ -10,13 +10,35 @@ namespace ScriptPlayer.Shared
 {
     public class BeatBar2 : Control
     {
-        public static readonly DependencyProperty Marker1Property = DependencyProperty.Register(
-            "Marker1", typeof(TimeSpan), typeof(BeatBar2), new PropertyMetadata(TimeSpan.MinValue, OnMarkerPropertyChanged));
+        public static readonly DependencyProperty HighlightBeatsProperty = DependencyProperty.Register(
+            "HighlightBeats", typeof(bool), typeof(BeatBar2), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        private static void OnMarkerPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public bool HighlightBeats
         {
-            ((BeatBar2)d).InvalidateVisual();
+            get { return (bool) GetValue(HighlightBeatsProperty); }
+            set { SetValue(HighlightBeatsProperty, value); }
         }
+
+        public static readonly DependencyProperty HighlightIntervalProperty = DependencyProperty.Register(
+            "HighlightInterval", typeof(int), typeof(BeatBar2), new FrameworkPropertyMetadata(4, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public int HighlightInterval
+        {
+            get { return (int) GetValue(HighlightIntervalProperty); }
+            set { SetValue(HighlightIntervalProperty, value); }
+        }
+
+        public static readonly DependencyProperty HighlightOffsetProperty = DependencyProperty.Register(
+            "HighlightOffset", typeof(int), typeof(BeatBar2), new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public int HighlightOffset
+        {
+            get { return (int) GetValue(HighlightOffsetProperty); }
+            set { SetValue(HighlightOffsetProperty, value); }
+        }
+
+        public static readonly DependencyProperty Marker1Property = DependencyProperty.Register(
+            "Marker1", typeof(TimeSpan), typeof(BeatBar2), new FrameworkPropertyMetadata(TimeSpan.MinValue, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public TimeSpan Marker1
         {
@@ -25,7 +47,7 @@ namespace ScriptPlayer.Shared
         }
 
         public static readonly DependencyProperty Marker2Property = DependencyProperty.Register(
-            "Marker2", typeof(TimeSpan), typeof(BeatBar2), new PropertyMetadata(TimeSpan.MinValue, OnMarkerPropertyChanged));
+            "Marker2", typeof(TimeSpan), typeof(BeatBar2), new FrameworkPropertyMetadata(TimeSpan.MinValue, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public TimeSpan Marker2
         {
@@ -46,6 +68,15 @@ namespace ScriptPlayer.Shared
         {
             get { return (Color) GetValue(LineColorProperty); }
             set { SetValue(LineColorProperty, value); }
+        }
+
+        public static readonly DependencyProperty HighlightColorProperty = DependencyProperty.Register(
+            "HighlightColor", typeof(Color), typeof(BeatBar2), new PropertyMetadata(Colors.Cyan, OnVisualPropertyChanged));
+
+        public Color HighlightColor
+        {
+            get { return (Color) GetValue(HighlightColorProperty); }
+            set { SetValue(HighlightColorProperty, value); }
         }
 
         public static readonly DependencyProperty LineWidthProperty = DependencyProperty.Register(
@@ -94,7 +125,6 @@ namespace ScriptPlayer.Shared
         {
             ((BeatBar2)d).RefreshRightMove();
             ((BeatBar2)d).InvalidateVisual();
-            
         }
 
         public TimeSpan Progress
@@ -148,7 +178,6 @@ namespace ScriptPlayer.Shared
         {
             if(_rightdown)
                 OnTimeMouseRightMove(TimeFromX(_lastMousePosition));
-            
         }
 
         private TimeSpan TimeFromX(double x)
@@ -231,13 +260,22 @@ namespace ScriptPlayer.Shared
                     int startingIndex = Beats.IndexOf(absoluteBeatPositions.First());
                     int index = startingIndex;
 
-                    List<double> relativeBeatPositions = absoluteBeatPositions.Select(b => (b - timeFrom).Divide(timeTo - timeFrom)).ToList();
-
-                    foreach (double pos in relativeBeatPositions)
+                    foreach (TimeSpan timePos in absoluteBeatPositions)
                     {
-                        int loopIndex = index % 8;
+                        double pos = (timePos - timeFrom).Divide(timeTo - timeFrom);
+                        bool isSelected = IsInSelectedRange(timePos);
+                        int loopIndex = (index + HighlightOffset) % HighlightInterval;
 
-                        DrawLine(drawingContext, loopIndex == 0 ? Colors.Red : LineColor, new Point(pos * ActualWidth, -5),
+                        Color outerColor = LineColor;
+
+                        if (HighlightBeats && loopIndex == 0)
+                        {
+                            outerColor = HighlightColor;
+                        }
+
+                        Color innerColor = isSelected ? Colors.Blue : Colors.White;
+
+                        DrawLine(drawingContext, outerColor, innerColor, new Point(pos * ActualWidth, -5),
                             new Point(pos * ActualWidth, ActualHeight + 5), LineWidth);
 
                         index++;
@@ -250,6 +288,17 @@ namespace ScriptPlayer.Shared
             drawingContext.Pop();
         }
 
+        private bool IsInSelectedRange(TimeSpan timePos)
+        {
+            if (Marker1 == TimeSpan.MinValue || Marker2 == TimeSpan.MinValue)
+                return false;
+            
+            TimeSpan earlier = Marker1 < Marker2 ? Marker1 : Marker2;
+            TimeSpan later = Marker1 > Marker2 ? Marker1 : Marker2;
+
+            return timePos >= earlier && timePos <= later;
+        }
+
         private bool IsTimeVisible(TimeSpan time)
         {
             if (time < Progress - TotalDisplayedDuration.Multiply(Midpoint))
@@ -260,10 +309,10 @@ namespace ScriptPlayer.Shared
             return true;
         }
 
-        private void DrawLine(DrawingContext drawingContext, Color primary, Point pFrom, Point pTo, double lineWidth = 4)
+        private void DrawLine(DrawingContext drawingContext, Color outer, Color inner, Point pFrom, Point pTo, double lineWidth = 4)
         {
-            drawingContext.DrawLine(new Pen(new SolidColorBrush(primary) { Opacity = 0.5 }, lineWidth) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
-            drawingContext.DrawLine(new Pen(new SolidColorBrush(Colors.White) { Opacity = 1.0 }, 2) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
+            drawingContext.DrawLine(new Pen(new SolidColorBrush(outer) { Opacity = 0.5 }, lineWidth) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
+            drawingContext.DrawLine(new Pen(new SolidColorBrush(inner) { Opacity = 1.0 }, 2) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
         }
 
         protected virtual void OnTimeMouseDown(TimeSpan e)

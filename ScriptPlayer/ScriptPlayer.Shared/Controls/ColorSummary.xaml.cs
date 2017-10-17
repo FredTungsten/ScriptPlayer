@@ -20,15 +20,15 @@ namespace ScriptPlayer.Shared
         private void UpdateColors()
         {
             rectColor.Fill = new SolidColorBrush(Color);
-            txtR.Text = Color.R.ToString("D");
-            txtG.Text = Color.G.ToString("D");
-            txtB.Text = Color.B.ToString("D");
+            txtR.Text = "R: " + Color.R.ToString("D");
+            txtG.Text = "G: " + Color.G.ToString("D");
+            txtB.Text = "B: " + Color.B.ToString("D");
 
             var hsl = HslConversion.FromRgb(Color.R, Color.G, Color.B);
 
-            txtH.Text = hsl.Item1.ToString("f0");
-            txtS.Text = hsl.Item2.ToString("f0");
-            txtL.Text = hsl.Item3.ToString("f0");
+            txtH.Text = "H: " + hsl.Item1.ToString("f0");
+            txtS.Text = "S: " + hsl.Item2.ToString("f0");
+            txtL.Text = "L: " + hsl.Item3.ToString("f0");
         }
 
         public Color Color

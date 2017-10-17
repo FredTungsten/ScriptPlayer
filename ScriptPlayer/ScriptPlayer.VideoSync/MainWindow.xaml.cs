@@ -929,6 +929,150 @@ namespace ScriptPlayer.VideoSync
             SetAllBeats(otherBeats);
         }
 
+        private void PatternFill()
+        {
+            PatternFillOptionsDialog dialog = new PatternFillOptionsDialog(_previousPattern){ Owner = this};
+            if (dialog.ShowDialog() != true) return;
+
+            _previousPattern = dialog.Result;
+            PatternFill(_previousPattern);
+        }
+
+        private void Fade()
+        {
+            List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
+
+            if (beatsToEvenOut.Count < 4)
+                return;
+
+            TimeSpan first = beatsToEvenOut[1] - beatsToEvenOut[0];
+            TimeSpan last = beatsToEvenOut[beatsToEvenOut.Count - 1] - beatsToEvenOut[beatsToEvenOut.Count - 2];
+
+            Fade(first, last);
+        }
+
+        private void Fade(TimeSpan firstLength, TimeSpan lastLength)
+        {
+            List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+
+            if (beatsToEvenOut.Count < 2)
+                return;
+
+            TimeSpan first = beatsToEvenOut.Min();
+            TimeSpan last = beatsToEvenOut.Max();
+
+            var iterations = FindBestIterations(firstLength, lastLength, last-first);
+
+            for (int i = 0; i <= iterations.Item3; i++)
+            {
+                otherBeats.Add(first + iterations.Item1.Multiply(i) + iterations.Item2.Multiply(i*(i-1)/2));
+            }
+
+            Fadeout.SetText("n = " + iterations.Item3, TimeSpan.FromSeconds(4));
+
+            SetAllBeats(otherBeats);
+        }
+
+        private Tuple<TimeSpan,TimeSpan,int> FindBestIterations(TimeSpan firstLength, TimeSpan lastLength, TimeSpan duration)
+        {
+            bool invert = firstLength > lastLength;
+
+            if (invert)
+            {
+                TimeSpan temp = firstLength;
+                firstLength = lastLength;
+                lastLength = temp;
+            }
+
+            int lowest = (int)Math.Floor(duration.Divide(lastLength));
+            int highest = (int)Math.Ceiling(duration.Divide(firstLength));
+
+            double ticksFirst = firstLength.Ticks;
+            double ticksLast = lastLength.Ticks;
+            double ticksDuration = duration.Ticks;
+
+            int bestN = 0;
+            double closestN = double.MaxValue;
+
+            for (int n = lowest; n <= highest; n++)
+            {
+                double ticksIncrement = (ticksLast - ticksFirst) / n;
+                double totalDuration = (((n + 1.0) * n) / 2.0) * ticksIncrement + ticksFirst * (n + 1);
+
+                double distanceToTarget = Math.Abs(ticksDuration - totalDuration);
+                if (distanceToTarget < closestN)
+                {
+                    closestN = distanceToTarget;
+                    bestN = n;
+                }
+            }
+
+            long finalTicksIncrement = (long)(ticksLast - ticksFirst) / bestN;
+            long totalIncrements = ((bestN * (1 + bestN)) / 2) * finalTicksIncrement;
+            long firstTickLength = (long)(ticksDuration - totalIncrements) / (bestN-1);
+
+            if (invert)
+            {
+                return new Tuple<TimeSpan, TimeSpan, int>(
+                    TimeSpan.FromTicks(firstTickLength + bestN * finalTicksIncrement),
+                    TimeSpan.FromTicks(-finalTicksIncrement),
+                    bestN);
+            }
+            else
+            {
+                return new Tuple<TimeSpan, TimeSpan, int>(
+                    TimeSpan.FromTicks(firstTickLength),
+                    TimeSpan.FromTicks(finalTicksIncrement),
+                    bestN);
+            }
+        }
+
+        private void PatternFill(bool[] pattern)
+        {
+            List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+
+            if (beatsToEvenOut.Count < 2)
+                return;
+
+            TimeSpan first = beatsToEvenOut.Min();
+            TimeSpan last = beatsToEvenOut.Max();
+
+            int numberOfBeats = beatsToEvenOut.Count;
+            if (numberOfBeats < 2)
+                numberOfBeats = 2;
+
+            TimeSpan tStart = first;
+            TimeSpan intervall = (last - first).Divide(numberOfBeats - 1);
+            TimeSpan smallIntervall = intervall.Divide(pattern.Length - 1);
+
+            for (int i = 0; i < numberOfBeats; i++)
+            {
+                otherBeats.Add(tStart + intervall.Multiply(i));
+                if (i + 1 < numberOfBeats)
+                {
+                    for (int j = 1; j < pattern.Length - 1; j++)
+                    {
+                        if(pattern[j])
+                            otherBeats.Add(tStart + intervall.Multiply(i) + smallIntervall.Multiply(j));
+                    }
+                }
+            }
+
+            Fadeout.SetText(smallIntervall.TotalMilliseconds.ToString("f0") + "ms", TimeSpan.FromSeconds(4));
+
+            SetAllBeats(otherBeats);
+        }
+
         private List<TimeSpan> GetSelectedBeats()
         {
             TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
@@ -986,6 +1130,16 @@ namespace ScriptPlayer.VideoSync
             bool handled = true;
             switch (e.Key)
             {
+                case Key.Home:
+                    {
+                        GotoSelectionBegin();
+                        break;
+                    }
+                case Key.End:
+                    {
+                        GotoSelectionEnd();
+                        break;
+                    }
                 case Key.PageDown:
                     {
                         GotoNextBookMark();
@@ -1024,6 +1178,16 @@ namespace ScriptPlayer.VideoSync
                         Normalize();
                         break;
                     }
+                case Key.P:
+                {
+                    PatternFill();
+                    break;
+                }
+                case Key.F:
+                {
+                    Fade();
+                    break;
+                }
                 case Key.Delete:
                     {
                         DeleteBeatsWithinMarkers();
@@ -1086,6 +1250,7 @@ namespace ScriptPlayer.VideoSync
         }
 
         TimeSpan _previouslyShortest = TimeSpan.MaxValue;
+        private bool[] _previousPattern;
 
         private void FindShortestBeatLongerThanPrevious()
         {
@@ -1098,7 +1263,7 @@ namespace ScriptPlayer.VideoSync
             for (int i = 0; i < Beats.Count - 1; i++)
             {
                 TimeSpan duration = Beats[i + 1] - Beats[i];
-                if ((duration <= shortest) && ((duration > _previouslyShortest) ||(_previouslyShortest == TimeSpan.MaxValue)))
+                if ((duration <= shortest) && ((duration > _previouslyShortest) || (_previouslyShortest == TimeSpan.MaxValue)))
                 {
                     shortest = duration;
                     position = Beats[i];
@@ -1108,7 +1273,7 @@ namespace ScriptPlayer.VideoSync
             _previouslyShortest = shortest;
 
             videoPlayer.SetPosition(position);
-            Fadeout.SetText(shortest.TotalMilliseconds.ToString("f0") + "ms", TimeSpan.FromSeconds(3));            
+            Fadeout.SetText(shortest.TotalMilliseconds.ToString("f0") + "ms", TimeSpan.FromSeconds(3));
         }
 
         private void AddPositionNow(byte position)
@@ -1411,6 +1576,32 @@ namespace ScriptPlayer.VideoSync
             });
 
             Positions = new PositionCollection(pos);
+        }
+
+        private void btnFirstMarker_Click(object sender, RoutedEventArgs e)
+        {
+            GotoSelectionBegin();
+        }
+
+        private void GotoSelectionBegin()
+        {
+            videoPlayer.SetPosition(_marker1 < _marker2 ? _marker1 : _marker2);
+        }
+
+        private void btnSecondMarker_Click(object sender, RoutedEventArgs e)
+        {
+            GotoSelectionEnd();
+        }
+
+        private void GotoSelectionEnd()
+        {
+            videoPlayer.SetPosition(_marker1 > _marker2 ? _marker1 : _marker2);
+        }
+
+        private void DirectInputControl_OnBeat(object sender, EventArgs e)
+        {
+            Beats.Add(videoPlayer.GetPosition());
+            SetAllBeats(Beats);
         }
     }
 }
