@@ -187,6 +187,7 @@
     <Compile Include="TimeSource\MediaPlayerTimeSource.cs" />
     <Compile Include="TimeSource\ISampleClock.cs" />
     <Compile Include="TimeSource\TimeSource.cs" />
+    <Compile Include="TimeSource\WhirlyTimeSource.cs" />
     <Compile Include="TimeSpanExtensions.cs" />
     <Compile Include="Scripts\ScriptLoader.cs" />
     <Compile Include="VanishingContainer.cs" />

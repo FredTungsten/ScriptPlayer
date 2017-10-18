@@ -876,11 +876,6 @@ namespace ScriptPlayer.VideoSync
                 SaveProjectAs(_projectFile);
         }
 
-        private void btnNormalize_Click(object sender, RoutedEventArgs e)
-        {
-            Normalize();
-        }
-
         private void Normalize()
         {
             bool wasPlaying = videoPlayer.TimeSource.IsPlaying;
@@ -949,6 +944,73 @@ namespace ScriptPlayer.VideoSync
             TimeSpan last = beatsToEvenOut[beatsToEvenOut.Count - 1] - beatsToEvenOut[beatsToEvenOut.Count - 2];
 
             Fade(first, last);
+        }
+
+        private void NormalizePattern()
+        {
+            PatternFillOptionsDialog dialog = new PatternFillOptionsDialog(_previousPattern) { Owner = this };
+            if (dialog.ShowDialog() != true) return;
+
+            _previousPattern = dialog.Result;
+            NormalizePattern(_previousPattern);
+        }
+
+        private void NormalizePattern(bool[] pattern)
+        {
+            List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+
+            int numberOfBeats = beatsToEvenOut.Count;
+            if (numberOfBeats < 2)
+                return;
+
+            TimeSpan first = beatsToEvenOut.Min();
+            TimeSpan last = beatsToEvenOut.Max();
+
+            int beatsInSet = 0;
+            for(int i = 0; i < pattern.Length-1; i++)
+                if (pattern[i])
+                    beatsInSet++;
+
+            int fullSets = numberOfBeats / beatsInSet;
+            int beatsInOpenSet = numberOfBeats % beatsInSet;
+
+            if (beatsInOpenSet == 0)
+            {
+                beatsInOpenSet = beatsInSet;
+                fullSets--;
+            }
+
+            int openSetLength = 0;
+
+            for (int i = 0; i < numberOfBeats; i++)
+            {
+                if (beatsInOpenSet == 0)
+                    break;
+
+                openSetLength++;
+
+                if (pattern[i])
+                    beatsInOpenSet--;
+            }
+
+            int measureCount = openSetLength + (pattern.Length - 1) * fullSets;
+
+            TimeSpan beatDuration = (last - first).Divide(measureCount - 1);
+
+            for (int i = 0; i < measureCount; i++)
+            {
+                if(pattern[i % (pattern.Length-1)])
+                otherBeats.Add(first + beatDuration.Multiply(i));
+            }
+
+            Fadeout.SetText(beatDuration.TotalMilliseconds.ToString("f0") + "ms", TimeSpan.FromSeconds(4));
+
+            SetAllBeats(otherBeats);
         }
 
         private void Fade(TimeSpan firstLength, TimeSpan lastLength)
@@ -1178,6 +1240,11 @@ namespace ScriptPlayer.VideoSync
                         Normalize();
                         break;
                     }
+                case Key.O:
+                {
+                    NormalizePattern();
+                    break;
+                }
                 case Key.P:
                 {
                     PatternFill();

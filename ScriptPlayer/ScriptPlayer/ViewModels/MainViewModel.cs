@@ -194,8 +194,13 @@ namespace ScriptPlayer.ViewModels
 
             if (BlindMode)
             {
-                TimeSource = new ManualTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                TimeSource = new WhirlygigTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
                     TimeSpan.FromMilliseconds(10)));
+
+                ((WhirlygigTimeSource)TimeSource).FileOpened += OnFileOpened;
+
+                //TimeSource = new ManualTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                //    TimeSpan.FromMilliseconds(10)));
                 RefreshManualDuration();
             }
             else
@@ -204,10 +209,18 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        private void OnFileOpened(object sender, string filename)
+        {
+            TryFindMatchingScript(filename, false);
+        }
+
         private void RefreshManualDuration()
         {
             if (TimeSource is ManualTimeSource source)
                 source.SetDuration(_scriptHandler.GetDuration().Add(TimeSpan.FromSeconds(5)));
+
+            if (TimeSource is WhirlygigTimeSource whirly)
+                whirly.SetDuration(_scriptHandler.GetDuration().Add(TimeSpan.FromSeconds(5)));
         }
 
         private void TimeSourceChanged()
@@ -723,7 +736,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void TryFindMatchingScript(string filename)
+        private void TryFindMatchingScript(string filename, bool ask = true)
         {
             if (VideoAndScriptNamesMatch())
                 return;
@@ -732,9 +745,12 @@ namespace ScriptPlayer.ViewModels
             if (!string.IsNullOrWhiteSpace(scriptFile))
             {
                 string nameOnly = Path.GetFileName(scriptFile);
-                if (OnRequestMessageBox($"Do you want to also load '{nameOnly}'?", "Also load Script?",
-                        MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-                    LoadScript(scriptFile, false);
+                if(ask)
+                    if (OnRequestMessageBox($"Do you want to also load '{nameOnly}'?", "Also load Script?",
+                            MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                        return;
+
+                LoadScript(scriptFile, false);
             }
         }
 
