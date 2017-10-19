@@ -83,7 +83,7 @@ namespace ScriptPlayer.ViewModels
         private byte _minSpeed = 20;
         private byte _maxSpeed = 95;
         private Hook _hook;
-        private bool _blindMode;
+        private PlaybackMode _playbackMode;
         private TimeSource _timeSource;
         private bool _showHeatMap;
         private PositionFilterMode _filterMode = PositionFilterMode.FullRange;
@@ -188,30 +188,69 @@ namespace ScriptPlayer.ViewModels
             return Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\Settings.xml");
         }
 
-        private void BlindModeChanged()
+        private void PlaybackModeChanged()
+        {
+            DisposeTimeSource();
+
+            switch (PlaybackMode)
+            {
+                case PlaybackMode.Local:
+                    {
+                        TimeSource = VideoPlayer.TimeSource;
+                        break;
+                    }
+                case PlaybackMode.Blind:
+                    {
+                        TimeSource = new ManualTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                            TimeSpan.FromMilliseconds(10)));
+
+                        RefreshManualDuration();
+                        break;
+                    }
+                case PlaybackMode.Whirligig:
+                    {
+                        TimeSource = new WhirligigTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                            TimeSpan.FromMilliseconds(10)));
+
+                        ((WhirligigTimeSource)TimeSource).FileOpened += OnFileOpened;
+
+                        RefreshManualDuration();
+                        break;
+                    }
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private void DisposeTimeSource()
         {
             TimeSource?.Pause();
 
-            if (BlindMode)
-            {
-                TimeSource = new WhirlygigTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                    TimeSpan.FromMilliseconds(10)));
-
-                ((WhirlygigTimeSource)TimeSource).FileOpened += OnFileOpened;
-
-                //TimeSource = new ManualTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                //    TimeSpan.FromMilliseconds(10)));
-                RefreshManualDuration();
-            }
-            else
-            {
-                TimeSource = VideoPlayer.TimeSource;
-            }
+            if (TimeSource is IDisposable)
+                ((IDisposable)TimeSource).Dispose();
         }
 
         private void OnFileOpened(object sender, string filename)
         {
-            TryFindMatchingScript(filename, false);
+            SilentlyFindMatchingScript(filename);
+        }
+
+        private void SilentlyFindMatchingScript(string filename)
+        {
+            if (VideoAndScriptNamesMatch())
+            {
+                OnRequestOverlay("Matching script alreadly loaded", TimeSpan.FromSeconds(6));
+                return;
+            }
+
+            string scriptFile = FindFile(filename, ScriptLoaderManager.GetSupportedExtensions());
+            if (string.IsNullOrWhiteSpace(scriptFile))
+            {
+                OnRequestOverlay($"No script for '{Path.GetFileName(filename)}' found!", TimeSpan.FromSeconds(6));
+                return;
+            }
+            
+            LoadScript(scriptFile, false);
         }
 
         private void RefreshManualDuration()
@@ -219,8 +258,8 @@ namespace ScriptPlayer.ViewModels
             if (TimeSource is ManualTimeSource source)
                 source.SetDuration(_scriptHandler.GetDuration().Add(TimeSpan.FromSeconds(5)));
 
-            if (TimeSource is WhirlygigTimeSource whirly)
-                whirly.SetDuration(_scriptHandler.GetDuration().Add(TimeSpan.FromSeconds(5)));
+            if (TimeSource is WhirligigTimeSource whirli)
+                whirli.SetDuration(_scriptHandler.GetDuration().Add(TimeSpan.FromSeconds(5)));
         }
 
         private void TimeSourceChanged()
@@ -259,16 +298,42 @@ namespace ScriptPlayer.ViewModels
                     TogglePlayback();
                     break;
                 case Keys.MediaNextTrack:
-                    if (BlindMode)
-                        TimeSource.SetPosition(TimeSource.Progress + TimeSpan.FromMilliseconds(50));
-                    else
-                        PlayNextPlaylistEntry();
+                    switch (PlaybackMode)
+                    {
+                        case PlaybackMode.Local:
+                        {
+                            PlayNextPlaylistEntry();
+                            break;
+                        }
+                        case PlaybackMode.Blind:
+                        {
+                            TimeSource.SetPosition(TimeSource.Progress + TimeSpan.FromMilliseconds(50));
+                            break;
+                        }
+                        case PlaybackMode.Whirligig:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
                     break;
                 case Keys.MediaPreviousTrack:
-                    if (BlindMode)
-                        TimeSource.SetPosition(TimeSource.Progress - TimeSpan.FromMilliseconds(50));
-                    else
-                        PlayPreviousPlaylistEntry();
+                    switch (PlaybackMode)
+                    {
+                        case PlaybackMode.Local:
+                        {
+                            PlayPreviousPlaylistEntry();
+                                break;
+                        }
+                        case PlaybackMode.Blind:
+                        {
+                            TimeSource.SetPosition(TimeSource.Progress - TimeSpan.FromMilliseconds(50));
+                            break;
+                        }
+                        case PlaybackMode.Whirligig:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
                     break;
                 case Keys.MediaStop:
                     Pause();
@@ -448,14 +513,14 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public bool BlindMode
+        public PlaybackMode PlaybackMode
         {
-            get => _blindMode;
+            get => _playbackMode;
             set
             {
-                if (value == _blindMode) return;
-                _blindMode = value;
-                BlindModeChanged();
+                if (value == _playbackMode) return;
+                _playbackMode = value;
+                PlaybackModeChanged();
                 OnPropertyChanged();
             }
         }
@@ -613,6 +678,8 @@ namespace ScriptPlayer.ViewModels
             _videoPlayer?.Dispose();
             _launch?.Close();
 
+            DisposeTimeSource();
+
             try
             {
                 _connector?.Disconnect();
@@ -685,7 +752,7 @@ namespace ScriptPlayer.ViewModels
 
             _openVideo = filename;
 
-            if (!BlindMode)
+            if (PlaybackMode == PlaybackMode.Local)
                 VideoPlayer.Open(filename);
 
             Title = Path.GetFileNameWithoutExtension(filename);
@@ -711,7 +778,7 @@ namespace ScriptPlayer.ViewModels
 
         private bool EntryLoaded()
         {
-            if (BlindMode)
+            if (PlaybackMode != PlaybackMode.Local)
                 return !string.IsNullOrWhiteSpace(_openedScript);
 
             return !string.IsNullOrWhiteSpace(_openVideo);
@@ -736,7 +803,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void TryFindMatchingScript(string filename, bool ask = true)
+        private void TryFindMatchingScript(string filename)
         {
             if (VideoAndScriptNamesMatch())
                 return;
@@ -745,7 +812,6 @@ namespace ScriptPlayer.ViewModels
             if (!string.IsNullOrWhiteSpace(scriptFile))
             {
                 string nameOnly = Path.GetFileName(scriptFile);
-                if(ask)
                     if (OnRequestMessageBox($"Do you want to also load '{nameOnly}'?", "Also load Script?",
                             MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                         return;
@@ -1507,9 +1573,7 @@ namespace ScriptPlayer.ViewModels
                 ScriptLoader[] otherLoaders = ScriptLoaderManager.GetAllLoaders().Except(loaders).ToArray();
                 if (!LoadScript(otherLoaders, file))
                 {
-                    OnRequestMessageBox($"The script file '{file}' could not be loaded!", "Load Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-
+                    OnRequestOverlay($"The script file '{file}' could not be loaded!", TimeSpan.FromSeconds(6));
                     return;
                 }
             }
@@ -1531,9 +1595,7 @@ namespace ScriptPlayer.ViewModels
                 ScriptLoader[] otherLoaders = ScriptLoaderManager.GetAllLoaders().Except(loaders).ToArray();
                 if (!LoadScript(otherLoaders, file))
                 {
-                    OnRequestMessageBox($"The script file '{file}' could not be loaded!", "Load Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-
+                    OnRequestOverlay($"The script file '{file}' could not be loaded!", TimeSpan.FromSeconds(6));
                     return;
                 }
             }
@@ -1643,5 +1705,12 @@ namespace ScriptPlayer.ViewModels
         {
             SaveSettings();
         }
+    }
+
+    public enum PlaybackMode
+    {
+        Local,
+        Blind,
+        Whirligig
     }
 }

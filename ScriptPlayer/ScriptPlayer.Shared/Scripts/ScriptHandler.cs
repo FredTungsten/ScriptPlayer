@@ -177,6 +177,9 @@ namespace ScriptPlayer.Shared.Scripts
             if (_actions == null)
                 return TimeSpan.Zero;
 
+            if (_actions.Count == 0)
+                return TimeSpan.Zero;
+
             return _actions.Max(a => a.TimeStamp);
         }
     }

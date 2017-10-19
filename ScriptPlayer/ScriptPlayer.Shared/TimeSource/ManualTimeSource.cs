@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 namespace ScriptPlayer.Shared
 {
@@ -7,6 +8,7 @@ namespace ScriptPlayer.Shared
         private ISampleClock _clock;
         private TimeSpan _lastProgress;
         private DateTime _lastCheckpoint;
+        private object _clocklock = new object();
 
         public ManualTimeSource(ISampleClock clock)
         {
@@ -29,9 +31,27 @@ namespace ScriptPlayer.Shared
 
         public override void SetPosition(TimeSpan position)
         {
-            _lastCheckpoint = DateTime.Now;
-            _lastProgress = position;
-            Progress = position;
+            //Calculate Expected Position and Compare:
+
+            DateTime now = DateTime.Now;
+            TimeSpan elapsed = now - _lastCheckpoint;
+            TimeSpan expected = _lastProgress + elapsed;
+
+            TimeSpan diff = expected - position;
+
+            //(DateTime.Now.TimeOfDay - position).ToString("hh\\:mm\\:ss\\.fff") + 
+            Debug.WriteLine("Time Offset: " + diff.TotalMilliseconds.ToString("f2") + " ms [" + position.ToString("h\\:mm\\:ss\\.fff") + "]");
+
+            if (Math.Abs(diff.TotalMilliseconds) < 100)
+                return;
+
+            lock (_clocklock)
+            {
+                Debug.WriteLine("Offset too high, adjusting ...");
+                _lastCheckpoint = DateTime.Now;
+                _lastProgress = position;
+                Progress = position;
+            }
         }
 
         public override void Play()
@@ -61,11 +81,14 @@ namespace ScriptPlayer.Shared
         {
             if (IsPlaying)
             {
-                DateTime now = DateTime.Now;
-                TimeSpan elapsed = now - _lastCheckpoint;
-                _lastProgress += elapsed;
-                _lastCheckpoint = now;
-                Progress = _lastProgress;
+                lock (_clocklock)
+                {
+                    DateTime now = DateTime.Now;
+                    TimeSpan elapsed = now - _lastCheckpoint;
+                    _lastProgress += elapsed;
+                    _lastCheckpoint = now;
+                    Progress = _lastProgress;
+                }
             }
             else
             {

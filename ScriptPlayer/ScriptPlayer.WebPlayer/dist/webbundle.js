@@ -3232,9 +3232,9 @@ module.exports = g;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+
 //Run the Webpack task runner to pack it,
 //Compiled Version should be @ dist/webbundle.js
-
 
 Object.defineProperty(exports, "__esModule", { value: true });
 /* Imports */
