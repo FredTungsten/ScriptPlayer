@@ -18,6 +18,15 @@ namespace ScriptPlayer.Shared
 
     public class TimeLineHeader : Control
     {
+        public static readonly DependencyProperty ShowMarkerProperty = DependencyProperty.Register(
+            "ShowMarker", typeof(bool), typeof(TimeLineHeader), new FrameworkPropertyMetadata(default(bool), FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public bool ShowMarker
+        {
+            get { return (bool)GetValue(ShowMarkerProperty); }
+            set { SetValue(ShowMarkerProperty, value); }
+        }
+
         public static readonly DependencyProperty MarkerModeProperty = DependencyProperty.Register(
             "MarkerMode", typeof(MarkerMode), typeof(TimeLineHeader), new PropertyMetadata(MarkerMode.Center, OnMarkerModePropertyChanged));
 
@@ -30,7 +39,7 @@ namespace ScriptPlayer.Shared
 
         public MarkerMode MarkerMode
         {
-            get { return (MarkerMode) GetValue(MarkerModeProperty); }
+            get { return (MarkerMode)GetValue(MarkerModeProperty); }
             set { SetValue(MarkerModeProperty, value); }
         }
 
@@ -76,7 +85,7 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan Marker
         {
-            get { return (TimeSpan) GetValue(MarkerProperty); }
+            get { return (TimeSpan)GetValue(MarkerProperty); }
             set { SetValue(MarkerProperty, value); }
         }
 
@@ -85,14 +94,14 @@ namespace ScriptPlayer.Shared
 
         private static void OnPositionPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            TimeLineHeader header = (TimeLineHeader) d;
+            TimeLineHeader header = (TimeLineHeader)d;
             header.Offset = header.Position - header.ViewPort.Divide(2);
             header.InvalidateVisual();
         }
 
         public TimeSpan Position
         {
-            get { return (TimeSpan) GetValue(PositionProperty); }
+            get { return (TimeSpan)GetValue(PositionProperty); }
             set { SetValue(PositionProperty, value); }
         }
 
@@ -108,7 +117,7 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan ViewPort
         {
-            get { return (TimeSpan) GetValue(ViewPortProperty); }
+            get { return (TimeSpan)GetValue(ViewPortProperty); }
             set { SetValue(ViewPortProperty, value); }
         }
 
@@ -122,14 +131,19 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan Offset
         {
-            get { return (TimeSpan) GetValue(OffsetProperty); }
+            get { return (TimeSpan)GetValue(OffsetProperty); }
             set { SetValue(OffsetProperty, value); }
+        }
+
+        static TimeLineHeader()
+        {
+            BackgroundProperty.OverrideMetadata(typeof(TimeLineHeader), new FrameworkPropertyMetadata(Brushes.Black));
         }
 
         protected override void OnRender(DrawingContext drawingContext)
         {
-            Rect rectAll = new Rect(0,0, ActualWidth, ActualHeight);
-            drawingContext.DrawRectangle(Brushes.Black, null, rectAll);
+            Rect rectAll = new Rect(0, 0, ActualWidth, ActualHeight);
+            drawingContext.DrawRectangle(Background, null, rectAll);
 
             TimeDivision scale = GetTimeScale(ViewPort, ActualWidth);
 
@@ -139,17 +153,21 @@ namespace ScriptPlayer.Shared
 
             Typeface typeface = new Typeface(new FontFamily("Arial"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 
-            double marker = TimeSpanToPosition(Marker);
+            if (ShowMarker)
+            {
 
-            drawingContext.DrawLine(new Pen(Brushes.Red,1), new Point(marker, 0), new Point(marker, ActualHeight));
+                double marker = TimeSpanToPosition(Marker);
+
+                drawingContext.DrawLine(new Pen(Brushes.Red, 1), new Point(marker, 0), new Point(marker, ActualHeight));
+            }
 
             while (currentPosition <= Offset + ViewPort)
             {
                 double x = TimeSpanToPosition(currentPosition);
 
-                drawingContext.DrawLine(new Pen(Brushes.White,1), new Point(x,32),new Point(x,64));
+                drawingContext.DrawLine(new Pen(Brushes.White, 1), new Point(x, 32), new Point(x, 64));
 
-                
+
 
                 FormattedText text = new FormattedText(GetText(currentPosition), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, 10, Brushes.White);
 
@@ -157,7 +175,7 @@ namespace ScriptPlayer.Shared
 
                 for (int i = 1; i < scale.Subdivisions; i++)
                 {
-                    TimeSpan smallTicks = currentPosition + TimeSpanExtensions.Divide((TimeSpan) scale.MajorScale, (double) scale.Subdivisions).Multiply(i);
+                    TimeSpan smallTicks = currentPosition + scale.MajorScale.Divide(scale.Subdivisions).Multiply(i);
                     double x2 = TimeSpanToPosition(smallTicks);
                     drawingContext.DrawLine(new Pen(Brushes.White, 1), new Point(x2, 48), new Point(x2, 64));
                 }
@@ -238,7 +256,7 @@ namespace ScriptPlayer.Shared
 
         private TimeSpan RoundDown(TimeSpan position, TimeSpan scale)
         {
-            int full = (int) position.Divide(scale);
+            int full = (int)position.Divide(scale);
             if (position < TimeSpan.Zero)
                 full--;
 
@@ -264,7 +282,7 @@ namespace ScriptPlayer.Shared
 
         private static TimeSpan RoundUp(TimeSpan minTimeSpan)
         {
-            TimeSpan[] recommendet = 
+            TimeSpan[] recommendet =
             {
                 TimeSpan.FromMilliseconds(100),
                 TimeSpan.FromSeconds(1),
@@ -291,6 +309,8 @@ namespace ScriptPlayer.Shared
                 DecreaseViewPort();
             else
                 IncreaseViewPort();
+
+            e.Handled = true;
         }
 
         private void IncreaseViewPort()

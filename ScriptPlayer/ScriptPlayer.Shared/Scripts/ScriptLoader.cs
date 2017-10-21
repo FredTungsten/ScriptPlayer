@@ -6,7 +6,7 @@ namespace ScriptPlayer.Shared.Scripts
 {
     public abstract class ScriptLoader
     {
-        protected CultureInfo Culture = CultureInfo.InvariantCulture;
+        public static CultureInfo Culture = CultureInfo.InvariantCulture;
 
         public abstract List<ScriptAction> Load(Stream stream);
 

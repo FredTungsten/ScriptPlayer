@@ -29,8 +29,8 @@ namespace ScriptPlayer.Shared
         {
             double delta = Math.Abs(PositionTo - PositionFrom);
 
-            byte actualSpeed2 = SpeedPredictor.Predict2((byte) delta, _timer.Interval);
-            byte actualSpeed = SpeedPredictor.Predict((byte)delta, _timer.Interval);
+            byte actualSpeed2 = SpeedPredictor.PredictSpeed2((byte) delta, _timer.Interval);
+            byte actualSpeed = SpeedPredictor.PredictSpeed((byte)delta, _timer.Interval);
 
             Debug.WriteLine("PredictedSpeed: " + actualSpeed + " / " + actualSpeed2);
 

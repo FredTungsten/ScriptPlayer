@@ -21,6 +21,7 @@ namespace ScriptPlayer.ViewModels
         public bool LogMarkers { get; set; }
         public PositionFilterMode FilterMode { get; set; }
         public double FilterRange { get; set; }
+        public bool ShowScriptPositions { get; set; }
 
         public static Settings FromFile(string filename)
         {

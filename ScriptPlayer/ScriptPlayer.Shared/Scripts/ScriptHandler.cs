@@ -6,6 +6,7 @@ namespace ScriptPlayer.Shared.Scripts
 {
     public class ScriptHandler
     {
+        public event EventHandler<PositionCollection> PositionsChanged;
         private int _lastIndex;
         private TimeSpan _lastTimestamp;
         private List<ScriptAction> _actions;
@@ -49,7 +50,20 @@ namespace ScriptPlayer.Shared.Scripts
                 .OrderBy(a => a.TimeStamp)
                 .Cast<ScriptAction>()
                 .ToList();
+
+            UpdatePositions();
             ResetCache();
+        }
+
+        private void UpdatePositions()
+        {
+            PositionCollection collection = new PositionCollection(_actions.OfType<FunScriptAction>().Select(f => new TimedPosition
+            {
+                Position = f.Position,
+                TimeStamp = f.TimeStamp
+            }));
+
+            OnPositionsChanged(collection);
         }
 
         public ScriptHandler()
@@ -84,6 +98,7 @@ namespace ScriptPlayer.Shared.Scripts
             
             SaveBeatFile();
             ConvertBeatFile();
+            UpdatePositions();
             ResetCache();
         }
 
@@ -181,6 +196,11 @@ namespace ScriptPlayer.Shared.Scripts
                 return TimeSpan.Zero;
 
             return _actions.Max(a => a.TimeStamp);
+        }
+
+        protected virtual void OnPositionsChanged(PositionCollection e)
+        {
+            PositionsChanged?.Invoke(this, e);
         }
     }
 

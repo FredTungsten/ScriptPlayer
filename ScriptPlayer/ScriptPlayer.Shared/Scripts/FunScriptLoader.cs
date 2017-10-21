@@ -27,7 +27,7 @@ namespace ScriptPlayer.Shared.Scripts
         {
             return new List<ScriptFileFormat>
             {
-                new ScriptFileFormat("Fun Script", "funscript")
+                new ScriptFileFormat("Fun Script", "funscript", "json")
             };
         }
     }

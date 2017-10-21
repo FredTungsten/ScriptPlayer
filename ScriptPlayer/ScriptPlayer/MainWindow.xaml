@@ -30,7 +30,8 @@
         <converters:ConversionModeToNameConverter x:Key="ConversionConverter"/>
         <converters1:DistinctValueToBooleanConverter x:Key="BooleanConverter"/>
         <converters1:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
-        <converters:BooleanInverter x:Key="Inverter"></converters:BooleanInverter>
+        <converters:BooleanInverter x:Key="Inverter"/>
+        <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -43,9 +44,9 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Name="GridVideo"  Grid.Row="1"  Grid.ColumnSpan="2">
-            
-            <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true" MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" MouseDoubleClick="VideoPlayer_OnMouseDoubleClick" x:Name="VideoPlayer">
+        <Grid Name="GridVideo"  Grid.Row="1"  Grid.ColumnSpan="2" Background="Black" MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown">
+
+            <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true" x:Name="VideoPlayer" MouseDoubleClick="VideoPlayer_OnMouseDoubleClick">
                 <shared:VideoPlayer.Style>
                     <Style TargetType="{x:Type shared:VideoPlayer}">
                         <Setter Property="Visibility" Value="Hidden"/>
@@ -58,7 +59,7 @@
                 </shared:VideoPlayer.Style>
             </shared:VideoPlayer>
 
-            <Grid Background="Black">
+            <Grid IsHitTestVisible="False">
                 <Grid.Style>
                     <Style TargetType="{x:Type Grid}">
                         <Setter Property="Visibility" Value="Hidden"/>
@@ -72,7 +73,7 @@
                 <TextBlock Text="Blind Mode" Foreground="White" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
 
-            <Grid Background="Black">
+            <Grid IsHitTestVisible="False">
                 <Grid.Style>
                     <Style TargetType="{x:Type Grid}">
                         <Setter Property="Visibility" Value="Hidden"/>
@@ -91,13 +92,25 @@
                                 <Setter Property="Text" Value="Not Connected.&#x0d;&#x0a;Start Whirligig and activate 'Timecode Server'&#x0d;&#x0a; in the settings tab 'General 1'."/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding TimeSource.IsConnected}" Value="true">
-                                        <Setter Property="Text" Value="Connected"/>        
+                                        <Setter Property="Text" Value="Connected"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
                 </StackPanel>
+            </Grid>
+
+            <Grid Visibility="{Binding ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="60" >
+                <Grid.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#00000000" Offset="0"/>
+                        <GradientStop Color="#7F000000" Offset="1"/>
+                        <GradientStop Color="#7F000000" Offset="0.331"/>
+                    </LinearGradientBrush>
+                </Grid.Background>
+                <shared:TimeLineHeader Background="Transparent" ViewPort="{Binding PositionsViewport, Mode=TwoWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Marker="{Binding Path=TimeSource.Progress, Mode=OneWay}"></shared:TimeLineHeader>
+                <shared:PositionBar TotalDisplayedDuration="{Binding PositionsViewport, Mode=OneWay}" IsReadOnly="True" Positions="{Binding Positions}" Progress="{Binding Path=TimeSource.Progress}"/>
             </Grid>
 
             <shared:NotificationList IsHitTestVisible="False" x:Name="Notifications" Margin="10">
@@ -310,6 +323,7 @@
 
                         <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Debug" FontSize="20"/>
                         <CheckBox Margin="4" IsChecked="{Binding ShowHeatMap}">Show Heat Map</CheckBox>
+                        <CheckBox Margin="4" IsChecked="{Binding ShowScriptPositions}">Show Script Positions</CheckBox>
                         <TextBlock Margin="4" Text="Test Patterns"/>
                         <ComboBox ItemsSource="{Binding TestPatterns}" SelectedItem="{Binding SelectedTestPattern}" DisplayMemberPath="Name" Margin="4" />
                         <Button Command="{Binding ExecuteSelectedTestPatternCommand}" Margin="4,0,4,4" Content="Execute Pattern" VerticalAlignment="Top"/>

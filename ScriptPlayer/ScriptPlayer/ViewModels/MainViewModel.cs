@@ -89,6 +89,27 @@ namespace ScriptPlayer.ViewModels
         private PositionFilterMode _filterMode = PositionFilterMode.FullRange;
         private double _filterRange = 0.5;
         private List<Range> _filterRanges;
+        private PositionCollection _positions;
+        private bool _showScriptPositions;
+        private TimeSpan _positionsViewport = TimeSpan.FromSeconds(5);
+
+        public TimeSpan PositionsViewport
+        {
+            get { return _positionsViewport; }
+            set
+            {
+                if (value.Equals(_positionsViewport)) return;
+                _positionsViewport = value;
+
+                if (_positionsViewport > TimeSpan.FromSeconds(20))
+                    _positionsViewport = TimeSpan.FromSeconds(20);
+
+                if (_positionsViewport < TimeSpan.FromSeconds(2))
+                    _positionsViewport = TimeSpan.FromSeconds(2);
+
+                OnPropertyChanged();
+            }
+        }
 
         public List<Range> FilterRanges
         {
@@ -160,6 +181,7 @@ namespace ScriptPlayer.ViewModels
                 LogMarkers = settings.LogMarkers;
                 FilterMode = settings.FilterMode;
                 FilterRange = settings.FilterRange;
+                ShowScriptPositions = settings.ShowScriptPositions;
             }
         }
 
@@ -179,6 +201,7 @@ namespace ScriptPlayer.ViewModels
             settings.CommandDelay = CommandDelay.TotalMilliseconds;
             settings.FilterMode = FilterMode;
             settings.FilterRange = FilterRange;
+            settings.ShowScriptPositions = ShowScriptPositions;
 
             settings.Save(GetSettingsFile());
         }
@@ -339,6 +362,17 @@ namespace ScriptPlayer.ViewModels
                     Pause();
                     TimeSource.SetPosition(TimeSpan.Zero);
                     break;
+            }
+        }
+
+        public PositionCollection Positions
+        {
+            get { return _positions; }
+            set
+            {
+                if (Equals(value, _positions)) return;
+                _positions = value;
+                OnPropertyChanged();
             }
         }
 
@@ -567,6 +601,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (Equals(value, _testPatterns)) return;
                 _testPatterns = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowScriptPositions
+        {
+            get => _showScriptPositions;
+            set
+            {
+                if (value == _showScriptPositions) return;
+                _showScriptPositions = value;
                 OnPropertyChanged();
             }
         }
@@ -885,9 +930,9 @@ namespace ScriptPlayer.ViewModels
                             PositionToTransformed = TransformPosition(transistion.To, 0, 99, DateTime.Now.TimeOfDay.TotalSeconds)
                         };
 
-                        info.SpeedOriginal = SpeedPredictor.Predict2(info.PositionFromOriginal, info.PositionToOriginal,
+                        info.SpeedOriginal = SpeedPredictor.PredictSpeed2(info.PositionFromOriginal, info.PositionToOriginal,
                             transistion.Duration);
-                        info.SpeedTransformed = ClampSpeed(SpeedPredictor.Predict2(info.PositionFromTransformed,
+                        info.SpeedTransformed = ClampSpeed(SpeedPredictor.PredictSpeed2(info.PositionFromTransformed,
                             info.PositionToTransformed, transistion.Duration));
 
                         SetDevices(info, false);
@@ -1039,9 +1084,9 @@ namespace ScriptPlayer.ViewModels
                     PositionToTransformed = TransformPosition(positions[i], 0, 99, DateTime.Now.TimeOfDay.TotalSeconds + delay.TotalSeconds)
                 };
 
-                info.SpeedOriginal = SpeedPredictor.Predict2(info.PositionFromOriginal, info.PositionToOriginal, delay);
+                info.SpeedOriginal = SpeedPredictor.PredictSpeed2(info.PositionFromOriginal, info.PositionToOriginal, delay);
                 info.SpeedTransformed =
-                    ClampSpeed(SpeedPredictor.Predict2(info.PositionFromTransformed, info.PositionToTransformed,
+                    ClampSpeed(SpeedPredictor.PredictSpeed2(info.PositionFromTransformed, info.PositionToTransformed,
                         delay));
 
                 SetDevices(info, false);
@@ -1215,7 +1260,13 @@ namespace ScriptPlayer.ViewModels
             _scriptHandler = new ScriptHandler();
             _scriptHandler.ScriptActionRaised += ScriptHandlerOnScriptActionRaised;
             _scriptHandler.IntermediateScriptActionRaised += ScriptHandlerOnIntermediateScriptActionRaised;
+            _scriptHandler.PositionsChanged += ScriptHandlerOnPositionsChanged;
             _scriptHandler.Delay = TimeSpan.FromMilliseconds(0);
+        }
+
+        private void ScriptHandlerOnPositionsChanged(object sender, PositionCollection positionCollection)
+        {
+            Positions = positionCollection;
         }
 
         private void ScriptHandlerOnIntermediateScriptActionRaised(object sender, IntermediateScriptActionEventArgs eventArgs)
@@ -1236,10 +1287,10 @@ namespace ScriptPlayer.ViewModels
             if (currentPositionTransformed == nextPositionTransformed) return;
 
             byte speedOriginal =
-                SpeedPredictor.Predict(
+                SpeedPredictor.PredictSpeed(
                     (byte)Math.Abs(eventArgs.PreviousAction.Position - eventArgs.NextAction.Position), duration);
             byte speedTransformed =
-                SpeedPredictor.Predict((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed), duration);
+                SpeedPredictor.PredictSpeed((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed), duration);
             speedTransformed = ClampSpeed(speedTransformed * SpeedMultiplier);
 
             //Debug.WriteLine($"{nextPositionTransformed} @ {speedTransformed}");
@@ -1292,10 +1343,10 @@ namespace ScriptPlayer.ViewModels
             {
 
                 byte speedOriginal =
-                    SpeedPredictor.Predict(
+                    SpeedPredictor.PredictSpeed(
                         (byte)Math.Abs(eventArgs.CurrentAction.Position - eventArgs.NextAction.Position), duration);
                 byte speedTransformed =
-                    SpeedPredictor.Predict((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed),
+                    SpeedPredictor.PredictSpeed((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed),
                         duration);
                 speedTransformed = ClampSpeed(speedTransformed * SpeedMultiplier);
 
@@ -1373,7 +1424,7 @@ namespace ScriptPlayer.ViewModels
 
             byte absolute = (byte)(minPosition + range * relative);
 
-            return SpeedPredictor.Clamp(absolute);
+            return SpeedPredictor.ClampValue(absolute);
         }
 
         private void GetRange(ref byte minPosition, ref byte maxPosition, double range, double factor)

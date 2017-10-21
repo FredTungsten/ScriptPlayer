@@ -73,8 +73,20 @@ namespace ScriptPlayer.Shared
             set { SetValue(ProgressProperty, value); }
         }
 
+        public static readonly DependencyProperty IsReadOnlyProperty = DependencyProperty.Register(
+            "IsReadOnly", typeof(bool), typeof(PositionBar), new PropertyMetadata(default(bool)));
+
+        public bool IsReadOnly
+        {
+            get { return (bool) GetValue(IsReadOnlyProperty); }
+            set { SetValue(IsReadOnlyProperty, value); }
+        }
+
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
+            if (IsReadOnly)
+                return;
+
             _mousePos = e.GetPosition(this);
 
             TimeSpan timeFrom = Progress - TotalDisplayedDuration.Multiply(Midpoint);
@@ -109,6 +121,9 @@ namespace ScriptPlayer.Shared
         {
             if (!_down) return;
 
+            if (IsReadOnly)
+                return;
+
             _down = false;
             _mousePos = e.GetPosition(this);
             UpdateSelectedPosition();
@@ -128,6 +143,9 @@ namespace ScriptPlayer.Shared
         {
             if (!_down) return;
 
+            if (IsReadOnly)
+                return;
+
             _mousePos = e.GetPosition(this);
             UpdateSelectedPosition();
             InvalidateVisual();
@@ -135,8 +153,6 @@ namespace ScriptPlayer.Shared
 
         private Point GetPointFromPosition(TimedPosition position)
         {
-            
-
             double x = PositionToX(position.TimeStamp);
             double y = PositionToY(position.Position);
 
@@ -150,7 +166,7 @@ namespace ScriptPlayer.Shared
 
         private double PositionToY(byte position)
         {
-            return ActualHeight * ((99.0 - position) / 99.0);
+            return (ActualHeight - 2 * CircleRadius) * ((99.0 - position) / 99.0) + CircleRadius;
         }
 
         private TimedPosition GetPositionFromPoint(Point point)
@@ -173,8 +189,11 @@ namespace ScriptPlayer.Shared
 
         private byte YToPosition(double y)
         {
-            return (byte)(Math.Min(ActualHeight, Math.Max(0, ActualHeight - y)) / ActualHeight * 99.0);
+            double usableHeight = ActualHeight - 2 * CircleRadius;
+            return (byte)(Math.Min(usableHeight, Math.Max(0, usableHeight - (y - CircleRadius))) / usableHeight * 99.0);
         }
+
+        private static double CircleRadius = 4;
 
         protected override void OnRender(DrawingContext drawingContext)
         {
@@ -217,7 +236,7 @@ namespace ScriptPlayer.Shared
 
                     for (int i = 0; i < beatPoints.Count; i++)
                     {
-                        drawingContext.DrawEllipse(Brushes.Black, redPen, beatPoints[i], 4, 4);
+                        drawingContext.DrawEllipse(Brushes.DarkRed, redPen, beatPoints[i], CircleRadius, CircleRadius);
                     }
                 }
             }

@@ -39,8 +39,7 @@ namespace ScriptPlayer.Shared
 
             TimeSpan diff = expected - position;
 
-            //(DateTime.Now.TimeOfDay - position).ToString("hh\\:mm\\:ss\\.fff") + 
-            Debug.WriteLine("Time Offset: " + diff.TotalMilliseconds.ToString("f2") + " ms [" + position.ToString("h\\:mm\\:ss\\.fff") + "]");
+            //Debug.WriteLine("Time Offset: " + diff.TotalMilliseconds.ToString("f2") + " ms [" + position.ToString("h\\:mm\\:ss\\.fff") + "]");
 
             if (Math.Abs(diff.TotalMilliseconds) < 100)
                 return;
