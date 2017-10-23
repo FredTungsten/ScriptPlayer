@@ -15,11 +15,18 @@ namespace ScriptPlayer.Shared.Scripts
         {
             //RegisterLoader<VorzeScriptLoader>();
             //RegisterLoader<RawScriptLoader>();
+
             RegisterLoader<FunScriptLoader>();
             RegisterLoader<BeatFileLoader>();
             RegisterLoader<VirtualRealPornScriptLoader>();
             RegisterLoader<VorzeScriptToFunscriptLoader>();
-            RegisterLoader<FeelMeScriptLoader>();
+            RegisterLoader<FeelVrScriptLoader>();
+            RegisterLoader<WankzVrScriptLoader>();
+
+            RegisterLoader<FeelMeBruteForceLoader>();
+            RegisterLoader<FeelMeBruteForceJsonLoader>();
+            RegisterLoader<FeelMeLikeBruteForceJsonLoader>();
+            RegisterLoader<FeelMeRegexLoader>();
         }
 
         public static void RegisterLoader<T>() where T : ScriptLoader, new()

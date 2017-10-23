@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer", "ScriptPlayer\ScriptPlayer.csproj", "{9B1B8C89-4AFE-47D4-B834-41673A672DDE}"
 EndProject
@@ -16,6 +16,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer.Indexer", "ScriptPlayer.Indexer\ScriptPlayer.Indexer.csproj", "{A52023B7-FA63-4B66-A54E-8F64D2499CDA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer.DockTest", "ScriptPlayer.DockTest\ScriptPlayer.DockTest.csproj", "{324F45E3-5A1D-497A-BEB0-38954BD728A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer.LoaderTester", "ScriptPlayer.LoaderTester\ScriptPlayer.LoaderTester.csproj", "{06000E2E-5EDA-4842-A38B-A085D38D48D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -261,6 +263,38 @@ Global
 		{324F45E3-5A1D-497A-BEB0-38954BD728A0}.Release|x64.Build.0 = Release|Any CPU
 		{324F45E3-5A1D-497A-BEB0-38954BD728A0}.Release|x86.ActiveCfg = Release|Any CPU
 		{324F45E3-5A1D-497A-BEB0-38954BD728A0}.Release|x86.Build.0 = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug_Ubuntu|ARM.ActiveCfg = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug_Ubuntu|ARM.Build.0 = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug_Ubuntu|x64.ActiveCfg = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug_Ubuntu|x64.Build.0 = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug_Ubuntu|x86.ActiveCfg = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug_Ubuntu|x86.Build.0 = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug|ARM.Build.0 = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug|x64.Build.0 = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Debug|x86.Build.0 = Debug|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release_Ubuntu|ARM.ActiveCfg = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release_Ubuntu|ARM.Build.0 = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release_Ubuntu|x64.ActiveCfg = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release_Ubuntu|x64.Build.0 = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release_Ubuntu|x86.ActiveCfg = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release_Ubuntu|x86.Build.0 = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release|ARM.ActiveCfg = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release|ARM.Build.0 = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release|x64.ActiveCfg = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release|x64.Build.0 = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release|x86.ActiveCfg = Release|Any CPU
+		{06000E2E-5EDA-4842-A38B-A085D38D48D6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

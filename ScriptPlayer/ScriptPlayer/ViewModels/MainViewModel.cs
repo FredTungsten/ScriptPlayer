@@ -966,8 +966,11 @@ namespace ScriptPlayer.ViewModels
                 case PatternSource.Slow:
                     StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(600));
                     break;
+                case PatternSource.Medium:
+                    StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(250));
+                    break;
                 case PatternSource.Fast:
-                    StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(50));
+                    StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(100));
                     break;
                 case PatternSource.ZigZag:
                     var zigzag = new RepeatingPatternGenerator();
@@ -1199,6 +1202,8 @@ namespace ScriptPlayer.ViewModels
                     if (actions.Count == 0)
                         continue;
 
+                    Debug.WriteLine("Script with {0} actions successfully loaded with {1}", actions.Count,
+                        loader.GetType().Name);
                     break;
                 }
                 catch (Exception e)
@@ -1557,13 +1562,17 @@ namespace ScriptPlayer.ViewModels
                 return;
             }
 
-            TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(3);
+            TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(2);
             TimeSpan duration = skipTo - currentPosition;
 
             if (skipTo < currentPosition)
                 return;
 
-            TimeSource.SetPosition(skipTo);
+            if(PlaybackMode == PlaybackMode.Local)
+                VideoPlayer.SoftSeek(skipTo);
+            else
+                TimeSource.SetPosition(skipTo);
+
             ShowPosition($"Skipped {duration.TotalSeconds:f0}s - ");
         }
 

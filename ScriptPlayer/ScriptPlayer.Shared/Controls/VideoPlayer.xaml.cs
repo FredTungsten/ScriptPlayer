@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace ScriptPlayer.Shared
 {
@@ -319,13 +321,72 @@ namespace ScriptPlayer.Shared
 
         public void SetPosition(TimeSpan position)
         {
+            position = ClampTimestamp(position);
+            _player.Position = position;
+        }
+
+        private TimeSpan ClampTimestamp(TimeSpan position)
+        {
             if (position < TimeSpan.Zero)
-                position = TimeSpan.Zero;
+                return TimeSpan.Zero;
 
             if (position > _player.NaturalDuration)
-                position = _player.NaturalDuration.TimeSpan;
+                return _player.NaturalDuration.TimeSpan;
 
-            _player.Position = position;
+            return position;
+        }
+
+        public void SoftSeek(TimeSpan position)
+        {
+            position = ClampTimestamp(position);
+            TimeSpan diff = position - _player.Position;
+
+            if (diff < TimeSpan.FromSeconds(2))
+            {
+                SetPosition(position);
+                return;
+            }
+
+            Transistion(position);
+        }
+
+        private async void Transistion(TimeSpan position)
+        {
+            Storyboard storyboard = new Storyboard();
+
+            DoubleAnimationUsingKeyFrames volumeAnimation = new DoubleAnimationUsingKeyFrames
+            {
+                Duration = new Duration(TimeSpan.FromSeconds(2)),
+                FillBehavior = FillBehavior.Stop,
+                AutoReverse = true
+            };
+            volumeAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromPercent(0.75)));
+
+            DoubleAnimationUsingKeyFrames opacityAnimation = new DoubleAnimationUsingKeyFrames
+            {
+                Duration = new Duration(TimeSpan.FromSeconds(2)),
+                FillBehavior = FillBehavior.Stop,
+                AutoReverse = true
+            };
+            opacityAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromPercent(0.75)));
+
+            storyboard.Children.Add(volumeAnimation);
+            storyboard.Children.Add(opacityAnimation);
+
+            Storyboard.SetTarget(volumeAnimation, this);
+            Storyboard.SetTarget(opacityAnimation, this);
+            Storyboard.SetTargetProperty(volumeAnimation, new PropertyPath(VolumeProperty));
+            Storyboard.SetTargetProperty(opacityAnimation, new PropertyPath(OpacityProperty));
+
+            storyboard.Begin();
+
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            storyboard.Pause();
+
+            SetPosition(position);
+
+            storyboard.Resume();
         }
 
         protected virtual void OnMediaOpened()

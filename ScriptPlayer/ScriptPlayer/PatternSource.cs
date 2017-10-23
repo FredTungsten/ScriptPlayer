@@ -5,6 +5,7 @@ namespace ScriptPlayer
         Video,
         None,
         Slow,
+        Medium,
         Fast,
         Random,
         ZigZag
