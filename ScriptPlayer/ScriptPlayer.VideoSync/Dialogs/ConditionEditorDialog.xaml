@@ -14,13 +14,14 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <RadioButton Grid.Row="0" Content="Average" x:Name="rbAverage" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <RadioButton Grid.Row="0" Content="Majority" x:Name="rbMajority" HorizontalAlignment="Left" Margin="10,30,0,0" VerticalAlignment="Top"/>
+        <RadioButton GroupName="ColorMode" Grid.Row="0" Content="Average" x:Name="rbAverage" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <RadioButton GroupName="ColorMode" Grid.Row="0" Content="Majority" x:Name="rbMajority" HorizontalAlignment="Left" Margin="10,30,0,0" VerticalAlignment="Top"/>
 
-        <Button Grid.Row="2" IsDefault="True" Content="Ok" Height="23" Width="75" Margin="0,0,90,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="btnOk_Click"/>
-        <Button Grid.Row="2" IsCancel="True" Content="Cancel" Height="23" Width="75" Margin="0,0,10,10" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+        <Button Grid.Row="3" IsDefault="True" Content="Ok" Height="23" Width="75" Margin="0,0,90,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="btnOk_Click"/>
+        <Button Grid.Row="3" IsCancel="True" Content="Cancel" Height="23" Width="75" Margin="0,0,10,10" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
 
         <ItemsControl  Grid.Row="1" ItemsSource="{Binding Conditions}" Margin="10">
             <ItemsControl.ItemTemplate>
@@ -66,7 +67,10 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <CheckBox IsChecked="{Binding Reanalyse, Mode=TwoWay}" Content="Re-Analyse Samples" Margin="0,0,170,13" Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="126"/>
+        <CheckBox IsChecked="{Binding Reanalyse, Mode=TwoWay}" Content="Re-Analyse Samples" Margin="0,0,170,13" Grid.Row="3" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="126"/>
+        <RadioButton Name="rbFirst"  GroupName="Method" Content="First Occurence" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <RadioButton Name="rbCenter" GroupName="Method" Content="Center" HorizontalAlignment="Left" Margin="10,30,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <RadioButton Name="rbLast" GroupName="Method" Content="Last Occurence" HorizontalAlignment="Left" Margin="10,50,0,10" Grid.Row="2" VerticalAlignment="Top"/>
     </Grid>
 </Window>
 

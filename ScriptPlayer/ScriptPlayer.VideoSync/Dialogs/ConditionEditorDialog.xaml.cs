@@ -30,6 +30,15 @@ namespace ScriptPlayer.VideoSync
             set { SetValue(ResultProperty, value); }
         }
 
+        public static readonly DependencyProperty Result2Property = DependencyProperty.Register(
+            "Result2", typeof(AnalysisParameters), typeof(ConditionEditorDialog), new PropertyMetadata(default(AnalysisParameters)));
+
+        public AnalysisParameters Result2
+        {
+            get { return (AnalysisParameters) GetValue(Result2Property); }
+            set { SetValue(Result2Property, value); }
+        }
+
         public static readonly DependencyProperty ConditionsProperty = DependencyProperty.Register(
             "Conditions", typeof(List<ConditionViewModel>), typeof(ConditionEditorDialog), new PropertyMetadata(default(List<ConditionViewModel>)));
 
@@ -39,7 +48,7 @@ namespace ScriptPlayer.VideoSync
             set { SetValue(ConditionsProperty, value); }
         }
 
-        public ConditionEditorDialog(PixelColorSampleCondition condition)
+        public ConditionEditorDialog(PixelColorSampleCondition condition, AnalysisParameters parameters)
         {
             Conditions = new List<ConditionViewModel>();
             Conditions.Add(new ConditionViewModel("Red", 0, 255, condition?.Red));
@@ -67,6 +76,24 @@ namespace ScriptPlayer.VideoSync
                 }
             }
 
+            if (parameters != null)
+            {
+                switch (parameters.Method)
+                {
+                    case TimeStampDeterminationMethod.FirstOccurence:
+                        rbFirst.IsChecked = true;
+                        break;
+                    case TimeStampDeterminationMethod.Center:
+                        rbCenter.IsChecked = true;
+                        break;
+                    case TimeStampDeterminationMethod.LastOccurence:
+                        rbLast.IsChecked = true;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
             foreach (var cond in Conditions)
                 cond.PropertyChanged += CondOnPropertyChanged;
         }
@@ -80,7 +107,25 @@ namespace ScriptPlayer.VideoSync
         private void btnOk_Click(object sender, RoutedEventArgs e)
         {
             Result = GetCondition();
+            Result2 = GetParameters();
             DialogResult = true;
+        }
+
+        private AnalysisParameters GetParameters()
+        {
+            AnalysisParameters result = new AnalysisParameters
+            {
+                MaxPositiveSamples = 10
+            };
+
+            if(rbFirst.IsChecked == true)
+                result.Method = TimeStampDeterminationMethod.FirstOccurence;
+            else if (rbCenter.IsChecked == true)
+                result.Method = TimeStampDeterminationMethod.Center;
+            else if(rbLast.IsChecked == true)
+                result.Method = TimeStampDeterminationMethod.LastOccurence;
+
+            return result;
         }
 
         private PixelColorSampleCondition GetCondition()
@@ -108,9 +153,9 @@ namespace ScriptPlayer.VideoSync
             return result;
         }
 
-        protected virtual void OnLiveConditionUpdate(PixelColorSampleCondition e)
+        protected virtual void OnLiveConditionUpdate(PixelColorSampleCondition condition)
         {
-            LiveConditionUpdate?.Invoke(this, e);
+            LiveConditionUpdate?.Invoke(this, condition);
         }
     }
 

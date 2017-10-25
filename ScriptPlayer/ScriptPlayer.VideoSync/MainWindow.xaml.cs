@@ -216,7 +216,9 @@ namespace ScriptPlayer.VideoSync
 
         private FrameCaptureCollection _frameSamples;
         private BeatCollection _originalBeats;
+
         private PixelColorSampleCondition _condition = new PixelColorSampleCondition();
+        private AnalysisParameters _parameters = new AnalysisParameters();
 
         private TimeSpan _stretchFromBegin;
         private TimeSpan _stretchFromEnd;
@@ -425,8 +427,7 @@ namespace ScriptPlayer.VideoSync
                 return;
             }
 
-            AnalysisParameters parameters = new AnalysisParameters() { MaxPositiveSamples = 10 };
-            FrameAnalyserDialog dialog = new FrameAnalyserDialog(_frameSamples, _condition, parameters);
+            FrameAnalyserDialog dialog = new FrameAnalyserDialog(_frameSamples, _condition, _parameters);
 
             if (dialog.ShowDialog() != true) return;
 
@@ -505,16 +506,20 @@ namespace ScriptPlayer.VideoSync
         private void mnuSetCondition_Click(object sender, RoutedEventArgs e)
         {
             var currentCondition = _condition;
-            ConditionEditorDialog dialog = new ConditionEditorDialog(currentCondition);
+            var currentParameters = _parameters;
+            ConditionEditorDialog dialog = new ConditionEditorDialog(currentCondition, currentParameters);
             dialog.LiveConditionUpdate += DialogOnLiveConditionUpdate;
 
             if (dialog.ShowDialog() != true)
             {
                 SetCondition(currentCondition);
+                _parameters = currentParameters;
             }
             else
             {
                 SetCondition(dialog.Result);
+                _parameters = dialog.Result2;
+
                 if (dialog.Reanalyse)
                     AnalyseSamples();
             }
@@ -821,6 +826,7 @@ namespace ScriptPlayer.VideoSync
             {
                 VideoFile = _videoFile,
                 SampleCondition = _condition,
+                AnalysisParameters = _parameters,
                 BeatBarDuration = BeatBar.TotalDisplayedDuration.TotalSeconds,
                 BeatBarMidpoint = BeatBar.Midpoint,
                 Beats = Beats.Select(b => b.Ticks).ToList(),
@@ -851,6 +857,7 @@ namespace ScriptPlayer.VideoSync
             }
 
             SetCondition(project.SampleCondition);
+            _parameters = project.AnalysisParameters;
             BeatBarDuration = TimeSpan.FromSeconds(project.BeatBarDuration);
             BeatBarCenter = project.BeatBarMidpoint;
             Beats = new BeatCollection(project.Beats.Select(TimeSpan.FromTicks));
@@ -944,6 +951,53 @@ namespace ScriptPlayer.VideoSync
             TimeSpan last = beatsToEvenOut[beatsToEvenOut.Count - 1] - beatsToEvenOut[beatsToEvenOut.Count - 2];
 
             Fade(first, last);
+        }
+
+        private void FadeNormalize()
+        {
+            List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+
+            if (beatsToEvenOut.Count < 3)
+                return;
+
+            TimeSpan first = beatsToEvenOut.Min();
+            TimeSpan last = beatsToEvenOut.Max();
+
+            //TODO invert?
+
+            TimeSpan firstSpan = beatsToEvenOut[1] - first;
+            TimeSpan lastSpan = last - beatsToEvenOut[beatsToEvenOut.Count - 2];
+
+            int count = beatsToEvenOut.Count-1;
+            int n = count - 1;
+
+            TimeSpan totalSpan = last - first;
+            TimeSpan totalSpanByBase = firstSpan.Multiply(count);
+            TimeSpan totalSpanByAddition = totalSpan - totalSpanByBase;
+
+            int totalAdditions = (n * (n + 1)) / 2;
+
+            TimeSpan addedSpan = totalSpanByAddition.Divide(totalAdditions);
+
+            otherBeats.Add(first);
+            
+            TimeSpan previous = first;
+           
+            for (int i = 0; i < count; i++)
+            {
+                previous += firstSpan + addedSpan.Multiply(i);
+                //otherBeats.Add(first + firstSpan.Multiply(i) + addedSpan.Multiply(i * (i - 1) / 2));
+                otherBeats.Add(previous);
+            }
+
+            //Fadeout.SetText("n = " + iterations.Item3, TimeSpan.FromSeconds(4));
+
+            SetAllBeats(otherBeats);
         }
 
         private void NormalizePattern()
@@ -1074,9 +1128,14 @@ namespace ScriptPlayer.VideoSync
                 }
             }
 
+            return GetGain(ticksFirst, ticksLast, ticksDuration, bestN, invert);
+        }
+
+        private Tuple<TimeSpan, TimeSpan, int> GetGain(double ticksFirst, double ticksLast, double ticksDuration, int bestN, bool invert)
+        {
             long finalTicksIncrement = (long)(ticksLast - ticksFirst) / bestN;
             long totalIncrements = ((bestN * (1 + bestN)) / 2) * finalTicksIncrement;
-            long firstTickLength = (long)(ticksDuration - totalIncrements) / (bestN-1);
+            long firstTickLength = (long)(ticksDuration - totalIncrements) / (bestN - 1);
 
             if (invert)
             {
@@ -1253,6 +1312,11 @@ namespace ScriptPlayer.VideoSync
                 case Key.F:
                 {
                     Fade();
+                    break;
+                }
+                case Key.T:
+                {
+                    FadeNormalize();
                     break;
                 }
                 case Key.Delete:

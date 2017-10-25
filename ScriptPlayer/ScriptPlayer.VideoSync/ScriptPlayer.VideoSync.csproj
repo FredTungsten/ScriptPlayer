@@ -135,6 +135,7 @@
     <Compile Include="AudioTests.xaml.cs">
       <DependentUpon>AudioTests.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\BeatVisualizer.cs" />
     <Compile Include="Controls\DirectInputControl.cs" />
     <Compile Include="Converters\ParameterToBooleanConverter.cs" />
     <Compile Include="Dialogs\ColorPicker.xaml.cs">

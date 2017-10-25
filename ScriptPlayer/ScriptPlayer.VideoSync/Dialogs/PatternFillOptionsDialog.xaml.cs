@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using ScriptPlayer.VideoSync.Annotations;
 
 namespace ScriptPlayer.VideoSync.Dialogs
@@ -14,23 +16,32 @@ namespace ScriptPlayer.VideoSync.Dialogs
     /// </summary>
     public partial class PatternFillOptionsDialog : Window
     {
+        public static readonly DependencyProperty RecentlyUsedPatternsProperty = DependencyProperty.Register(
+            "RecentlyUsedPatterns", typeof(List<bool[]>), typeof(PatternFillOptionsDialog), new PropertyMetadata(default(List<bool[]>)));
+
+        public List<bool[]> RecentlyUsedPatterns
+        {
+            get { return (List<bool[]>)GetValue(RecentlyUsedPatternsProperty); }
+            set { SetValue(RecentlyUsedPatternsProperty, value); }
+        }
+
         public static readonly DependencyProperty TicksInPatternProperty = DependencyProperty.Register(
             "TicksInPattern", typeof(int), typeof(PatternFillOptionsDialog), new PropertyMetadata(9, PropertyChangedCallback));
 
         private static void PropertyChangedCallback(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
         {
-            ((PatternFillOptionsDialog) dependencyObject).UpdateBeatCount();
+            ((PatternFillOptionsDialog)dependencyObject).UpdateBeatCount();
         }
 
         private void UpdateBeatCount()
         {
-            if(IsInitialized)
+            if (IsInitialized)
                 SetBeatCount(TicksInPattern);
         }
 
         public int TicksInPattern
         {
-            get { return (int) GetValue(TicksInPatternProperty); }
+            get { return (int)GetValue(TicksInPatternProperty); }
             set { SetValue(TicksInPatternProperty, value); }
         }
 
@@ -39,16 +50,18 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         public bool[] Result
         {
-            get { return (bool[]) GetValue(ResultProperty); }
+            get { return (bool[])GetValue(ResultProperty); }
             set { SetValue(ResultProperty, value); }
         }
 
         public static readonly DependencyProperty BeatsProperty = DependencyProperty.Register(
             "Beats", typeof(ObservableCollection<IndexedBoolean>), typeof(PatternFillOptionsDialog), new PropertyMetadata(default(ObservableCollection<IndexedBoolean>)));
 
+        private static List<bool[]> _recentlyUsed = new List<bool[]>();
+
         public ObservableCollection<IndexedBoolean> Beats
         {
-            get { return (ObservableCollection<IndexedBoolean>) GetValue(BeatsProperty); }
+            get { return (ObservableCollection<IndexedBoolean>)GetValue(BeatsProperty); }
             set { SetValue(BeatsProperty, value); }
         }
 
@@ -58,14 +71,21 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
             if (initialValues != null)
             {
-                TicksInPattern = initialValues.Length;
-                SetBeatCount(TicksInPattern);
-                for (int i = 0; i < TicksInPattern; i++)
-                    Beats[i].Value = initialValues[i];
+                SetPattern(initialValues);
             }
+
+            RecentlyUsedPatterns = _recentlyUsed;
 
             Initialized += OnInitialized;
             InitializeComponent();
+        }
+
+        private void SetPattern(bool[] values)
+        {
+            TicksInPattern = values.Length;
+            SetBeatCount(TicksInPattern);
+            for (int i = 0; i < TicksInPattern; i++)
+                Beats[i].Value = values[i];
         }
 
         private void OnInitialized(object sender, EventArgs eventArgs)
@@ -75,14 +95,14 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         private void SetBeatCount(int ticksInPattern)
         {
-            while(Beats.Count > ticksInPattern)
+            while (Beats.Count > ticksInPattern)
                 Beats.RemoveAt(Beats.Count - 1);
 
-            while(Beats.Count < ticksInPattern)
+            while (Beats.Count < ticksInPattern)
                 Beats.Add(new IndexedBoolean
                 {
                     CanEdit = true,
-                    Caption = (Beats.Count + 1).ToString(),
+                    Caption = ((Beats.Count % (ticksInPattern + 1)) + 1).ToString(),
                     Value = true
                 });
 
@@ -102,9 +122,29 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         private void btnOk_Click(object sender, RoutedEventArgs e)
         {
-            ((Button) sender).Focus();
+            ((Button)sender).Focus();
+            ReturnResult();
+        }
+
+        private void ReturnResult()
+        {
             Result = Beats.Select(b => b.Value).ToArray();
+            SavePatternToMRU(Result);
             DialogResult = true;
+        }
+
+        private void SavePatternToMRU(bool[] result)
+        {
+            for (int i = 0; i < _recentlyUsed.Count; i++)
+            {
+                if (_recentlyUsed[i].SequenceEqual(result))
+                {
+                    _recentlyUsed.RemoveAt(i);
+                    break;
+                }
+            }
+
+            _recentlyUsed.Insert(0, result);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -114,8 +154,21 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            if(TicksInPattern > 2)
-            TicksInPattern--;
+            if (TicksInPattern > 2)
+                TicksInPattern--;
+        }
+
+        private void ListItem_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            ReturnResult();
+        }
+
+        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            bool[] selection = ((ListBox) sender).SelectedItem as bool[];
+            if (selection == null) return;
+
+            SetPattern(selection);
         }
     }
 

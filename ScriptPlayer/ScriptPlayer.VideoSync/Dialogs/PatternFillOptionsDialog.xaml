@@ -4,9 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScriptPlayer.VideoSync.Dialogs"
+        xmlns:System="clr-namespace:System;assembly=mscorlib"
+        xmlns:controls="clr-namespace:ScriptPlayer.VideoSync.Controls"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Pattern Fill Options" Height="291.102" Width="300">
+        Title="Pattern Fill Options" Height="374.979" Width="330.22">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
         <ItemsControl Margin="10,10,10,35" ItemsSource="{Binding Beats}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -19,9 +25,24 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <Button IsDefault="True" Click="btnOk_Click" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75"/>
-        <Button IsCancel="True" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
+        <Button IsDefault="True" Click="btnOk_Click" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Grid.Column="1"/>
+        <Button IsCancel="True" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Grid.Column="1"/>
         <Button Content="+" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="21" Click="Button_Click"/>
         <Button Content="-" HorizontalAlignment="Left" Margin="36,0,0,10" Width="21" Height="20" VerticalAlignment="Bottom" Click="Button_Click_1"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Recently used:" VerticalAlignment="Top" RenderTransformOrigin="0.641,0.578" Width="195"/>
+        <ListBox Grid.Column="1" Margin="10,31,10,35" ItemsSource="{Binding RecentlyUsedPatterns}" SelectionChanged="ListBox_SelectionChanged">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="{x:Type ListBoxItem}">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                    <EventSetter Event="MouseDoubleClick" Handler="ListItem_DoubleClick"></EventSetter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <controls:BeatVisualizer Foreground="Magenta" Pattern="{Binding}" HorizontalAlignment="Stretch" Height="30"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 </Window>
