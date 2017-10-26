@@ -27,6 +27,7 @@
         <KeyBinding Key="Down" Command="{Binding VolumeDownCommand}"/>
     </Window.InputBindings>-->
     <Window.Resources>
+        <converters1:TimeLeftConverter x:Key="TimeLeftConverter"/>
         <converters:ConversionModeToNameConverter x:Key="ConversionConverter"/>
         <converters1:DistinctValueToBooleanConverter x:Key="BooleanConverter"/>
         <converters1:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
@@ -188,13 +189,31 @@
             </Button>
             <Button Command="{Binding SkipToNextEventCommand}" ToolTip="Skip close to next event" Content="8"/>
 
-            <TextBlock TextAlignment="Right" DockPanel.Dock="Right" VerticalAlignment="Center" Width="90" Margin="0,0,8,0">
-                <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0:h\:mm\:ss} / {1:h\:mm\:ss}">
-                        <Binding Path="TimeSource.Progress"/>
-                        <Binding Path="TimeSource.Duration"/>
-                    </MultiBinding>
-                </TextBlock.Text>
+            <TextBlock MouseLeftButtonDown="TimeDisplay_OnMouseLeftButtonDown" TextAlignment="Right" DockPanel.Dock="Right" VerticalAlignment="Center" Width="95" Margin="0,0,8,0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Text">
+                            <Setter.Value>
+                                <MultiBinding StringFormat="{}{0:h\:mm\:ss} / {1:h\:mm\:ss}">
+                                    <Binding Path="TimeSource.Progress"/>
+                                    <Binding Path="TimeSource.Duration"/>
+                                </MultiBinding>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ShowTimeLeft}" Value="True">
+                                <Setter Property="Text">
+                                    <Setter.Value>
+                                        <MultiBinding Converter="{StaticResource TimeLeftConverter}">
+                                            <Binding Path="TimeSource.Progress"/>
+                                            <Binding Path="TimeSource.Duration"/>
+                                        </MultiBinding>
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
             </TextBlock>
             <Slider VerticalAlignment="Center" Margin="16,0" Width="50" Value="{Binding Volume, Mode=TwoWay}" Minimum="0" Maximum="100" DockPanel.Dock="Right" Style="{DynamicResource VolumeSliderStyle}"></Slider>
             <Button Command="{Binding Playlist.PlayNextEntryCommand}" CommandParameter="{Binding OpenedScript}" ToolTip="Play next video in playlist" Content=":" DockPanel.Dock="Right" />

@@ -332,5 +332,10 @@ namespace ScriptPlayer
             ScriptDownloadDialog dialog = new ScriptDownloadDialog(){Owner = this};
             dialog.ShowDialog();
         }
+
+        private void TimeDisplay_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            ViewModel.ShowTimeLeft ^= true;
+        }
     }
 }

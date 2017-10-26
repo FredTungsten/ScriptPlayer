@@ -5,6 +5,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
 namespace ScriptPlayer.Shared
 {
@@ -14,12 +16,21 @@ namespace ScriptPlayer.Shared
     /// </summary>
     public partial class VideoPlayer : UserControl, IDisposable
     {
+        public static readonly DependencyProperty FadeOutOpacityProperty = DependencyProperty.Register(
+            "FadeOutOpacity", typeof(double), typeof(VideoPlayer), new PropertyMetadata(0.5));
+
+        public double FadeOutOpacity
+        {
+            get { return (double) GetValue(FadeOutOpacityProperty); }
+            set { SetValue(FadeOutOpacityProperty, value); }
+        }
+
         public static readonly DependencyProperty SpeedRatioProperty = DependencyProperty.Register(
             "SpeedRatio", typeof(double), typeof(VideoPlayer), new PropertyMetadata(1.0, OnSpeedPropertyChanged));
 
         private static void OnSpeedPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VideoPlayer) d).OnSpeedChanged();
+            ((VideoPlayer)d).OnSpeedChanged();
         }
 
         private void OnSpeedChanged()
@@ -29,7 +40,7 @@ namespace ScriptPlayer.Shared
 
         public double SpeedRatio
         {
-            get { return (double) GetValue(SpeedRatioProperty); }
+            get { return (double)GetValue(SpeedRatioProperty); }
             set { SetValue(SpeedRatioProperty, value); }
         }
 
@@ -38,7 +49,7 @@ namespace ScriptPlayer.Shared
 
         private static void OnVolumePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VideoPlayer) d).OnVolumeChanged();
+            ((VideoPlayer)d).OnVolumeChanged();
         }
 
         private void OnVolumeChanged()
@@ -48,7 +59,7 @@ namespace ScriptPlayer.Shared
 
         public double Volume
         {
-            get { return (double) GetValue(VolumeProperty); }
+            get { return (double)GetValue(VolumeProperty); }
             set { SetValue(VolumeProperty, value); }
         }
 
@@ -82,7 +93,7 @@ namespace ScriptPlayer.Shared
             ((VideoPlayer)d).RefreshRect();
         }
 
-        public event EventHandler MediaEnded; 
+        public event EventHandler MediaEnded;
 
         private void RefreshRect()
         {
@@ -179,10 +190,11 @@ namespace ScriptPlayer.Shared
 
         private MediaPlayer _player;
         private bool _down;
-        
+
         private double _scale;
         private Point _offset;
         private bool _sideBySide;
+        private bool _animationCanceled;
 
         public bool SideBySide
         {
@@ -197,8 +209,8 @@ namespace ScriptPlayer.Shared
 
         public VideoPlayer()
         {
-            _mouseHider =  new MouseHider(this);
-            
+            _mouseHider = new MouseHider(this);
+
             InitializeComponent();
             InitializePlayer();
         }
@@ -218,7 +230,7 @@ namespace ScriptPlayer.Shared
 
         private void InitializePlayer()
         {
-            _player = new MediaPlayer {ScrubbingEnabled = true};
+            _player = new MediaPlayer { ScrubbingEnabled = true };
             _player.MediaOpened += PlayerOnMediaOpened;
             _player.MediaEnded += PlayerOnMediaEnded;
 
@@ -242,15 +254,15 @@ namespace ScriptPlayer.Shared
 
             Rect rect = new Rect(0, 0, 1, 1);
 
-            if(SideBySide)
-                rect = new Rect(0,0,0.5,1);
+            if (SideBySide)
+                rect = new Rect(0, 0, 0.5, 1);
 
             VideoBrush = new DrawingBrush(
                 new VideoDrawing
                 {
                     Player = _player,
                     Rect = rect,
-                    
+
                 })
             {
                 Stretch = Stretch.Fill,
@@ -321,6 +333,7 @@ namespace ScriptPlayer.Shared
 
         public void SetPosition(TimeSpan position)
         {
+            CancelAnimations();
             position = ClampTimestamp(position);
             _player.Position = position;
         }
@@ -336,7 +349,7 @@ namespace ScriptPlayer.Shared
             return position;
         }
 
-        public void SoftSeek(TimeSpan position)
+        public async Task SoftSeek(TimeSpan position, bool skipFadeOut = false)
         {
             position = ClampTimestamp(position);
             TimeSpan diff = position - _player.Position;
@@ -347,46 +360,130 @@ namespace ScriptPlayer.Shared
                 return;
             }
 
-            Transistion(position);
+            await Transistion(position, skipFadeOut);
         }
 
-        private async void Transistion(TimeSpan position)
+        private async Task Transistion(TimeSpan position, bool skipFadeOut)
         {
-            Storyboard storyboard = new Storyboard();
+            _animationCanceled = false;
+            TimeSpan fadeOutDuration = TimeSpan.FromSeconds(1);
+            TimeSpan fadeInDuration = TimeSpan.FromSeconds(1);
 
-            DoubleAnimationUsingKeyFrames volumeAnimation = new DoubleAnimationUsingKeyFrames
+            if (!skipFadeOut)
             {
-                Duration = new Duration(TimeSpan.FromSeconds(2)),
-                FillBehavior = FillBehavior.Stop,
-                AutoReverse = true
-            };
-            volumeAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromPercent(0.75)));
+                await FadeOutAndCapture(fadeOutDuration);
+            }
 
-            DoubleAnimationUsingKeyFrames opacityAnimation = new DoubleAnimationUsingKeyFrames
-            {
-                Duration = new Duration(TimeSpan.FromSeconds(2)),
-                FillBehavior = FillBehavior.Stop,
-                AutoReverse = true
-            };
-            opacityAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromPercent(0.75)));
-
-            storyboard.Children.Add(volumeAnimation);
-            storyboard.Children.Add(opacityAnimation);
-
-            Storyboard.SetTarget(volumeAnimation, this);
-            Storyboard.SetTarget(opacityAnimation, this);
-            Storyboard.SetTargetProperty(volumeAnimation, new PropertyPath(VolumeProperty));
-            Storyboard.SetTargetProperty(opacityAnimation, new PropertyPath(OpacityProperty));
-
-            storyboard.Begin();
-
-            await Task.Delay(TimeSpan.FromSeconds(2));
-
-            storyboard.Pause();
-
+            if (_animationCanceled) return;
             SetPosition(position);
+            if (_animationCanceled) return;
+            await FadeInAndRelease(fadeInDuration);
+        }
 
-            storyboard.Resume();
+        private async Task FadeInAndRelease(TimeSpan fadeInDuration)
+        {
+            FadeIn(fadeInDuration);
+            if (_animationCanceled) return;
+            await Task.Delay(fadeInDuration);
+            if (_animationCanceled) return;
+            BackgroundBorder.Background = new SolidColorBrush(Colors.Black);
+        }
+
+        private async Task FadeOutAndCapture(TimeSpan fadeOutDuration)
+        {
+            FadeOut(fadeOutDuration);
+            if (_animationCanceled) return;
+            await Task.Delay(fadeOutDuration);
+            if (_animationCanceled) return;
+            CaptureBackground();
+        }
+
+        private void CaptureBackground()
+        {
+            int w = Resolution.Horizontal;
+            int h = Resolution.Vertical;
+
+            if (w * h > 0)
+            {
+                RenderTargetBitmap bitmap = new RenderTargetBitmap(w, h, 96, 96, PixelFormats.Pbgra32);
+                DrawingVisual visual = new DrawingVisual();
+                using (var dc = visual.RenderOpen())
+                {
+                    dc.DrawRectangle(VideoBrush, null, new Rect(0, 0, w, h));
+                }
+                bitmap.Render(visual);
+
+                BackgroundBorder.Background = new ImageBrush(bitmap);
+            }
+        }
+
+        private void FadeOut(TimeSpan duration)
+        {
+            Storyboard storyboardFadeOut = new Storyboard();
+
+            DoubleAnimation volumeFadeOutAnimation = new DoubleAnimation
+            {
+                Duration = duration,
+                FillBehavior = FillBehavior.HoldEnd,
+                To = 0,
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            DoubleAnimation opacityFadeOutAnimation = new DoubleAnimation
+            {
+                Duration = duration,
+                FillBehavior = FillBehavior.HoldEnd,
+                To = FadeOutOpacity,
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            storyboardFadeOut.Children.Add(volumeFadeOutAnimation);
+            storyboardFadeOut.Children.Add(opacityFadeOutAnimation);
+
+            Storyboard.SetTarget(volumeFadeOutAnimation, this);
+            Storyboard.SetTarget(opacityFadeOutAnimation, Border);
+            Storyboard.SetTargetProperty(volumeFadeOutAnimation, new PropertyPath(VolumeProperty));
+            Storyboard.SetTargetProperty(opacityFadeOutAnimation, new PropertyPath(OpacityProperty));
+
+            storyboardFadeOut.Begin();
+        }
+
+        private void CancelAnimations()
+        {
+            _animationCanceled = true;
+            BeginAnimation(VolumeProperty, null);
+            Border.BeginAnimation(OpacityProperty, null);
+        }
+
+        private void FadeIn(TimeSpan duration)
+        {
+            Storyboard storyboardFadeIn = new Storyboard();
+
+            DoubleAnimation volumeFadeInAnimation = new DoubleAnimation
+            {
+                Duration = duration,
+                FillBehavior = FillBehavior.Stop,
+                From = 0,
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            DoubleAnimation opacityFadeInAnimation = new DoubleAnimation()
+            {
+                Duration = duration,
+                FillBehavior = FillBehavior.Stop,
+                From = 0,
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            storyboardFadeIn.Children.Add(volumeFadeInAnimation);
+            storyboardFadeIn.Children.Add(opacityFadeInAnimation);
+
+            Storyboard.SetTarget(volumeFadeInAnimation, this);
+            Storyboard.SetTarget(opacityFadeInAnimation, Border);
+            Storyboard.SetTargetProperty(volumeFadeInAnimation, new PropertyPath(VolumeProperty));
+            Storyboard.SetTargetProperty(opacityFadeInAnimation, new PropertyPath(OpacityProperty));
+
+            storyboardFadeIn.Begin();
         }
 
         protected virtual void OnMediaOpened()

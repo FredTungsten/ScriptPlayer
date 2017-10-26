@@ -92,6 +92,18 @@ namespace ScriptPlayer.ViewModels
         private PositionCollection _positions;
         private bool _showScriptPositions;
         private TimeSpan _positionsViewport = TimeSpan.FromSeconds(5);
+        private bool _showTimeLeft;
+
+        public bool ShowTimeLeft
+        {
+            get { return _showTimeLeft; }
+            set
+            {
+                if (value == _showTimeLeft) return;
+                _showTimeLeft = value;
+                OnPropertyChanged();
+            }
+        }
 
         public TimeSpan PositionsViewport
         {
@@ -1554,6 +1566,11 @@ namespace ScriptPlayer.ViewModels
 
         public void SkipToNextEvent()
         {
+            SkipToNextEvent(false);
+        }
+
+        public async void SkipToNextEvent(bool isInitialSkip)
+        {
             TimeSpan currentPosition = TimeSource.Progress;
             ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition - _scriptHandler.Delay);
             if (nextAction == null)
@@ -1569,7 +1586,7 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             if(PlaybackMode == PlaybackMode.Local)
-                VideoPlayer.SoftSeek(skipTo);
+                await VideoPlayer.SoftSeek(skipTo, isInitialSkip);
             else
                 TimeSource.SetPosition(skipTo);
 
@@ -1579,7 +1596,7 @@ namespace ScriptPlayer.ViewModels
         private void VideoPlayer_MediaOpened(object sender, EventArgs e)
         {
             if (AutoSkip)
-                SkipToNextEvent();
+                SkipToNextEvent(true);
 
             UpdateHeatMap();
         }
