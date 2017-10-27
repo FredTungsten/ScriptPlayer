@@ -154,6 +154,9 @@
                 <MenuItem Header="Blind" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Blind}}"/>
                 <MenuItem Header="Whirligig" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Whirligig}}"/>
             </MenuItem>
+            <MenuItem Header="View">
+                <MenuItem Header="Toggle FullScreen" Command="{Binding ToggleFullScreenCommand}"/>
+            </MenuItem>
             <MenuItem Header="Help">
                 <MenuItem Header="Documentation (Online)" Click="mnuDocs_Click"/>
                 <MenuItem Header="About / Check for new Version" Click="mnuVersion_Click"/>
@@ -307,6 +310,7 @@
 
                         <StackPanel Margin="4" ToolTip="Will automatically skip command gaps of more than 10s.">
                             <CheckBox IsChecked="{Binding AutoSkip}" Content="Auto-Skip Gaps"/>
+                            <CheckBox IsChecked="{Binding DisplayEventNotifications}" Content="Display Event Notifications"/>
                         </StackPanel>
 
                         <StackPanel Margin="4" ToolTip="Determines how beat files are converted to movements">

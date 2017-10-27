@@ -22,6 +22,12 @@ namespace ScriptPlayer.ViewModels
         public PositionFilterMode FilterMode { get; set; }
         public double FilterRange { get; set; }
         public bool ShowScriptPositions { get; set; }
+        public bool DisplayEventNotifications { get; set; }
+
+        public Settings()
+        {
+            DisplayEventNotifications = true;
+        }
 
         public static Settings FromFile(string filename)
         {

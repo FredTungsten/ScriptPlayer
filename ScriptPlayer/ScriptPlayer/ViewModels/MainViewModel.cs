@@ -93,6 +93,7 @@ namespace ScriptPlayer.ViewModels
         private bool _showScriptPositions;
         private TimeSpan _positionsViewport = TimeSpan.FromSeconds(5);
         private bool _showTimeLeft;
+        private bool _displayEventNotifications;
 
         public bool ShowTimeLeft
         {
@@ -188,6 +189,7 @@ namespace ScriptPlayer.ViewModels
                 SpeedMultiplier = settings.SpeedMultiplier;
                 CommandDelay = TimeSpan.FromMilliseconds(settings.CommandDelay);
                 AutoSkip = settings.AutoSkip;
+                DisplayEventNotifications = settings.DisplayEventNotifications;
                 ConversionMode = settings.ConversionMode;
                 ShowHeatMap = settings.ShowHeatMap;
                 LogMarkers = settings.LogMarkers;
@@ -206,6 +208,7 @@ namespace ScriptPlayer.ViewModels
             settings.MaxPosition = MaxPosition;
             settings.SpeedMultiplier = SpeedMultiplier;
             settings.AutoSkip = AutoSkip;
+            settings.DisplayEventNotifications = DisplayEventNotifications;
             settings.ConversionMode = ConversionMode;
             settings.ShowHeatMap = ShowHeatMap;
             settings.LogMarkers = LogMarkers;
@@ -688,6 +691,8 @@ namespace ScriptPlayer.ViewModels
 
         public RelayCommand ConnectButtplugCommand { get; set; }
 
+        public RelayCommand ToggleFullScreenCommand { get; set; }
+
         public RelayCommand ConnectLaunchDirectlyCommand { get; set; }
 
         public RelayCommand AddScriptsToPlaylistCommand { get; set; }
@@ -714,6 +719,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _logMarkers) return;
                 _logMarkers = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool DisplayEventNotifications
+        {
+            get { return _displayEventNotifications; }
+            set
+            {
+                if (value == _displayEventNotifications) return;
+                _displayEventNotifications = value;
                 OnPropertyChanged();
             }
         }
@@ -754,6 +770,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestFileEventArgs> RequestFile;
         public event EventHandler<MessageBoxEventArgs> RequestMessageBox;
         public event EventHandler<ButtplugUrlRequestEventArgs> RequestButtplugUrl;
+        public event EventHandler RequestToggleFullscreen;
 
         private void HandleVideoPlayerEvents(VideoPlayer oldValue, VideoPlayer newValue)
         {
@@ -1014,8 +1031,13 @@ namespace ScriptPlayer.ViewModels
             TogglePlaybackCommand = new RelayCommand(TogglePlayback);
             VolumeUpCommand = new RelayCommand(VolumeUp);
             VolumeDownCommand = new RelayCommand(VolumeDown);
-            ExecuteSelectedTestPatternCommand =
-                new RelayCommand(ExecuteSelectedTestPattern, CanExecuteSelectedTestPattern);
+            ExecuteSelectedTestPatternCommand = new RelayCommand(ExecuteSelectedTestPattern, CanExecuteSelectedTestPattern);
+            ToggleFullScreenCommand = new RelayCommand(ExecuteToggleFullScreen);
+        }
+
+        private void ExecuteToggleFullScreen()
+        {
+            OnRequestToggleFullscreen();
         }
 
         private bool CanExecuteSelectedTestPattern()
@@ -1359,7 +1381,7 @@ namespace ScriptPlayer.ViewModels
             {
                 if (AutoSkip)
                     Playlist.PlayNextEntryCommand.Execute(OpenedScript);
-                else
+                else if(DisplayEventNotifications)
                     OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
                 return;
             }
@@ -1397,7 +1419,7 @@ namespace ScriptPlayer.ViewModels
             {
                 if (AutoSkip)
                     SkipToNextEvent();
-                else
+                else if (DisplayEventNotifications)
                     OnRequestOverlay($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4), "Events");
             }
         }
@@ -1587,7 +1609,8 @@ namespace ScriptPlayer.ViewModels
             ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition - _scriptHandler.Delay);
             if (nextAction == null)
             {
-                OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
+                if(DisplayEventNotifications)
+                    OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
                 return;
             }
 
@@ -1602,7 +1625,8 @@ namespace ScriptPlayer.ViewModels
             else
                 TimeSource.SetPosition(skipTo);
 
-            ShowPosition($"Skipped {duration.TotalSeconds:f0}s - ");
+            if(DisplayEventNotifications)
+                ShowPosition($"Skipped {duration.TotalSeconds:f0}s - ");
         }
 
         private void VideoPlayer_MediaOpened(object sender, EventArgs e)
@@ -1757,18 +1781,18 @@ namespace ScriptPlayer.ViewModels
 
             if (success)
             {
-                OnRequestOverlay("Connected to Buttplug", TimeSpan.FromSeconds(6), "Buttplug");
+                OnRequestOverlay("Connected to Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
             }
             else
             {
                 _connector = null;
-                OnRequestOverlay("Could not connect to Buttplug", TimeSpan.FromSeconds(6), "Buttplug");
+                OnRequestOverlay("Could not connect to Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
             }
         }
 
         private void ConnectorOnDeviceAdded(object sender, string deviceName)
         {
-            OnRequestOverlay("Device found: " + deviceName, TimeSpan.FromSeconds(5), "Buttplug");
+            OnRequestOverlay("Device found: " + deviceName, TimeSpan.FromSeconds(5));
         }
 
         protected virtual string OnRequestButtplugUrl(string defaultValue)
@@ -1793,6 +1817,11 @@ namespace ScriptPlayer.ViewModels
         public void Unload()
         {
             SaveSettings();
+        }
+
+        protected virtual void OnRequestToggleFullscreen()
+        {
+            RequestToggleFullscreen?.Invoke(this, EventArgs.Empty);
         }
     }
 

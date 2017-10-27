@@ -49,12 +49,18 @@ namespace ScriptPlayer
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            ViewModel.RequestToggleFullscreen += ViewModelOnRequestToggleFullscreen;
             ViewModel.RequestOverlay += ViewModelOnRequestOverlay;
             ViewModel.RequestButtplugUrl += ViewModelOnRequestButtplugUrl;
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
+        }
+
+        private void ViewModelOnRequestToggleFullscreen(object sender, EventArgs eventArgs)
+        {
+            ToggleFullscreen();
         }
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
