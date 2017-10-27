@@ -21,5 +21,14 @@ namespace ScriptPlayer.Shared.Scripts
         }
 
         private string DebuggerDisplay => $"{TimeStamp.TotalSeconds:f2} - P:{Position} S:{Speed}";
+        public override bool IsSameAction(ScriptAction action)
+        {
+            if (action is RawScriptAction raw)
+            {
+                if (Position != raw.Position) return false;
+                return Speed == raw.Speed;
+            }
+            return false;
+        }
     }
 }

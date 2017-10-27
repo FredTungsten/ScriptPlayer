@@ -331,9 +331,11 @@ namespace ScriptPlayer.Shared
             VideoMouseUp?.Invoke(this, x, y);
         }
 
-        public void SetPosition(TimeSpan position)
+        public void SetPosition(TimeSpan position, bool cancelAnimation = true)
         {
-            CancelAnimations();
+            if(cancelAnimation)
+                CancelAnimations();
+
             position = ClampTimestamp(position);
             _player.Position = position;
         }
@@ -375,7 +377,8 @@ namespace ScriptPlayer.Shared
             }
 
             if (_animationCanceled) return;
-            SetPosition(position);
+            SetPosition(position, false);
+
             if (_animationCanceled) return;
             await FadeInAndRelease(fadeInDuration);
         }

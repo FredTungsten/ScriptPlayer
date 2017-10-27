@@ -18,5 +18,10 @@ namespace ScriptPlayer.Shared.Scripts
         }
 
         private string DebuggerDisplay => $"{TimeStamp.TotalSeconds:f2} - {Position}";
+
+        public override bool IsSameAction(ScriptAction action)
+        {
+            return (action as FunScriptAction)?.Position == Position;
+        }
     }
 }

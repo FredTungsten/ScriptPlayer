@@ -3,9 +3,11 @@ using Newtonsoft.Json;
 
 namespace ScriptPlayer.Shared.Scripts
 {
-    public class ScriptAction
+    public abstract class ScriptAction
     {
         [JsonIgnore]
         public TimeSpan TimeStamp;
+
+        public abstract bool IsSameAction(ScriptAction action);
     }
 }

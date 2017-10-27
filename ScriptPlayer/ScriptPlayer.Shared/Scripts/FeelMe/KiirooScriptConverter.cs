@@ -117,5 +117,9 @@ namespace ScriptPlayer.Shared.Scripts
     public class KiirooScriptAction : ScriptAction
     {
         public int Value { get; set; }
+        public override bool IsSameAction(ScriptAction action)
+        {
+            return (action as KiirooScriptAction)?.Value == Value;
+        }
     }
 }
