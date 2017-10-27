@@ -115,20 +115,24 @@
                     <TabControl>
                         <TabItem Header="Color Samples">
                             <DockPanel LastChildFill="True">
-                                
-                            <HeaderedContentControl Header="Capture Rect" DockPanel.Dock="Top">
-                                <Grid Name="GridSampleRect">
-                                    <TextBlock  HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="X" VerticalAlignment="Top"/>
-                                    <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,8,0,0" TextWrapping="Wrap" Text="{Binding SampleX}" VerticalAlignment="Top" Width="162"/>
-                                    <TextBlock  HorizontalAlignment="Left" Margin="10,38,0,0" TextWrapping="Wrap" Text="Y" VerticalAlignment="Top"/>
-                                    <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,36,0,0" TextWrapping="Wrap" Text="{Binding SampleY}" VerticalAlignment="Top" Width="162"/>
-                                    <TextBlock  HorizontalAlignment="Left" Margin="10,66,0,0" TextWrapping="Wrap" Text="W" VerticalAlignment="Top"/>
-                                    <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,64,0,0" TextWrapping="Wrap" Text="{Binding SampleW}" VerticalAlignment="Top" Width="162"/>
-                                    <TextBlock  HorizontalAlignment="Left" Margin="10,94,0,0" TextWrapping="Wrap" Text="H" VerticalAlignment="Top"/>
-                                    <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,92,0,0" TextWrapping="Wrap" Text="{Binding SampleH}" VerticalAlignment="Top" Width="162"/>
-                                    <Button Content="Reset to Samples"  HorizontalAlignment="Stretch" Margin="10,120,10,10" VerticalAlignment="Top" Click="btnResetSamples_Click"/>
-                                </Grid>
-                            </HeaderedContentControl>
+
+                                <HeaderedContentControl Header="Capture Rect" DockPanel.Dock="Top">
+                                    <Grid Name="GridSampleRect">
+                                        <TextBlock  HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="X" VerticalAlignment="Top"/>
+                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,8,0,0" TextWrapping="Wrap" Text="{Binding SampleX}" VerticalAlignment="Top" Width="162"/>
+                                        <TextBlock  HorizontalAlignment="Left" Margin="10,38,0,0" TextWrapping="Wrap" Text="Y" VerticalAlignment="Top"/>
+                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,36,0,0" TextWrapping="Wrap" Text="{Binding SampleY}" VerticalAlignment="Top" Width="162"/>
+                                        <TextBlock  HorizontalAlignment="Left" Margin="10,66,0,0" TextWrapping="Wrap" Text="W" VerticalAlignment="Top"/>
+                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,64,0,0" TextWrapping="Wrap" Text="{Binding SampleW}" VerticalAlignment="Top" Width="162"/>
+                                        <TextBlock  HorizontalAlignment="Left" Margin="10,94,0,0" TextWrapping="Wrap" Text="H" VerticalAlignment="Top"/>
+                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,92,0,0" TextWrapping="Wrap" Text="{Binding SampleH}" VerticalAlignment="Top" Width="162"/>
+                                        <Button Content="Reset to Samples"  HorizontalAlignment="Stretch" Margin="10,120,10,10" VerticalAlignment="Top" Click="btnResetSamples_Click"/>
+                                    </Grid>
+                                </HeaderedContentControl>
+
+                                <HeaderedContentControl Header="Capture Preview" DockPanel.Dock="Top">
+                                    <controls:SampleRectZoom RenderOptions.BitmapScalingMode="NearestNeighbor" Player="{Binding ElementName=videoPlayer}" MinHeight="200"/>
+                                </HeaderedContentControl>
 
                                 <HeaderedContentControl Header="Color Sampler" DockPanel.Dock="Top">
                                     <Grid>

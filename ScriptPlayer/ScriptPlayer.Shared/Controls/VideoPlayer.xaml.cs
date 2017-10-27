@@ -257,13 +257,13 @@ namespace ScriptPlayer.Shared
             if (SideBySide)
                 rect = new Rect(0, 0, 0.5, 1);
 
-            VideoBrush = new DrawingBrush(
-                new VideoDrawing
-                {
-                    Player = _player,
-                    Rect = rect,
+            var videoDrawing = new VideoDrawing
+            {
+                Player = _player,
+                Rect = rect
+            };
 
-                })
+            VideoBrush = new DrawingBrush(videoDrawing)
             {
                 Stretch = Stretch.Fill,
                 Viewbox = rect

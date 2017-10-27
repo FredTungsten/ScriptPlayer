@@ -1,4 +1,6 @@
-﻿namespace ScriptPlayer.Shared
+﻿using System.Windows;
+
+namespace ScriptPlayer.Shared
 {
     public struct Resolution
     {
@@ -9,6 +11,11 @@
         {
             Horizontal = horizonal;
             Vertical = vertical;
+        }
+
+        public Size ToSize()
+        {
+            return new Size(Horizontal, Vertical);
         }
     }
 }
