@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
@@ -9,25 +8,22 @@ using Windows.Storage.Streams;
 
 namespace ScriptPlayer.Shared
 {
-    public class Launch
+    public class Launch : Device
     {
         public bool SendCommandsWithResponse { get; set; } = false;
 
-        public TimeSpan MinDelayBetweenCommands = TimeSpan.FromMilliseconds(166);
-        public TimeSpan AcceptableCommandExecutionDelay = TimeSpan.FromMilliseconds(1);
-
         public event EventHandler<Exception> Disconnected; 
 
+        // Just to make sure it doesn't get disposed or something like that
+        // ReSharper disable once NotAccessedField.Local
         private BluetoothLEDevice _device;
+
         private readonly GattCharacteristic _commandCharacteristics;
         private readonly GattCharacteristic _notifyCharacteristics;
         private readonly GattCharacteristic _writeCharacteristics;
-        
-        private readonly Thread _commandThread;
-        private readonly BlockingQueue<QueueEntry> _queue = new BlockingQueue<QueueEntry>();
 
         private bool _initialized;
-        private bool _running;
+        
 
         public Launch(BluetoothLEDevice device, GattCharacteristic writeCharacteristics, GattCharacteristic notifyCharacteristics, GattCharacteristic commandCharacteristics)
         {
@@ -36,46 +32,7 @@ namespace ScriptPlayer.Shared
             _notifyCharacteristics = notifyCharacteristics;
             _commandCharacteristics = commandCharacteristics;
 
-            _running = true;
-            _commandThread = new Thread(CommandLoop);
-            _commandThread.Start();
-        }
-
-        public void Close()
-        {
-            _running = false;
-            _queue.Close();
-
-            if(!_commandThread.Join(TimeSpan.FromMilliseconds(500)))
-                _commandThread.Abort();
-        }
-
-        private async void CommandLoop()
-        {
-            while (_running)
-            {
-                var entry = _queue.Deqeue();
-
-                if (entry == null)
-                    return;
-
-                DateTime now = DateTime.Now;
-                TimeSpan delay = now - entry.Submitted;
-
-                if (delay > AcceptableCommandExecutionDelay)
-                    Debug.WriteLine("Command Execution Delay: " + delay.ToString("g"));
-
-                await SetPosition(entry.Position, entry.Speed);
-
-                TimeSpan wait = DateTime.Now - now;
-                if (wait < MinDelayBetweenCommands)
-                    await Task.Delay(MinDelayBetweenCommands - wait);
-            }
-        }
-
-        public void EnqueuePosition(byte position, byte speed)
-        {
-            _queue.ReplaceExisting(new QueueEntry(position, speed), e => Math.Abs(e.Position - position) < 10);
+            Name = "Fleshlight Launch";
         }
 
         public async Task<bool> SetPosition(byte position, byte speed)
@@ -146,8 +103,31 @@ namespace ScriptPlayer.Shared
 
         protected virtual void OnDisconnected(Exception e)
         {
-            Close();
+            Dispose();
             Disconnected?.Invoke(this, e);
+        }
+
+        public override async Task Set(DeviceCommandInformation information)
+        {
+            await SetPosition(information.PositionToTransformed, information.SpeedTransformed);
+        }
+
+        public override async Task Set(IntermediateCommandInformation information)
+        {
+            return;
+            // Does not apply
+        }
+
+        public override void Stop()
+        {
+            // Not available
+        }
+
+        public override  void Dispose()
+        {
+            base.Dispose();
+            _device.Dispose();
+            _device = null;
         }
     }
 }

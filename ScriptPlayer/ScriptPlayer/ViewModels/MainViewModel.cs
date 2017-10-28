@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -35,8 +36,6 @@ namespace ScriptPlayer.ViewModels
         private string _buttplugApiVersion = "Unknown";
         private TimeSpan _commandDelay = TimeSpan.FromMilliseconds(166);
 
-        private ButtplugAdapter _connector;
-
         private ConversionMode _conversionMode = ConversionMode.UpOrDown;
 
         private List<ConversionMode> _conversionModes;
@@ -45,9 +44,6 @@ namespace ScriptPlayer.ViewModels
 
         private int _lastScriptFilterIndex = 1;
         private int _lastVideoFilterIndex = 1;
-
-        private Launch _launch;
-        private LaunchBluetooth _launchConnect;
 
         private bool _logMarkers;
 
@@ -94,6 +90,11 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _positionsViewport = TimeSpan.FromSeconds(5);
         private bool _showTimeLeft;
         private bool _displayEventNotifications;
+
+        private readonly List<DeviceController> _controllers = new List<DeviceController>();
+        private readonly ObservableCollection<Device> _devices = new ObservableCollection<Device>();
+
+        public ObservableCollection<Device> Devices => _devices;
 
         public bool ShowTimeLeft
         {
@@ -749,18 +750,23 @@ namespace ScriptPlayer.ViewModels
         {
             _videoPlayer?.TimeSource.Pause();
             _videoPlayer?.Dispose();
-            _launch?.Close();
+
+            StopPattern();
+
+            foreach (DeviceController controller in _controllers)
+            {
+                if(controller is IDisposable disposable)
+                    disposable.Dispose();
+            }
+            _controllers.Clear();
+
+            foreach (Device device in _devices)
+            {
+                device.Dispose();
+            }
+            _devices.Clear();
 
             DisposeTimeSource();
-
-            try
-            {
-                _connector?.Disconnect();
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("MainViewModel.Dispose: " + e.Message);
-            }
         }
 
 
@@ -793,8 +799,8 @@ namespace ScriptPlayer.ViewModels
 
         private void CommandDelayChanged()
         {
-            if (_launch != null)
-                _launch.MinDelayBetweenCommands = CommandDelay;
+            foreach(Device device in _devices)
+                device.MinDelayBetweenCommands = CommandDelay;
         }
 
         private void StartRegularPattern(byte positionFrom, byte positionTo, TimeSpan intervall)
@@ -1134,21 +1140,23 @@ namespace ScriptPlayer.ViewModels
         }
 
 
-        private void LaunchConnectOnDeviceFound(object sender, Launch device)
+        private void DeviceController_DeviceFound(object sender, Device device)
         {
-            _launch = device;
-            _launch.Disconnected += LaunchOnDisconnected;
+            _devices.Add(device);
+            device.IsEnabled = true;
+            //TODO Handle Disconnect
+            //_launch.Disconnected += LaunchOnDisconnected;
 
-            OnRequestOverlay("Launch Connected", TimeSpan.FromSeconds(8), "Launch");
+            OnRequestOverlay("Device Connected: " + device.Name, TimeSpan.FromSeconds(8));
         }
 
-        private void LaunchOnDisconnected(object sender, Exception exception)
+        /*private void LaunchOnDisconnected(object sender, Exception exception)
         {
             _launch.Disconnected -= LaunchOnDisconnected;
             _launch = null;
 
             OnRequestOverlay("Launch Disconnected", TimeSpan.FromSeconds(8), "Launch");
-        }
+        }*/
 
         private void PlaylistOnPlayEntry(object sender, PlaylistEntry playlistEntry)
         {
@@ -1193,8 +1201,12 @@ namespace ScriptPlayer.ViewModels
 
         private void InitializeLaunchFinder()
         {
-            _launchConnect = new LaunchBluetooth();
-            _launchConnect.DeviceFound += LaunchConnectOnDeviceFound;
+            LaunchBluetooth launchController = _controllers.OfType<LaunchBluetooth>().FirstOrDefault();
+            if (launchController != null) return;
+
+            launchController = new LaunchBluetooth();
+            launchController.DeviceFound += DeviceController_DeviceFound;
+            _controllers.Add(launchController);
         }
 
         private void CheckForArguments()
@@ -1497,8 +1509,8 @@ namespace ScriptPlayer.ViewModels
         {
             if (TimeSource.IsPlaying || !requirePlaying)
             {
-                _launch?.EnqueuePosition(information.PositionToTransformed, information.SpeedTransformed);
-                _connector?.Set(information);
+                foreach(Device device in _devices)
+                    device.Enqueue(information);
             }
         }
 
@@ -1506,13 +1518,15 @@ namespace ScriptPlayer.ViewModels
         {
             if (TimeSource.IsPlaying || !requirePlaying)
             {
-                _connector?.Set(intermediateInfo);
+                foreach (Device device in _devices)
+                    device.Set(intermediateInfo);
             }
         }
 
         private void StopDevices()
         {
-            _connector?.Stop();
+            foreach (Device device in _devices)
+                device.Stop();
         }
 
         protected virtual string OnRequestFile(string filter, ref int filterIndex)
@@ -1721,7 +1735,8 @@ namespace ScriptPlayer.ViewModels
 
         public void ConnectLaunchDirectly()
         {
-            _launchConnect.Start();
+            LaunchBluetooth controller = _controllers.OfType<LaunchBluetooth>().Single();
+            controller.Start();
         }
 
         public void VolumeDown()
@@ -1762,22 +1777,32 @@ namespace ScriptPlayer.ViewModels
 
         public void StartScanningButtplug()
         {
-            _connector?.StartScanning();
+            var controller = _controllers.OfType<ButtplugAdapter>().SingleOrDefault();
+            controller?.StartScanning();
         }
 
         public async void ConnectButtplug()
         {
-            if (_connector != null)
-                await _connector?.Disconnect();
+            var controller = _controllers.OfType<ButtplugAdapter>().SingleOrDefault();
+
+            if (controller != null)
+            {
+                controller.DeviceFound -= DeviceController_DeviceFound;
+                await controller.Disconnect();
+            }
+
+            _controllers.Remove(controller);
 
             string url = OnRequestButtplugUrl(ButtplugAdapter.DefaultUrl);
             if (url == null)
                 return;
 
-            _connector = new ButtplugAdapter(url);
-            _connector.DeviceAdded += ConnectorOnDeviceAdded;
+            controller = new ButtplugAdapter(url);
+            controller.DeviceFound += DeviceController_DeviceFound;
 
-            bool success = await _connector.Connect();
+            _controllers.Add(controller);
+
+            bool success = await controller.Connect();
 
             if (success)
             {
@@ -1785,14 +1810,10 @@ namespace ScriptPlayer.ViewModels
             }
             else
             {
-                _connector = null;
+                _controllers.Remove(controller);
+                controller.DeviceFound -= DeviceController_DeviceFound;
                 OnRequestOverlay("Could not connect to Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
             }
-        }
-
-        private void ConnectorOnDeviceAdded(object sender, string deviceName)
-        {
-            OnRequestOverlay("Device found: " + deviceName, TimeSpan.FromSeconds(5));
         }
 
         protected virtual string OnRequestButtplugUrl(string defaultValue)

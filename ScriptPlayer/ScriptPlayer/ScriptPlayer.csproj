@@ -83,11 +83,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\DeviceToImageConverter.cs" />
     <Compile Include="Converters\DistinctValueToBooleanConverter.cs" />
     <Compile Include="Converters\TimeLeftConverter.cs" />
     <Compile Include="Converters\TimeSpanToMillisecondsConverter.cs" />
     <Compile Include="Dialogs\ButtplugConnectionSettingsDialog.xaml.cs">
       <DependentUpon>ButtplugConnectionSettingsDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\DeviceManagerDialog.xaml.cs">
+      <DependentUpon>DeviceManagerDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\ScriptDownloadDialog.xaml.cs">
       <DependentUpon>ScriptDownloadDialog.xaml</DependentUpon>
@@ -97,6 +101,7 @@
     </Compile>
     <Compile Include="PatternSource.cs" />
     <Compile Include="ViewModels\ButtplugUrlRequestEventArgs.cs" />
+    <Compile Include="ViewModels\DeviceViewModel.cs" />
     <Compile Include="ViewModels\MessageBoxEventArgs.cs" />
     <Compile Include="ViewModels\PlaylistEntry.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
@@ -106,6 +111,10 @@
     <Compile Include="ViewModels\Settings.cs" />
     <Compile Include="ViewModels\TestPatternDefinition.cs" />
     <Page Include="Dialogs\ButtplugConnectionSettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\DeviceManagerDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

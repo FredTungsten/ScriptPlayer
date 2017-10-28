@@ -2,7 +2,7 @@
 
 namespace ScriptPlayer.Shared
 {
-    public struct DeviceCommandInformation
+    public class DeviceCommandInformation
     {
         public byte PositionFromTransformed;
         public byte PositionToTransformed;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
 
 namespace ScriptPlayer.Shared
@@ -65,7 +64,7 @@ namespace ScriptPlayer.Shared
             return result;
         }
 
-        private void DeleteTill(Func<T, bool> func)
+        private void DeleteTill(Func<T, T, bool> func, T comparison)
         {
             lock (_queueLock)
             {
@@ -73,10 +72,9 @@ namespace ScriptPlayer.Shared
 
                 while (_queue.Count > 0)
                 {
-                    T item;
-                    _queue.TryDequeue(out item);
+                    _queue.TryDequeue(out T item);
 
-                    if (func(item))
+                    if (func(item, comparison))
                         break;
 
                     newQueue.Enqueue(item);
@@ -86,11 +84,11 @@ namespace ScriptPlayer.Shared
             }
         }
 
-        public void ReplaceExisting(T item, Func<T, bool> condition)
+        public void ReplaceExisting(T item, Func<T,T, bool> condition)
         {
             lock (_queueLock)
             {
-                DeleteTill(condition);
+                DeleteTill(condition, item);
                 Enqueue(item);
             }
         }

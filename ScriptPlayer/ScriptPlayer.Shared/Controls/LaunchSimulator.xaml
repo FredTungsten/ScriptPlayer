@@ -18,9 +18,9 @@
         <ProgressBar Minimum="0" Maximum="99" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:LaunchSimulator}, Path=Position}" Orientation="Vertical" VerticalAlignment="Stretch" HorizontalAlignment="Left" Width="20"/>
         <Viewbox Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Grid Width="259" Height="621">
-                <Image HorizontalAlignment="Left" Height="491" Margin="0,130,0,0" VerticalAlignment="Top" Width="259" Stretch="None" Source="pack://application:,,,/LaunchControl.Shared;component/Images/LaunchBack.png"/>
-                <Image HorizontalAlignment="Left" Height="491" Margin="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:LaunchSimulator}, Path=Position, Converter={StaticResource MarginConverter}}" VerticalAlignment="Top" Width="259" Stretch="None" Source="pack://application:,,,/LaunchControl.Shared;component/Images/Flash.png"/>
-                <Image HorizontalAlignment="Left" Height="491" Margin="0,130,0,0" VerticalAlignment="Top" Width="259" Stretch="None" Source="pack://application:,,,/LaunchControl.Shared;component/Images/Front.png"/>
+                <Image HorizontalAlignment="Left" Height="491" Margin="0,130,0,0" VerticalAlignment="Top" Width="259" Stretch="None" Source="pack://application:,,,/ScriptPlayer.Shared;component/Images/LaunchBack.png"/>
+                <Image HorizontalAlignment="Left" Height="491" Margin="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:LaunchSimulator}, Path=Position, Converter={StaticResource MarginConverter}}" VerticalAlignment="Top" Width="259" Stretch="None" Source="pack://application:,,,/ScriptPlayer.Shared;component/Images/Flash.png"/>
+                <Image HorizontalAlignment="Left" Height="491" Margin="0,130,0,0" VerticalAlignment="Top" Width="259" Stretch="None" Source="pack://application:,,,/ScriptPlayer.Shared;component/Images/Front.png"/>
             </Grid>
         </Viewbox>
     </Grid>

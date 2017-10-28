@@ -76,16 +76,16 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AnalysisParameters.cs" />
-    <Compile Include="BeatCollection.cs" />
-    <Compile Include="BlockingQueue.cs" />
-    <Compile Include="ButtplugAdapter.cs" />
-    <Compile Include="ColorSampler.cs" />
+    <Compile Include="Colors\AnalysisParameters.cs" />
+    <Compile Include="Beats\BeatCollection.cs" />
+    <Compile Include="Classes\BlockingQueue.cs" />
+    <Compile Include="Devices\ButtplugAdapter.cs" />
+    <Compile Include="Colors\ColorSampler.cs" />
     <Compile Include="Colors\HslConversion.cs" />
     <Compile Include="Controls\BeatBar.cs" />
-    <Compile Include="BeatGroup.cs" />
-    <Compile Include="BeatPattern.cs" />
-    <Compile Include="BeatTimeline.cs" />
+    <Compile Include="Beats\BeatGroup.cs" />
+    <Compile Include="Beats\BeatPattern.cs" />
+    <Compile Include="Beats\BeatTimeline.cs" />
     <Compile Include="Controls\PointExtensions.cs" />
     <Compile Include="Controls\PositionBar.cs" />
     <Compile Include="Controls\BeatBar2.cs" />
@@ -126,39 +126,41 @@
     <Compile Include="Converters\PositionToMarginConverter.cs" />
     <Compile Include="Converters\TimeSpanToSecondsConverter.cs" />
     <Compile Include="Controls\GifPlayer.cs" />
-    <Compile Include="DeviceCommandInformation.cs" />
+    <Compile Include="Devices\ButtplugDevice.cs" />
+    <Compile Include="Devices\DeviceCommandInformation.cs" />
+    <Compile Include="Devices\DeviceController.cs" />
     <Compile Include="Dialogs\BeatPatternEditor.xaml.cs">
       <DependentUpon>BeatPatternEditor.xaml</DependentUpon>
     </Compile>
-    <Compile Include="DirtyHacks.cs" />
+    <Compile Include="Helpers\DirtyHacks.cs" />
     <Compile Include="Elevation\PermissionChecker.cs" />
     <Compile Include="Elevation\PermissionCheckResult.cs" />
     <Compile Include="Elevation\RegistryHelper.cs" />
     <Compile Include="Elevation\RegistryKeyResult.cs" />
     <Compile Include="Elevation\RegistryValue.cs" />
-    <Compile Include="Flash.cs" />
-    <Compile Include="FrameCapture.cs" />
-    <Compile Include="FrameCaptureCollection.cs" />
-    <Compile Include="HeatMapGenerator.cs" />
-    <Compile Include="HideOnHover.cs" />
-    <Compile Include="IDeviceController.cs" />
+    <Compile Include="Controls\Flash.cs" />
+    <Compile Include="Colors\FrameCapture.cs" />
+    <Compile Include="Colors\FrameCaptureCollection.cs" />
+    <Compile Include="Colors\HeatMapGenerator.cs" />
+    <Compile Include="Helpers\HideOnHover.cs" />
+    <Compile Include="Devices\Device.cs" />
     <Compile Include="Indexer\Indexer.cs" />
-    <Compile Include="Launch.cs" />
-    <Compile Include="LaunchBluetooth.cs" />
-    <Compile Include="Metronome.cs" />
-    <Compile Include="MetronomeAudio.cs" />
-    <Compile Include="MouseHider.cs" />
-    <Compile Include="NotificationList.cs" />
+    <Compile Include="Devices\Launch.cs" />
+    <Compile Include="Devices\LaunchBluetooth.cs" />
+    <Compile Include="Beats\Metronome.cs" />
+    <Compile Include="Beats\MetronomeAudio.cs" />
+    <Compile Include="Helpers\MouseHider.cs" />
+    <Compile Include="Controls\NotificationList.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Controls\SeekBar.cs" />
-    <Compile Include="QueueEntry.cs" />
+    <Compile Include="Controls\QueueEntry.cs" />
     <Compile Include="Controls\RangeSlider.xaml.cs">
       <DependentUpon>RangeSlider.xaml</DependentUpon>
     </Compile>
-    <Compile Include="RelayCommand.cs" />
-    <Compile Include="RepeatingScriptActions.cs" />
-    <Compile Include="SampleAnalyser.cs" />
+    <Compile Include="Classes\RelayCommand.cs" />
+    <Compile Include="Scripts\RepeatingScriptActions.cs" />
+    <Compile Include="Colors\SampleAnalyser.cs" />
     <Compile Include="Scripts\BeatsToFunScriptConverter.cs" />
     <Compile Include="Scripts\FeelMe\FeelMeBruteForceJsonLoader.cs" />
     <Compile Include="Scripts\FeelMe\FeelMeBruteForceLoader.cs" />
@@ -190,8 +192,8 @@
     <Compile Include="Scripts\VorzeScriptLoader.cs" />
     <Compile Include="Scripts\VorzeToFunscriptConverter.cs" />
     <Compile Include="Sounds\SoundResources.cs" />
-    <Compile Include="SpeedPredictor.cs" />
-    <Compile Include="SystemIdlePreventer.cs" />
+    <Compile Include="Beats\SpeedPredictor.cs" />
+    <Compile Include="Helpers\SystemIdlePreventer.cs" />
     <Compile Include="TimeSource\CompositionTargetClock.cs" />
     <Compile Include="TimeSource\DispatcherClock.cs" />
     <Compile Include="TimeSource\ManualTimeSource.cs" />
@@ -199,9 +201,9 @@
     <Compile Include="TimeSource\ISampleClock.cs" />
     <Compile Include="TimeSource\TimeSource.cs" />
     <Compile Include="TimeSource\WhirlyTimeSource.cs" />
-    <Compile Include="TimeSpanExtensions.cs" />
+    <Compile Include="Beats\TimeSpanExtensions.cs" />
     <Compile Include="Scripts\ScriptLoader.cs" />
-    <Compile Include="VanishingContainer.cs" />
+    <Compile Include="Controls\VanishingContainer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Sounds\2.wav" />
@@ -255,6 +257,12 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Devices\Controller.png" />
+    <Resource Include="Images\Devices\Hush.png" />
+    <Resource Include="Images\Devices\Launch.png" />
+    <Resource Include="Images\Devices\Nora.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -8,15 +8,16 @@ using Windows.Devices.Bluetooth.GenericAttributeProfile;
 
 namespace ScriptPlayer.Shared
 {
-    public class LaunchBluetooth
+    public class LaunchBluetooth : DeviceController
     {
         private readonly object _discoverylocker = new object();
         private bool _discover;
         public BluetoothLEAdvertisementWatcher BleWatcher { get; set; }
 
-        public delegate void DeviceFoundEventHandler(object sender, Launch device);
-
-        public event DeviceFoundEventHandler DeviceFound;
+        public override void ScanForDevices()
+        {
+            Start();
+        }
 
         public LaunchBluetooth()
         {
@@ -112,10 +113,7 @@ namespace ScriptPlayer.Shared
             catch (Exception e)
             {
                 Debug.WriteLine("Exception: " + e.Message);
-                if (device != null)
-                {
-                    device.Dispose();
-                }
+                device.Dispose();
             }
             finally
             {
@@ -125,11 +123,6 @@ namespace ScriptPlayer.Shared
                     Start();
                 }
             }
-        }
-
-        protected virtual void OnDeviceFound(Launch device)
-        {
-            DeviceFound?.Invoke(this, device);
         }
     }
 }

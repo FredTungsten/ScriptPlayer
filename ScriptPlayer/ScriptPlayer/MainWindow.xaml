@@ -137,6 +137,8 @@
                 <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
             </MenuItem>
             <MenuItem Header="Devices">
+                <MenuItem Header="Show Devices" Click="mnuShowDevices_Click"/>
+                <Separator/>
                 <MenuItem Header="Connect Launch directly" Command="{Binding ConnectLaunchDirectlyCommand}"/>
                 <MenuItem>
                     <MenuItem.Header>
@@ -304,7 +306,7 @@
 
                         <StackPanel Margin="4" ToolTip="Minimal delay between two script commands">
                             <TextBlock Margin="0" Text="Min Command Delay" TextAlignment="Center"/>
-                            <Slider LargeChange="1" Margin="0,4" Minimum="100" Maximum="200"  Value="{Binding Path=CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"/>
+                            <Slider LargeChange="1" Margin="0,4" Minimum="100" Maximum="300"  Value="{Binding Path=CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"/>
                             <TextBlock Margin="0" Text="{Binding Path=CommandDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}" TextAlignment="Center"/>
                         </StackPanel>
 

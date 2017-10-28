@@ -302,6 +302,30 @@ namespace ScriptPlayer
             ShowPlaylist();
         }
 
+        private void mnuShowDevices_Click(object sender, RoutedEventArgs e)
+        {
+            ShowDevices();
+        }
+
+        private void ShowDevices()
+        {
+            var existing = Application.Current.Windows.OfType<DeviceManagerDialog>().FirstOrDefault();
+
+            if (existing == null || !existing.IsLoaded)
+            {
+                DeviceManagerDialog deviceManager = new DeviceManagerDialog(ViewModel.Devices);
+                deviceManager.Show();
+            }
+            else
+            {
+                if (existing.WindowState == WindowState.Minimized)
+                    existing.WindowState = WindowState.Normal;
+
+                existing.Activate();
+                existing.Focus();
+            }
+        }
+
         private void ShowPlaylist()
         {
             var existing = Application.Current.Windows.OfType<PlaylistWindow>().FirstOrDefault();
