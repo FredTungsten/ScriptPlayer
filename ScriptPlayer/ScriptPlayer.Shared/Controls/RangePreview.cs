@@ -17,6 +17,11 @@ namespace ScriptPlayer.Shared
             set { SetValue(RangesProperty, value); }
         }
 
+        public RangePreview()
+        {
+            ClipToBounds = true;
+        }
+
         protected override void OnRender(DrawingContext drawingContext)
         {
             drawingContext.DrawRectangle(Brushes.Black, null, new Rect(0, 0, ActualWidth, ActualHeight));
