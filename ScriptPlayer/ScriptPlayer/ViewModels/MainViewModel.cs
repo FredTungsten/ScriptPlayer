@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -93,6 +94,8 @@ namespace ScriptPlayer.ViewModels
 
         private readonly List<DeviceController> _controllers = new List<DeviceController>();
         private readonly ObservableCollection<Device> _devices = new ObservableCollection<Device>();
+        private bool _showBanner = true;
+        private string _scriptPlayerVersion;
 
         public ObservableCollection<Device> Devices => _devices;
 
@@ -163,6 +166,7 @@ namespace ScriptPlayer.ViewModels
         public MainViewModel()
         {
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
+            ScriptPlayerVersion = GetScriptPlayerVersion();
             Playlist = new PlaylistViewModel();
             Playlist.PlayEntry += PlaylistOnPlayEntry;
 
@@ -175,6 +179,27 @@ namespace ScriptPlayer.ViewModels
             InitializeScriptHandler();
 
             LoadSettings();
+        }
+
+        private string GetScriptPlayerVersion()
+        {
+            string location = Assembly.GetExecutingAssembly().Location;
+            if (string.IsNullOrWhiteSpace(location))
+                return "?";
+
+            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(location);
+            return fileVersionInfo.ProductVersion;
+        }
+
+        public string ScriptPlayerVersion
+        {
+            get { return _scriptPlayerVersion; }
+            set
+            {
+                if (value == _scriptPlayerVersion) return;
+                _scriptPlayerVersion = value;
+                OnPropertyChanged();
+            }
         }
 
         private void LoadSettings()
@@ -240,6 +265,7 @@ namespace ScriptPlayer.ViewModels
                     }
                 case PlaybackMode.Blind:
                     {
+                        HideBanner();
                         TimeSource = new ManualTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
                             TimeSpan.FromMilliseconds(10)));
 
@@ -248,6 +274,7 @@ namespace ScriptPlayer.ViewModels
                     }
                 case PlaybackMode.Whirligig:
                     {
+                        HideBanner();
                         TimeSource = new WhirligigTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
                             TimeSpan.FromMilliseconds(10)));
 
@@ -259,6 +286,11 @@ namespace ScriptPlayer.ViewModels
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private void HideBanner()
+        {
+            ShowBanner = false;
         }
 
         private void DisposeTimeSource()
@@ -288,7 +320,7 @@ namespace ScriptPlayer.ViewModels
                 OnRequestOverlay($"No script for '{Path.GetFileName(filename)}' found!", TimeSpan.FromSeconds(6));
                 return;
             }
-            
+
             LoadScript(scriptFile, false);
         }
 
@@ -340,15 +372,15 @@ namespace ScriptPlayer.ViewModels
                     switch (PlaybackMode)
                     {
                         case PlaybackMode.Local:
-                        {
-                            PlayNextPlaylistEntry();
-                            break;
-                        }
+                            {
+                                PlayNextPlaylistEntry();
+                                break;
+                            }
                         case PlaybackMode.Blind:
-                        {
-                            TimeSource.SetPosition(TimeSource.Progress + TimeSpan.FromMilliseconds(50));
-                            break;
-                        }
+                            {
+                                TimeSource.SetPosition(TimeSource.Progress + TimeSpan.FromMilliseconds(50));
+                                break;
+                            }
                         case PlaybackMode.Whirligig:
                             break;
                         default:
@@ -359,15 +391,15 @@ namespace ScriptPlayer.ViewModels
                     switch (PlaybackMode)
                     {
                         case PlaybackMode.Local:
-                        {
-                            PlayPreviousPlaylistEntry();
+                            {
+                                PlayPreviousPlaylistEntry();
                                 break;
-                        }
+                            }
                         case PlaybackMode.Blind:
-                        {
-                            TimeSource.SetPosition(TimeSource.Progress - TimeSpan.FromMilliseconds(50));
-                            break;
-                        }
+                            {
+                                TimeSource.SetPosition(TimeSource.Progress - TimeSpan.FromMilliseconds(50));
+                                break;
+                            }
                         case PlaybackMode.Whirligig:
                             break;
                         default:
@@ -621,6 +653,17 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public bool ShowBanner
+        {
+            get => _showBanner;
+            set
+            {
+                if (value == _showBanner) return;
+                _showBanner = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool ShowScriptPositions
         {
             get => _showScriptPositions;
@@ -755,7 +798,7 @@ namespace ScriptPlayer.ViewModels
 
             foreach (DeviceController controller in _controllers)
             {
-                if(controller is IDisposable disposable)
+                if (controller is IDisposable disposable)
                     disposable.Dispose();
             }
             _controllers.Clear();
@@ -799,7 +842,7 @@ namespace ScriptPlayer.ViewModels
 
         private void CommandDelayChanged()
         {
-            foreach(Device device in _devices)
+            foreach (Device device in _devices)
                 device.MinDelayBetweenCommands = CommandDelay;
         }
 
@@ -833,7 +876,10 @@ namespace ScriptPlayer.ViewModels
             _openVideo = filename;
 
             if (PlaybackMode == PlaybackMode.Local)
+            {
+                HideBanner();
                 VideoPlayer.Open(filename);
+            }
 
             Title = Path.GetFileNameWithoutExtension(filename);
 
@@ -892,9 +938,9 @@ namespace ScriptPlayer.ViewModels
             if (!string.IsNullOrWhiteSpace(scriptFile))
             {
                 string nameOnly = Path.GetFileName(scriptFile);
-                    if (OnRequestMessageBox($"Do you want to also load '{nameOnly}'?", "Also load Script?",
-                            MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
-                        return;
+                if (OnRequestMessageBox($"Do you want to also load '{nameOnly}'?", "Also load Script?",
+                        MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                    return;
 
                 LoadScript(scriptFile, false);
             }
@@ -1311,7 +1357,7 @@ namespace ScriptPlayer.ViewModels
 
             foreach (ScriptAction action in timestamps)
             {
-                if(result.Count == 0 || !result.Last().IsSameAction(action))
+                if (result.Count == 0 || !result.Last().IsSameAction(action))
                     result.Add(action);
             }
             return result;
@@ -1393,7 +1439,7 @@ namespace ScriptPlayer.ViewModels
             {
                 if (AutoSkip)
                     Playlist.PlayNextEntryCommand.Execute(OpenedScript);
-                else if(DisplayEventNotifications)
+                else if (DisplayEventNotifications)
                     OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
                 return;
             }
@@ -1509,7 +1555,7 @@ namespace ScriptPlayer.ViewModels
         {
             if (TimeSource.IsPlaying || !requirePlaying)
             {
-                foreach(Device device in _devices)
+                foreach (Device device in _devices)
                     device.Enqueue(information);
             }
         }
@@ -1623,7 +1669,7 @@ namespace ScriptPlayer.ViewModels
             ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition - _scriptHandler.Delay);
             if (nextAction == null)
             {
-                if(DisplayEventNotifications)
+                if (DisplayEventNotifications)
                     OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
                 return;
             }
@@ -1634,12 +1680,12 @@ namespace ScriptPlayer.ViewModels
             if (skipTo < currentPosition)
                 return;
 
-            if(PlaybackMode == PlaybackMode.Local)
+            if (PlaybackMode == PlaybackMode.Local)
                 await VideoPlayer.SoftSeek(skipTo, isInitialSkip);
             else
                 TimeSource.SetPosition(skipTo);
 
-            if(DisplayEventNotifications)
+            if (DisplayEventNotifications)
                 ShowPosition($"Skipped {duration.TotalSeconds:f0}s - ");
         }
 

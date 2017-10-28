@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
@@ -34,6 +35,7 @@ namespace ScriptPlayer
         private bool _fullscreen;
         private Rect _windowPosition;
         private WindowState _windowState;
+        private DateTime _doubleClickTimeStamp = DateTime.MinValue;
 
         public MainWindow()
         {
@@ -117,14 +119,6 @@ namespace ScriptPlayer
             e.Url = dialog.Url;
         }
 
-        private void VideoPlayer_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton != MouseButton.Left)
-                return;
-
-            ToggleFullscreen();
-        }
-
         private void ToggleFullscreen()
         {
             SetFullscreen(!_fullscreen);
@@ -183,9 +177,33 @@ namespace ScriptPlayer
             _windowState = WindowState;
         }
 
-        private void VideoPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private async void VideoPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            //Debug.WriteLine("Click?");
+            DateTime click = DateTime.Now;
+            await Task.Delay(TimeSpan.FromMilliseconds(350));
+
+            if (_doubleClickTimeStamp >= click)
+                return;
+
+            e.Handled = true;
+
+            //Debug.WriteLine("Click!");
             ViewModel.TogglePlayback();
+        }
+
+
+        private void VideoPlayer_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton != MouseButton.Left)
+                return;
+
+            e.Handled = true;
+
+            //Debug.WriteLine("DoubleClick!");
+            _doubleClickTimeStamp = DateTime.Now;
+
+            ToggleFullscreen();
         }
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)

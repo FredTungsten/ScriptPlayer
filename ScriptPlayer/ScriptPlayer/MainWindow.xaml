@@ -102,6 +102,30 @@
                 </StackPanel>
             </Grid>
 
+            <Grid IsHitTestVisible="False" Visibility="{Binding ShowBanner, Converter={StaticResource VisibilityConverter}}">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="3*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Viewbox StretchDirection="DownOnly" Grid.Column="1"  Grid.Row="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Image Width="512" Height="512" Source="Images/ScriptPlayerIcon.png"></Image>
+                        <!--<TextBlock Foreground="White" Grid.Row="1" Text="{Binding Path=ScriptPlayerVersion, StringFormat={}ScriptPlayer {0}}" FontSize="40" FontWeight="DemiBold" TextAlignment="Center" HorizontalAlignment="Stretch"></TextBlock>-->
+                    </Grid>
+                </Viewbox>
+            </Grid>
+
             <Grid Visibility="{Binding ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="60" >
                 <Grid.Background>
                     <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
