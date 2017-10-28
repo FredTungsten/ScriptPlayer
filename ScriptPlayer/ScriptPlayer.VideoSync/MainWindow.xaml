@@ -37,6 +37,7 @@
             <MenuItem Header="Beats">
                 <MenuItem Header="Set Condition" Click="mnuSetCondition_Click"/>
                 <MenuItem Header="Analyse Samples" Click="mnuAnalyseSamples_Click"/>
+                <MenuItem Header="Re-analyse Selection" Click="mnuAnalyseSelection_Click"/>
                 <MenuItem Header="Clear" Click="mnuClear_Click"/>
                 <Separator/>
                 <MenuItem Header="Convert Beats to Positions" Click="mnuBeatsToPositions_Click"/>

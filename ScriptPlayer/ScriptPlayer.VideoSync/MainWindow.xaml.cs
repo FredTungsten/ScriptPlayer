@@ -434,6 +434,32 @@ namespace ScriptPlayer.VideoSync
             SetAllBeats(dialog.Result);
         }
 
+        private void mnuAnalyseSelection_Click(object sender, RoutedEventArgs e)
+        {
+            if (_frameSamples == null)
+            {
+                MessageBox.Show(this, "No samples to analyse!");
+                return;
+            }
+
+            FrameAnalyserDialog dialog = new FrameAnalyserDialog(_frameSamples, _condition, _parameters);
+
+            if (dialog.ShowDialog() != true) return;
+
+            OverridesSelection(dialog.Result);
+        }
+
+        private void OverridesSelection(List<TimeSpan> beats)
+        {
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> newBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+            newBeats.AddRange(beats.Where(t => t >= tBegin && t <= tEnd).ToList());
+           
+            SetAllBeats(newBeats);
+        }
+
         private void SetAllBeats(IEnumerable<TimeSpan> beats)
         {
             _originalBeats = new BeatCollection(beats);
