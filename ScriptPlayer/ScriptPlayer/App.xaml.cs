@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows;
+using Microsoft.Win32;
 using ScriptPlayer.Shared.Elevation;
 
 namespace ScriptPlayer
@@ -23,7 +24,25 @@ namespace ScriptPlayer
                     Debugger.Launch();
             }
 #endif
+            int _releaseId = 0;
+            try
+            {
+                _releaseId = int.Parse(Registry
+                    .GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "ReleaseId", string.Empty)
+                    .ToString());
+            }
+            catch (Exception)
+            {
+                // If we can't retreive a version, just skip the perm check entirely and don't allow Bluetooth usage.
+                Debug.WriteLine("Can't get version!");
+                return;
+            }
 
+            if (_releaseId < 1703)
+            {
+                // Version too low to use Bluetooth, skip check.
+                return;
+            }
             string exeName = Path.GetFileName(PermissionChecker.GetExe());
             Guid guid = Guid.NewGuid();
 

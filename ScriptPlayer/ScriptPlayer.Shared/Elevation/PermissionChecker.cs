@@ -132,7 +132,7 @@ namespace ScriptPlayer.Shared.Elevation
 
             // https://deploywindows.info/2013/10/17/how-to-build-a-sddl-string-and-set-service-permissions/
             // https://social.msdn.microsoft.com/Forums/en-US/58da3fdb-a0e1-4161-8af3-778b6839f4e1/bluetooth-bluetoothledevicefromidasync-does-not-complete-on-10015063?forum=wdk#ef927009-676c-47bb-8201-8a80d2323a7f
-
+            // XXX: This line will throw on Windows 7, as the SDDI format used in this string is apparently not compatible there.
             RawSecurityDescriptor descriptor = new RawSecurityDescriptor("O:BAG:BAD:(A;;0x7;;;PS)(A;;0x3;;;SY)(A;;0x7;;;BA)(A;;0x3;;;AC)(A;;0x3;;;LS)(A;;0x3;;;NS)");
             byte[] data = new byte[descriptor.BinaryLength];
             descriptor.GetBinaryForm(data,0);
