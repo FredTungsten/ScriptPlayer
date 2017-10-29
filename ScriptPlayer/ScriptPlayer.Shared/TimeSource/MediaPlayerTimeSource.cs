@@ -62,5 +62,9 @@ namespace ScriptPlayer.Shared
             _player.Stop();
             _player.Close();
         }
+
+        public override bool CanPlayPause => true;
+        public override bool CanSeek => true;
+        public override bool CanOpenMedia => true;
     }
 }

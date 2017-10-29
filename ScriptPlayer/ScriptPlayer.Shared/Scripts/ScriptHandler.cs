@@ -32,8 +32,8 @@ namespace ScriptPlayer.Shared.Scripts
         public void Clear()
         {
             ResetCache();
-            _actions.Clear();
-            _beats.Clear();
+            _actions?.Clear();
+            _beats?.Clear();
             UpdatePositions();
         }
 
@@ -76,6 +76,7 @@ namespace ScriptPlayer.Shared.Scripts
 
         public ScriptHandler()
         {
+            _actions = new List<ScriptAction>();
             Delay = new TimeSpan(0);
         }
 

@@ -35,7 +35,7 @@ namespace ScriptPlayer.Shared
                     AddDevice(device);
                     break;
                 case DeviceEventArgs.DeviceAction.REMOVED:
-                    _devices.RemoveAll(dev => dev.Index == device.Index);
+                    RemoveDevice(device);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -76,6 +76,15 @@ namespace ScriptPlayer.Shared
             {
                 AddDevice(device);
             }
+        }
+
+        private void RemoveDevice(ButtplugClientDevice device)
+        {
+            ButtplugDevice localDevice = _devices.SingleOrDefault(dev => dev.Index == device.Index);
+            if (localDevice == null) return;
+
+            _devices.Remove(localDevice);
+            OnDeviceRemoved(localDevice);
         }
 
         private void AddDevice(ButtplugClientDevice device)

@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Windows;
@@ -145,6 +144,10 @@ namespace ScriptPlayer.Shared
             }
         }
 
+        public override bool CanPlayPause => false;
+        public override bool CanSeek => false;
+        public override bool CanOpenMedia => false;
+
         public override void Play()
         {
             Debug.WriteLine("Can't play");
@@ -176,39 +179,6 @@ namespace ScriptPlayer.Shared
             _client?.Dispose();
             _clientLoop?.Interrupt();
             _clientLoop?.Abort();
-        }
-    }
-
-    public class WhirligigConnectionSettings
-    {
-        public string IpAndPort { get; set; }
-
-        public IPEndPoint ToEndpoint()
-        {
-            try
-            {
-                string ip;
-                int port;
-
-                if (IpAndPort.Contains(":"))
-                {
-                    int index = IpAndPort.IndexOf(":");
-                    ip = IpAndPort.Substring(0, index);
-                    port = int.Parse(IpAndPort.Substring(index + 1));
-                }
-                else
-                {
-                    ip = IpAndPort;
-                    port = 2000;
-                }
-
-                return new IPEndPoint(IPAddress.Parse(ip),port);
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("Could not parse Whirligig Connection Settings: " + e.Message);
-                return new IPEndPoint(IPAddress.Loopback, 2000);
-            }
         }
     }
 }

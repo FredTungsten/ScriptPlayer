@@ -11,6 +11,10 @@ namespace ScriptPlayer.Shared
         private object _clocklock = new object();
         private TimeSpan _maxOffset;
 
+        public override bool CanPlayPause => true;
+        public override bool CanSeek => true;
+        public override bool CanOpenMedia => true;
+
         public ManualTimeSource(ISampleClock clock) : this(clock, TimeSpan.FromMilliseconds(100))
         { }
 

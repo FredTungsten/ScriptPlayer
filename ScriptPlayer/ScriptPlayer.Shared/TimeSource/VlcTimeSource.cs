@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -36,7 +35,7 @@ namespace ScriptPlayer.Shared
             _connectionSettings = connectionSettings;
             _previousStatus = new VlcStatus{IsValid = false};
 
-            _timeSource = new ManualTimeSource(clock, TimeSpan.FromMilliseconds(150));
+            _timeSource = new ManualTimeSource(clock, TimeSpan.FromMilliseconds(200));
             _timeSource.DurationChanged += TimeSourceOnDurationChanged;
             _timeSource.IsPlayingChanged += TimeSourceOnIsPlayingChanged;
             _timeSource.ProgressChanged += TimeSourceOnProgressChanged;
@@ -68,7 +67,6 @@ namespace ScriptPlayer.Shared
                 {
                     while (_running)
                     {
-                        Thread.Sleep(100);
                         string status = Request("status.xml");
                         if (string.IsNullOrWhiteSpace(status))
                         {
@@ -116,40 +114,50 @@ namespace ScriptPlayer.Shared
                 return;
             }
 
-            VlcStatus newStatus = new VlcStatus(statusXml);
-
-            if (newStatus.IsValid)
+            try
             {
-                if (!_previousStatus.IsValid || _previousStatus.Filename != newStatus.Filename)
+                VlcStatus newStatus = new VlcStatus(statusXml);
+
+                if (newStatus.IsValid)
                 {
-                    FindFullFilename(newStatus.Filename);
+                    if (!_previousStatus.IsValid || _previousStatus.Filename != newStatus.Filename)
+                    {
+                        FindFullFilename(newStatus.Filename);
+                    }
+
+                    if (!_previousStatus.IsValid || _previousStatus.PlaybackState != newStatus.PlaybackState)
+                    {
+                        if (newStatus.PlaybackState == VlcPlaybackState.Playing)
+                            _timeSource.Play();
+                        else
+                            _timeSource.Pause();
+                    }
+
+                    if (!_previousStatus.IsValid || _previousStatus.Duration != newStatus.Duration)
+                    {
+                        _timeSource.SetDuration(newStatus.Duration);
+                    }
+
+                    if (!_previousStatus.IsValid || _previousStatus.Progress != newStatus.Progress)
+                    {
+                        _timeSource.SetPosition(newStatus.Progress);
+                    }
                 }
 
-                if (!_previousStatus.IsValid || _previousStatus.PlaybackState != newStatus.PlaybackState)
-                {
-                    if (newStatus.PlaybackState == VlcPlaybackState.Playing)
-                        _timeSource.Play();
-                    else
-                        _timeSource.Pause();
-                }
-
-                if (!_previousStatus.IsValid || _previousStatus.Duration != newStatus.Duration)
-                {
-                    _timeSource.SetDuration(newStatus.Duration);
-                }
-
-                if (!_previousStatus.IsValid || _previousStatus.Progress != newStatus.Progress)
-                {
-                    _timeSource.SetPosition(newStatus.Progress);
-                }
+                _previousStatus = newStatus;
             }
-
-            _previousStatus = newStatus;
+            catch (Exception exception)
+            {
+                Debug.WriteLine("Couldn't interpret VLC Status: " + exception.Message);
+            }
         }
 
         private void FindFullFilename(string newStatusFilename)
         {
             string playlist = Request("playlist.xml");
+
+            if (String.IsNullOrWhiteSpace(playlist))
+                return;
 
             string filename = FindFileByName(playlist, newStatusFilename);
 
@@ -239,84 +247,9 @@ namespace ScriptPlayer.Shared
             _clientLoop?.Interrupt();
             _clientLoop?.Abort();
         }
-    }
 
-    public enum VlcPlaybackState
-    {
-        Stopped,
-        Playing,
-        Paused
-    }
-
-    public class VlcStatus
-    {
-        public VlcStatus()
-        {
-            
-        }
-        public VlcStatus(string statusXml)
-        {
-            try
-            {
-                XmlDocument status = new XmlDocument();
-                status.LoadXml(statusXml);
-
-                string state = status.SelectSingleNode("/root/state")?.InnerText;
-
-                switch (state.ToLower(CultureInfo.InvariantCulture))
-                {
-                    case "playing":
-                        PlaybackState = VlcPlaybackState.Playing;
-                        break;
-                    case "paused":
-                        PlaybackState = VlcPlaybackState.Paused;
-                        break;
-                    default:
-                        PlaybackState = VlcPlaybackState.Stopped;
-                        break;
-                }
-
-                string length = status.SelectSingleNode("/root/length")?.InnerText;
-
-                double lengthInSeconds = double.Parse(length, CultureInfo.InvariantCulture);
-
-                Duration = TimeSpan.FromSeconds(lengthInSeconds);
-
-                string progress = status.SelectSingleNode("/root/position")?.InnerText;
-
-                double relativeProgress = double.Parse(progress, CultureInfo.InvariantCulture);
-
-                Progress = TimeSpan.FromSeconds(lengthInSeconds * relativeProgress);
-
-                string encodedFileName = status.SelectSingleNode("/root/information/category[@name='meta']/info[@name='filename']")?.InnerText;
-
-                if (!String.IsNullOrWhiteSpace(encodedFileName))
-                    Filename = WebUtility.HtmlDecode(encodedFileName);
-                else
-                    Filename = null;
-
-                IsValid = true;
-            }
-            catch
-            {
-                IsValid = false;
-            }
-
-        }
-
-        public string Filename { get; set; }
-
-        public VlcPlaybackState PlaybackState { get; set; }
-
-        public bool IsValid { get; set; }
-        public TimeSpan Duration { get; set; }
-
-        public TimeSpan Progress { get; set; }
-    }
-
-    public class VlcConnectionSettings
-    {
-        public string Password { get; set; }
-        public string IpAndPort { get; set; }
+        public override bool CanPlayPause => true;
+        public override bool CanSeek => true;
+        public override bool CanOpenMedia => false;
     }
 }

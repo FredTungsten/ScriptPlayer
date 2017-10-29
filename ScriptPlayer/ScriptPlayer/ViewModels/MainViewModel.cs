@@ -295,30 +295,33 @@ namespace ScriptPlayer.ViewModels
 
         private void PlaybackModeChanged(PlaybackMode oldValue, PlaybackMode newValue)
         {
-            DisposeTimeSource();
-            ClearScript();
-
-            Title = "";
-            OpenedScript = null;
-            _openVideo = null;
-
-            switch (newValue)
+            try
             {
-                case PlaybackMode.Local:
+                DisposeTimeSource();
+                ClearScript();
+
+                Title = "";
+                OpenedScript = null;
+                _openVideo = null;
+
+                switch (newValue)
+                {
+                    case PlaybackMode.Local:
                     {
                         TimeSource = VideoPlayer.TimeSource;
                         break;
                     }
-                case PlaybackMode.Blind:
+                    case PlaybackMode.Blind:
                     {
                         HideBanner();
-                        TimeSource = new ManualTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                            TimeSpan.FromMilliseconds(10)));
+                        TimeSource = new ManualTimeSource(
+                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                TimeSpan.FromMilliseconds(10)));
 
                         RefreshManualDuration();
                         break;
                     }
-                case PlaybackMode.Whirligig:
+                    case PlaybackMode.Whirligig:
                     {
                         HideBanner();
 
@@ -343,7 +346,7 @@ namespace ScriptPlayer.ViewModels
                         RefreshManualDuration();
                         break;
                     }
-                case PlaybackMode.Vlc:
+                    case PlaybackMode.Vlc:
                     {
                         HideBanner();
 
@@ -358,17 +361,23 @@ namespace ScriptPlayer.ViewModels
                             PlaybackMode = PlaybackMode.Local;
                             return;
                         }
-                        
+
                         TimeSource = new VlcTimeSource(
-                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread), TimeSpan.FromMilliseconds(10)),
+                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                TimeSpan.FromMilliseconds(10)),
                             settings);
 
-                        ((VlcTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
-                        
+                        ((VlcTimeSource) TimeSource).FileOpened += OnVideoFileOpened;
+
                         break;
                     }
-                default:
-                    throw new ArgumentOutOfRangeException();
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+            finally
+            {
+                CommandManager.InvalidateRequerySuggested();
             }
         }
 
@@ -1022,6 +1031,9 @@ namespace ScriptPlayer.ViewModels
 
         public void TogglePlayback()
         {
+            if (!TimeSource.CanPlayPause)
+                return;
+
             if (TimeSource.IsPlaying)
                 Pause();
             else
@@ -1203,12 +1215,24 @@ namespace ScriptPlayer.ViewModels
             ConnectLaunchDirectlyCommand = new RelayCommand(ConnectLaunchDirectly);
             ConnectButtplugCommand = new RelayCommand(ConnectButtplug);
             StartScanningButtplugCommand = new RelayCommand(StartScanningButtplug);
-            SkipToNextEventCommand = new RelayCommand(SkipToNextEvent);
-            TogglePlaybackCommand = new RelayCommand(TogglePlayback);
+            SkipToNextEventCommand = new RelayCommand(SkipToNextEvent, CanSkipToNextEvent);
+            TogglePlaybackCommand = new RelayCommand(TogglePlayback, CanTogglePlayback);
             VolumeUpCommand = new RelayCommand(VolumeUp);
             VolumeDownCommand = new RelayCommand(VolumeDown);
             ExecuteSelectedTestPatternCommand = new RelayCommand(ExecuteSelectedTestPattern, CanExecuteSelectedTestPattern);
             ToggleFullScreenCommand = new RelayCommand(ExecuteToggleFullScreen);
+        }
+
+        private bool CanSkipToNextEvent()
+        {
+            if (TimeSource == null) return false;
+            return TimeSource.CanSeek;
+        }
+
+        private bool CanTogglePlayback()
+        {
+            if (TimeSource == null) return false;
+            return TimeSource.CanPlayPause;
         }
 
         private void ExecuteToggleFullScreen()
@@ -1309,6 +1333,12 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        private void DevicecController_DeviceRemoved(object sender, Device device)
+        {
+            _devices.Remove(device);
+
+            OnRequestOverlay("Device Removed: " + device.Name, TimeSpan.FromSeconds(8));
+        }
 
         private void DeviceController_DeviceFound(object sender, Device device)
         {
@@ -1330,6 +1360,7 @@ namespace ScriptPlayer.ViewModels
 
         private void PlaylistOnPlayEntry(object sender, PlaylistEntry playlistEntry)
         {
+            if (!TimeSource.CanOpenMedia) return;
             LoadFile(playlistEntry.Fullname);
             Play();
         }
@@ -1755,11 +1786,13 @@ namespace ScriptPlayer.ViewModels
 
         private void PlayNextPlaylistEntry()
         {
+            if (!TimeSource.CanOpenMedia) return;
             Playlist.PlayNextEntryCommand.Execute(OpenedScript);
         }
 
         private void PlayPreviousPlaylistEntry()
         {
+            if (!TimeSource.CanOpenMedia) return;
             Playlist.PlayPreviousEntryCommand.Execute(OpenedScript);
         }
 
@@ -1971,6 +2004,7 @@ namespace ScriptPlayer.ViewModels
             if (controller != null)
             {
                 controller.DeviceFound -= DeviceController_DeviceFound;
+                controller.DeviceRemoved -= DevicecController_DeviceRemoved;
                 await controller.Disconnect();
             }
 
@@ -1982,6 +2016,7 @@ namespace ScriptPlayer.ViewModels
 
             controller = new ButtplugAdapter(url);
             controller.DeviceFound += DeviceController_DeviceFound;
+            controller.DeviceRemoved += DevicecController_DeviceRemoved;
 
             _controllers.Add(controller);
 
@@ -1995,6 +2030,7 @@ namespace ScriptPlayer.ViewModels
             {
                 _controllers.Remove(controller);
                 controller.DeviceFound -= DeviceController_DeviceFound;
+                controller.DeviceRemoved -= DevicecController_DeviceRemoved;
                 OnRequestOverlay("Could not connect to Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
             }
         }

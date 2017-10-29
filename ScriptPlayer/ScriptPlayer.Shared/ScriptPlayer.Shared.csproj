@@ -204,8 +204,12 @@
     <Compile Include="TimeSource\MediaPlayerTimeSource.cs" />
     <Compile Include="TimeSource\ISampleClock.cs" />
     <Compile Include="TimeSource\TimeSource.cs" />
+    <Compile Include="TimeSource\VlcConnectionSettings.cs" />
+    <Compile Include="TimeSource\VlcPlaybackState.cs" />
+    <Compile Include="TimeSource\VlcStatus.cs" />
     <Compile Include="TimeSource\VlcTimeSource.cs" />
-    <Compile Include="TimeSource\WhirlyTimeSource.cs" />
+    <Compile Include="TimeSource\WhirligigTimeSource.cs" />
+    <Compile Include="TimeSource\WhirligigConnectionSettings.cs" />
     <Compile Include="Beats\TimeSpanExtensions.cs" />
     <Compile Include="Scripts\ScriptLoader.cs" />
     <Compile Include="Controls\VanishingContainer.cs" />
