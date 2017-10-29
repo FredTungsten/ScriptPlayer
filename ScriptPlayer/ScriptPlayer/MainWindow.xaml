@@ -198,7 +198,7 @@
             <MenuItem Header="Devices">
                 <MenuItem Header="Show Devices" Click="mnuShowDevices_Click"/>
                 <Separator/>
-                <MenuItem Header="Connect Launch directly" Command="{Binding ConnectLaunchDirectlyCommand}"/>
+                <MenuItem Header="Connect Launch Directly (Win10 15063+ Only)" Command="{Binding ConnectLaunchDirectlyCommand}" Name="LaunchDirectConnectItem" IsEnabled="False"/>
                 <MenuItem>
                     <MenuItem.Header>
                         <TextBlock>

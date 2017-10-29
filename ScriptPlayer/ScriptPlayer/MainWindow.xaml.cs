@@ -61,6 +61,7 @@ namespace ScriptPlayer
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
+            LaunchDirectConnectItem.IsEnabled = ViewModel.CanDirectConnectLaunch;
         }
 
         private void ViewModelOnRequestWhirligigConnectionSettings(object sender, RequestEventArgs<WhirligigConnectionSettings> args)

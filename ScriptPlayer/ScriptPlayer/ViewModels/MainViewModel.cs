@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using FMUtils.KeyboardHook;
 using JetBrains.Annotations;
+using Microsoft.Win32;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 using Application = System.Windows.Application;
@@ -101,6 +102,8 @@ namespace ScriptPlayer.ViewModels
         private string _scriptPlayerVersion;
         private bool _blurVideo;
 
+        private bool _canDirectConnectLaunch = false;
+
         public ObservableCollection<Device> Devices => _devices;
 
         public bool ShowTimeLeft
@@ -167,10 +170,28 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public Boolean CanDirectConnectLaunch
+        {
+            get { return _canDirectConnectLaunch; }
+        }
+
         public MainViewModel()
         {
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             ScriptPlayerVersion = GetScriptPlayerVersion();
+            int _releaseId = 0;
+            try
+            {
+                _releaseId = int.Parse(Registry
+                    .GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "ReleaseId", string.Empty)
+                    .ToString());
+            }
+            catch (Exception)
+            {
+                // If we can't retreive a version, just skip the perm check entirely and don't allow Bluetooth usage.
+                Debug.WriteLine("Can't get version!");
+            }
+
             LoadPlaylist();
 
             ConversionModes = Enum.GetValues(typeof(ConversionMode)).Cast<ConversionMode>().ToList();
@@ -178,7 +199,12 @@ namespace ScriptPlayer.ViewModels
 
             InitializeCommands();
             InitializeTestPatterns();
-            InitializeLaunchFinder();
+            if (_releaseId >= 1703)
+            {
+                // Only initialize LaunchFinder on Win10 15063+
+                InitializeLaunchFinder();
+            }
+
             InitializeScriptHandler();
 
             LoadSettings();
@@ -1419,6 +1445,7 @@ namespace ScriptPlayer.ViewModels
             launchController = new LaunchBluetooth();
             launchController.DeviceFound += DeviceController_DeviceFound;
             _controllers.Add(launchController);
+            _canDirectConnectLaunch = true;
         }
 
         private void CheckForArguments()
