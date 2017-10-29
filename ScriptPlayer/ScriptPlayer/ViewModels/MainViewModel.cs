@@ -27,6 +27,9 @@ namespace ScriptPlayer.ViewModels
         public delegate void RequestOverlayEventHandler(object sender, string text, TimeSpan duration,
             string designation);
 
+        public event EventHandler<RequestEventArgs<VlcConnectionSettings>> RequestVlcConnectionSettings;
+        public event EventHandler<RequestEventArgs<WhirligigConnectionSettings>> RequestWhirligigConnectionSettings;
+
         private readonly string[] _supportedScriptExtensions;
 
         private readonly string[] _supportedVideoExtensions =
@@ -167,8 +170,7 @@ namespace ScriptPlayer.ViewModels
         {
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             ScriptPlayerVersion = GetScriptPlayerVersion();
-            Playlist = new PlaylistViewModel();
-            Playlist.PlayEntry += PlaylistOnPlayEntry;
+            LoadPlaylist();
 
             ConversionModes = Enum.GetValues(typeof(ConversionMode)).Cast<ConversionMode>().ToList();
             _supportedScriptExtensions = ScriptLoaderManager.GetSupportedExtensions();
@@ -179,6 +181,7 @@ namespace ScriptPlayer.ViewModels
             InitializeScriptHandler();
 
             LoadSettings();
+            
         }
 
         private string GetScriptPlayerVersion()
@@ -225,6 +228,39 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        private void LoadPlaylist(string filename = null)
+        {
+            if (string.IsNullOrWhiteSpace(filename))
+                filename = GetDefaultPlaylistFile();
+
+            M3uPlaylist playlist = M3uPlaylist.FromFile(filename);
+
+            if (Playlist == null)
+            {
+                Playlist = new PlaylistViewModel();
+                Playlist.PlayEntry += PlaylistOnPlayEntry;
+            }
+            else
+            {
+                Playlist.Clear();
+            }
+
+            if (playlist == null) return;
+
+            foreach(string entry in playlist.Entries)
+                Playlist.AddEntry(new PlaylistEntry(entry));
+        }
+
+        private void SavePlaylist(string filename = null)
+        {
+            if (string.IsNullOrWhiteSpace(filename))
+                filename = GetDefaultPlaylistFile();
+
+            M3uPlaylist playlist = new M3uPlaylist();
+            playlist.Entries.AddRange(Playlist.Entries.Select(e => e.Fullname));
+            playlist.Save(filename);
+        }
+
         private void SaveSettings()
         {
             Settings settings = new Settings();
@@ -252,11 +288,21 @@ namespace ScriptPlayer.ViewModels
             return Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\Settings.xml");
         }
 
-        private void PlaybackModeChanged()
+        private string GetDefaultPlaylistFile()
+        {
+            return Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\Playlist.m3u");
+        }
+
+        private void PlaybackModeChanged(PlaybackMode oldValue, PlaybackMode newValue)
         {
             DisposeTimeSource();
+            ClearScript();
 
-            switch (PlaybackMode)
+            Title = "";
+            OpenedScript = null;
+            _openVideo = null;
+
+            switch (newValue)
             {
                 case PlaybackMode.Local:
                     {
@@ -275,17 +321,80 @@ namespace ScriptPlayer.ViewModels
                 case PlaybackMode.Whirligig:
                     {
                         HideBanner();
-                        TimeSource = new WhirligigTimeSource(new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                            TimeSpan.FromMilliseconds(10)));
 
-                        ((WhirligigTimeSource)TimeSource).FileOpened += OnFileOpened;
+                        WhirligigConnectionSettings settings =
+                            OnRequestWhirligigConnectionSettings(new WhirligigConnectionSettings
+                            {
+                                IpAndPort = "127.0.0.1:2000"
+                            });
+
+                        if (settings == null)
+                        {
+                            PlaybackMode = PlaybackMode.Local;
+                            return;
+                        }
+
+                        TimeSource = new WhirligigTimeSource(new DispatcherClock(
+                            Dispatcher.FromThread(Thread.CurrentThread),
+                            TimeSpan.FromMilliseconds(10)), settings);
+
+                        ((WhirligigTimeSource) TimeSource).FileOpened += OnVideoFileOpened;
 
                         RefreshManualDuration();
+                        break;
+                    }
+                case PlaybackMode.Vlc:
+                    {
+                        HideBanner();
+
+                        VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
+                        {
+                            IpAndPort = "127.0.0.1:8080",
+                            Password = "test"
+                        });
+
+                        if (settings == null)
+                        {
+                            PlaybackMode = PlaybackMode.Local;
+                            return;
+                        }
+                        
+                        TimeSource = new VlcTimeSource(
+                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread), TimeSpan.FromMilliseconds(10)),
+                            settings);
+
+                        ((VlcTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+                        
                         break;
                     }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private void ClearScript()
+        {
+            _scriptHandler.Clear();
+        }
+
+        private VlcConnectionSettings OnRequestVlcConnectionSettings(VlcConnectionSettings currentSettings)
+        {
+            RequestEventArgs<VlcConnectionSettings> args = new RequestEventArgs<VlcConnectionSettings>(currentSettings);
+            RequestVlcConnectionSettings?.Invoke(this, args);
+
+            if (!args.Handled)
+                return null;
+            return args.Value;
+        }
+
+        private WhirligigConnectionSettings OnRequestWhirligigConnectionSettings(WhirligigConnectionSettings currentSettings)
+        {
+            RequestEventArgs<WhirligigConnectionSettings> args = new RequestEventArgs<WhirligigConnectionSettings>(currentSettings);
+            RequestWhirligigConnectionSettings?.Invoke(this, args);
+
+            if (!args.Handled)
+                return null;
+            return args.Value;
         }
 
         private void HideBanner()
@@ -297,27 +406,27 @@ namespace ScriptPlayer.ViewModels
         {
             TimeSource?.Pause();
 
-            if (TimeSource is IDisposable)
-                ((IDisposable)TimeSource).Dispose();
+            if (TimeSource is IDisposable disposable)
+                disposable.Dispose();
         }
 
-        private void OnFileOpened(object sender, string filename)
+        private void OnVideoFileOpened(object sender, string videoFileName)
         {
-            SilentlyFindMatchingScript(filename);
+            SilentlyFindMatchingScript(videoFileName);
         }
 
-        private void SilentlyFindMatchingScript(string filename)
+        private void SilentlyFindMatchingScript(string videoFileName)
         {
-            if (VideoAndScriptNamesMatch())
+            if (IsMatchingScriptLoaded(videoFileName))
             {
                 OnRequestOverlay("Matching script alreadly loaded", TimeSpan.FromSeconds(6));
                 return;
             }
 
-            string scriptFile = FindFile(filename, ScriptLoaderManager.GetSupportedExtensions());
+            string scriptFile = FindFile(videoFileName, ScriptLoaderManager.GetSupportedExtensions());
             if (string.IsNullOrWhiteSpace(scriptFile))
             {
-                OnRequestOverlay($"No script for '{Path.GetFileName(filename)}' found!", TimeSpan.FromSeconds(6));
+                OnRequestOverlay($"No script for '{Path.GetFileName(videoFileName)}' found!", TimeSpan.FromSeconds(6));
                 return;
             }
 
@@ -601,8 +710,9 @@ namespace ScriptPlayer.ViewModels
             set
             {
                 if (value == _playbackMode) return;
+                PlaybackMode oldValue = _playbackMode;
                 _playbackMode = value;
-                PlaybackModeChanged();
+                PlaybackModeChanged(oldValue, _playbackMode);
                 OnPropertyChanged();
             }
         }
@@ -868,22 +978,22 @@ namespace ScriptPlayer.ViewModels
             LoadVideo(selectedFile, true);
         }
 
-        private void LoadVideo(string filename, bool checkForScript)
+        private void LoadVideo(string videoFileName, bool checkForScript)
         {
             if (checkForScript)
-                TryFindMatchingScript(filename);
+                TryFindMatchingScript(videoFileName);
 
-            _openVideo = filename;
+            _openVideo = videoFileName;
 
             if (PlaybackMode == PlaybackMode.Local)
             {
                 HideBanner();
-                VideoPlayer.Open(filename);
+                VideoPlayer.Open(videoFileName);
             }
 
-            Title = Path.GetFileNameWithoutExtension(filename);
+            Title = Path.GetFileNameWithoutExtension(videoFileName);
 
-            OnRequestOverlay($"Loaded {Path.GetFileName(filename)}", TimeSpan.FromSeconds(4), "VideoLoaded");
+            OnRequestOverlay($"Loaded {Path.GetFileName(videoFileName)}", TimeSpan.FromSeconds(4), "VideoLoaded");
 
             Play();
         }
@@ -929,12 +1039,12 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void TryFindMatchingScript(string filename)
+        private void TryFindMatchingScript(string videoFileName)
         {
-            if (VideoAndScriptNamesMatch())
+            if (IsMatchingScriptLoaded(videoFileName))
                 return;
 
-            string scriptFile = FindFile(filename, ScriptLoaderManager.GetSupportedExtensions());
+            string scriptFile = FindFile(videoFileName, ScriptLoaderManager.GetSupportedExtensions());
             if (!string.IsNullOrWhiteSpace(scriptFile))
             {
                 string nameOnly = Path.GetFileName(scriptFile);
@@ -946,12 +1056,12 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void TryFindMatchingVideo(string filename)
+        private void TryFindMatchingVideo(string scriptFileName)
         {
-            if (VideoAndScriptNamesMatch())
+            if (IsMatchingVideoLoaded(scriptFileName))
                 return;
 
-            string videoFile = FindFile(filename, _supportedVideoExtensions);
+            string videoFile = FindFile(scriptFileName, _supportedVideoExtensions);
             if (!string.IsNullOrWhiteSpace(videoFile))
                 LoadVideo(videoFile, false);
         }
@@ -968,18 +1078,32 @@ namespace ScriptPlayer.ViewModels
             return null;
         }
 
-        private bool VideoAndScriptNamesMatch()
+        private bool IsMatchingScriptLoaded(string videoFileName)
         {
             if (string.IsNullOrWhiteSpace(OpenedScript))
+                return false;
+
+            if (string.IsNullOrWhiteSpace(videoFileName))
+                return false;
+
+            if (Path.GetDirectoryName(OpenedScript) != Path.GetDirectoryName(videoFileName))
+                return false;
+
+            return Path.GetFileNameWithoutExtension(OpenedScript).Equals(Path.GetFileNameWithoutExtension(videoFileName));
+        }
+
+        private bool IsMatchingVideoLoaded(string scriptFileName)
+        {
+            if (string.IsNullOrWhiteSpace(scriptFileName))
                 return false;
 
             if (string.IsNullOrWhiteSpace(_openVideo))
                 return false;
 
-            if (Path.GetDirectoryName(OpenedScript) != Path.GetDirectoryName(_openVideo))
+            if (Path.GetDirectoryName(scriptFileName) != Path.GetDirectoryName(_openVideo))
                 return false;
 
-            return Path.GetFileNameWithoutExtension(OpenedScript).Equals(Path.GetFileNameWithoutExtension(_openVideo));
+            return Path.GetFileNameWithoutExtension(scriptFileName).Equals(Path.GetFileNameWithoutExtension(_openVideo));
         }
 
         private void StartPattern(PatternGenerator generator)
@@ -1733,50 +1857,52 @@ namespace ScriptPlayer.ViewModels
         {
             ScriptFileFormatCollection formats = ScriptLoaderManager.GetFormats();
 
-            string file = OnRequestFile(formats.BuildFilter(true), ref _lastScriptFilterIndex);
-            if (file == null)
+            string scriptFileName = OnRequestFile(formats.BuildFilter(true), ref _lastScriptFilterIndex);
+            if (scriptFileName == null)
                 return;
 
-            ScriptFileFormat[] format = formats.GetFormats(_lastScriptFilterIndex - 1, file);
+            ScriptFileFormat[] format = formats.GetFormats(_lastScriptFilterIndex - 1, scriptFileName);
 
             ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(format);
 
-            if (!LoadScript(loaders, file))
+            if (!LoadScript(loaders, scriptFileName))
             {
                 ScriptLoader[] otherLoaders = ScriptLoaderManager.GetAllLoaders().Except(loaders).ToArray();
-                if (!LoadScript(otherLoaders, file))
+                if (!LoadScript(otherLoaders, scriptFileName))
                 {
-                    OnRequestOverlay($"The script file '{file}' could not be loaded!", TimeSpan.FromSeconds(6));
+                    OnRequestOverlay($"The script file '{scriptFileName}' could not be loaded!", TimeSpan.FromSeconds(6));
                     return;
                 }
             }
 
-            TryFindMatchingVideo(file);
+            TryFindMatchingVideo(scriptFileName);
 
             UpdateHeatMap();
         }
 
         //TODO: Maybe merge some code with OpenScript()?
-        private void LoadScript(string file, bool checkForVideo)
+        private void LoadScript(string scriptFileName, bool checkForVideo)
         {
-            ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(file);
+            ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(scriptFileName);
             if (loaders == null)
                 return;
 
-            if (!LoadScript(loaders, file))
+            if (!LoadScript(loaders, scriptFileName))
             {
                 ScriptLoader[] otherLoaders = ScriptLoaderManager.GetAllLoaders().Except(loaders).ToArray();
-                if (!LoadScript(otherLoaders, file))
+                if (!LoadScript(otherLoaders, scriptFileName))
                 {
-                    OnRequestOverlay($"The script file '{file}' could not be loaded!", TimeSpan.FromSeconds(6));
+                    OnRequestOverlay($"The script file '{scriptFileName}' could not be loaded!", TimeSpan.FromSeconds(6));
                     return;
                 }
             }
 
-            OnRequestOverlay($"Loaded {Path.GetFileName(file)}", TimeSpan.FromSeconds(4), "ScriptLoaded");
+            OnRequestOverlay($"Loaded {Path.GetFileName(scriptFileName)}", TimeSpan.FromSeconds(4), "ScriptLoaded");
+
+            Title = Path.GetFileNameWithoutExtension(scriptFileName);
 
             if (checkForVideo)
-                TryFindMatchingVideo(file);
+                TryFindMatchingVideo(scriptFileName);
         }
 
         public void ConnectLaunchDirectly()
@@ -1884,6 +2010,7 @@ namespace ScriptPlayer.ViewModels
         public void Unload()
         {
             SaveSettings();
+            SavePlaylist();
         }
 
         protected virtual void OnRequestToggleFullscreen()
@@ -1896,6 +2023,7 @@ namespace ScriptPlayer.ViewModels
     {
         Local,
         Blind,
-        Whirligig
+        Whirligig,
+        Vlc
     }
 }

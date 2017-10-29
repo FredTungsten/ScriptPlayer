@@ -11,30 +11,34 @@ namespace ScriptPlayer.Shared
 {
     public class WhirligigTimeSource : TimeSource, IDisposable
     {
+        private readonly WhirligigConnectionSettings _connectionSettings;
+
         public static readonly DependencyProperty IsConnectedProperty = DependencyProperty.Register(
             "IsConnected", typeof(bool), typeof(WhirligigTimeSource), new PropertyMetadata(default(bool)));
 
         public bool IsConnected
         {
-            get { return (bool) GetValue(IsConnectedProperty); }
-            set { SetValue(IsConnectedProperty, value); }
+            get => (bool) GetValue(IsConnectedProperty);
+            set => SetValue(IsConnectedProperty, value);
         }
 
         public event EventHandler<string> FileOpened;
 
         private readonly Thread _clientLoop;
-        private ManualTimeSource TimeSource { get; set; }
+        private readonly ManualTimeSource _timeSource;
 
         private bool _running = true;
         private TcpClient _client;
         private TimeSpan _lastReceivedTimestamp = TimeSpan.MaxValue;
 
-        public WhirligigTimeSource(ISampleClock clock)
+        public WhirligigTimeSource(ISampleClock clock, WhirligigConnectionSettings connectionSettings)
         {
-            TimeSource = new ManualTimeSource(clock);
-            TimeSource.DurationChanged += TimeSourceOnDurationChanged;
-            TimeSource.IsPlayingChanged += TimeSourceOnIsPlayingChanged;
-            TimeSource.ProgressChanged += TimeSourceOnProgressChanged;
+            _connectionSettings = connectionSettings;
+
+            _timeSource = new ManualTimeSource(clock, TimeSpan.FromMilliseconds(100));
+            _timeSource.DurationChanged += TimeSourceOnDurationChanged;
+            _timeSource.IsPlayingChanged += TimeSourceOnIsPlayingChanged;
+            _timeSource.ProgressChanged += TimeSourceOnProgressChanged;
 
             _clientLoop = new Thread(ClientLoop);
             _clientLoop.Start();
@@ -62,7 +66,7 @@ namespace ScriptPlayer.Shared
                 try
                 {
                     _client = new TcpClient();
-                    _client.Connect(new IPEndPoint(IPAddress.Loopback, 2000));
+                    _client.Connect(_connectionSettings.ToEndpoint());
 
                     SetConnected(true);
 
@@ -73,8 +77,7 @@ namespace ScriptPlayer.Shared
                             while (!reader.EndOfStream)
                             {
                                 string line = reader.ReadLine();
-                                DateTime timestamp = DateTime.Now;
-                                InterpretLine(line, timestamp);
+                                InterpretLine(line);
                             }
                         }
                     }
@@ -108,18 +111,18 @@ namespace ScriptPlayer.Shared
                 Dispatcher.Invoke(() => { SetConnected(isConnected); });
         }
 
-        private void InterpretLine(string line, DateTime timestamp)
+        private void InterpretLine(string line)
         {
-            if (TimeSource.CheckAccess())
+            if (_timeSource.CheckAccess())
             {
                 if (line.StartsWith("S"))
                 {
-                    TimeSource.Pause();
+                    _timeSource.Pause();
                 }
                 else if (line.StartsWith("C"))
                 {
                     string file = line.Substring(2).Trim('\t', ' ', '\"');
-                    Debug.WriteLine("Wirligig opened '{0}'", file);
+                    Debug.WriteLine("Whirligig opened '{0}'", file);
                     OnFileOpened(file);
                 }
                 else if (line.StartsWith("P"))
@@ -128,17 +131,17 @@ namespace ScriptPlayer.Shared
                     double seconds = double.Parse(timeStamp, CultureInfo.InvariantCulture);
                     TimeSpan position = TimeSpan.FromSeconds(seconds);
 
-                    TimeSource.Play();
+                    _timeSource.Play();
 
                     if (position == _lastReceivedTimestamp)
                         return;
                     _lastReceivedTimestamp = position;
-                    TimeSource.SetPosition(position);
+                    _timeSource.SetPosition(position);
                 }
             }
             else
             {
-                TimeSource.Dispatcher.Invoke(() => InterpretLine(line, timestamp));
+                _timeSource.Dispatcher.Invoke(() => InterpretLine(line));
             }
         }
 
@@ -152,11 +155,6 @@ namespace ScriptPlayer.Shared
             Debug.WriteLine("Can't pause");
         }
 
-        public override void TogglePlayback()
-        {
-            Debug.WriteLine("Can't toggle");
-        }
-
         public override void SetPosition(TimeSpan position)
         {
             Debug.WriteLine("Can't set position");
@@ -164,7 +162,7 @@ namespace ScriptPlayer.Shared
 
         public void SetDuration(TimeSpan duration)
         {
-            TimeSource.SetDuration(duration);
+            _timeSource.SetDuration(duration);
         }
 
         protected virtual void OnFileOpened(string e)
@@ -178,6 +176,39 @@ namespace ScriptPlayer.Shared
             _client?.Dispose();
             _clientLoop?.Interrupt();
             _clientLoop?.Abort();
+        }
+    }
+
+    public class WhirligigConnectionSettings
+    {
+        public string IpAndPort { get; set; }
+
+        public IPEndPoint ToEndpoint()
+        {
+            try
+            {
+                string ip;
+                int port;
+
+                if (IpAndPort.Contains(":"))
+                {
+                    int index = IpAndPort.IndexOf(":");
+                    ip = IpAndPort.Substring(0, index);
+                    port = int.Parse(IpAndPort.Substring(index + 1));
+                }
+                else
+                {
+                    ip = IpAndPort;
+                    port = 2000;
+                }
+
+                return new IPEndPoint(IPAddress.Parse(ip),port);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Could not parse Whirligig Connection Settings: " + e.Message);
+                return new IPEndPoint(IPAddress.Loopback, 2000);
+            }
         }
     }
 }

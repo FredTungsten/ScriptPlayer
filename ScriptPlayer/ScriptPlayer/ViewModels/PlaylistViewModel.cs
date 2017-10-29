@@ -224,11 +224,17 @@ namespace ScriptPlayer.ViewModels
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        public event EventHandler<PlaylistEntry> PlayEntry; 
+        public event EventHandler<PlaylistEntry> PlayEntry;
 
         public void AddEntry(PlaylistEntry entry)
         {
             Entries.Add(entry);
+            CommandManager.InvalidateRequerySuggested();
+        }
+
+        public void Clear()
+        {
+            Entries.Clear();
             CommandManager.InvalidateRequerySuggested();
         }
 

@@ -54,10 +54,37 @@ namespace ScriptPlayer
             ViewModel.RequestToggleFullscreen += ViewModelOnRequestToggleFullscreen;
             ViewModel.RequestOverlay += ViewModelOnRequestOverlay;
             ViewModel.RequestButtplugUrl += ViewModelOnRequestButtplugUrl;
+            ViewModel.RequestVlcConnectionSettings += ViewModelOnRequestVlcConnectionSettings;
+            ViewModel.RequestWhirligigConnectionSettings += ViewModelOnRequestWhirligigConnectionSettings;
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
+        }
+
+        private void ViewModelOnRequestWhirligigConnectionSettings(object sender, RequestEventArgs<WhirligigConnectionSettings> args)
+        {
+            WhirligigConnectionSettingsDialog dialog = new WhirligigConnectionSettingsDialog(args.Value.IpAndPort) { Owner = this };
+            if (dialog.ShowDialog() != true) return;
+
+            args.Handled = true;
+            args.Value = new WhirligigConnectionSettings
+            {
+                IpAndPort = dialog.IpAndPort
+            };
+        }
+
+        private void ViewModelOnRequestVlcConnectionSettings(object sender, RequestEventArgs<VlcConnectionSettings> args)
+        {
+            VlcConnectionSettingsDialog dialog = new VlcConnectionSettingsDialog(args.Value.IpAndPort, args.Value.Password){Owner = this};
+            if (dialog.ShowDialog() != true) return;
+
+            args.Handled = true;
+            args.Value = new VlcConnectionSettings
+            {
+                IpAndPort = dialog.IpAndPort,
+                Password = dialog.Password
+            };
         }
 
         private void ViewModelOnRequestToggleFullscreen(object sender, EventArgs eventArgs)

@@ -9,19 +9,16 @@ namespace ScriptPlayer.Shared
         private TimeSpan _lastProgress;
         private DateTime _lastCheckpoint;
         private object _clocklock = new object();
+        private TimeSpan _maxOffset;
 
-        public ManualTimeSource(ISampleClock clock)
+        public ManualTimeSource(ISampleClock clock) : this(clock, TimeSpan.FromMilliseconds(100))
+        { }
+
+        public ManualTimeSource(ISampleClock clock, TimeSpan maxOffset)
         {
+            _maxOffset = maxOffset;
             _clock = clock;
             _clock.Tick += ClockOnTick;
-        }
-
-        public override void TogglePlayback()
-        {
-            if (IsPlaying)
-                Pause();
-            else
-                Play();
         }
 
         public void SetDuration(TimeSpan duration)
@@ -41,12 +38,12 @@ namespace ScriptPlayer.Shared
 
             //Debug.WriteLine("Time Offset: " + diff.TotalMilliseconds.ToString("f2") + " ms [" + position.ToString("h\\:mm\\:ss\\.fff") + "]");
 
-            if (Math.Abs(diff.TotalMilliseconds) < 100)
+            if (Math.Abs(diff.TotalMilliseconds) < Math.Abs(_maxOffset.TotalMilliseconds))
                 return;
 
             lock (_clocklock)
             {
-                Debug.WriteLine("Offset too high, adjusting ...");
+                Debug.WriteLine("Offset too high ({0}), adjusting ...", diff);
                 _lastCheckpoint = DateTime.Now;
                 _lastProgress = position;
                 Progress = position;

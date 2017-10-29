@@ -29,6 +29,14 @@ namespace ScriptPlayer.Shared.Scripts
             }
         }
 
+        public void Clear()
+        {
+            ResetCache();
+            _actions.Clear();
+            _beats.Clear();
+            UpdatePositions();
+        }
+
         private void SaveBeatFile()
         {
             if (_actions.FirstOrDefault() is BeatScriptAction)

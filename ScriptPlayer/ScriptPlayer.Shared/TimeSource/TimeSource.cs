@@ -64,7 +64,13 @@ namespace ScriptPlayer.Shared
 
         public abstract void Play();
         public abstract void Pause();
-        public abstract void TogglePlayback();
+        public virtual void TogglePlayback()
+        { 
+            if (IsPlaying)
+                Pause();
+            else
+                Play();
+        }
         public abstract void SetPosition(TimeSpan position);
 
         protected virtual void OnDurationChanged(TimeSpan e)

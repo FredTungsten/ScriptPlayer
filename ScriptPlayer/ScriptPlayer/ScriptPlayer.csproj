@@ -99,6 +99,12 @@
     <Compile Include="Dialogs\VersionDialog.xaml.cs">
       <DependentUpon>VersionDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\WhirligigConnectionSettingsDialog.xaml.cs">
+      <DependentUpon>WhirligigConnectionSettingsDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\VlcConnectionSettingsDialog.xaml.cs">
+      <DependentUpon>VlcConnectionSettingsDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PatternSource.cs" />
     <Compile Include="ViewModels\ButtplugUrlRequestEventArgs.cs" />
     <Compile Include="ViewModels\DeviceViewModel.cs" />
@@ -107,6 +113,7 @@
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\PlaylistViewModel.cs" />
     <Compile Include="ViewModels\PositionFilterMode.cs" />
+    <Compile Include="ViewModels\RequestEventArgs.cs" />
     <Compile Include="ViewModels\RequestFileEventArgs.cs" />
     <Compile Include="ViewModels\Settings.cs" />
     <Compile Include="ViewModels\TestPatternDefinition.cs" />
@@ -123,6 +130,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\VersionDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\WhirligigConnectionSettingsDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialogs\VlcConnectionSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

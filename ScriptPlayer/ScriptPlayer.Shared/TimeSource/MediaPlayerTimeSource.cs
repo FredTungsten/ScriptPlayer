@@ -4,7 +4,7 @@ using System.Windows.Media;
 
 namespace ScriptPlayer.Shared
 {
-    public class MediaPlayerTimeSource : TimeSource
+    public class MediaPlayerTimeSource : TimeSource, IDisposable
     {
         private readonly MediaPlayer _player;
         private readonly ISampleClock _clock;
@@ -52,17 +52,15 @@ namespace ScriptPlayer.Shared
             _player.Pause();
         }
 
-        public override void TogglePlayback()
-        {
-            if (IsPlaying)
-                Pause();
-            else
-                Play();
-        }
-
         public override void SetPosition(TimeSpan position)
         {
             _player.Position = position;
+        }
+
+        public void Dispose()
+        {   
+            _player.Stop();
+            _player.Close();
         }
     }
 }
