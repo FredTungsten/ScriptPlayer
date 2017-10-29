@@ -155,6 +155,8 @@ namespace ScriptPlayer
 
         private void SetFullscreen(bool isFullscreen)
         {
+            if (_fullscreen == isFullscreen) return;
+
             _fullscreen = isFullscreen;
 
             if (_fullscreen)
