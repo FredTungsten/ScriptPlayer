@@ -35,5 +35,13 @@ namespace ScriptPlayer.Dialogs
 
             ViewModel.RequestPlayEntry(entry);
         }
+
+        private void ListBox_Drop(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            ViewModel.AddEntries(files);
+        }
     }
 }

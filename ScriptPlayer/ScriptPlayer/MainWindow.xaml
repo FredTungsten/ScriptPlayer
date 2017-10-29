@@ -45,7 +45,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Name="GridVideo"  Grid.Row="1"  Grid.ColumnSpan="2" Background="Black" MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown">
+        <Grid Name="GridVideo"  Grid.Row="1"  Grid.ColumnSpan="2" Background="Black" MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" AllowDrop="True" Drop="GridVideo_Drop">
 
             <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true" x:Name="VideoPlayer" MouseDoubleClick="VideoPlayer_OnMouseDoubleClick">
                 <shared:VideoPlayer.Style>

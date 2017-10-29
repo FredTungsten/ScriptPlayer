@@ -11,6 +11,7 @@ using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
 using Application = System.Windows.Application;
+using DataFormats = System.Windows.DataFormats;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
@@ -28,8 +29,8 @@ namespace ScriptPlayer
 
         public MainViewModel ViewModel
         {
-            get { return (MainViewModel)GetValue(ViewModelProperty); }
-            set { SetValue(ViewModelProperty, value); }
+            get => (MainViewModel)GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
         }
 
         private bool _fullscreen;
@@ -401,16 +402,26 @@ namespace ScriptPlayer
             Process.Start("https://github.com/FredTungsten/ScriptPlayer/wiki");
         }
 
+        /*
         private void mnuDownloadScript_Click(object sender, RoutedEventArgs e)
         {
             //Process.Start("https://github.com/FredTungsten/Scripts");
             ScriptDownloadDialog dialog = new ScriptDownloadDialog(){Owner = this};
             dialog.ShowDialog();
         }
+        */
 
         private void TimeDisplay_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             ViewModel.ShowTimeLeft ^= true;
+        }
+
+        private void GridVideo_Drop(object sender, System.Windows.DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            ViewModel.FilesDropped(files);
         }
     }
 }

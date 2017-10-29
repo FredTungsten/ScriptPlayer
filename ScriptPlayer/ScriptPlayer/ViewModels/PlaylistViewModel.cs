@@ -232,6 +232,15 @@ namespace ScriptPlayer.ViewModels
             CommandManager.InvalidateRequerySuggested();
         }
 
+
+        public void AddEntries(string[] entries)
+        {
+            foreach(string entry in entries)
+                Entries.Add(new PlaylistEntry(entry));
+
+            CommandManager.InvalidateRequerySuggested();
+        }
+
         public void Clear()
         {
             Entries.Clear();

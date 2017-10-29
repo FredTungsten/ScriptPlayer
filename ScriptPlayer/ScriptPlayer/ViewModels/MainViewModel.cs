@@ -1047,10 +1047,10 @@ namespace ScriptPlayer.ViewModels
             string scriptFile = FindFile(videoFileName, ScriptLoaderManager.GetSupportedExtensions());
             if (!string.IsNullOrWhiteSpace(scriptFile))
             {
-                string nameOnly = Path.GetFileName(scriptFile);
+                /*string nameOnly = Path.GetFileName(scriptFile);
                 if (OnRequestMessageBox($"Do you want to also load '{nameOnly}'?", "Also load Script?",
                         MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
-                    return;
+                    return;*/
 
                 LoadScript(scriptFile, false);
             }
@@ -1199,7 +1199,7 @@ namespace ScriptPlayer.ViewModels
         {
             OpenScriptCommand = new RelayCommand(OpenScript);
             OpenVideoCommand = new RelayCommand(OpenVideo);
-            AddScriptsToPlaylistCommand = new RelayCommand(AddScriptsToPlaylist);
+            AddScriptsToPlaylistCommand = new RelayCommand(AddToPlaylist);
             ConnectLaunchDirectlyCommand = new RelayCommand(ConnectLaunchDirectly);
             ConnectButtplugCommand = new RelayCommand(ConnectButtplug);
             StartScanningButtplugCommand = new RelayCommand(StartScanningButtplug);
@@ -1330,8 +1330,7 @@ namespace ScriptPlayer.ViewModels
 
         private void PlaylistOnPlayEntry(object sender, PlaylistEntry playlistEntry)
         {
-            LoadScript(playlistEntry.Fullname, true);
-
+            LoadFile(playlistEntry.Fullname);
             Play();
         }
 
@@ -1390,7 +1389,7 @@ namespace ScriptPlayer.ViewModels
                 LoadFile(fileToLoad);
         }
 
-        private void LoadFile(string fileToLoad)
+        public void LoadFile(string fileToLoad)
         {
             string extension = Path.GetExtension(fileToLoad);
             if (string.IsNullOrWhiteSpace(extension))
@@ -1398,7 +1397,9 @@ namespace ScriptPlayer.ViewModels
 
             extension = extension.TrimStart('.').ToLower();
 
-            if (_supportedVideoExtensions.Contains(extension))
+            if(extension == "m3u")
+                LoadPlaylist(fileToLoad);
+            else if (_supportedVideoExtensions.Contains(extension))
                 LoadVideo(fileToLoad, true);
             else if (_supportedScriptExtensions.Contains(extension))
                 LoadScript(fileToLoad, true);
@@ -1406,6 +1407,11 @@ namespace ScriptPlayer.ViewModels
 
         private bool LoadScript(ScriptLoader[] loaders, string fileName)
         {
+            const long maxScriptSize = 4 * 1024 * 1024; //4 MB
+
+            if (!File.Exists(fileName)) return false;
+            if (new FileInfo(fileName).Length > maxScriptSize) return false;
+
             List<ScriptAction> actions = null;
 
             foreach (ScriptLoader loader in loaders)
@@ -1841,11 +1847,16 @@ namespace ScriptPlayer.ViewModels
             return MessageBoxResult.None;
         }
 
-        public void AddScriptsToPlaylist()
+        public void AddToPlaylist()
         {
             ScriptFileFormatCollection formats = ScriptLoaderManager.GetFormats();
 
-            string[] files = OnRequestFiles(formats.BuildFilter(true), ref _lastScriptFilterIndex);
+            string videoFilters = $"Videos|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}";
+            string scriptFilters = formats.BuildFilter(true);
+
+            string filters = videoFilters + "|" + scriptFilters;
+
+            string[] files = OnRequestFiles(filters, ref _lastScriptFilterIndex);
             if (files == null)
                 return;
 
@@ -2016,6 +2027,15 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnRequestToggleFullscreen()
         {
             RequestToggleFullscreen?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void FilesDropped(string[] files)
+        {
+            if (files == null || files.Length == 0)
+                return;
+
+            Playlist.AddEntries(files);
+            LoadFile(files[0]);
         }
     }
 
