@@ -198,7 +198,31 @@
             <MenuItem Header="Devices">
                 <MenuItem Header="Show Devices" Click="mnuShowDevices_Click"/>
                 <Separator/>
-                <MenuItem Header="Connect Launch Directly (Win10 15063+ Only)" Command="{Binding ConnectLaunchDirectlyCommand}" Name="LaunchDirectConnectItem" IsEnabled="False"/>
+                <MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" Name="LaunchDirectConnectItem" IsEnabled="False" ToolTipService.ShowOnDisabled="True">
+                    <MenuItem.Header>
+                        <TextBlock Text="Connect Launch directly">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="Foreground" Value="DarkGray"></Setter>
+                                            <Setter Property="TextDecorations" Value="{x:Static TextDecorations.Strikethrough}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </MenuItem.Header>
+                    <MenuItem.Style>
+                        <Style TargetType="MenuItem">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="ToolTip" Value="This feature requires Win10 15063 or higher"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </MenuItem.Style>
+                </MenuItem>
                 <MenuItem>
                     <MenuItem.Header>
                         <TextBlock>

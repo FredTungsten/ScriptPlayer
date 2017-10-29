@@ -12,7 +12,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("ScriptPlayer")]
-[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyCopyright("Copyright © Ferd Tungsten 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -55,3 +55,5 @@ using System.Windows;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 // Use informational version to store git hashes
 [assembly: AssemblyInformationalVersion("1.0.0.0")]
+[assembly: Guid("6F331F84-6C70-4E9F-AAFF-8527663E68A5")]
+

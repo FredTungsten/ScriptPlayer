@@ -54,17 +54,17 @@ namespace ScriptPlayer.Converters
             "LVS-Domi37",
 
             private static Dictionary<string, string> friendlyNames = new Dictionary<string, string>()
-                    {
-                        { "LVS-A011", "Nora" },
-                        { "LVS-C011", "Nora" },
-                        { "LVS-B011", "Max" },
-                        { "LVS-L009", "Ambi" },
-                        { "LVS-S001", "Lush" },
-                        { "LVS-Z001", "Hush" },
-                        { "LVS_Z001", "Hush Prototype" },
-                        { "LVS-P36", "Edge" },
-                        { "LVS-Z36", "Hush" },
-                        { "LVS-Domi37", "Domi" },
+            {
+                { "LVS-A011", "Nora" },
+                { "LVS-C011", "Nora" },
+                { "LVS-B011", "Max" },
+                { "LVS-L009", "Ambi" },
+                { "LVS-S001", "Lush" },
+                { "LVS-Z001", "Hush" },
+                { "LVS_Z001", "Hush Prototype" },
+                { "LVS-P36", "Edge" },
+                { "LVS-Z36", "Hush" },
+                { "LVS-Domi37", "Domi" },
             };
          */
 

@@ -43,7 +43,7 @@ namespace ScriptPlayer
             Closed += OnClosed;
             ViewModel = new MainViewModel();
         }
-        
+
 
         private void OnClosed(object sender, EventArgs eventArgs)
         {
@@ -61,7 +61,7 @@ namespace ScriptPlayer
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
-            LaunchDirectConnectItem.IsEnabled = ViewModel.CanDirectConnectLaunch;
+            LaunchDirectConnectItem.IsEnabled = false;//ViewModel.CanDirectConnectLaunch;
         }
 
         private void ViewModelOnRequestWhirligigConnectionSettings(object sender, RequestEventArgs<WhirligigConnectionSettings> args)
