@@ -1,19 +1,73 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using ScriptPlayer.Shared;
 
 namespace ScriptPlayer.Converters
 {
     public class DeviceToImageConverter : IValueConverter
     {
+        //TODO Add more graphics
+        /*
+         "Youcups Device ({friendlyNames[aInterface.Name]})"
+                "Youcups"
+            "Warrior II"
+
+             $"Vibratissimo Device ({aInterface.Name})",
+            "Vibratissimo"
+
+
+            $"WeVibe Device ({aInterface.Name})",
+            "4 Plus",
+            "Ditto",
+            "Nova",
+            "Pivot",
+            "Wish",
+            "Verge",
+
+            $"Kiiroo {aInterface.Name}",
+             "ONYX", "PEARL" 
+ 
+             "CycSA" "Vorze A10 Cyclone"
+ 
+             "Fleshlight Launch"
+ 
+             $"MagicMotion Device ({aInterface.Name})",
+             "Smart Mini Vibe",
+ 
+            $"Lovense Device ({friendlyNames[aInterface.Name]})",
+ 
+            // Nora
+            "LVS-A011", "LVS-C011",
+
+            // Max
+            "LVS-B011",
+
+             // Ambi
+            "LVS-L009",
+
+            // Edge
+            "LVS-P36",
+
+             // Edge
+            "LVS-Domi37",
+
+            private static Dictionary<string, string> friendlyNames = new Dictionary<string, string>()
+                    {
+                        { "LVS-A011", "Nora" },
+                        { "LVS-C011", "Nora" },
+                        { "LVS-B011", "Max" },
+                        { "LVS-L009", "Ambi" },
+                        { "LVS-S001", "Lush" },
+                        { "LVS-Z001", "Hush" },
+                        { "LVS_Z001", "Hush Prototype" },
+                        { "LVS-P36", "Edge" },
+                        { "LVS-Z36", "Hush" },
+                        { "LVS-Domi37", "Domi" },
+            };
+         */
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             Device device = (Device) value;

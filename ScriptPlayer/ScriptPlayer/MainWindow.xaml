@@ -310,7 +310,7 @@
 
                         <StackPanel Margin="4" ToolTip="Timespan by which every script command will be delayed. Negative values will cause the commands to be executed ahead of time.">
                             <TextBlock TextAlignment="Center" Margin="0" Text="Script Delay"/>
-                            <Slider Value="{Binding Path=ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-2000" Maximum="2000"/>
+                            <Slider Value="{Binding Path=ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-500" Maximum="500" SmallChange="25" LargeChange="100"/>
                             <TextBlock TextAlignment="Center" Margin="0" Text="{Binding Path=ScriptDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
                         </StackPanel>
                         <Separator/>
