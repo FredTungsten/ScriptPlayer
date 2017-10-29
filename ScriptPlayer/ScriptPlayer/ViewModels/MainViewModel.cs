@@ -99,6 +99,7 @@ namespace ScriptPlayer.ViewModels
         private readonly ObservableCollection<Device> _devices = new ObservableCollection<Device>();
         private bool _showBanner = true;
         private string _scriptPlayerVersion;
+        private bool _blurVideo;
 
         public ObservableCollection<Device> Devices => _devices;
 
@@ -709,6 +710,17 @@ namespace ScriptPlayer.ViewModels
                 if (value == _patternSource) return;
                 _patternSource = value;
                 UpdatePattern(_patternSource);
+                OnPropertyChanged();
+            }
+        }
+
+        public bool BlurVideo
+        {
+            get { return _blurVideo; }
+            set
+            {
+                if (value == _blurVideo) return;
+                _blurVideo = value;
                 OnPropertyChanged();
             }
         }

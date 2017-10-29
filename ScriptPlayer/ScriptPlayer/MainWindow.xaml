@@ -55,6 +55,13 @@
                             <DataTrigger Binding="{Binding PlaybackMode}" Value="{x:Static viewModels:PlaybackMode.Local}">
                                 <Setter Property="Visibility" Value="Visible"/>
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding BlurVideo}" Value="true">
+                                <Setter Property="Effect">
+                                    <Setter.Value>
+                                        <BlurEffect RenderingBias="Performance" KernelType="Gaussian" Radius="100"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </shared:VideoPlayer.Style>
@@ -407,6 +414,7 @@
                         <ComboBox ItemsSource="{Binding TestPatterns}" SelectedItem="{Binding SelectedTestPattern}" DisplayMemberPath="Name" Margin="4" />
                         <Button Command="{Binding ExecuteSelectedTestPatternCommand}" Margin="4,0,4,4" Content="Execute Pattern" VerticalAlignment="Top"/>
                         <CheckBox IsChecked="{Binding LogMarkers}" Margin="4" Content="Log Markers"/>
+                        <CheckBox IsChecked="{Binding BlurVideo}" Margin="4" Content="Blur Video"/>
                     </StackPanel>
                     <CheckBox Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Top" Margin="3" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="24" Height="24" HorizontalAlignment="Left"
                               IsChecked="{Binding ElementName=GridSettings, Path=(shared:HideOnHover.IsActive), Mode=TwoWay, Converter={StaticResource Inverter}}">
