@@ -16,8 +16,8 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using FMUtils.KeyboardHook;
 using JetBrains.Annotations;
-using Microsoft.Win32;
 using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Helpers;
 using ScriptPlayer.Shared.Scripts;
 using Application = System.Windows.Application;
 
@@ -101,14 +101,13 @@ namespace ScriptPlayer.ViewModels
         private bool _showBanner = true;
         private string _scriptPlayerVersion;
         private bool _blurVideo;
-
-        private bool _canDirectConnectLaunch = false;
+        private bool _canDirectConnectLaunch;
 
         public ObservableCollection<Device> Devices => _devices;
 
         public bool ShowTimeLeft
         {
-            get { return _showTimeLeft; }
+            get => _showTimeLeft;
             set
             {
                 if (value == _showTimeLeft) return;
@@ -119,7 +118,7 @@ namespace ScriptPlayer.ViewModels
 
         public TimeSpan PositionsViewport
         {
-            get { return _positionsViewport; }
+            get => _positionsViewport;
             set
             {
                 if (value.Equals(_positionsViewport)) return;
@@ -137,7 +136,7 @@ namespace ScriptPlayer.ViewModels
 
         public List<Range> FilterRanges
         {
-            get { return _filterRanges; }
+            get => _filterRanges;
             set
             {
                 if (Equals(value, _filterRanges)) return;
@@ -148,7 +147,7 @@ namespace ScriptPlayer.ViewModels
 
         public double FilterRange
         {
-            get { return _filterRange; }
+            get => _filterRange;
             set
             {
                 if (value.Equals(_filterRange)) return;
@@ -160,7 +159,7 @@ namespace ScriptPlayer.ViewModels
 
         public PositionFilterMode FilterMode
         {
-            get { return _filterMode; }
+            get => _filterMode;
             set
             {
                 if (value == _filterMode) return;
@@ -170,27 +169,21 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public Boolean CanDirectConnectLaunch
+        public bool CanDirectConnectLaunch
         {
-            get { return _canDirectConnectLaunch; }
+            get => _canDirectConnectLaunch;
+            private set
+            {
+                if (value == _canDirectConnectLaunch) return;
+                _canDirectConnectLaunch = value;
+                OnPropertyChanged();
+            }
         }
 
         public MainViewModel()
         {
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             ScriptPlayerVersion = GetScriptPlayerVersion();
-            int _releaseId = 0;
-            try
-            {
-                _releaseId = int.Parse(Registry
-                    .GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "ReleaseId", string.Empty)
-                    .ToString());
-            }
-            catch (Exception)
-            {
-                // If we can't retreive a version, just skip the perm check entirely and don't allow Bluetooth usage.
-                Debug.WriteLine("Can't get version!");
-            }
 
             LoadPlaylist();
 
@@ -199,7 +192,8 @@ namespace ScriptPlayer.ViewModels
 
             InitializeCommands();
             InitializeTestPatterns();
-            if (_releaseId >= 1703)
+
+            if (OsInformation.GetWindowsReleaseVersion() >= 1703)
             {
                 // Only initialize LaunchFinder on Win10 15063+
                 InitializeLaunchFinder();
@@ -223,7 +217,7 @@ namespace ScriptPlayer.ViewModels
 
         public string ScriptPlayerVersion
         {
-            get { return _scriptPlayerVersion; }
+            get => _scriptPlayerVersion;
             set
             {
                 if (value == _scriptPlayerVersion) return;
@@ -324,6 +318,8 @@ namespace ScriptPlayer.ViewModels
         {
             try
             {
+                Debug.WriteLine("Changing TimeSource from {0} to {1}", oldValue, newValue);
+
                 DisposeTimeSource();
                 ClearScript();
 
@@ -560,7 +556,7 @@ namespace ScriptPlayer.ViewModels
 
         public PositionCollection Positions
         {
-            get { return _positions; }
+            get => _positions;
             set
             {
                 if (Equals(value, _positions)) return;
@@ -742,7 +738,7 @@ namespace ScriptPlayer.ViewModels
 
         public bool BlurVideo
         {
-            get { return _blurVideo; }
+            get => _blurVideo;
             set
             {
                 if (value == _blurVideo) return;
@@ -926,7 +922,7 @@ namespace ScriptPlayer.ViewModels
 
         public bool DisplayEventNotifications
         {
-            get { return _displayEventNotifications; }
+            get => _displayEventNotifications;
             set
             {
                 if (value == _displayEventNotifications) return;
@@ -1445,7 +1441,7 @@ namespace ScriptPlayer.ViewModels
             launchController = new LaunchBluetooth();
             launchController.DeviceFound += DeviceController_DeviceFound;
             _controllers.Add(launchController);
-            _canDirectConnectLaunch = true;
+            CanDirectConnectLaunch = true;
         }
 
         private void CheckForArguments()

@@ -147,6 +147,7 @@
     <Compile Include="Colors\HeatMapGenerator.cs" />
     <Compile Include="Helpers\HideOnHover.cs" />
     <Compile Include="Devices\Device.cs" />
+    <Compile Include="Helpers\OsInformation.cs" />
     <Compile Include="Indexer\Indexer.cs" />
     <Compile Include="Devices\Launch.cs" />
     <Compile Include="Devices\LaunchBluetooth.cs" />
