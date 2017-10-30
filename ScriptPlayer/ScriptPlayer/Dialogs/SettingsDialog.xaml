@@ -1,0 +1,67 @@
+﻿<Window x:Class="ScriptPlayer.Dialogs.SettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
+        xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
+        mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="ToolWindow"
+        Title="Settings" Height="394.373" Width="641.797">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Background="#ffeeeeee">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TreeView Grid.Column="0" Grid.Row="0" Margin="10,10,0,10" ItemsSource="{Binding Pages}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding SubSettings}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Width="16" Height="16" Source="{Binding Icon}" Margin="1,1,8,1"/>
+                            <TextBlock Text="{Binding Name}"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+
+            <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
+
+            <controls:PageSelector Grid.Column="2" Grid.Row="0" Margin="0,31,10,10" DesignModeContentIdentifier="EXT" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+                <controls:PageSelector.Elements>
+                    <Grid controls:PageSelector.ContentIdentifier="EXT">
+                        <TextBlock Text="EXT"></TextBlock>
+                    </Grid>
+                    <Grid controls:PageSelector.ContentIdentifier="WHIRLIGIG">
+                        <TextBlock Text="WHIRLIGIG"></TextBlock>
+                    </Grid>
+                    <Grid controls:PageSelector.ContentIdentifier="BUTTPLUG">
+                        <TextBlock Text="BUTTPLUG"></TextBlock>
+                    </Grid>
+                    <Grid controls:PageSelector.ContentIdentifier="VLC">
+                        <TextBlock Text="VLC"></TextBlock>
+                    </Grid>
+                    <Grid controls:PageSelector.ContentIdentifier="INTERACTION">
+                        <TextBlock Text="INTERACTION"></TextBlock>
+                    </Grid>
+                    <Grid controls:PageSelector.ContentIdentifier="PATHS">
+                        <TextBlock Text="PATHS"></TextBlock>
+                    </Grid>
+                </controls:PageSelector.Elements>
+            </controls:PageSelector>
+            <TextBlock Grid.Column="2" HorizontalAlignment="Left" Margin="0,10,0,0" TextWrapping="Wrap" Text="{Binding SettingsTitle}" VerticalAlignment="Top" Width="458"/>
+        </Grid>
+
+        <Grid Grid.Column="0" Grid.Row="1" Background="LightGray">
+            <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,10,90,10" VerticalAlignment="Bottom" Width="75"/>
+            <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,10,10,10" VerticalAlignment="Bottom" Width="75"/>
+        </Grid>
+    </Grid>
+</Window>

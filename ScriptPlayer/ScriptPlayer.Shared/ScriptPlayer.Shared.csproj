@@ -82,6 +82,7 @@
     <Compile Include="Colors\AnalysisParameters.cs" />
     <Compile Include="Beats\BeatCollection.cs" />
     <Compile Include="Classes\BlockingQueue.cs" />
+    <Compile Include="Controls\PageSelector.cs" />
     <Compile Include="Devices\ButtplugAdapter.cs" />
     <Compile Include="Colors\ColorSampler.cs" />
     <Compile Include="Colors\HslConversion.cs" />

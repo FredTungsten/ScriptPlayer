@@ -243,6 +243,8 @@
             <MenuItem Header="View">
                 <MenuItem Header="Toggle Fullscreen" Command="{Binding ToggleFullScreenCommand}"/>
             </MenuItem>
+            <MenuItem Header="Settings" Click="mnuSettings_Click">
+            </MenuItem>
             <MenuItem Header="Help">
                 <MenuItem Header="Documentation (Online)" Click="mnuDocs_Click"/>
                 <MenuItem Header="About / Check for new Version" Click="mnuVersion_Click"/>

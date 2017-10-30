@@ -393,6 +393,26 @@ namespace ScriptPlayer
             }
         }
 
+
+        private void mnuSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var existing = Application.Current.Windows.OfType<SettingsDialog>().FirstOrDefault();
+
+            if (existing == null || !existing.IsLoaded)
+            {
+                SettingsDialog settings = new SettingsDialog();
+                settings.Show();
+            }
+            else
+            {
+                if (existing.WindowState == WindowState.Minimized)
+                    existing.WindowState = WindowState.Normal;
+
+                existing.Activate();
+                existing.Focus();
+            }
+        }
+
         private void mnuVersion_Click(object sender, RoutedEventArgs e)
         {
             VersionDialog dialog = new VersionDialog(){Owner = this};
