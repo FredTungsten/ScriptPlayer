@@ -58,7 +58,7 @@ namespace ScriptPlayer.Shared.Scripts
 
         public static string[] GetSupportedExtensions()
         {
-            return Loaders.SelectMany(l => l.GetSupportedFormats().SelectMany(f => f.Extensions)).ToArray();
+            return Loaders.SelectMany(l => l.GetSupportedFormats().SelectMany(f => f.Extensions)).Distinct().ToArray();
         }
 
         public static ScriptLoader[] GetLoaders(string filename)

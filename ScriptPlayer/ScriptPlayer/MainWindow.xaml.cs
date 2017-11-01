@@ -396,21 +396,10 @@ namespace ScriptPlayer
 
         private void mnuSettings_Click(object sender, RoutedEventArgs e)
         {
-            var existing = Application.Current.Windows.OfType<SettingsDialog>().FirstOrDefault();
+            SettingsDialog settings = new SettingsDialog(ViewModel.Settings) {Owner = this};
+            if (settings.ShowDialog() != true) return;
 
-            if (existing == null || !existing.IsLoaded)
-            {
-                SettingsDialog settings = new SettingsDialog();
-                settings.Show();
-            }
-            else
-            {
-                if (existing.WindowState == WindowState.Minimized)
-                    existing.WindowState = WindowState.Normal;
-
-                existing.Activate();
-                existing.Focus();
-            }
+            ViewModel.ApplySettings(settings.Settings);
         }
 
         private void mnuVersion_Click(object sender, RoutedEventArgs e)

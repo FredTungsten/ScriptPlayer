@@ -7,7 +7,7 @@
         mc:Ignorable="d" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow"
         Title="Whirligig Connection Settings" Height="107.62" Width="282.839">
     <Grid>
-        <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="IP / Port" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Top"/>
         <TextBox Name="txtIpPort" Height="23" Margin="81,10,10,0" VerticalAlignment="Top"/>
 
         <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,11" VerticalAlignment="Bottom" Width="75" Click="ButtonBase_OnClick"/>

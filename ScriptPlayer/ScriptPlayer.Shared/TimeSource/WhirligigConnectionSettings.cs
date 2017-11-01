@@ -7,6 +7,7 @@ namespace ScriptPlayer.Shared
     public class WhirligigConnectionSettings
     {
         public string IpAndPort { get; set; }
+        public const string DefaultEndpoint = "127.0.0.1:2000";
 
         public IPEndPoint ToEndpoint()
         {
@@ -34,6 +35,11 @@ namespace ScriptPlayer.Shared
                 Debug.WriteLine("Could not parse Whirligig Connection Settings: " + e.Message);
                 return new IPEndPoint(IPAddress.Loopback, 2000);
             }
+        }
+
+        public WhirligigConnectionSettings()
+        {
+            IpAndPort = DefaultEndpoint;
         }
     }
 }

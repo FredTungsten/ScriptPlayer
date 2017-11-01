@@ -1,13 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Xml.Serialization;
+using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 
 namespace ScriptPlayer.ViewModels
 {
     public class Settings
     {
+        public List<string> AdditionalPaths { get; set; }
+        public VlcConnectionSettings Vlc { get; set; }
+        public WhirligigConnectionSettings Whirligig { get; set; }
+        public ButtplugConnectionSettings Buttplug { get; set; }
         public Byte MinPosition { get; set; }
         public Byte MaxPosition { get; set; }
         public byte MinSpeed { get; set; }
@@ -27,6 +33,7 @@ namespace ScriptPlayer.ViewModels
         public Settings()
         {
             DisplayEventNotifications = true;
+            AdditionalPaths = new List<string>();
         }
 
         public static Settings FromFile(string filename)

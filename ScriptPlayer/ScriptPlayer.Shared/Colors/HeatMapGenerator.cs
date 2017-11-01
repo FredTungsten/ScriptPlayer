@@ -13,10 +13,10 @@ namespace ScriptPlayer.Shared
 
         static HeatMapGenerator()
         {
-            HeatMap = GradientsSmoothFromColors(0.5, Colors.Blue, Colors.Cyan, Colors.Lime, Colors.Yellow, Colors.Red);
+            HeatMap = GradientsSmoothFromColors(0.5, Colors.DodgerBlue, Colors.Cyan, Colors.Lime, Colors.Yellow, Colors.Red);
             HeatMap2 = GradientsSmoothFromColors(0.5, Colors.Black, Colors.Cyan, Colors.Lime, Colors.Yellow,
                 Colors.Red);
-            HeatMap2.Insert(1, new GradientStop(Colors.Blue, 0.01));
+            HeatMap2.Insert(1, new GradientStop(Colors.DodgerBlue, 0.01));
         }
 
         public static GradientStopCollection GradientsSmoothFromColors(double fade, params Color[] colors)
@@ -119,9 +119,8 @@ namespace ScriptPlayer.Shared
 
         public static Brush Generate2(List<TimeSpan> beats, TimeSpan timeFrom, TimeSpan timeTo)
         {
-            List<List<TimeSpan>> segmentss = new List<List<TimeSpan>>();
-            segmentss.Add(new List<TimeSpan>());
-
+            List<List<TimeSpan>> segments = new List<List<TimeSpan>>();
+            
             TimeSpan previous = timeFrom;
             TimeSpan isGap = TimeSpan.FromSeconds(10);
             TimeSpan fastest = TimeSpan.FromMilliseconds(200);
@@ -133,20 +132,41 @@ namespace ScriptPlayer.Shared
 
                 if (beat - previous >= isGap)
                 {
-                    segmentss.Add(new List<TimeSpan>());
+                    segments.Add(new List<TimeSpan>());
                 }
-                segmentss.Last().Add(beat);
+
+                if(segments.Count == 0)
+                    segments.Add(new List<TimeSpan>());
+
+                segments.Last().Add(beat);
                 previous = beat;
             }
 
             GradientStopCollection stops = new GradientStopCollection();
             stops.Add(new GradientStop(Colors.Black, 0.0));
 
-            foreach (List<TimeSpan> segment in segmentss)
+            foreach (List<TimeSpan> segment in segments)
             {
-                if (segment.Count < 2)
-                    continue;
+                if (segment.Count == 1)
+                {
+                    TimeSpan stamp = segment.Single();
+                    TimeSpan span = TimeSpan.FromSeconds(2);
 
+                    TimeSpan beginSegment = stamp - span;
+                    if (beginSegment < timeFrom)
+                        beginSegment = timeFrom;
+
+                    TimeSpan endSegment = stamp + span;
+                    if (endSegment > timeTo)
+                        endSegment = timeTo;
+
+                    stops.Add(new GradientStop(Colors.Black, beginSegment.Divide(duration)));
+                    stops.Add(new GradientStop(Colors.DodgerBlue, beginSegment.Divide(duration)));
+                    stops.Add(new GradientStop(Colors.DodgerBlue, endSegment.Divide(duration)));
+                    stops.Add(new GradientStop(Colors.Black, endSegment.Divide(duration)));
+                }
+                else
+                { 
                 TimeSpan span = segment.Last() - segment.First();
                 int segmentCount = (int) Math.Max(1, Math.Min((segment.Count -1) / 12.0, span.Divide(duration.Divide(200))));
 
@@ -178,7 +198,7 @@ namespace ScriptPlayer.Shared
                     if(i == segmentCount - 1)
                         stops.Add(new GradientStop(color, positionEnd));
                 }
-                stops.Add(new GradientStop(Colors.Black, (segment.Last() - timeFrom).Divide(duration)));
+                stops.Add(new GradientStop(Colors.Black, (segment.Last() - timeFrom).Divide(duration)));}
             }
 
             stops.Add(new GradientStop(Colors.Black, 1.0));

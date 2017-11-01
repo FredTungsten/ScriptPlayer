@@ -273,7 +273,7 @@ namespace ScriptPlayer.Shared
                             outerColor = HighlightColor;
                         }
 
-                        Color innerColor = isSelected ? Colors.Blue : Colors.White;
+                        Color innerColor = isSelected ? Colors.White : Colors.LightBlue;
 
                         DrawLine(drawingContext, outerColor, innerColor, new Point(pos * ActualWidth, -5),
                             new Point(pos * ActualWidth, ActualHeight + 5), LineWidth);

@@ -13,15 +13,14 @@ namespace ScriptPlayer.Shared
 {
     public class ButtplugAdapter : DeviceController, INotifyPropertyChanged, IDisposable
     {
-        public const string DefaultUrl = "ws://localhost:12345/buttplug";
         private ButtplugWSClient _client;
         private readonly string _url;
         private readonly List<ButtplugDevice> _devices;
 
-        public ButtplugAdapter(string url = DefaultUrl)
+        public ButtplugAdapter(ButtplugConnectionSettings settings)
         {
             _devices = new List<ButtplugDevice>();
-            _url = url;
+            _url = settings.Url;
         }
 
         private void Client_DeviceAddedOrRemoved(object sender, DeviceEventArgs deviceEventArgs)
@@ -233,21 +232,32 @@ namespace ScriptPlayer.Shared
             return fileVersionInfo.ProductVersion;
         }
 
-        public override void ScanForDevices()
+        public override async void ScanForDevices()
         {
-            StartScanning();
+            await StartScanning();
         }
 
-        public void Dispose()
+        public async void Dispose()
         {
             try
             {
-                Disconnect();
+                await Disconnect();
             }
             catch
             {
                 
             }
+        }
+    }
+
+    public class ButtplugConnectionSettings
+    {
+        public string Url { get; set; }
+
+        public const string DefaultUrl = "ws://localhost:12345/buttplug";
+        public ButtplugConnectionSettings()
+        {
+            Url = DefaultUrl;
         }
     }
 }

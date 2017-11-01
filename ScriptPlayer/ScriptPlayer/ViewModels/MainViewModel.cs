@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using FMUtils.KeyboardHook;
 using JetBrains.Annotations;
+using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Helpers;
 using ScriptPlayer.Shared.Scripts;
@@ -102,6 +103,7 @@ namespace ScriptPlayer.ViewModels
         private string _scriptPlayerVersion;
         private bool _blurVideo;
         private bool _canDirectConnectLaunch;
+        private Settings _settings;
 
         public ObservableCollection<Device> Devices => _devices;
 
@@ -205,7 +207,7 @@ namespace ScriptPlayer.ViewModels
             
         }
 
-        private string GetScriptPlayerVersion()
+        private static string GetScriptPlayerVersion()
         {
             string location = Assembly.GetExecutingAssembly().Location;
             if (string.IsNullOrWhiteSpace(location))
@@ -228,9 +230,10 @@ namespace ScriptPlayer.ViewModels
 
         private void LoadSettings()
         {
-            Settings settings = Settings.FromFile(GetSettingsFile());
+            Settings settings = Settings.FromFile(GetSettingsFilePath());
             if (settings != null)
             {
+                _settings = settings;
                 MinSpeed = settings.MinSpeed;
                 MaxSpeed = settings.MaxSpeed;
                 MinPosition = settings.MinPosition;
@@ -247,30 +250,13 @@ namespace ScriptPlayer.ViewModels
                 FilterRange = settings.FilterRange;
                 ShowScriptPositions = settings.ShowScriptPositions;
             }
-        }
-
-        private void LoadPlaylist(string filename = null)
-        {
-            if (string.IsNullOrWhiteSpace(filename))
-                filename = GetDefaultPlaylistFile();
-
-            M3uPlaylist playlist = M3uPlaylist.FromFile(filename);
-
-            if (Playlist == null)
-            {
-                Playlist = new PlaylistViewModel();
-                Playlist.PlayEntry += PlaylistOnPlayEntry;
-            }
             else
             {
-                Playlist.Clear();
+                _settings = new Settings();
             }
-
-            if (playlist == null) return;
-
-            foreach(string entry in playlist.Entries)
-                Playlist.AddEntry(new PlaylistEntry(entry));
         }
+
+        
 
         private void SavePlaylist(string filename = null)
         {
@@ -284,32 +270,34 @@ namespace ScriptPlayer.ViewModels
 
         private void SaveSettings()
         {
-            Settings settings = new Settings();
-            settings.MinSpeed = MinSpeed;
-            settings.MaxSpeed = MaxSpeed;
-            settings.MinPosition = MinPosition;
-            settings.MaxPosition = MaxPosition;
-            settings.SpeedMultiplier = SpeedMultiplier;
-            settings.AutoSkip = AutoSkip;
-            settings.DisplayEventNotifications = DisplayEventNotifications;
-            settings.ConversionMode = ConversionMode;
-            settings.ShowHeatMap = ShowHeatMap;
-            settings.LogMarkers = LogMarkers;
-            settings.ScriptDelay = ScriptDelay.TotalMilliseconds;
-            settings.CommandDelay = CommandDelay.TotalMilliseconds;
-            settings.FilterMode = FilterMode;
-            settings.FilterRange = FilterRange;
-            settings.ShowScriptPositions = ShowScriptPositions;
+            if(_settings == null)
+                _settings = new Settings();
 
-            settings.Save(GetSettingsFile());
+            _settings.MinSpeed = MinSpeed;
+            _settings.MaxSpeed = MaxSpeed;
+            _settings.MinPosition = MinPosition;
+            _settings.MaxPosition = MaxPosition;
+            _settings.SpeedMultiplier = SpeedMultiplier;
+            _settings.AutoSkip = AutoSkip;
+            _settings.DisplayEventNotifications = DisplayEventNotifications;
+            _settings.ConversionMode = ConversionMode;
+            _settings.ShowHeatMap = ShowHeatMap;
+            _settings.LogMarkers = LogMarkers;
+            _settings.ScriptDelay = ScriptDelay.TotalMilliseconds;
+            _settings.CommandDelay = CommandDelay.TotalMilliseconds;
+            _settings.FilterMode = FilterMode;
+            _settings.FilterRange = FilterRange;
+            _settings.ShowScriptPositions = ShowScriptPositions;
+
+            _settings.Save(GetSettingsFilePath());
         }
 
-        private string GetSettingsFile()
+        private static string GetSettingsFilePath()
         {
             return Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\Settings.xml");
         }
 
-        private string GetDefaultPlaylistFile()
+        private static string GetDefaultPlaylistFile()
         {
             return Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\Playlist.m3u");
         }
@@ -348,7 +336,7 @@ namespace ScriptPlayer.ViewModels
                     {
                         HideBanner();
 
-                        WhirligigConnectionSettings settings =
+                        /*WhirligigConnectionSettings settings =
                             OnRequestWhirligigConnectionSettings(new WhirligigConnectionSettings
                             {
                                 IpAndPort = "127.0.0.1:2000"
@@ -358,11 +346,11 @@ namespace ScriptPlayer.ViewModels
                         {
                             PlaybackMode = PlaybackMode.Local;
                             return;
-                        }
+                        }*/
 
                         TimeSource = new WhirligigTimeSource(new DispatcherClock(
                             Dispatcher.FromThread(Thread.CurrentThread),
-                            TimeSpan.FromMilliseconds(10)), settings);
+                            TimeSpan.FromMilliseconds(10)), _settings.Whirligig);
 
                         ((WhirligigTimeSource) TimeSource).FileOpened += OnVideoFileOpened;
 
@@ -373,9 +361,9 @@ namespace ScriptPlayer.ViewModels
                     {
                         HideBanner();
 
-                        VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
+                        /*VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
                         {
-                            IpAndPort = "127.0.0.1:8080",
+                            IpAndPort = VlcConnectionSettings.DefaultEndpoint,
                             Password = "test"
                         });
 
@@ -383,12 +371,11 @@ namespace ScriptPlayer.ViewModels
                         {
                             PlaybackMode = PlaybackMode.Local;
                             return;
-                        }
+                        }*/
 
                         TimeSource = new VlcTimeSource(
                             new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                                TimeSpan.FromMilliseconds(10)),
-                            settings);
+                                TimeSpan.FromMilliseconds(10)), Settings.Vlc);
 
                         ((VlcTimeSource) TimeSource).FileOpened += OnVideoFileOpened;
 
@@ -444,25 +431,7 @@ namespace ScriptPlayer.ViewModels
 
         private void OnVideoFileOpened(object sender, string videoFileName)
         {
-            SilentlyFindMatchingScript(videoFileName);
-        }
-
-        private void SilentlyFindMatchingScript(string videoFileName)
-        {
-            if (IsMatchingScriptLoaded(videoFileName))
-            {
-                OnRequestOverlay("Matching script alreadly loaded", TimeSpan.FromSeconds(6));
-                return;
-            }
-
-            string scriptFile = FindFile(videoFileName, ScriptLoaderManager.GetSupportedExtensions());
-            if (string.IsNullOrWhiteSpace(scriptFile))
-            {
-                OnRequestOverlay($"No script for '{Path.GetFileName(videoFileName)}' found!", TimeSpan.FromSeconds(6));
-                return;
-            }
-
-            LoadScript(scriptFile, false);
+            TryFindMatchingScript(videoFileName);
         }
 
         private void RefreshManualDuration()
@@ -942,6 +911,8 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public Settings Settings => _settings;
+
         public void Dispose()
         {
             _videoPlayer?.TimeSource.Pause();
@@ -1021,25 +992,7 @@ namespace ScriptPlayer.ViewModels
             LoadVideo(selectedFile, true);
         }
 
-        private void LoadVideo(string videoFileName, bool checkForScript)
-        {
-            if (checkForScript)
-                TryFindMatchingScript(videoFileName);
-
-            _openVideo = videoFileName;
-
-            if (PlaybackMode == PlaybackMode.Local)
-            {
-                HideBanner();
-                VideoPlayer.Open(videoFileName);
-            }
-
-            Title = Path.GetFileNameWithoutExtension(videoFileName);
-
-            OnRequestOverlay($"Loaded {Path.GetFileName(videoFileName)}", TimeSpan.FromSeconds(4), "VideoLoaded");
-
-            Play();
-        }
+       
 
         private void Play()
         {
@@ -1088,37 +1041,79 @@ namespace ScriptPlayer.ViewModels
         private void TryFindMatchingScript(string videoFileName)
         {
             if (IsMatchingScriptLoaded(videoFileName))
-                return;
-
-            string scriptFile = FindFile(videoFileName, ScriptLoaderManager.GetSupportedExtensions());
-            if (!string.IsNullOrWhiteSpace(scriptFile))
             {
-                /*string nameOnly = Path.GetFileName(scriptFile);
-                if (OnRequestMessageBox($"Do you want to also load '{nameOnly}'?", "Also load Script?",
-                        MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
-                    return;*/
-
-                LoadScript(scriptFile, false);
+                OnRequestOverlay("Matching script alreadly loaded", TimeSpan.FromSeconds(6));
+                return;
             }
+
+            string scriptFile = FindFile(videoFileName, GetScriptExtensions(), GetAdditionalPaths());
+            if (string.IsNullOrWhiteSpace(scriptFile))
+            {
+                OnRequestOverlay($"No script for '{Path.GetFileName(videoFileName)}' found!", TimeSpan.FromSeconds(6));
+                return;
+            }
+
+            LoadScript(scriptFile, false);
+        }
+
+        private string[] GetScriptExtensions()
+        {
+            return ScriptLoaderManager.GetSupportedExtensions();
+        }
+
+        private string[] GetAdditionalPaths()
+        {
+            return Settings?.AdditionalPaths?.ToArray();
         }
 
         private void TryFindMatchingVideo(string scriptFileName)
         {
             if (IsMatchingVideoLoaded(scriptFileName))
+            {
+                OnRequestOverlay("Matching video alreadly loaded", TimeSpan.FromSeconds(6));
                 return;
+            }
 
-            string videoFile = FindFile(scriptFileName, _supportedVideoExtensions);
-            if (!string.IsNullOrWhiteSpace(videoFile))
-                LoadVideo(videoFile, false);
+            string videoFile = FindFile(scriptFileName, _supportedVideoExtensions, GetAdditionalPaths());
+            if (string.IsNullOrWhiteSpace(videoFile))
+            {
+                OnRequestOverlay($"No video for '{Path.GetFileName(scriptFileName)}' found!", TimeSpan.FromSeconds(6));
+                return;
+            }
+
+            LoadVideo(videoFile, false);
         }
 
-        private string FindFile(string filename, string[] extensions)
+        private static string FindFile(string filename, string[] extensions, string[] additionalPaths)
         {
+            //Same directory
             foreach (string extension in extensions)
             {
                 string path = Path.ChangeExtension(filename, extension);
                 if (File.Exists(path))
                     return path;
+            }
+
+            //Additional Directories
+            if (additionalPaths == null)
+                return null;
+
+            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filename);
+            if (string.IsNullOrWhiteSpace(fileNameWithoutExtension))
+                return null;
+
+            foreach (string path in additionalPaths)
+            {
+                if (!Directory.Exists(path)) continue;
+
+                string basePath = Path.Combine(path, fileNameWithoutExtension);
+
+                foreach (string extension in extensions)
+                {
+                    string expectedPath = basePath + "." + extension;
+                    if (File.Exists(expectedPath))
+                        return expectedPath;
+                }
             }
 
             return null;
@@ -1132,8 +1127,8 @@ namespace ScriptPlayer.ViewModels
             if (string.IsNullOrWhiteSpace(videoFileName))
                 return false;
 
-            if (Path.GetDirectoryName(OpenedScript) != Path.GetDirectoryName(videoFileName))
-                return false;
+            /*if (Path.GetDirectoryName(OpenedScript) != Path.GetDirectoryName(videoFileName))
+                return false;*/
 
             return Path.GetFileNameWithoutExtension(OpenedScript).Equals(Path.GetFileNameWithoutExtension(videoFileName));
         }
@@ -1146,8 +1141,8 @@ namespace ScriptPlayer.ViewModels
             if (string.IsNullOrWhiteSpace(_openVideo))
                 return false;
 
-            if (Path.GetDirectoryName(scriptFileName) != Path.GetDirectoryName(_openVideo))
-                return false;
+            /*if (Path.GetDirectoryName(scriptFileName) != Path.GetDirectoryName(_openVideo))
+                return false;*/
 
             return Path.GetFileNameWithoutExtension(scriptFileName).Equals(Path.GetFileNameWithoutExtension(_openVideo));
         }
@@ -1469,6 +1464,49 @@ namespace ScriptPlayer.ViewModels
                 LoadVideo(fileToLoad, true);
             else if (_supportedScriptExtensions.Contains(extension))
                 LoadScript(fileToLoad, true);
+        }
+
+        private void LoadPlaylist(string filename = null)
+        {
+            if (string.IsNullOrWhiteSpace(filename))
+                filename = GetDefaultPlaylistFile();
+
+            M3uPlaylist playlist = M3uPlaylist.FromFile(filename);
+
+            if (Playlist == null)
+            {
+                Playlist = new PlaylistViewModel();
+                Playlist.PlayEntry += PlaylistOnPlayEntry;
+            }
+            else
+            {
+                Playlist.Clear();
+            }
+
+            if (playlist == null) return;
+
+            foreach (string entry in playlist.Entries)
+                Playlist.AddEntry(new PlaylistEntry(entry));
+        }
+
+        private void LoadVideo(string videoFileName, bool checkForScript)
+        {
+            if (checkForScript)
+                TryFindMatchingScript(videoFileName);
+
+            _openVideo = videoFileName;
+
+            if (PlaybackMode == PlaybackMode.Local)
+            {
+                HideBanner();
+                VideoPlayer.Open(videoFileName);
+            }
+
+            Title = Path.GetFileNameWithoutExtension(videoFileName);
+
+            OnRequestOverlay($"Loaded {Path.GetFileName(videoFileName)}", TimeSpan.FromSeconds(4), "VideoLoaded");
+
+            Play();
         }
 
         private bool LoadScript(ScriptLoader[] loaders, string fileName)
@@ -1863,6 +1901,8 @@ namespace ScriptPlayer.ViewModels
 
         public async void SkipToNextEvent(bool isInitialSkip)
         {
+            //TODO Skip duplicates too!
+
             TimeSpan currentPosition = TimeSource.Progress;
             ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition - _scriptHandler.Delay);
             if (nextAction == null)
@@ -2045,11 +2085,11 @@ namespace ScriptPlayer.ViewModels
 
             _controllers.Remove(controller);
 
-            string url = OnRequestButtplugUrl(ButtplugAdapter.DefaultUrl);
+            /*string url = OnRequestButtplugUrl(ButtplugAdapter.DefaultUrl);
             if (url == null)
-                return;
+                return;*/
 
-            controller = new ButtplugAdapter(url);
+            controller = new ButtplugAdapter(_settings.Buttplug);
             controller.DeviceFound += DeviceController_DeviceFound;
             controller.DeviceRemoved += DevicecController_DeviceRemoved;
 
@@ -2107,6 +2147,27 @@ namespace ScriptPlayer.ViewModels
 
             Playlist.AddEntries(files);
             LoadFile(files[0]);
+        }
+
+        public void ApplySettings(SettingsViewModel settings)
+        {
+            Settings.Buttplug = new ButtplugConnectionSettings
+            {
+                Url = settings.ButtplugUrl
+            };
+
+            Settings.Vlc = new VlcConnectionSettings
+            {
+                IpAndPort = settings.VlcEndpoint,
+                Password = settings.VlcPassword
+            };
+
+            Settings.Whirligig = new WhirligigConnectionSettings
+            {
+                IpAndPort = settings.WhirligigEndpoint
+            };
+
+            Settings.AdditionalPaths = settings.AdditionalPaths.ToList();
         }
     }
 

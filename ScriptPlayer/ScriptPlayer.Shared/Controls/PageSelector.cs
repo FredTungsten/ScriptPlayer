@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,12 +9,33 @@ namespace ScriptPlayer.Shared.Controls
     public class PageSelector : ContentControl
     {
         public static readonly DependencyProperty ElementsProperty = DependencyProperty.Register(
-            "Elements", typeof(List<UIElement>), typeof(PageSelector), new PropertyMetadata(new List<UIElement>()));
+            "Elements", typeof(ObservableCollection<UIElement>), typeof(PageSelector), new PropertyMetadata(new ObservableCollection<UIElement>(), OnElementsChanged));
 
-        public List<UIElement> Elements
+        private static void OnElementsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            get { return (List<UIElement>) GetValue(ElementsProperty); }
-            set { SetValue(ElementsProperty, value); }
+            ((PageSelector)d).ElementsChanged(e.OldValue as ObservableCollection<UIElement>, e.NewValue as ObservableCollection<UIElement>);
+        }
+
+        private void ElementsChanged(ObservableCollection<UIElement> oldValue, ObservableCollection<UIElement> newValue)
+        {
+            if (oldValue != null)
+                oldValue.CollectionChanged -= Elements_CollectionChanged;
+
+            if (newValue != null)
+                newValue.CollectionChanged += Elements_CollectionChanged;
+
+            RefreshActiveContent();
+        }
+
+        private void Elements_CollectionChanged(object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
+        {
+            RefreshActiveContent();
+        }
+
+        public ObservableCollection<UIElement> Elements
+        {
+            get => (ObservableCollection<UIElement>)GetValue(ElementsProperty);
+            set => SetValue(ElementsProperty, value);
         }
 
         public static readonly DependencyProperty DesignModeContentIdentifierProperty = DependencyProperty.Register(
@@ -21,14 +43,13 @@ namespace ScriptPlayer.Shared.Controls
 
         private static void DesignModeContentIdentifierPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (!DesignerProperties.GetIsInDesignMode(d)) return;
-            ((PageSelector)d).ActiveContentIdentifierChanged((string)e.OldValue, (string)e.NewValue);
+            ((PageSelector)d).RefreshActiveContent();
         }
 
         public string DesignModeContentIdentifier
         {
-            get { return (string) GetValue(DesignModeContentIdentifierProperty); }
-            set { SetValue(DesignModeContentIdentifierProperty, value); }
+            get => (string)GetValue(DesignModeContentIdentifierProperty);
+            set => SetValue(DesignModeContentIdentifierProperty, value);
         }
 
         public static readonly DependencyProperty ActiveContentIdentifierProperty = DependencyProperty.Register(
@@ -36,27 +57,13 @@ namespace ScriptPlayer.Shared.Controls
 
         private static void ActiveContentIdentifierPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (DesignerProperties.GetIsInDesignMode(d)) return;
-            ((PageSelector) d).ActiveContentIdentifierChanged((string)e.OldValue, (string)e.NewValue);
-        }
-
-        private void ActiveContentIdentifierChanged(string oldValue, string newValue)
-        {
-            if (Elements == null) return;
-            foreach (UIElement element in Elements)
-            {
-                if (GetContentIdentifier(element) == newValue)
-                {
-                    Content = element;
-                    break;
-                }
-            }
+            ((PageSelector)d).ElementsChanged(e.OldValue as ObservableCollection<UIElement>, e.NewValue as ObservableCollection<UIElement>);
         }
 
         public string ActiveContentIdentifier
         {
-            get { return (string) GetValue(ActiveContentIdentifierProperty); }
-            set { SetValue(ActiveContentIdentifierProperty, value); }
+            get => (string)GetValue(ActiveContentIdentifierProperty);
+            set => SetValue(ActiveContentIdentifierProperty, value);
         }
 
         public static readonly DependencyProperty ContentIdentifierProperty = DependencyProperty.RegisterAttached(
@@ -69,7 +76,34 @@ namespace ScriptPlayer.Shared.Controls
 
         public static string GetContentIdentifier(DependencyObject element)
         {
-            return (string) element.GetValue(ContentIdentifierProperty);
+            return (string)element.GetValue(ContentIdentifierProperty);
+        }
+
+        public PageSelector()
+        {
+            Loaded += OnLoaded;
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
+        {
+            RefreshActiveContent();
+        }
+
+        private void RefreshActiveContent()
+        {
+            if (Elements == null) return;
+
+            string id = DesignerProperties.GetIsInDesignMode(this)
+                ? DesignModeContentIdentifier
+                : ActiveContentIdentifier;
+
+            foreach (UIElement element in Elements)
+            {
+                if (GetContentIdentifier(element) != id) continue;
+
+                Content = element;
+                break;
+            }
         }
     }
 }

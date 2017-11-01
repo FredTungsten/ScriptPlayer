@@ -7,7 +7,7 @@
         mc:Ignorable="d" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow"
         Title="Vlc Connection Settings" Height="137.288" Width="282.839">
     <Grid>
-        <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="IP / Port" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Top"/>
         <TextBox Name="txtIpPort" Height="23" Margin="81,10,10,0" VerticalAlignment="Top"/>
 
         <TextBlock HorizontalAlignment="Left" Margin="10,39,0,0" TextWrapping="Wrap" Text="Password" VerticalAlignment="Top"/>
