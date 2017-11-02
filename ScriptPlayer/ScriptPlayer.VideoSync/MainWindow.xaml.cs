@@ -1340,6 +1340,11 @@ namespace ScriptPlayer.VideoSync
                     Fade();
                     break;
                 }
+                case Key.E:
+                {
+                    EqualizeBeatLengths();
+                    break;
+                }
                 case Key.T:
                 {
                     FadeNormalize();
@@ -1404,6 +1409,43 @@ namespace ScriptPlayer.VideoSync
 
             if (handled)
                 e.Handled = true;
+        }
+
+        private void EqualizeBeatLengths()
+        {
+            List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+
+            if (beatsToEvenOut.Count <= 2)
+                return;
+
+            const double factor = 0.1;
+
+            for (int i = 0; i < beatsToEvenOut.Count; i++)
+            {
+                if (i == 0 || i == beatsToEvenOut.Count - 1)
+                {
+                    otherBeats.Add(beatsToEvenOut[i]);
+                }
+                else
+                {
+                    TimeSpan beatBefore = beatsToEvenOut[i] - beatsToEvenOut[i - 1];
+                    TimeSpan beatAfter = beatsToEvenOut[i+1] - beatsToEvenOut[i];
+                    TimeSpan average = (beatBefore + beatAfter).Divide(2);
+
+                    TimeSpan newLength = beatBefore.Multiply(1.0 - factor) + average.Multiply(factor);
+                    TimeSpan absolutePosition = beatsToEvenOut[i - 1] + newLength;
+                    otherBeats.Add(absolutePosition);
+                }
+            }
+
+            Fadeout.SetText($"Beats equalized by {factor:p}", TimeSpan.FromSeconds(4));
+
+            SetAllBeats(otherBeats);
         }
 
         TimeSpan _previouslyShortest = TimeSpan.MaxValue;
