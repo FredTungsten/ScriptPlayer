@@ -35,8 +35,8 @@ namespace ScriptPlayer.Dialogs
 
         public string SelectedAdditionalPath
         {
-            get { return (string) GetValue(SelectedAdditionalPathProperty); }
-            set { SetValue(SelectedAdditionalPathProperty, value); }
+            get => (string) GetValue(SelectedAdditionalPathProperty);
+            set => SetValue(SelectedAdditionalPathProperty, value);
         }
 
         public static readonly DependencyProperty AdditionalPathProperty = DependencyProperty.Register(
@@ -44,8 +44,8 @@ namespace ScriptPlayer.Dialogs
 
         public string AdditionalPath
         {
-            get { return (string) GetValue(AdditionalPathProperty); }
-            set { SetValue(AdditionalPathProperty, value); }
+            get => (string) GetValue(AdditionalPathProperty);
+            set => SetValue(AdditionalPathProperty, value);
         }
 
         public static readonly DependencyProperty SettingsProperty = DependencyProperty.Register(
@@ -79,6 +79,7 @@ namespace ScriptPlayer.Dialogs
         {
             Pages = new SettingsPageViewModelCollection
             {
+                new SettingsPageViewModel("General", "GENERAL"),
                 new SettingsPageViewModel("External Programs", "EXT"),
                 new SettingsPageViewModel("Interaction", "INTERACTION"),
                 new SettingsPageViewModel("Paths", "PATHS")
@@ -100,6 +101,8 @@ namespace ScriptPlayer.Dialogs
 
 
             if (initialSettings == null) return;
+
+            Settings.CheckForNewVersionOnStartup = initialSettings.CheckForNewVersionOnStartup;
 
             if (initialSettings.AdditionalPaths != null)
             {
@@ -217,10 +220,22 @@ namespace ScriptPlayer.Dialogs
         private string _whirligigEndpoint;
         private string _buttplugUrl;
         private ObservableCollection<string> _additionalPaths;
+        private bool _checkForNewVersionOnStartup;
+
+        public bool CheckForNewVersionOnStartup
+        {
+            get => _checkForNewVersionOnStartup;
+            set
+            {
+                if (value == _checkForNewVersionOnStartup) return;
+                _checkForNewVersionOnStartup = value;
+                OnPropertyChanged();
+            }
+        }
 
         public ObservableCollection<string> AdditionalPaths
         {
-            get { return _additionalPaths; }
+            get => _additionalPaths;
             set
             {
                 if (Equals(value, _additionalPaths)) return;

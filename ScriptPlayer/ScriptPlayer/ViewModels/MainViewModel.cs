@@ -185,7 +185,7 @@ namespace ScriptPlayer.ViewModels
         public MainViewModel()
         {
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
-            ScriptPlayerVersion = GetScriptPlayerVersion();
+            Version = new VersionViewModel();
 
             LoadPlaylist();
 
@@ -205,16 +205,6 @@ namespace ScriptPlayer.ViewModels
 
             LoadSettings();
             
-        }
-
-        private static string GetScriptPlayerVersion()
-        {
-            string location = Assembly.GetExecutingAssembly().Location;
-            if (string.IsNullOrWhiteSpace(location))
-                return "?";
-
-            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(location);
-            return fileVersionInfo.ProductVersion;
         }
 
         public string ScriptPlayerVersion
@@ -457,6 +447,8 @@ namespace ScriptPlayer.ViewModels
             _loaded = true;
             HookUpMediaKeys();
             CheckForArguments();
+            if(Settings.CheckForNewVersionOnStartup)
+                Version.CheckIfYouHaventAlready();
         }
 
         private void HookUpMediaKeys()
@@ -692,6 +684,8 @@ namespace ScriptPlayer.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        public VersionViewModel Version { get; }
 
         public PatternSource PatternSource
         {
@@ -2151,6 +2145,8 @@ namespace ScriptPlayer.ViewModels
 
         public void ApplySettings(SettingsViewModel settings)
         {
+            Settings.CheckForNewVersionOnStartup = settings.CheckForNewVersionOnStartup;
+
             Settings.Buttplug = new ButtplugConnectionSettings
             {
                 Url = settings.ButtplugUrl

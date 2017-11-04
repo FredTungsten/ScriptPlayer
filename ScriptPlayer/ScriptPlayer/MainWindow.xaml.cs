@@ -404,7 +404,7 @@ namespace ScriptPlayer
 
         private void mnuVersion_Click(object sender, RoutedEventArgs e)
         {
-            VersionDialog dialog = new VersionDialog(){Owner = this};
+            VersionDialog dialog = new VersionDialog(ViewModel.Version){Owner = this};
             dialog.ShowDialog();
         }
 

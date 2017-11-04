@@ -83,6 +83,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ViewModels\VersionViewModel.cs" />
     <Compile Include="Converters\DeviceToImageConverter.cs" />
     <Compile Include="Converters\DistinctValueToBooleanConverter.cs" />
     <Compile Include="Converters\TimeLeftConverter.cs" />

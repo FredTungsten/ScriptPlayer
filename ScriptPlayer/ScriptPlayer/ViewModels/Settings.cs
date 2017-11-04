@@ -10,6 +10,7 @@ namespace ScriptPlayer.ViewModels
 {
     public class Settings
     {
+        public bool CheckForNewVersionOnStartup { get; set; }
         public List<string> AdditionalPaths { get; set; }
         public VlcConnectionSettings Vlc { get; set; }
         public WhirligigConnectionSettings Whirligig { get; set; }
@@ -32,6 +33,7 @@ namespace ScriptPlayer.ViewModels
 
         public Settings()
         {
+            CheckForNewVersionOnStartup = true;
             DisplayEventNotifications = true;
             AdditionalPaths = new List<string>();
         }
