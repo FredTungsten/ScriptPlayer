@@ -6,14 +6,44 @@
              xmlns:controls="clr-namespace:ScriptPlayer.Shared"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="SliderThumb.MouseOver.Background" Color="#FFDCECFC"/>
+        <SolidColorBrush x:Key="SliderThumb.MouseOver.Border" Color="#FF7Eb4EA"/>
+        <SolidColorBrush x:Key="SliderThumb.Pressed.Background" Color="#FFDAECFC"/>
+        <SolidColorBrush x:Key="SliderThumb.Pressed.Border" Color="#FF569DE5"/>
+        <SolidColorBrush x:Key="SliderThumb.Disabled.Background" Color="#FFF0F0F0"/>
+        <SolidColorBrush x:Key="SliderThumb.Disabled.Border" Color="#FFD9D9D9"/>
+        <SolidColorBrush x:Key="SliderThumb.Static.Background" Color="#FFF0F0F0"/>
+        <SolidColorBrush x:Key="SliderThumb.Static.Border" Color="#FFACACAC"/>
+
+        <ControlTemplate x:Key="SliderThumbHorizontalDefault" TargetType="{x:Type Thumb}">
+            <Grid HorizontalAlignment="Center" UseLayoutRounding="True" VerticalAlignment="Center">
+                <Path x:Name="grip" Data="M 0,0 C0,0 11,0 11,0 11,0 11,18 11,18 11,18 0,18 0,18 0,18 0,0 0,0 z" Fill="{StaticResource SliderThumb.Static.Background}" Stretch="Fill" SnapsToDevicePixels="True" Stroke="{StaticResource SliderThumb.Static.Border}" StrokeThickness="1" UseLayoutRounding="True" VerticalAlignment="Center"/>
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="true">
+                    <Setter Property="Fill" TargetName="grip" Value="{StaticResource SliderThumb.MouseOver.Background}"/>
+                    <Setter Property="Stroke" TargetName="grip" Value="{StaticResource SliderThumb.MouseOver.Border}"/>
+                </Trigger>
+                <Trigger Property="IsDragging" Value="true">
+                    <Setter Property="Fill" TargetName="grip" Value="{StaticResource SliderThumb.Pressed.Background}"/>
+                    <Setter Property="Stroke" TargetName="grip" Value="{StaticResource SliderThumb.Pressed.Border}"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="false">
+                    <Setter Property="Fill" TargetName="grip" Value="{StaticResource SliderThumb.Disabled.Background}"/>
+                    <Setter Property="Stroke" TargetName="grip" Value="{StaticResource SliderThumb.Disabled.Border}"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+    </UserControl.Resources>
     <Grid>
-        <Border HorizontalAlignment="Stretch" Name="track" Margin="8" Height="5" Background="LightGray" BorderBrush="Black" BorderThickness="1,1,0,0">
-            <Border HorizontalAlignment="Stretch" Height="4" Background="LightGray" BorderBrush="White" BorderThickness="0,0,1,1"/>
+        <Border HorizontalAlignment="Stretch" Name="track" Margin="8" Height="5" Background="LightGray" BorderBrush="DarkGray" BorderThickness="1,1,0,0">
+            <Border HorizontalAlignment="Stretch" Height="4" Background="LightGray" BorderBrush="DarkGray" BorderThickness="0,0,1,1"/>
         </Border>
         <Rectangle Name="RectLeft" Opacity="0.5" Fill="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:RangeSlider}}, Path=OutsideBrush}" HorizontalAlignment="Left" Margin="8,8,0,8"/>
         <Rectangle Name="RectCenter" Opacity="0.5" Fill="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:RangeSlider}}, Path=InsideBrush}" HorizontalAlignment="Left" Margin="8,8,0,8"/>
         <Rectangle Name="RectRight" Opacity="0.5" Fill="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:RangeSlider}}, Path=OutsideBrush}" HorizontalAlignment="Right" Margin="0,8,8,8"/>
-        <Thumb HorizontalAlignment="Left" VerticalAlignment="Center" Name="thumbLower" Width="8" Height="16" DragStarted="Thumb_OnDragStarted" DragDelta="Thumb_OnDragDelta" DragCompleted="Thumb_OnDragCompleted"/>
-        <Thumb HorizontalAlignment="Left" VerticalAlignment="Center" Name="thumbUpper" Width="8" Height="16" DragStarted="Thumb_OnDragStarted" DragDelta="Thumb_OnDragDelta" DragCompleted="Thumb_OnDragCompleted"/>
+        <Thumb Template="{StaticResource SliderThumbHorizontalDefault}" HorizontalAlignment="Left" VerticalAlignment="Center" Name="thumbLower" Width="8" Height="16" DragStarted="Thumb_OnDragStarted" DragDelta="Thumb_OnDragDelta" DragCompleted="Thumb_OnDragCompleted"/>
+        <Thumb Template="{StaticResource SliderThumbHorizontalDefault}" HorizontalAlignment="Left" VerticalAlignment="Center" Name="thumbUpper" Width="8" Height="16" DragStarted="Thumb_OnDragStarted" DragDelta="Thumb_OnDragDelta" DragCompleted="Thumb_OnDragCompleted"/>
     </Grid>
 </UserControl>

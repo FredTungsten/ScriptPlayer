@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using JetBrains.Annotations;
-using Microsoft.Win32;
-using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Controls;
 using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Dialogs
@@ -58,7 +53,17 @@ namespace ScriptPlayer.Dialogs
         }
 
         public static readonly DependencyProperty SelectedPageProperty = DependencyProperty.Register(
-            "SelectedPage", typeof(SettingsPageViewModel), typeof(SettingsDialog), new PropertyMetadata(default(SettingsPageViewModel)));
+            "SelectedPage", typeof(SettingsPageViewModel), typeof(SettingsDialog), new PropertyMetadata(default(SettingsPageViewModel), OnSelectedPageChanged));
+
+        private static void OnSelectedPageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((SettingsDialog) d).UpdatePageTitle();
+        }
+
+        private void UpdatePageTitle()
+        {
+            SettingsTitle = BuildSettingsPath();
+        }
 
         public SettingsPageViewModel SelectedPage
         {
@@ -75,63 +80,48 @@ namespace ScriptPlayer.Dialogs
             set => SetValue(SettingsTitleProperty, value);
         }
 
-        public SettingsDialog(Settings initialSettings)
+        public SettingsDialog(SettingsViewModel initialSettings)
         {
-            Pages = new SettingsPageViewModelCollection
-            {
-                new SettingsPageViewModel("General", "GENERAL"),
-                new SettingsPageViewModel("External Programs", "EXT"),
-                new SettingsPageViewModel("Interaction", "INTERACTION"),
-                new SettingsPageViewModel("Paths", "PATHS")
-            };
-
-            Pages["EXT"].Add(new SettingsPageViewModel("Buttplug", "BUTTPLUG"));
-            Pages["EXT"].Add(new SettingsPageViewModel("Whirligig", "WHIRLIGIG"));
-            Pages["EXT"].Add(new SettingsPageViewModel("VLC", "VLC"));
+            Settings = initialSettings.Duplicate();
 
             InitializeComponent();
 
-            Settings = new SettingsViewModel
+            Pages = BuildPages(PageSelector);
+            SelectedPage = Pages.FirstOrDefault();
+        }
+
+        private static SettingsPageViewModelCollection BuildPages(PageSelector pageSelector)
+        {
+            var pages = new SettingsPageViewModelCollection();
+
+            foreach (var page in pageSelector.Elements)
             {
-                WhirligigEndpoint = WhirligigConnectionSettings.DefaultEndpoint,
-                VlcEndpoint = VlcConnectionSettings.DefaultEndpoint,
-                ButtplugUrl = ButtplugConnectionSettings.DefaultUrl,
-                AdditionalPaths = new ObservableCollection<string>()
-            };
+                string id = PageSelector.GetContentIdentifier(page);
+                if (string.IsNullOrWhiteSpace("id")) continue;
 
+                if (id.Contains("/"))
+                {
+                    string[] sections = id.Split('/');
 
-            if (initialSettings == null) return;
+                    if (pages[sections[0]] == null)
+                    {
+                        pages.Add(new SettingsPageViewModel(sections[0], sections[0]));
+                    }
 
-            Settings.CheckForNewVersionOnStartup = initialSettings.CheckForNewVersionOnStartup;
-
-            if (initialSettings.AdditionalPaths != null)
-            {
-                foreach(string path in initialSettings.AdditionalPaths)
-                    Settings.AdditionalPaths.Add(path);
+                    pages[sections[0]].Add(new SettingsPageViewModel(sections[1], id));
+                }
+                else
+                {
+                    pages.Add(new SettingsPageViewModel(id,id));
+                }
             }
 
-            if (initialSettings.Vlc != null)
-            {
-                Settings.VlcPassword = initialSettings.Vlc.Password;
-                Settings.VlcEndpoint = initialSettings.Vlc.IpAndPort;
-            }
-                
-            if (initialSettings.Buttplug != null)
-            {
-                Settings.ButtplugUrl = initialSettings.Buttplug.Url;
-            }
-
-            if (initialSettings.Whirligig != null)
-            {
-                Settings.WhirligigEndpoint = initialSettings.Whirligig.IpAndPort;
-            }
+            return pages;
         }
 
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             SelectedPage = e.NewValue as SettingsPageViewModel;
-
-            SettingsTitle = BuildSettingsPath();
         }
 
         private string BuildSettingsPath()
@@ -160,13 +150,13 @@ namespace ScriptPlayer.Dialogs
             txtPasswordVlcPassword.Password = Settings.VlcPassword;
         }
 
-        private void btnOk_OnClick(object sender, RoutedEventArgs e)
+        private void BtnOk_OnClick(object sender, RoutedEventArgs e)
         {
             ((Button) sender).Focus();
             DialogResult = true;
         }
 
-        private void btnRemovePath_Click(object sender, RoutedEventArgs e)
+        private void BtnRemovePath_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(SelectedAdditionalPath)) return;
 
@@ -178,7 +168,7 @@ namespace ScriptPlayer.Dialogs
             SelectedAdditionalPath = currentIndex >= 0 ? Settings.AdditionalPaths[currentIndex] : null;
         }
 
-        private void btnAddPath_Click(object sender, RoutedEventArgs e)
+        private void BtnAddPath_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(AdditionalPath))
                 return;
@@ -199,7 +189,7 @@ namespace ScriptPlayer.Dialogs
             Settings.AdditionalPaths.Add(AdditionalPath);
         }
 
-        private bool IsValidDirectory(string path)
+        private static bool IsValidDirectory(string path)
         {
             try
             {
@@ -210,90 +200,6 @@ namespace ScriptPlayer.Dialogs
                 Debug.WriteLine(e);
                 throw;
             }
-        }
-    }
-
-    public class SettingsViewModel : INotifyPropertyChanged
-    {
-        private string _vlcEndpoint;
-        private string _vlcPassword;
-        private string _whirligigEndpoint;
-        private string _buttplugUrl;
-        private ObservableCollection<string> _additionalPaths;
-        private bool _checkForNewVersionOnStartup;
-
-        public bool CheckForNewVersionOnStartup
-        {
-            get => _checkForNewVersionOnStartup;
-            set
-            {
-                if (value == _checkForNewVersionOnStartup) return;
-                _checkForNewVersionOnStartup = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public ObservableCollection<string> AdditionalPaths
-        {
-            get => _additionalPaths;
-            set
-            {
-                if (Equals(value, _additionalPaths)) return;
-                _additionalPaths = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string VlcEndpoint
-        {
-            get => _vlcEndpoint;
-            set
-            {
-                if (value == _vlcEndpoint) return;
-                _vlcEndpoint = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string VlcPassword
-        {
-            get => _vlcPassword;
-            set
-            {
-                if (value == _vlcPassword) return;
-                _vlcPassword = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string WhirligigEndpoint
-        {
-            get => _whirligigEndpoint;
-            set
-            {
-                if (value == _whirligigEndpoint) return;
-                _whirligigEndpoint = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string ButtplugUrl
-        {
-            get => _buttplugUrl;
-            set
-            {
-                if (value == _buttplugUrl) return;
-                _buttplugUrl = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 

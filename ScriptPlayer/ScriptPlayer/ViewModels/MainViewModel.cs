@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +15,6 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using FMUtils.KeyboardHook;
 using JetBrains.Annotations;
-using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Helpers;
 using ScriptPlayer.Shared.Scripts;
@@ -37,26 +35,15 @@ namespace ScriptPlayer.ViewModels
         private readonly string[] _supportedVideoExtensions =
             {"mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf"};
 
-        private bool _autoSkip;
-
         private string _buttplugApiVersion = "Unknown";
-        private TimeSpan _commandDelay = TimeSpan.FromMilliseconds(166);
-
-        private ConversionMode _conversionMode = ConversionMode.UpOrDown;
-
+        
         private List<ConversionMode> _conversionModes;
 
         private Brush _heatMap;
 
         private int _lastScriptFilterIndex = 1;
         private int _lastVideoFilterIndex = 1;
-
-        private bool _logMarkers;
-
-        private byte _maxPosition = 95;
         private byte _maxScriptPosition;
-
-        private byte _minPosition = 5;
         private byte _minScriptPosition;
 
         private string _openedScript;
@@ -67,11 +54,9 @@ namespace ScriptPlayer.ViewModels
         private PlaylistViewModel _playlist;
         private Thread _repeaterThread;
 
-        private TimeSpan _scriptDelay;
         private ScriptHandler _scriptHandler;
 
         private TestPatternDefinition _selectedTestPattern;
-        private double _speedMultiplier = 1;
 
         private List<TestPatternDefinition> _testPatterns;
 
@@ -82,41 +67,26 @@ namespace ScriptPlayer.ViewModels
 
         private bool _wasPlaying;
         private bool _loaded;
-        private byte _minSpeed = 20;
-        private byte _maxSpeed = 95;
+        
         private Hook _hook;
         private PlaybackMode _playbackMode;
         private TimeSource _timeSource;
-        private bool _showHeatMap;
-        private PositionFilterMode _filterMode = PositionFilterMode.FullRange;
-        private double _filterRange = 0.5;
+        
         private List<Range> _filterRanges;
         private PositionCollection _positions;
-        private bool _showScriptPositions;
         private TimeSpan _positionsViewport = TimeSpan.FromSeconds(5);
-        private bool _showTimeLeft;
-        private bool _displayEventNotifications;
-
+        
         private readonly List<DeviceController> _controllers = new List<DeviceController>();
         private readonly ObservableCollection<Device> _devices = new ObservableCollection<Device>();
         private bool _showBanner = true;
         private string _scriptPlayerVersion;
         private bool _blurVideo;
         private bool _canDirectConnectLaunch;
-        private Settings _settings;
+        private SettingsViewModel _settings;
 
         public ObservableCollection<Device> Devices => _devices;
 
-        public bool ShowTimeLeft
-        {
-            get => _showTimeLeft;
-            set
-            {
-                if (value == _showTimeLeft) return;
-                _showTimeLeft = value;
-                OnPropertyChanged();
-            }
-        }
+        
 
         public TimeSpan PositionsViewport
         {
@@ -147,29 +117,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public double FilterRange
-        {
-            get => _filterRange;
-            set
-            {
-                if (value.Equals(_filterRange)) return;
-                _filterRange = value;
-                UpdateFilter();
-                OnPropertyChanged();
-            }
-        }
-
-        public PositionFilterMode FilterMode
-        {
-            get => _filterMode;
-            set
-            {
-                if (value == _filterMode) return;
-                _filterMode = value;
-                UpdateFilter();
-                OnPropertyChanged();
-            }
-        }
+        
 
         public bool CanDirectConnectLaunch
         {
@@ -187,8 +135,6 @@ namespace ScriptPlayer.ViewModels
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             Version = new VersionViewModel();
 
-            LoadPlaylist();
-
             ConversionModes = Enum.GetValues(typeof(ConversionMode)).Cast<ConversionMode>().ToList();
             _supportedScriptExtensions = ScriptLoaderManager.GetSupportedExtensions();
 
@@ -204,7 +150,6 @@ namespace ScriptPlayer.ViewModels
             InitializeScriptHandler();
 
             LoadSettings();
-            
         }
 
         public string ScriptPlayerVersion
@@ -220,33 +165,40 @@ namespace ScriptPlayer.ViewModels
 
         private void LoadSettings()
         {
-            Settings settings = Settings.FromFile(GetSettingsFilePath());
-            if (settings != null)
+            SettingsViewModel settings = SettingsViewModel.FromFile(GetSettingsFilePath());
+            Settings = settings ?? new SettingsViewModel();
+
+            if (Playlist == null)
             {
-                _settings = settings;
-                MinSpeed = settings.MinSpeed;
-                MaxSpeed = settings.MaxSpeed;
-                MinPosition = settings.MinPosition;
-                MaxPosition = settings.MaxPosition;
-                ScriptDelay = TimeSpan.FromMilliseconds(settings.ScriptDelay);
-                SpeedMultiplier = settings.SpeedMultiplier;
-                CommandDelay = TimeSpan.FromMilliseconds(settings.CommandDelay);
-                AutoSkip = settings.AutoSkip;
-                DisplayEventNotifications = settings.DisplayEventNotifications;
-                ConversionMode = settings.ConversionMode;
-                ShowHeatMap = settings.ShowHeatMap;
-                LogMarkers = settings.LogMarkers;
-                FilterMode = settings.FilterMode;
-                FilterRange = settings.FilterRange;
-                ShowScriptPositions = settings.ShowScriptPositions;
+                Playlist = new PlaylistViewModel();
+                Playlist.PlayEntry += PlaylistOnPlayEntry;
+                Playlist.PropertyChanged += PlaylistOnPropertyChanged;
             }
-            else
+
+            if (Settings.RememberPlaylist)
+                LoadPlaylist();
+
+            Playlist.Repeat = Settings.RepeatPlaylist;
+            Playlist.Shuffle = Settings.ShufflePlaylist;
+        }
+
+        private void PlaylistOnPropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
+        {
+            switch (eventArgs.PropertyName)
             {
-                _settings = new Settings();
+                case nameof(PlaylistViewModel.Shuffle):
+                {
+                    Settings.ShufflePlaylist = Playlist.Shuffle;
+                    break;
+                }
+                case nameof(PlaylistViewModel.Repeat):
+                {
+                    Settings.RepeatPlaylist = Playlist.Repeat;
+                    break;
+                }
             }
         }
 
-        
 
         private void SavePlaylist(string filename = null)
         {
@@ -260,36 +212,22 @@ namespace ScriptPlayer.ViewModels
 
         private void SaveSettings()
         {
-            if(_settings == null)
-                _settings = new Settings();
-
-            _settings.MinSpeed = MinSpeed;
-            _settings.MaxSpeed = MaxSpeed;
-            _settings.MinPosition = MinPosition;
-            _settings.MaxPosition = MaxPosition;
-            _settings.SpeedMultiplier = SpeedMultiplier;
-            _settings.AutoSkip = AutoSkip;
-            _settings.DisplayEventNotifications = DisplayEventNotifications;
-            _settings.ConversionMode = ConversionMode;
-            _settings.ShowHeatMap = ShowHeatMap;
-            _settings.LogMarkers = LogMarkers;
-            _settings.ScriptDelay = ScriptDelay.TotalMilliseconds;
-            _settings.CommandDelay = CommandDelay.TotalMilliseconds;
-            _settings.FilterMode = FilterMode;
-            _settings.FilterRange = FilterRange;
-            _settings.ShowScriptPositions = ShowScriptPositions;
-
-            _settings.Save(GetSettingsFilePath());
+            Settings.Save(GetSettingsFilePath());
         }
 
         private static string GetSettingsFilePath()
         {
-            return Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\Settings.xml");
+            return GetAppDataFile("Settings.xml");
         }
 
         private static string GetDefaultPlaylistFile()
         {
-            return Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\Playlist.m3u");
+            return GetAppDataFile("Playlist.m3u");
+        }
+
+        private static string GetAppDataFile(string filename)
+        {
+            return Path.Combine(Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\"), filename);
         }
 
         private void PlaybackModeChanged(PlaybackMode oldValue, PlaybackMode newValue)
@@ -340,7 +278,10 @@ namespace ScriptPlayer.ViewModels
 
                         TimeSource = new WhirligigTimeSource(new DispatcherClock(
                             Dispatcher.FromThread(Thread.CurrentThread),
-                            TimeSpan.FromMilliseconds(10)), _settings.Whirligig);
+                            TimeSpan.FromMilliseconds(10)), new WhirligigConnectionSettings
+                            {
+                                IpAndPort = Settings.WhirligigEndpoint
+                            });
 
                         ((WhirligigTimeSource) TimeSource).FileOpened += OnVideoFileOpened;
 
@@ -365,7 +306,11 @@ namespace ScriptPlayer.ViewModels
 
                         TimeSource = new VlcTimeSource(
                             new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                                TimeSpan.FromMilliseconds(10)), Settings.Vlc);
+                                TimeSpan.FromMilliseconds(10)), new VlcConnectionSettings
+                            {
+                                IpAndPort = Settings.VlcEndpoint,
+                                Password = Settings.VlcPassword
+                            });
 
                         ((VlcTimeSource) TimeSource).FileOpened += OnVideoFileOpened;
 
@@ -553,19 +498,6 @@ namespace ScriptPlayer.ViewModels
             UpdateHeatMap();
         }
 
-        public ConversionMode ConversionMode
-        {
-            get => _conversionMode;
-            set
-            {
-                if (value == _conversionMode) return;
-                _conversionMode = value;
-                _scriptHandler.ConversionMode = _conversionMode;
-                UpdateHeatMap();
-                OnPropertyChanged();
-            }
-        }
-
         public List<ConversionMode> ConversionModes
         {
             get => _conversionModes;
@@ -573,52 +505,6 @@ namespace ScriptPlayer.ViewModels
             {
                 if (Equals(value, _conversionModes)) return;
                 _conversionModes = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public byte MinPosition
-        {
-            get => _minPosition;
-            set
-            {
-                if (value == _minPosition) return;
-                _minPosition = value;
-                UpdateFilter();
-                OnPropertyChanged();
-            }
-        }
-
-        public byte MinSpeed
-        {
-            get => _minSpeed;
-            set
-            {
-                if (value == _minSpeed) return;
-                _minSpeed = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public byte MaxSpeed
-        {
-            get => _maxSpeed;
-            set
-            {
-                if (value == _maxSpeed) return;
-                _maxSpeed = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public byte MaxPosition
-        {
-            get => _maxPosition;
-            set
-            {
-                if (value == _maxPosition) return;
-                _maxPosition = value;
-                UpdateFilter();
                 OnPropertyChanged();
             }
         }
@@ -631,8 +517,8 @@ namespace ScriptPlayer.ViewModels
             {
                 newRange.Add(new Range
                 {
-                    Min = TransformPosition(0, MinPosition, MaxPosition, i) / 99.0,
-                    Max = TransformPosition(255, MinPosition, MaxPosition, i) / 99.0
+                    Min = TransformPosition(0, Settings.MinPosition, Settings.MaxPosition, i) / 99.0,
+                    Max = TransformPosition(255, Settings.MinPosition, Settings.MaxPosition, i) / 99.0
                 });
             }
 
@@ -659,17 +545,6 @@ namespace ScriptPlayer.ViewModels
                 if (Equals(value, _videoPlayer)) return;
                 HandleVideoPlayerEvents(_videoPlayer, value);
                 _videoPlayer = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public double SpeedMultiplier
-        {
-            get => _speedMultiplier;
-            set
-            {
-                if (value.Equals(_speedMultiplier)) return;
-                _speedMultiplier = value;
                 OnPropertyChanged();
             }
         }
@@ -723,30 +598,6 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public TimeSpan ScriptDelay
-        {
-            get => _scriptDelay;
-            set
-            {
-                if (value.Equals(_scriptDelay)) return;
-                _scriptDelay = value;
-                _scriptHandler.Delay = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public TimeSpan CommandDelay
-        {
-            get => _commandDelay;
-            set
-            {
-                if (value.Equals(_commandDelay)) return;
-                _commandDelay = value;
-                CommandDelayChanged();
-                OnPropertyChanged();
-            }
-        }
-
         public Brush HeatMap
         {
             get => _heatMap;
@@ -776,28 +627,6 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _showBanner) return;
                 _showBanner = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool ShowScriptPositions
-        {
-            get => _showScriptPositions;
-            set
-            {
-                if (value == _showScriptPositions) return;
-                _showScriptPositions = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool ShowHeatMap
-        {
-            get => _showHeatMap;
-            set
-            {
-                if (value == _showHeatMap) return;
-                _showHeatMap = value;
                 OnPropertyChanged();
             }
         }
@@ -872,40 +701,103 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public bool LogMarkers
+        public SettingsViewModel Settings
         {
-            get => _logMarkers;
+            get => _settings;
             set
             {
-                if (value == _logMarkers) return;
-                _logMarkers = value;
+                if (value == _settings) return;
+                SettingsViewModel oldValue = _settings;
+                _settings = value;
+                OnSettingsChanged(oldValue, _settings);
                 OnPropertyChanged();
             }
         }
 
-        public bool DisplayEventNotifications
+        private void OnSettingsChanged(SettingsViewModel oldValue, SettingsViewModel newValue)
         {
-            get => _displayEventNotifications;
-            set
+            if (oldValue != null)
+                oldValue.PropertyChanged -= Settings_PropertyChanged;
+
+            if (newValue != null)
             {
-                if (value == _displayEventNotifications) return;
-                _displayEventNotifications = value;
-                OnPropertyChanged();
+                newValue.PropertyChanged += Settings_PropertyChanged;
+                UpdateAllFromSettings();
             }
         }
 
-        public bool AutoSkip
+        private void UpdateAllFromSettings()
         {
-            get => _autoSkip;
-            set
+            UpdateFilter();
+            UpdateScriptDelay();
+            UpdateCommandDelay();
+            UpdateConversionMode();
+            UpdatePlaylistShuffle();
+            UpdatePlaylistRepeat();
+        }
+
+        private void UpdatePlaylistRepeat()
+        {
+            if (Playlist == null) return;
+            Playlist.Repeat = Settings.RepeatPlaylist;
+        }
+
+        private void UpdatePlaylistShuffle()
+        {
+            if (Playlist == null) return;
+            Playlist.Shuffle = Settings.ShufflePlaylist;
+        }
+
+        private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
+        {
+            switch (eventArgs.PropertyName)
             {
-                if (value == _autoSkip) return;
-                _autoSkip = value;
-                OnPropertyChanged();
+                case nameof(SettingsViewModel.FilterRange):
+                case nameof(SettingsViewModel.FilterMode):
+                case nameof(SettingsViewModel.MinPosition):
+                case nameof(SettingsViewModel.MaxPosition):
+                {
+                    UpdateFilter();
+                    break;
+                }
+                case nameof(SettingsViewModel.ScriptDelay):
+                {
+                    UpdateScriptDelay();
+                    break;
+                }
+                case nameof(SettingsViewModel.CommandDelay):
+                {
+                    UpdateCommandDelay();
+                    break;
+                }
+                case nameof(SettingsViewModel.ConversionMode):
+                {
+                    UpdateConversionMode();
+                    break;
+                }
+                case nameof(SettingsViewModel.ShufflePlaylist):
+                {
+                    UpdatePlaylistShuffle();
+                    break;
+                }
+                case nameof(SettingsViewModel.RepeatPlaylist):
+                {
+                    UpdatePlaylistRepeat();
+                    break;
+                }
             }
         }
 
-        public Settings Settings => _settings;
+        private void UpdateConversionMode()
+        {
+            _scriptHandler.ConversionMode = Settings.ConversionMode;
+            UpdateHeatMap();
+        }
+
+        private void UpdateScriptDelay()
+        {
+            _scriptHandler.Delay = Settings.ScriptDelay;
+        }
 
         public void Dispose()
         {
@@ -958,10 +850,10 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void CommandDelayChanged()
+        private void UpdateCommandDelay()
         {
             foreach (Device device in _devices)
-                device.MinDelayBetweenCommands = CommandDelay;
+                device.MinDelayBetweenCommands = Settings.CommandDelay;
         }
 
         private void StartRegularPattern(byte positionFrom, byte positionTo, TimeSpan intervall)
@@ -1467,15 +1359,7 @@ namespace ScriptPlayer.ViewModels
 
             M3uPlaylist playlist = M3uPlaylist.FromFile(filename);
 
-            if (Playlist == null)
-            {
-                Playlist = new PlaylistViewModel();
-                Playlist.PlayEntry += PlaylistOnPlayEntry;
-            }
-            else
-            {
-                Playlist.Clear();
-            }
+            Playlist.Clear();
 
             if (playlist == null) return;
 
@@ -1628,7 +1512,7 @@ namespace ScriptPlayer.ViewModels
                     (byte)Math.Abs(eventArgs.PreviousAction.Position - eventArgs.NextAction.Position), duration);
             byte speedTransformed =
                 SpeedPredictor.PredictSpeed((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed), duration);
-            speedTransformed = ClampSpeed(speedTransformed * SpeedMultiplier);
+            speedTransformed = ClampSpeed(speedTransformed * Settings.SpeedMultiplier);
 
             //Debug.WriteLine($"{nextPositionTransformed} @ {speedTransformed}");
 
@@ -1665,9 +1549,9 @@ namespace ScriptPlayer.ViewModels
         {
             if (eventArgs.NextAction == null)
             {
-                if (AutoSkip)
+                if (Settings.AutoSkip)
                     Playlist.PlayNextEntryCommand.Execute(OpenedScript);
-                else if (DisplayEventNotifications)
+                else if (Settings.DisplayEventNotifications)
                     OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
                 return;
             }
@@ -1685,7 +1569,7 @@ namespace ScriptPlayer.ViewModels
                 byte speedTransformed =
                     SpeedPredictor.PredictSpeed((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed),
                         duration);
-                speedTransformed = ClampSpeed(speedTransformed * SpeedMultiplier);
+                speedTransformed = ClampSpeed(speedTransformed * Settings.SpeedMultiplier);
 
                 DeviceCommandInformation info = new DeviceCommandInformation
                 {
@@ -1703,16 +1587,16 @@ namespace ScriptPlayer.ViewModels
 
             if (duration > TimeSpan.FromSeconds(10) && TimeSource.IsPlaying)
             {
-                if (AutoSkip)
+                if (Settings.AutoSkip)
                     SkipToNextEvent();
-                else if (DisplayEventNotifications)
+                else if (Settings.DisplayEventNotifications)
                     OnRequestOverlay($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4), "Events");
             }
         }
 
         private byte ClampSpeed(double speed)
         {
-            return (byte)Math.Min(MaxSpeed, Math.Max(MinSpeed, speed));
+            return (byte)Math.Min(Settings.MaxSpeed, Math.Max(Settings.MinSpeed, speed));
         }
 
         private byte TransformPosition(byte pos, byte inMin, byte inMax, double timestamp)
@@ -1720,14 +1604,14 @@ namespace ScriptPlayer.ViewModels
             double relative = (double)(pos - inMin) / (inMax - inMin);
             relative = Math.Min(1, Math.Max(0, relative));
 
-            byte minPosition = MinPosition;
-            byte maxPosition = MaxPosition;
+            byte minPosition = Settings.MinPosition;
+            byte maxPosition = Settings.MaxPosition;
 
             const double secondsPercycle = 10.0;
             double cycle = timestamp / secondsPercycle;
-            double range = FilterRange;
+            double range = Settings.FilterRange;
 
-            switch (FilterMode)
+            switch (Settings.FilterMode)
             {
                 case PositionFilterMode.FullRange:
                     break;
@@ -1865,7 +1749,7 @@ namespace ScriptPlayer.ViewModels
 
         private void VideoPlayer_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (LogMarkers != true)
+            if (Settings.LogMarkers != true)
                 return;
 
             try
@@ -1901,7 +1785,7 @@ namespace ScriptPlayer.ViewModels
             ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition - _scriptHandler.Delay);
             if (nextAction == null)
             {
-                if (DisplayEventNotifications)
+                if (Settings.DisplayEventNotifications)
                     OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
                 return;
             }
@@ -1917,13 +1801,13 @@ namespace ScriptPlayer.ViewModels
             else
                 TimeSource.SetPosition(skipTo);
 
-            if (DisplayEventNotifications)
+            if (Settings.DisplayEventNotifications)
                 ShowPosition($"Skipped {duration.TotalSeconds:f0}s - ");
         }
 
         private void VideoPlayer_MediaOpened(object sender, EventArgs e)
         {
-            if (AutoSkip)
+            if (Settings.AutoSkip)
                 SkipToNextEvent(true);
 
             UpdateHeatMap();
@@ -2083,7 +1967,10 @@ namespace ScriptPlayer.ViewModels
             if (url == null)
                 return;*/
 
-            controller = new ButtplugAdapter(_settings.Buttplug);
+            controller = new ButtplugAdapter(new ButtplugConnectionSettings
+            {
+                Url = Settings.ButtplugUrl
+            });
             controller.DeviceFound += DeviceController_DeviceFound;
             controller.DeviceRemoved += DevicecController_DeviceRemoved;
 
@@ -2145,33 +2032,7 @@ namespace ScriptPlayer.ViewModels
 
         public void ApplySettings(SettingsViewModel settings)
         {
-            Settings.CheckForNewVersionOnStartup = settings.CheckForNewVersionOnStartup;
-
-            Settings.Buttplug = new ButtplugConnectionSettings
-            {
-                Url = settings.ButtplugUrl
-            };
-
-            Settings.Vlc = new VlcConnectionSettings
-            {
-                IpAndPort = settings.VlcEndpoint,
-                Password = settings.VlcPassword
-            };
-
-            Settings.Whirligig = new WhirligigConnectionSettings
-            {
-                IpAndPort = settings.WhirligigEndpoint
-            };
-
-            Settings.AdditionalPaths = settings.AdditionalPaths.ToList();
+            Settings = settings;
         }
-    }
-
-    public enum PlaybackMode
-    {
-        Local,
-        Blind,
-        Whirligig,
-        Vlc
     }
 }

@@ -153,7 +153,7 @@ namespace ScriptPlayer.Shared
             RectLeft.Width = rightEdgeOfLowerThumb - 8;
             RectRight.Width = ActualWidth - leftEdgeOfUpperThumb - 8;
 
-            RectCenter.Width = leftEdgeOfUpperThumb - rightEdgeOfLowerThumb;
+            RectCenter.Width = Math.Abs(leftEdgeOfUpperThumb - rightEdgeOfLowerThumb);
             RectCenter.Margin = new Thickness(rightEdgeOfLowerThumb,8,0,8);
         }
 

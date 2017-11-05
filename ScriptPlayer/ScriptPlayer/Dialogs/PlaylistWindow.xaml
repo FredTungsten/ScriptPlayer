@@ -13,7 +13,7 @@
         <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}"></Style>
     </Window.Resources>
     <Grid>
-        <ListBox Margin="10,10,10,42" ItemsSource="{Binding Path=Entries}" SelectedItem="{Binding Path=SelectedEntry, Mode=TwoWay}" AllowDrop="True" Drop="ListBox_Drop">
+        <ListBox ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,42" ItemsSource="{Binding Path=Entries}" SelectedItem="{Binding Path=SelectedEntry, Mode=TwoWay}" AllowDrop="True" Drop="ListBox_Drop">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
@@ -21,7 +21,7 @@
             </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="viewModels:PlaylistEntry">
-                    <TextBlock Text="{Binding Shortname}" ToolTip="{Binding Fullname}"/>
+                    <TextBlock Text="{Binding Shortname}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Fullname}"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

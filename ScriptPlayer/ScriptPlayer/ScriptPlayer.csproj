@@ -83,6 +83,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ViewModels\PlaybackMode.cs" />
+    <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="ViewModels\VersionViewModel.cs" />
     <Compile Include="Converters\DeviceToImageConverter.cs" />
     <Compile Include="Converters\DistinctValueToBooleanConverter.cs" />
@@ -119,7 +121,6 @@
     <Compile Include="ViewModels\PositionFilterMode.cs" />
     <Compile Include="ViewModels\RequestEventArgs.cs" />
     <Compile Include="ViewModels\RequestFileEventArgs.cs" />
-    <Compile Include="ViewModels\Settings.cs" />
     <Compile Include="ViewModels\TestPatternDefinition.cs" />
     <Page Include="Dialogs\ButtplugConnectionSettingsDialog.xaml">
       <SubType>Designer</SubType>

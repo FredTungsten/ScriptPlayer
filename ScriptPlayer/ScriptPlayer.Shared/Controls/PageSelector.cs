@@ -9,7 +9,7 @@ namespace ScriptPlayer.Shared.Controls
     public class PageSelector : ContentControl
     {
         public static readonly DependencyProperty ElementsProperty = DependencyProperty.Register(
-            "Elements", typeof(ObservableCollection<UIElement>), typeof(PageSelector), new PropertyMetadata(new ObservableCollection<UIElement>(), OnElementsChanged));
+            "Elements", typeof(ObservableCollection<UIElement>), typeof(PageSelector), new PropertyMetadata(null, OnElementsChanged));
 
         private static void OnElementsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -81,6 +81,7 @@ namespace ScriptPlayer.Shared.Controls
 
         public PageSelector()
         {
+            Elements = new ObservableCollection<UIElement>();
             Loaded += OnLoaded;
         }
 
@@ -102,8 +103,10 @@ namespace ScriptPlayer.Shared.Controls
                 if (GetContentIdentifier(element) != id) continue;
 
                 Content = element;
-                break;
+                return;
             }
+
+            Content = null;
         }
     }
 }

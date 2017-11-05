@@ -424,7 +424,7 @@ namespace ScriptPlayer
 
         private void TimeDisplay_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            ViewModel.ShowTimeLeft ^= true;
+            ViewModel.Settings.ShowTimeLeft ^= true;
         }
 
         private void GridVideo_Drop(object sender, System.Windows.DragEventArgs e)

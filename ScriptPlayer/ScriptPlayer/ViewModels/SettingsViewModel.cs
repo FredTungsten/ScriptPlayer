@@ -1,0 +1,457 @@
+using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
+using JetBrains.Annotations;
+using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Scripts;
+
+namespace ScriptPlayer.ViewModels
+{
+    public class SettingsViewModel : INotifyPropertyChanged
+    {
+        private string _vlcEndpoint;
+        private string _vlcPassword;
+        private string _whirligigEndpoint;
+        private string _buttplugUrl;
+
+        private ObservableCollection<string> _additionalPaths;
+
+        private bool _checkForNewVersionOnStartup;
+        private bool _autoSkip;
+
+        private TimeSpan _commandDelay = TimeSpan.FromMilliseconds(166);
+        private TimeSpan _scriptDelay;
+
+        private ConversionMode _conversionMode = ConversionMode.UpOrDown;
+        private bool _logMarkers;
+
+        private byte _maxPosition = 95;
+        private byte _minPosition = 5;
+        private byte _minSpeed = 20;
+        private byte _maxSpeed = 95;
+        private double _speedMultiplier = 1;
+        
+        private bool _showHeatMap;
+        private PositionFilterMode _filterMode = PositionFilterMode.FullRange;
+        private double _filterRange = 0.5;
+        private bool _showScriptPositions;
+
+        private bool _showTimeLeft;
+        private bool _displayEventNotifications;
+        private bool _filterDoubleClicks;
+        private bool _doubleClickToFullscreen;
+        private bool _clickToPlayPause;
+        private bool _rememberPlaylist;
+        private bool _shufflePlaylist;
+        private bool _repeatPlaylist;
+
+        public SettingsViewModel()
+        {
+            WhirligigEndpoint = WhirligigConnectionSettings.DefaultEndpoint;
+            VlcEndpoint = VlcConnectionSettings.DefaultEndpoint;
+            ButtplugUrl = ButtplugConnectionSettings.DefaultUrl;
+            AdditionalPaths = new ObservableCollection<string>();
+            CheckForNewVersionOnStartup = true;
+            DisplayEventNotifications = true;
+            ClickToPlayPause = true;
+            DoubleClickToFullscreen = true;
+            FilterDoubleClicks = true;
+            RememberPlaylist = true;
+        }
+
+        public SettingsViewModel Duplicate()
+        {
+            return new SettingsViewModel
+            {
+                AdditionalPaths = new ObservableCollection<string>(AdditionalPaths),
+                AutoSkip = AutoSkip,
+                ButtplugUrl = ButtplugUrl,
+                CheckForNewVersionOnStartup = CheckForNewVersionOnStartup,
+                ClickToPlayPause = ClickToPlayPause,
+                CommandDelay = CommandDelay,
+                ConversionMode = ConversionMode,
+                DisplayEventNotifications = DisplayEventNotifications,
+                DoubleClickToFullscreen = DoubleClickToFullscreen,
+                FilterDoubleClicks = FilterDoubleClicks,
+                FilterMode = FilterMode,
+                FilterRange = FilterRange,
+                LogMarkers = LogMarkers,
+                MaxPosition = MaxPosition,
+                MaxSpeed = MaxSpeed,
+                MinPosition = MinPosition,
+                MinSpeed = MinSpeed,
+                RememberPlaylist = RememberPlaylist,
+                RepeatPlaylist = RepeatPlaylist,
+                ScriptDelay = ScriptDelay,
+                ShowHeatMap = ShowHeatMap,
+                ShowScriptPositions = ShowScriptPositions,
+                ShowTimeLeft = ShowTimeLeft,
+                SpeedMultiplier = SpeedMultiplier,
+                ShufflePlaylist = ShufflePlaylist,
+                VlcEndpoint = VlcEndpoint,
+                VlcPassword = VlcPassword,
+                WhirligigEndpoint = WhirligigEndpoint
+            };
+        }
+
+        public bool ShufflePlaylist
+        {
+            get { return _shufflePlaylist; }
+            set
+            {
+                if (value == _shufflePlaylist) return;
+                _shufflePlaylist = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool RepeatPlaylist
+        {
+            get { return _repeatPlaylist; }
+            set
+            {
+                if (value == _repeatPlaylist) return;
+                _repeatPlaylist = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool RememberPlaylist
+        {
+            get => _rememberPlaylist;
+            set
+            {
+                if (value == _rememberPlaylist) return;
+                _rememberPlaylist = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ClickToPlayPause
+        {
+            get => _clickToPlayPause;
+            set
+            {
+                if (value == _clickToPlayPause) return;
+                _clickToPlayPause = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool DoubleClickToFullscreen
+        {
+            get => _doubleClickToFullscreen;
+            set
+            {
+                if (value == _doubleClickToFullscreen) return;
+                _doubleClickToFullscreen = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool FilterDoubleClicks
+        {
+            get => _filterDoubleClicks;
+            set
+            {
+                if (value == _filterDoubleClicks) return;
+                _filterDoubleClicks = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool CheckForNewVersionOnStartup
+        {
+            get => _checkForNewVersionOnStartup;
+            set
+            {
+                if (value == _checkForNewVersionOnStartup) return;
+                _checkForNewVersionOnStartup = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ObservableCollection<string> AdditionalPaths
+        {
+            get => _additionalPaths;
+            set
+            {
+                if (Equals(value, _additionalPaths)) return;
+                _additionalPaths = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string VlcEndpoint
+        {
+            get => _vlcEndpoint;
+            set
+            {
+                if (value == _vlcEndpoint) return;
+                _vlcEndpoint = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string VlcPassword
+        {
+            get => _vlcPassword;
+            set
+            {
+                if (value == _vlcPassword) return;
+                _vlcPassword = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string WhirligigEndpoint
+        {
+            get => _whirligigEndpoint;
+            set
+            {
+                if (value == _whirligigEndpoint) return;
+                _whirligigEndpoint = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ButtplugUrl
+        {
+            get => _buttplugUrl;
+            set
+            {
+                if (value == _buttplugUrl) return;
+                _buttplugUrl = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowTimeLeft
+        {
+            get => _showTimeLeft;
+            set
+            {
+                if (value == _showTimeLeft) return;
+                _showTimeLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double FilterRange
+        {
+            get => _filterRange;
+            set
+            {
+                if (value.Equals(_filterRange)) return;
+                _filterRange = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public PositionFilterMode FilterMode
+        {
+            get => _filterMode;
+            set
+            {
+                if (value == _filterMode) return;
+                _filterMode = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool LogMarkers
+        {
+            get => _logMarkers;
+            set
+            {
+                if (value == _logMarkers) return;
+                _logMarkers = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool DisplayEventNotifications
+        {
+            get => _displayEventNotifications;
+            set
+            {
+                if (value == _displayEventNotifications) return;
+                _displayEventNotifications = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AutoSkip
+        {
+            get => _autoSkip;
+            set
+            {
+                if (value == _autoSkip) return;
+                _autoSkip = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public byte MinPosition
+        {
+            get => _minPosition;
+            set
+            {
+                if (value == _minPosition) return;
+                _minPosition = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public byte MinSpeed
+        {
+            get => _minSpeed;
+            set
+            {
+                if (value == _minSpeed) return;
+                _minSpeed = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public byte MaxSpeed
+        {
+            get => _maxSpeed;
+            set
+            {
+                if (value == _maxSpeed) return;
+                _maxSpeed = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public byte MaxPosition
+        {
+            get => _maxPosition;
+            set
+            {
+                if (value == _maxPosition) return;
+                _maxPosition = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double SpeedMultiplier
+        {
+            get => _speedMultiplier;
+            set
+            {
+                if (value.Equals(_speedMultiplier)) return;
+                _speedMultiplier = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public TimeSpan ScriptDelay
+        {
+            get => _scriptDelay;
+            set
+            {
+                if (value.Equals(_scriptDelay)) return;
+                _scriptDelay = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public TimeSpan CommandDelay
+        {
+            get => _commandDelay;
+            set
+            {
+                if (value.Equals(_commandDelay)) return;
+                _commandDelay = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ConversionMode ConversionMode
+        {
+            get => _conversionMode;
+            set
+            {
+                if (value == _conversionMode) return;
+                _conversionMode = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowScriptPositions
+        {
+            get => _showScriptPositions;
+            set
+            {
+                if (value == _showScriptPositions) return;
+                _showScriptPositions = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowHeatMap
+        {
+            get => _showHeatMap;
+            set
+            {
+                if (value == _showHeatMap) return;
+                _showHeatMap = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public static SettingsViewModel FromFile(string filename)
+        {
+            try
+            {
+                using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(SettingsViewModel));
+                    return serializer.Deserialize(stream) as SettingsViewModel;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                return null;
+            }
+        }
+
+        public void Save(string filename)
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(filename);
+                if (string.IsNullOrWhiteSpace(dir))
+                    throw new ArgumentException(@"Directory is null", nameof(filename));
+
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                using (FileStream stream = new FileStream(filename, FileMode.Create, FileAccess.Write))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(SettingsViewModel));
+                    serializer.Serialize(stream, this);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+            }
+        }
+    }
+}
