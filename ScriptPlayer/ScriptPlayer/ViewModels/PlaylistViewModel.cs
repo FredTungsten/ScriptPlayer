@@ -88,6 +88,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand MoveSelectedEntryUpCommand { get; set; }
         public RelayCommand MoveSelectedEntryDownCommand { get; set; }
         public RelayCommand RemoveSelectedEntryCommand { get; set; }
+        public RelayCommand ClearPlaylistCommand { get; set; }
         public int EntryCount => Entries.Count;
 
         public PlaylistViewModel()
@@ -97,8 +98,19 @@ namespace ScriptPlayer.ViewModels
             MoveSelectedEntryDownCommand = new RelayCommand(ExecuteMoveSelectedEntryDown, CanMoveSelectedEntryDown);
             MoveSelectedEntryUpCommand = new RelayCommand(ExecuteMoveSelectedEntryUp, CanMoveSelectedEntryUp);
             RemoveSelectedEntryCommand = new RelayCommand(ExecuteRemoveSelectedEntry, CanRemoveSelectedEntry);
+            ClearPlaylistCommand = new RelayCommand(ExecuteClearPlaylist, CanClearPlaylist);
             PlayNextEntryCommand = new RelayCommand<string>(ExecutePlayNextEntry, CanPlayNextEntry);
             PlayPreviousEntryCommand = new RelayCommand<string>(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
+        }
+
+        private bool CanClearPlaylist()
+        {
+            return _entries.Count > 0;
+        }
+
+        private void ExecuteClearPlaylist()
+        {
+            Clear();
         }
 
         private bool CanPlayPreviousEntry(string currentFile)

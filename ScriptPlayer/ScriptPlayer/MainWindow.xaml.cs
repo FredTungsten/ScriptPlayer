@@ -209,31 +209,75 @@ namespace ScriptPlayer
 
         private async void VideoPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            //Debug.WriteLine("Click?");
-            DateTime click = DateTime.Now;
-            await Task.Delay(TimeSpan.FromMilliseconds(350));
+            SettingsViewModel s = ViewModel.Settings;
+            bool secondClick = e.ClickCount % 2 == 0;
 
-            if (_doubleClickTimeStamp >= click)
-                return;
+            if (s.DoubleClickToFullscreen && s.ClickToPlayPause)
+            {
+                if (s.FilterDoubleClicks)
+                {
+                    if (secondClick)
+                        HandleDoubleClick(e);
+                    else
+                        await HandleSingleClick(e);
+                }
+                else
+                {
+                    await HandleSingleClick(e);
+                    if(secondClick)
+                        HandleDoubleClick(e);
+                }
+            }
+            else if (s.DoubleClickToFullscreen && secondClick)
+            {
+                HandleDoubleClick(e);
+            }
+            else if (s.ClickToPlayPause)
+            {
+                await HandleSingleClick(e);
+            }
+        }
+
+        private void HandleDoubleClick(MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+
+            Debug.WriteLine("DoubleClick!");
+            _doubleClickTimeStamp = DateTime.Now;
+
+            ToggleFullscreen();
+        }
+
+        private async Task HandleSingleClick(MouseButtonEventArgs e)
+        {
+            if (ViewModel.Settings.FilterDoubleClicks)
+            {
+                Debug.WriteLine("Click?");
+                DateTime click = DateTime.Now;
+                await Task.Delay(TimeSpan.FromMilliseconds(350));
+
+                if (_doubleClickTimeStamp >= click)
+                    return;
+            }
 
             e.Handled = true;
 
-            //Debug.WriteLine("Click!");
+            Debug.WriteLine("Click!");
             ViewModel.TogglePlayback();
         }
 
 
         private void VideoPlayer_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (e.ChangedButton != MouseButton.Left)
-                return;
+            //if (e.ChangedButton != MouseButton.Left)
+            //    return;
 
-            e.Handled = true;
+            //e.Handled = true;
 
-            //Debug.WriteLine("DoubleClick!");
-            _doubleClickTimeStamp = DateTime.Now;
+            ////Debug.WriteLine("DoubleClick!");
+            //_doubleClickTimeStamp = DateTime.Now;
 
-            ToggleFullscreen();
+            //ToggleFullscreen();
         }
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)

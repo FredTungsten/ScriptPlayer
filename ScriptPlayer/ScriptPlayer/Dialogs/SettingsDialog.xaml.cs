@@ -80,6 +80,8 @@ namespace ScriptPlayer.Dialogs
             set => SetValue(SettingsTitleProperty, value);
         }
 
+        private static string _lastSelected;
+
         public SettingsDialog(SettingsViewModel initialSettings)
         {
             Settings = initialSettings.Duplicate();
@@ -87,7 +89,22 @@ namespace ScriptPlayer.Dialogs
             InitializeComponent();
 
             Pages = BuildPages(PageSelector);
-            SelectedPage = Pages.FirstOrDefault();
+            SelectedPage = FindPage(_lastSelected) ?? Pages.FirstOrDefault();
+        }
+
+        private SettingsPageViewModel FindPage(string pageId)
+        {
+            if (string.IsNullOrWhiteSpace(pageId))
+                return null;
+
+            string[] sections = pageId.Split('/');
+
+            SettingsPageViewModel page = Pages[sections[0]];
+
+            for (int i = 1; i < sections.Length; i++)
+                page = page?.SubSettings[string.Join("/", sections.Take(i+1))];
+
+            return page;
         }
 
         private static SettingsPageViewModelCollection BuildPages(PageSelector pageSelector)
@@ -116,12 +133,28 @@ namespace ScriptPlayer.Dialogs
                 }
             }
 
+            SortPages(pages);
+
             return pages;
+        }
+
+        private static void SortPages(SettingsPageViewModelCollection pages)
+        {
+            if (pages == null) return;
+
+            pages.Sort((a,b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+
+            foreach (SettingsPageViewModel page in pages)
+                SortPages(page.SubSettings);
         }
 
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            SelectedPage = e.NewValue as SettingsPageViewModel;
+            SettingsPageViewModel page = e.NewValue as SettingsPageViewModel;
+            if (page == null) return;
+
+            SelectedPage = page;
+            _lastSelected = page.SettingsId;
         }
 
         private string BuildSettingsPath()

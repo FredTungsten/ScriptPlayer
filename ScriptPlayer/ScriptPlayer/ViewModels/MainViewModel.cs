@@ -1250,6 +1250,17 @@ namespace ScriptPlayer.ViewModels
 
         private void DevicecController_DeviceRemoved(object sender, Device device)
         {
+            RemoveDevice(device);
+        }
+
+        private void RemoveDevice(Device device)
+        {
+            if (!Application.Current.Dispatcher.CheckAccess())
+            {
+                Application.Current.Dispatcher.Invoke(() => RemoveDevice(device));
+                return;
+            }
+
             _devices.Remove(device);
 
             OnRequestOverlay("Device Removed: " + device.Name, TimeSpan.FromSeconds(8));
@@ -1257,6 +1268,17 @@ namespace ScriptPlayer.ViewModels
 
         private void DeviceController_DeviceFound(object sender, Device device)
         {
+            AddDevice(device);
+        }
+
+        private void AddDevice(Device device)
+        {
+            if (!Application.Current.Dispatcher.CheckAccess())
+            {
+                Application.Current.Dispatcher.Invoke(() => AddDevice(device));
+                return;
+            }
+
             _devices.Add(device);
             device.IsEnabled = true;
             //TODO Handle Disconnect
