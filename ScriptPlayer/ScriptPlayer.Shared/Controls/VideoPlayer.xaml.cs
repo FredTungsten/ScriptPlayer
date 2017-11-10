@@ -93,6 +93,15 @@ namespace ScriptPlayer.Shared
             ((VideoPlayer)d).RefreshRect();
         }
 
+        public static readonly DependencyProperty SoftSeekFreezeFrameProperty = DependencyProperty.Register(
+            "SoftSeekFreezeFrame", typeof(bool), typeof(VideoPlayer), new PropertyMetadata(default(bool)));
+
+        public bool SoftSeekFreezeFrame
+        {
+            get { return (bool) GetValue(SoftSeekFreezeFrameProperty); }
+            set { SetValue(SoftSeekFreezeFrameProperty, value); }
+        }
+
         public event EventHandler MediaEnded;
 
         private void RefreshRect()
@@ -398,7 +407,9 @@ namespace ScriptPlayer.Shared
             if (_animationCanceled) return;
             await Task.Delay(fadeOutDuration);
             if (_animationCanceled) return;
-            CaptureBackground();
+
+            if(SoftSeekFreezeFrame)
+                CaptureBackground();
         }
 
         private void CaptureBackground()
@@ -432,11 +443,13 @@ namespace ScriptPlayer.Shared
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
             };
 
+            double opacity = SoftSeekFreezeFrame ? FadeOutOpacity : 0.0;
+
             DoubleAnimation opacityFadeOutAnimation = new DoubleAnimation
             {
                 Duration = duration,
                 FillBehavior = FillBehavior.HoldEnd,
-                To = FadeOutOpacity,
+                To = opacity,
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
             };
 

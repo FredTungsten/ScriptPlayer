@@ -109,9 +109,9 @@ namespace ScriptPlayer.Dialogs
 
         private static SettingsPageViewModelCollection BuildPages(PageSelector pageSelector)
         {
-            var pages = new SettingsPageViewModelCollection();
+            SettingsPageViewModelCollection pages = new SettingsPageViewModelCollection();
 
-            foreach (var page in pageSelector.Elements)
+            foreach (UIElement page in pageSelector.Elements)
             {
                 string id = PageSelector.GetContentIdentifier(page);
                 if (string.IsNullOrWhiteSpace("id")) continue;

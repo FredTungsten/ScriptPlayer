@@ -10,12 +10,30 @@ namespace ScriptPlayer.Shared
 {
     public class BeatBar2 : Control
     {
+        public static readonly DependencyProperty FlashDurationProperty = DependencyProperty.Register(
+            "FlashDuration", typeof(TimeSpan), typeof(BeatBar2), new PropertyMetadata(TimeSpan.FromMilliseconds(50)));
+
+        public TimeSpan FlashDuration
+        {
+            get { return (TimeSpan)GetValue(FlashDurationProperty); }
+            set { SetValue(FlashDurationProperty, value); }
+        }
+
+        public static readonly DependencyProperty FlashAfterBeatProperty = DependencyProperty.Register(
+            "FlashAfterBeat", typeof(bool), typeof(BeatBar2), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public bool FlashAfterBeat
+        {
+            get { return (bool)GetValue(FlashAfterBeatProperty); }
+            set { SetValue(FlashAfterBeatProperty, value); }
+        }
+
         public static readonly DependencyProperty HighlightBeatsProperty = DependencyProperty.Register(
             "HighlightBeats", typeof(bool), typeof(BeatBar2), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public bool HighlightBeats
         {
-            get { return (bool) GetValue(HighlightBeatsProperty); }
+            get { return (bool)GetValue(HighlightBeatsProperty); }
             set { SetValue(HighlightBeatsProperty, value); }
         }
 
@@ -24,7 +42,7 @@ namespace ScriptPlayer.Shared
 
         public int HighlightInterval
         {
-            get { return (int) GetValue(HighlightIntervalProperty); }
+            get { return (int)GetValue(HighlightIntervalProperty); }
             set { SetValue(HighlightIntervalProperty, value); }
         }
 
@@ -33,7 +51,7 @@ namespace ScriptPlayer.Shared
 
         public int HighlightOffset
         {
-            get { return (int) GetValue(HighlightOffsetProperty); }
+            get { return (int)GetValue(HighlightOffsetProperty); }
             set { SetValue(HighlightOffsetProperty, value); }
         }
 
@@ -42,7 +60,7 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan Marker1
         {
-            get { return (TimeSpan) GetValue(Marker1Property); }
+            get { return (TimeSpan)GetValue(Marker1Property); }
             set { SetValue(Marker1Property, value); }
         }
 
@@ -51,7 +69,7 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan Marker2
         {
-            get { return (TimeSpan) GetValue(Marker2Property); }
+            get { return (TimeSpan)GetValue(Marker2Property); }
             set { SetValue(Marker2Property, value); }
         }
 
@@ -66,7 +84,7 @@ namespace ScriptPlayer.Shared
 
         public Color LineColor
         {
-            get { return (Color) GetValue(LineColorProperty); }
+            get { return (Color)GetValue(LineColorProperty); }
             set { SetValue(LineColorProperty, value); }
         }
 
@@ -75,7 +93,7 @@ namespace ScriptPlayer.Shared
 
         public Color HighlightColor
         {
-            get { return (Color) GetValue(HighlightColorProperty); }
+            get { return (Color)GetValue(HighlightColorProperty); }
             set { SetValue(HighlightColorProperty, value); }
         }
 
@@ -84,7 +102,7 @@ namespace ScriptPlayer.Shared
 
         public double LineWidth
         {
-            get { return (double) GetValue(LineWidthProperty); }
+            get { return (double)GetValue(LineWidthProperty); }
             set { SetValue(LineWidthProperty, value); }
         }
 
@@ -93,7 +111,7 @@ namespace ScriptPlayer.Shared
 
         public BeatCollection Beats
         {
-            get { return (BeatCollection) GetValue(BeatsProperty); }
+            get { return (BeatCollection)GetValue(BeatsProperty); }
             set { SetValue(BeatsProperty, value); }
         }
 
@@ -120,6 +138,7 @@ namespace ScriptPlayer.Shared
 
         private bool _rightdown;
         private double _lastMousePosition;
+        private TimeSpan _previouslyRendered;
 
         private static void OnVisualPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -129,7 +148,7 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan Progress
         {
-            get { return (TimeSpan) GetValue(ProgressProperty); }
+            get { return (TimeSpan)GetValue(ProgressProperty); }
             set { SetValue(ProgressProperty, value); }
         }
 
@@ -137,7 +156,7 @@ namespace ScriptPlayer.Shared
         {
             double x = e.GetPosition(this).X;
             TimeSpan position = TimeFromX(x);
-            
+
             OnTimeMouseDown(position);
         }
 
@@ -152,7 +171,7 @@ namespace ScriptPlayer.Shared
 
         protected override void OnPreviewMouseRightButtonUp(MouseButtonEventArgs e)
         {
-            if(!_rightdown)
+            if (!_rightdown)
                 base.OnPreviewMouseRightButtonUp(e);
             else
             {
@@ -176,7 +195,7 @@ namespace ScriptPlayer.Shared
 
         private void RefreshRightMove()
         {
-            if(_rightdown)
+            if (_rightdown)
                 OnTimeMouseRightMove(TimeFromX(_lastMousePosition));
         }
 
@@ -198,20 +217,20 @@ namespace ScriptPlayer.Shared
 
         protected override void OnRender(DrawingContext drawingContext)
         {
-            bool numbers = Keyboard.IsKeyToggled(Key.NumLock);
-
-            #region Background
-
-            Rect fullRect = new Rect(new Point(), new Size(ActualWidth, ActualHeight));
-            drawingContext.PushClip(new RectangleGeometry(fullRect));
-            drawingContext.DrawRectangle(Background, null, fullRect);
-
-            #endregion
+            //bool numbers = Keyboard.IsKeyToggled(Key.NumLock);
 
             #region Selection
 
             TimeSpan timeFrom = Progress - TotalDisplayedDuration.Multiply(Midpoint);
             TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
+
+            List<TimeSpan> absoluteBeatPositions = Beats?.GetBeats(timeFrom, timeTo).ToList() ?? new List<TimeSpan>();
+
+            bool isActive = FlashAfterBeat && absoluteBeatPositions.Any(b => Progress >= b  && Progress <= b.Add(FlashDuration));
+
+            Rect fullRect = new Rect(new Point(), new Size(ActualWidth, ActualHeight));
+            drawingContext.PushClip(new RectangleGeometry(fullRect));
+            drawingContext.DrawRectangle(isActive ? Brushes.White : Background, null, fullRect);
 
             if (Marker1 != TimeSpan.MinValue && Marker2 != TimeSpan.MinValue)
             {
@@ -223,9 +242,9 @@ namespace ScriptPlayer.Shared
                     double xFrom = XFromTime(earlier);
                     double xTo = XFromTime(later);
 
-                    SolidColorBrush brush = new SolidColorBrush(Colors.Cyan){Opacity = 0.4};
+                    SolidColorBrush brush = new SolidColorBrush(Colors.Cyan) { Opacity = 0.4 };
 
-                    drawingContext.DrawRectangle(brush, null, new Rect(new Point(xFrom,0), new Point(xTo, ActualHeight)));
+                    drawingContext.DrawRectangle(brush, null, new Rect(new Point(xFrom, 0), new Point(xTo, ActualHeight)));
                 }
             }
 
@@ -245,54 +264,51 @@ namespace ScriptPlayer.Shared
 
             #region MidPoint
 
-            drawingContext.DrawLine(new Pen(Brushes.Red, 11), new Point(Midpoint * ActualWidth, 0), new Point(Midpoint * ActualWidth, ActualHeight));
+            drawingContext.DrawLine(new Pen(isActive ? Brushes.Black : Brushes.Red, 11), new Point(XFromTime(Progress), 0), new Point(Midpoint * ActualWidth, ActualHeight));
 
             #endregion
 
             #region Beats
 
-            if (Beats != null)
+            if (absoluteBeatPositions.Count > 0)
             {
-                List<TimeSpan> absoluteBeatPositions = Beats.GetBeats(timeFrom, timeTo).ToList();
+                int startingIndex = Beats.IndexOf(absoluteBeatPositions.First());
+                int index = startingIndex;
 
-                if(absoluteBeatPositions.Count > 0)
+                foreach (TimeSpan timePos in absoluteBeatPositions)
                 {
-                    int startingIndex = Beats.IndexOf(absoluteBeatPositions.First());
-                    int index = startingIndex;
+                    double pos = (timePos - timeFrom).Divide(timeTo - timeFrom);
+                    bool isSelected = IsInSelectedRange(timePos);
+                    int loopIndex = (index + HighlightOffset) % HighlightInterval;
 
-                    foreach (TimeSpan timePos in absoluteBeatPositions)
+                    Color outerColor = LineColor;
+
+                    if (HighlightBeats && loopIndex == 0)
                     {
-                        double pos = (timePos - timeFrom).Divide(timeTo - timeFrom);
-                        bool isSelected = IsInSelectedRange(timePos);
-                        int loopIndex = (index + HighlightOffset) % HighlightInterval;
-
-                        Color outerColor = LineColor;
-
-                        if (HighlightBeats && loopIndex == 0)
-                        {
-                            outerColor = HighlightColor;
-                        }
-
-                        Color innerColor = isSelected ? Colors.White : Colors.LightBlue;
-
-                        DrawLine(drawingContext, outerColor, innerColor, new Point(pos * ActualWidth, -5),
-                            new Point(pos * ActualWidth, ActualHeight + 5), LineWidth);
-
-                        index++;
+                        outerColor = HighlightColor;
                     }
+
+                    Color innerColor = isSelected ? Colors.White : Colors.LightBlue;
+
+                    DrawLine(drawingContext, outerColor, innerColor, new Point(pos * ActualWidth, -5),
+                        new Point(pos * ActualWidth, ActualHeight + 5), LineWidth);
+
+                    index++;
                 }
             }
 
             #endregion
 
             drawingContext.Pop();
+
+            _previouslyRendered = Progress;
         }
 
         private bool IsInSelectedRange(TimeSpan timePos)
         {
             if (Marker1 == TimeSpan.MinValue || Marker2 == TimeSpan.MinValue)
                 return false;
-            
+
             TimeSpan earlier = Marker1 < Marker2 ? Marker1 : Marker2;
             TimeSpan later = Marker1 > Marker2 ? Marker1 : Marker2;
 

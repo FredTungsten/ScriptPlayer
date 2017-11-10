@@ -178,6 +178,7 @@
                                         
                                         <CheckBox Margin="2" VerticalAlignment="Center" Name="cckRTL" Checked="CckRTL_OnChecked" Unchecked="CckRTL_OnUnchecked">Right to Left</CheckBox>
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=HighlightBeats}">Highlight Beats</CheckBox>
+                                        <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=FlashAfterBeat}">Flash after Beats</CheckBox>
 
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="Highlight Interval:"/>
                                         <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="2" Maximum="16" 

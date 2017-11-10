@@ -266,20 +266,6 @@ namespace ScriptPlayer
             ViewModel.TogglePlayback();
         }
 
-
-        private void VideoPlayer_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            //if (e.ChangedButton != MouseButton.Left)
-            //    return;
-
-            //e.Handled = true;
-
-            ////Debug.WriteLine("DoubleClick!");
-            //_doubleClickTimeStamp = DateTime.Now;
-
-            //ToggleFullscreen();
-        }
-
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
             e.Handled = true;

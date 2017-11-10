@@ -13,7 +13,6 @@
         WindowStyle="ToolWindow" Loaded="SettingsDialog_OnLoaded"
         Title="Settings" Height="492.373" Width="670.797">
     <Window.Resources>
-        <converters:TimeLeftConverter x:Key="TimeLeftConverter"/>
         <converters1:ConversionModeToNameConverter x:Key="ConversionConverter"/>
         <converters:DistinctValueToBooleanConverter x:Key="BooleanConverter"/>
         <converters:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
@@ -66,7 +65,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Interaction/Input" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Input" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -75,6 +74,16 @@
                     </ControlTemplate>
                 </controls:PageSelector.Template>
                 <controls:PageSelector.Elements>
+                    <Grid controls:PageSelector.ContentIdentifier="Notifications">
+                        <StackPanel>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyPlayPause}" Content="Play / Pause"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyPosition}" Content="Position"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyVolume}" Content="Volume"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyFileLoaded}" Content="File loading"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyDevices}" Content="Devices"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyGaps}" Content="Gaps / Events"/>
+                        </StackPanel>
+                    </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Debug">
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ShowHeatMap}" Content="Show Heat Map"/>
@@ -83,31 +92,31 @@
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="General">
-                        <CheckBox IsChecked="{Binding Settings.CheckForNewVersionOnStartup}" Content="Check for new version on startup"/>
+                        <CheckBox Margin="4" IsChecked="{Binding Settings.CheckForNewVersionOnStartup}" Content="Check for new version on startup"/>
                     </Grid>
-                    <Grid controls:PageSelector.ContentIdentifier="External Programs/Whirligig">
+                    <Grid controls:PageSelector.ContentIdentifier="Whirligig">
                         <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Top"/>
                         <TextBox Text="{Binding Settings.WhirligigEndpoint}" Height="23" Margin="81,10,10,0" VerticalAlignment="Top"/>
                     </Grid>
-                    <Grid controls:PageSelector.ContentIdentifier="External Programs/Buttplug">
+                    <Grid controls:PageSelector.ContentIdentifier="Buttplug">
                         <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="WS URL" VerticalAlignment="Top"/>
                         <TextBox Text="{Binding Settings.ButtplugUrl}" Height="23" Margin="81,10,10,0" VerticalAlignment="Top"/>
                     </Grid>
-                    <Grid controls:PageSelector.ContentIdentifier="External Programs/VLC">
+                    <Grid controls:PageSelector.ContentIdentifier="VLC">
                         <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Top"/>
                         <TextBox Text="{Binding Settings.VlcEndpoint}" Height="23" Margin="81,10,10,0" VerticalAlignment="Top"/>
 
                         <TextBlock HorizontalAlignment="Left" Margin="10,39,0,0" TextWrapping="Wrap" Text="Password" VerticalAlignment="Top"/>
                         <PasswordBox x:Name="txtPasswordVlcPassword" PasswordChanged="TxtPasswordVlcPassword_OnPasswordChanged" Height="23" Margin="81,38,10,0" VerticalAlignment="Top"/>
                     </Grid>
-                    <Grid controls:PageSelector.ContentIdentifier="Interaction/Input">
+                    <Grid controls:PageSelector.ContentIdentifier="Input">
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ClickToPlayPause}" Content="Toggle playback when clicking video"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.DoubleClickToFullscreen}" Content="Toggle fullscreen when double-clicking video"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.FilterDoubleClicks}" Content="Filter double-clicks"/>
                         </StackPanel>
                     </Grid>
-                    <Grid controls:PageSelector.ContentIdentifier="Interaction/Range">
+                    <Grid controls:PageSelector.ContentIdentifier="Range">
                         <StackPanel>
                             <DockPanel Margin="4" ToolTip="Minimum and maximum position of the Launch. Values received from the script will be scaled accordingly.">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Range"/>
@@ -155,7 +164,7 @@
 
                         </StackPanel>
                     </Grid>
-                    <Grid controls:PageSelector.ContentIdentifier="Interaction/Speed">
+                    <Grid controls:PageSelector.ContentIdentifier="Speed">
                         <StackPanel>
                             <DockPanel Margin="4" ToolTip="Minimum and maximum speed of the Launch.">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Speed"/>
@@ -177,25 +186,31 @@
                             </DockPanel>
                         </StackPanel>
                     </Grid>
-                    <Grid controls:PageSelector.ContentIdentifier="Interaction/Timings">
+                    <Grid controls:PageSelector.ContentIdentifier="Gaps">
                         <StackPanel>
-                                <CheckBox IsChecked="{Binding Settings.AutoSkip}" Content="Auto-skip gaps"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.AutoSkip}" Content="Auto-skip gaps"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.SoftSeek}" Content="Soft seek"/>
+                            <RadioButton IsEnabled="{Binding Settings.SoftSeek}" Margin="12,4,4,4" IsChecked="{Binding Settings.SeekFreezeFrame}" Content="Freeze frame"/>
+                            <RadioButton IsEnabled="{Binding Settings.SoftSeek}" Margin="12,4,4,4" IsChecked="{Binding Settings.SeekFreezeFrame, Converter={StaticResource Inverter}}" Content="Fade to black"/>
+                        </StackPanel>
+                    </Grid>
+                    <Grid controls:PageSelector.ContentIdentifier="Timings">
+                        <StackPanel>
+                            <DockPanel Margin="4" ToolTip="Timespan by which every script command will be delayed. Negative values will cause the commands to be executed ahead of time.">
+                                <TextBlock Style="{StaticResource SettingName}" Text="Script Delay"/>
+                                <TextBlock Style="{StaticResource SettingValue}" Text="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
+                                <Slider Value="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-500" Maximum="500" SmallChange="25" LargeChange="100"/>
+                            </DockPanel>
 
-                                <DockPanel Margin="4" ToolTip="Timespan by which every script command will be delayed. Negative values will cause the commands to be executed ahead of time.">
-                                    <TextBlock Style="{StaticResource SettingName}" Text="Script Delay"/>
-                                    <TextBlock Style="{StaticResource SettingValue}" Text="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
-                                    <Slider Value="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-500" Maximum="500" SmallChange="25" LargeChange="100"/>
-                                </DockPanel>
-
-                                <DockPanel Margin="4" ToolTip="Minimal delay between two script commands">
-                                    <TextBlock Style="{StaticResource SettingName}" Text="Min Command Delay"/>
-                                    <TextBlock Style="{StaticResource SettingValue}" Text="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
-                                    <Slider LargeChange="1" Margin="0,4" Minimum="100" Maximum="300"  Value="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"/>
-                                </DockPanel>
-                            </StackPanel>
+                            <DockPanel Margin="4" ToolTip="Minimal delay between two script commands">
+                                <TextBlock Style="{StaticResource SettingName}" Text="Min Command Delay"/>
+                                <TextBlock Style="{StaticResource SettingValue}" Text="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
+                                <Slider LargeChange="1" Margin="0,4" Minimum="100" Maximum="300"  Value="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"/>
+                            </DockPanel>
+                        </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Paths">
-                        <ListBox Margin="10,10,10,38" ItemsSource="{Binding Settings.AdditionalPaths}"/>
+                        <ListBox Margin="10,10,10,38" ItemsSource="{Binding Settings.AdditionalPaths}" SelectedItem="{Binding SelectedAdditionalPath}"/>
 
                         <Button Content="+" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,38,10" Width="23" Click="BtnAddPath_Click" Height="23"/>
                         <Button Content="-" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10" Width="23" Click="BtnRemovePath_Click" Height="23"/>

@@ -42,7 +42,8 @@
 
         <Grid Name="GridVideo"  Grid.Row="1"  Grid.ColumnSpan="2" Background="Black" MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" AllowDrop="True" Drop="GridVideo_Drop">
 
-            <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true" x:Name="VideoPlayer" MouseDoubleClick="VideoPlayer_OnMouseDoubleClick">
+            <!-- VIDEO PLAYER -->
+            <shared:VideoPlayer IsHitTestVisible="False" Volume="{Binding Volume}" SoftSeekFreezeFrame="{Binding Settings.SeekFreezeFrame}" HideMouse="true" x:Name="VideoPlayer">
                 <shared:VideoPlayer.Style>
                     <Style TargetType="{x:Type shared:VideoPlayer}">
                         <Setter Property="Visibility" Value="Hidden"/>
@@ -62,6 +63,7 @@
                 </shared:VideoPlayer.Style>
             </shared:VideoPlayer>
 
+            <!-- BLIND MODE -->
             <Grid IsHitTestVisible="False">
                 <Grid.Style>
                     <Style TargetType="{x:Type Grid}">
@@ -76,6 +78,7 @@
                 <TextBlock Text="Blind Mode" Foreground="White" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
 
+            <!-- WHIRLIGIG -->
             <Grid IsHitTestVisible="False">
                 <Grid.Style>
                     <Style TargetType="{x:Type Grid}">
@@ -104,6 +107,7 @@
                 </StackPanel>
             </Grid>
 
+            <!-- VLC -->
             <Grid IsHitTestVisible="False">
                 <Grid.Style>
                     <Style TargetType="{x:Type Grid}">
@@ -132,6 +136,7 @@
                 </StackPanel>
             </Grid>
 
+            <!-- ICON AND VERSION -->
             <Grid IsHitTestVisible="False" Visibility="{Binding ShowBanner, Converter={StaticResource VisibilityConverter}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -191,8 +196,9 @@
                     </Grid>
                 </Viewbox>
             </Grid>
-
-            <Grid Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="60" >
+            
+            <!-- SCRIPT POSITIONS -->
+            <Grid IsHitTestVisible="False" Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="60" >
                 <Grid.Background>
                     <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                         <GradientStop Color="#00000000" Offset="0"/>
@@ -204,6 +210,7 @@
                 <shared:PositionBar TotalDisplayedDuration="{Binding PositionsViewport, Mode=OneWay}" IsReadOnly="True" Positions="{Binding Positions}" Progress="{Binding Path=TimeSource.Progress}"/>
             </Grid>
 
+            <!-- NOTIFICATIONS -->
             <shared:NotificationList IsHitTestVisible="False" x:Name="Notifications" Margin="10">
                 <shared:NotificationList.Resources>
                     <DataTemplate DataType="{x:Type shared:Notification}">
@@ -213,15 +220,12 @@
                     </DataTemplate>
                 </shared:NotificationList.Resources>
             </shared:NotificationList>
-
         </Grid>
 
         <Menu Name="MnuMain" Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="0">
             <MenuItem Header="File">
                 <MenuItem Header="Open Video" Command="{Binding OpenVideoCommand}"/>
                 <MenuItem Header="Open Script" Command="{Binding OpenScriptCommand}"/>
-                <!--<Separator/>
-                <MenuItem Header="Download Script" Click="mnuDownloadScript_Click"/>-->
                 <Separator/>
                 <MenuItem Header="Add to Playlist" Command="{Binding AddScriptsToPlaylistCommand}"/>
                 <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
@@ -429,7 +433,6 @@
 
                         <StackPanel Margin="4" ToolTip="Will automatically skip command gaps of more than 10s.">
                             <CheckBox IsChecked="{Binding Settings.AutoSkip}" Content="Auto-Skip Gaps"/>
-                            <CheckBox IsChecked="{Binding Settings.DisplayEventNotifications}" Content="Display Event Notifications"/>
                         </StackPanel>
 
                         <StackPanel Margin="4" ToolTip="Determines how beat files are converted to movements">

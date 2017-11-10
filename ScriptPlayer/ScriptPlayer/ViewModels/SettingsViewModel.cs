@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
@@ -41,13 +42,21 @@ namespace ScriptPlayer.ViewModels
         private bool _showScriptPositions;
 
         private bool _showTimeLeft;
-        private bool _displayEventNotifications;
         private bool _filterDoubleClicks;
         private bool _doubleClickToFullscreen;
         private bool _clickToPlayPause;
         private bool _rememberPlaylist;
         private bool _shufflePlaylist;
         private bool _repeatPlaylist;
+        private bool _softSeek;
+        private bool _seekFreezeFrame;
+        private bool _notifyGaps = true;
+        private bool _notifyPosition = true;
+        private bool _notifyDevices = true;
+        private bool _notifyFileLoaded = true;
+        private bool _notifyPlayPause = true;
+        private bool _notifyVolume = true;
+        private bool _notifyLogging = true;
 
         public SettingsViewModel()
         {
@@ -56,16 +65,26 @@ namespace ScriptPlayer.ViewModels
             ButtplugUrl = ButtplugConnectionSettings.DefaultUrl;
             AdditionalPaths = new ObservableCollection<string>();
             CheckForNewVersionOnStartup = true;
-            DisplayEventNotifications = true;
             ClickToPlayPause = true;
             DoubleClickToFullscreen = true;
             FilterDoubleClicks = true;
             RememberPlaylist = true;
+            SoftSeek = true;
+            SeekFreezeFrame = true;
         }
 
         public SettingsViewModel Duplicate()
         {
-            return new SettingsViewModel
+            SettingsViewModel duplicate = new SettingsViewModel();
+
+            foreach(PropertyInfo property in GetType().GetProperties())
+                property.SetValue(duplicate, property.GetValue(this));
+
+            duplicate.AdditionalPaths = new ObservableCollection<string>(AdditionalPaths);
+
+            return duplicate;
+
+            /*return new SettingsViewModel
             {
                 AdditionalPaths = new ObservableCollection<string>(AdditionalPaths),
                 AutoSkip = AutoSkip,
@@ -92,15 +111,83 @@ namespace ScriptPlayer.ViewModels
                 ShowTimeLeft = ShowTimeLeft,
                 SpeedMultiplier = SpeedMultiplier,
                 ShufflePlaylist = ShufflePlaylist,
+                SoftSeek = SoftSeek,
+                SeekFreezeFrame = SeekFreezeFrame,
                 VlcEndpoint = VlcEndpoint,
                 VlcPassword = VlcPassword,
                 WhirligigEndpoint = WhirligigEndpoint
-            };
+            };*/
+        }
+
+        public bool NotifyVolume
+        {
+            get => _notifyVolume;
+            set
+            {
+                if (value == _notifyVolume) return;
+                _notifyVolume = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool NotifyPlayPause
+        {
+            get => _notifyPlayPause;
+            set
+            {
+                if (value == _notifyPlayPause) return;
+                _notifyPlayPause = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool NotifyFileLoaded
+        {
+            get => _notifyFileLoaded;
+            set
+            {
+                if (value == _notifyFileLoaded) return;
+                _notifyFileLoaded = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool NotifyDevices
+        {
+            get => _notifyDevices;
+            set
+            {
+                if (value == _notifyDevices) return;
+                _notifyDevices = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool NotifyPosition
+        {
+            get => _notifyPosition;
+            set
+            {
+                if (value == _notifyPosition) return;
+                _notifyPosition = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool NotifyGaps
+        {
+            get => _notifyGaps;
+            set
+            {
+                if (value == _notifyGaps) return;
+                _notifyGaps = value;
+                OnPropertyChanged();
+            }
         }
 
         public bool ShufflePlaylist
         {
-            get { return _shufflePlaylist; }
+            get => _shufflePlaylist;
             set
             {
                 if (value == _shufflePlaylist) return;
@@ -111,7 +198,7 @@ namespace ScriptPlayer.ViewModels
 
         public bool RepeatPlaylist
         {
-            get { return _repeatPlaylist; }
+            get => _repeatPlaylist;
             set
             {
                 if (value == _repeatPlaylist) return;
@@ -274,17 +361,6 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public bool DisplayEventNotifications
-        {
-            get => _displayEventNotifications;
-            set
-            {
-                if (value == _displayEventNotifications) return;
-                _displayEventNotifications = value;
-                OnPropertyChanged();
-            }
-        }
-
         public bool AutoSkip
         {
             get => _autoSkip;
@@ -351,6 +427,14 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("ScriptDelay")]
+        public long ScriptDelayWrapper
+        {
+            get => ScriptDelay.Ticks;
+            set => ScriptDelay = TimeSpan.FromTicks(value);
+        }
+
+        [XmlIgnore]
         public TimeSpan ScriptDelay
         {
             get => _scriptDelay;
@@ -362,6 +446,14 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("CommandDelay")]
+        public long CommandDelayWrapper
+        {
+            get => CommandDelay.Ticks;
+            set => CommandDelay = TimeSpan.FromTicks(value);
+        }
+
+        [XmlIgnore]
         public TimeSpan CommandDelay
         {
             get => _commandDelay;
@@ -402,6 +494,39 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _showHeatMap) return;
                 _showHeatMap = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool SoftSeek
+        {
+            get => _softSeek;
+            set
+            {
+                if (value == _softSeek) return;
+                _softSeek = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool SeekFreezeFrame
+        {
+            get => _seekFreezeFrame;
+            set
+            {
+                if (value == _seekFreezeFrame) return;
+                _seekFreezeFrame = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool NotifyLogging
+        {
+            get => _notifyLogging;
+            set
+            {
+                if (value == _notifyLogging) return;
+                _notifyLogging = value;
                 OnPropertyChanged();
             }
         }
