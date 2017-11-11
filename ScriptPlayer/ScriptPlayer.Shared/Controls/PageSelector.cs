@@ -79,6 +79,19 @@ namespace ScriptPlayer.Shared.Controls
             return (string)element.GetValue(ContentIdentifierProperty);
         }
 
+        public static readonly DependencyProperty HeaderProperty = DependencyProperty.RegisterAttached(
+            "Header", typeof(object), typeof(PageSelector), new PropertyMetadata(default(object)));
+
+        public static void SetHeader(DependencyObject element, object value)
+        {
+            element.SetValue(HeaderProperty, value);
+        }
+
+        public static object GetHeader(DependencyObject element)
+        {
+            return (object) element.GetValue(HeaderProperty);
+        }
+
         public PageSelector()
         {
             Elements = new ObservableCollection<UIElement>();

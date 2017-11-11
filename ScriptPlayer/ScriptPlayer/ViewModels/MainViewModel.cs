@@ -264,17 +264,22 @@ namespace ScriptPlayer.ViewModels
                     {
                         HideBanner();
 
-                        /*WhirligigConnectionSettings settings =
-                            OnRequestWhirligigConnectionSettings(new WhirligigConnectionSettings
-                            {
-                                IpAndPort = "127.0.0.1:2000"
-                            });
-
-                        if (settings == null)
+                        if (string.IsNullOrWhiteSpace(Settings.WhirligigEndpoint))
                         {
-                            PlaybackMode = PlaybackMode.Local;
-                            return;
-                        }*/
+                            WhirligigConnectionSettings settings =
+                                OnRequestWhirligigConnectionSettings(new WhirligigConnectionSettings
+                                {
+                                    IpAndPort = "127.0.0.1:2000"
+                                });
+    
+                            if (settings == null)
+                            {
+                                PlaybackMode = PlaybackMode.Local;
+                                return;
+                            }
+
+                            Settings.WhirligigEndpoint = settings.IpAndPort;
+                        }
 
                         TimeSource = new WhirligigTimeSource(new DispatcherClock(
                             Dispatcher.FromThread(Thread.CurrentThread),
@@ -292,17 +297,24 @@ namespace ScriptPlayer.ViewModels
                     {
                         HideBanner();
 
-                        /*VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
+                        if (string.IsNullOrWhiteSpace(Settings.VlcEndpoint) ||
+                            string.IsNullOrWhiteSpace(Settings.VlcPassword))
                         {
-                            IpAndPort = VlcConnectionSettings.DefaultEndpoint,
-                            Password = "test"
-                        });
+                            VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
+                            {
+                                IpAndPort = VlcConnectionSettings.DefaultEndpoint,
+                                Password = "test"
+                            });
 
-                        if (settings == null)
-                        {
-                            PlaybackMode = PlaybackMode.Local;
-                            return;
-                        }*/
+                            if (settings == null)
+                            {
+                                PlaybackMode = PlaybackMode.Local;
+                                return;
+                            }
+
+                            Settings.VlcPassword = settings.Password;
+                            Settings.VlcEndpoint = settings.IpAndPort;
+                        }
 
                         TimeSource = new VlcTimeSource(
                             new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
@@ -680,6 +692,8 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand StartScanningButtplugCommand { get; set; }
 
         public RelayCommand ConnectButtplugCommand { get; set; }
+
+        public RelayCommand DisconnectButtplugCommand { get; set; }
 
         public RelayCommand ToggleFullScreenCommand { get; set; }
 
@@ -1128,6 +1142,7 @@ namespace ScriptPlayer.ViewModels
             AddScriptsToPlaylistCommand = new RelayCommand(AddToPlaylist);
             ConnectLaunchDirectlyCommand = new RelayCommand(ConnectLaunchDirectly);
             ConnectButtplugCommand = new RelayCommand(ConnectButtplug);
+            DisconnectButtplugCommand = new RelayCommand(DisconnectButtplug);
             StartScanningButtplugCommand = new RelayCommand(StartScanningButtplug);
             SkipToNextEventCommand = new RelayCommand(SkipToNextEvent, CanSkipToNextEvent);
             TogglePlaybackCommand = new RelayCommand(TogglePlayback, CanTogglePlayback);
@@ -1247,16 +1262,18 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void DevicecController_DeviceRemoved(object sender, Device device)
+        private void DeviceController_DeviceRemoved(object sender, Device device)
         {
             RemoveDevice(device);
         }
 
         private void RemoveDevice(Device device)
         {
+            // ReSharper disable once AccessToDisposedClosure
             if (ShouldInvokeInstead(() => RemoveDevice(device))) return;
 
             device.Disconnected -= Device_Disconnected;
+            device.Dispose();
             _devices.Remove(device);
 
             if (Settings.NotifyDevices)
@@ -1981,27 +1998,24 @@ namespace ScriptPlayer.ViewModels
 
         public async void ConnectButtplug()
         {
-            ButtplugAdapter controller = _controllers.OfType<ButtplugAdapter>().SingleOrDefault();
+            await DisconnectButtplugAsync();
 
-            if (controller != null)
+            if (string.IsNullOrWhiteSpace(Settings.ButtplugUrl))
             {
-                controller.DeviceFound -= DeviceController_DeviceFound;
-                controller.DeviceRemoved -= DevicecController_DeviceRemoved;
-                await controller.Disconnect();
+                string url = OnRequestButtplugUrl(ButtplugConnectionSettings.DefaultUrl);
+                if (url == null)
+                    return;
+
+                Settings.ButtplugUrl = url;
             }
 
-            _controllers.Remove(controller);
-
-            /*string url = OnRequestButtplugUrl(ButtplugAdapter.DefaultUrl);
-            if (url == null)
-                return;*/
-
-            controller = new ButtplugAdapter(new ButtplugConnectionSettings
+            ButtplugAdapter controller = new ButtplugAdapter(new ButtplugConnectionSettings
             {
                 Url = Settings.ButtplugUrl
             });
+            controller.Disconnected += DeviceController_Disconnected;
             controller.DeviceFound += DeviceController_DeviceFound;
-            controller.DeviceRemoved += DevicecController_DeviceRemoved;
+            controller.DeviceRemoved += DeviceController_DeviceRemoved;
 
             _controllers.Add(controller);
 
@@ -2016,10 +2030,42 @@ namespace ScriptPlayer.ViewModels
             {
                 _controllers.Remove(controller);
                 controller.DeviceFound -= DeviceController_DeviceFound;
-                controller.DeviceRemoved -= DevicecController_DeviceRemoved;
+                controller.DeviceRemoved -= DeviceController_DeviceRemoved;
                 if (Settings.NotifyDevices)
                     OnRequestOverlay("Could not connect to Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
             }
+        }
+
+        private void DeviceController_Disconnected(object sender, EventArgs eventArgs)
+        {
+            ButtplugAdapter controller = sender as ButtplugAdapter;
+
+            if (controller == null) return;
+
+            controller.DeviceFound -= DeviceController_DeviceFound;
+            controller.Disconnected -= DeviceController_Disconnected;
+            controller.DeviceRemoved -= DeviceController_DeviceRemoved;
+
+            _controllers.Remove(controller);
+        }
+
+        private async void DisconnectButtplug()
+        {
+            await DisconnectButtplugAsync();
+        }
+
+        private async Task DisconnectButtplugAsync()
+        {
+            ButtplugAdapter controller = _controllers.OfType<ButtplugAdapter>().SingleOrDefault();
+
+            if (controller == null) return;
+
+            controller.DeviceFound -= DeviceController_DeviceFound;
+            controller.Disconnected -= DeviceController_Disconnected;
+            await controller.Disconnect();
+            controller.DeviceRemoved -= DeviceController_DeviceRemoved;
+
+            _controllers.Remove(controller);
         }
 
         protected virtual string OnRequestButtplugUrl(string defaultValue)

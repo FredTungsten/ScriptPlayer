@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
-using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 
 namespace ScriptPlayer.ViewModels
@@ -60,9 +59,10 @@ namespace ScriptPlayer.ViewModels
 
         public SettingsViewModel()
         {
-            WhirligigEndpoint = WhirligigConnectionSettings.DefaultEndpoint;
-            VlcEndpoint = VlcConnectionSettings.DefaultEndpoint;
-            ButtplugUrl = ButtplugConnectionSettings.DefaultUrl;
+            WhirligigEndpoint = null;
+            VlcEndpoint = null;
+            ButtplugUrl = null;
+
             AdditionalPaths = new ObservableCollection<string>();
             CheckForNewVersionOnStartup = true;
             ClickToPlayPause = true;

@@ -12,7 +12,29 @@
         <converters:DeviceToImageConverter x:Key="DeviceConverter"/>
     </Window.Resources>
     <Grid>
+        <Grid Margin="10,10,10,31" HorizontalAlignment="Stretch">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Devices.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <TextBlock Text="No Devices Connected" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10"/>
+        </Grid>
         <ItemsControl ItemsSource="{Binding Devices}" Margin="10,10,10,31" HorizontalContentAlignment="Stretch">
+            <ItemsControl.Style>
+                <Style TargetType="ItemsControl">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Devices.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ItemsControl.Style>
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch"/>

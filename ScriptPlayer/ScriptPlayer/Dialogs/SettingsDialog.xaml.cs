@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Controls;
 using ScriptPlayer.ViewModels;
 
@@ -63,6 +64,7 @@ namespace ScriptPlayer.Dialogs
         private void UpdatePageTitle()
         {
             SettingsTitle = BuildSettingsPath();
+            _lastSelected = SelectedPage?.SettingsId;
         }
 
         public SettingsPageViewModel SelectedPage
@@ -114,6 +116,7 @@ namespace ScriptPlayer.Dialogs
             foreach (UIElement page in pageSelector.Elements)
             {
                 string id = PageSelector.GetContentIdentifier(page);
+                object header = PageSelector.GetHeader(page);
                 if (string.IsNullOrWhiteSpace("id")) continue;
 
                 if (id.Contains("/"))
@@ -125,11 +128,11 @@ namespace ScriptPlayer.Dialogs
                         pages.Add(new SettingsPageViewModel(sections[0], sections[0]));
                     }
 
-                    pages[sections[0]].Add(new SettingsPageViewModel(sections[1], id));
+                    pages[sections[0]].Add(new SettingsPageViewModel(sections[1], id, header));
                 }
                 else
                 {
-                    pages.Add(new SettingsPageViewModel(id,id));
+                    pages.Add(new SettingsPageViewModel(id,id, header));
                 }
             }
 
@@ -154,7 +157,6 @@ namespace ScriptPlayer.Dialogs
             if (page == null) return;
 
             SelectedPage = page;
-            _lastSelected = page.SettingsId;
         }
 
         private string BuildSettingsPath()
@@ -234,6 +236,21 @@ namespace ScriptPlayer.Dialogs
                 throw;
             }
         }
+
+        private void BtnButtplugDefault_Click(object sender, RoutedEventArgs e)
+        {
+            Settings.ButtplugUrl = ButtplugConnectionSettings.DefaultUrl;
+        }
+
+        private void BtnVlcDefault_Click(object sender, RoutedEventArgs e)
+        {
+            Settings.VlcEndpoint = VlcConnectionSettings.DefaultEndpoint;
+        }
+
+        private void BtnWhirligigDefault_Click(object sender, RoutedEventArgs e)
+        {
+            Settings.WhirligigEndpoint = WhirligigConnectionSettings.DefaultEndpoint;
+        }
     }
 
     public class SettingsPageViewModelCollection : List<SettingsPageViewModel>
@@ -246,14 +263,15 @@ namespace ScriptPlayer.Dialogs
         public SettingsPageViewModel()
         { }
 
-        public SettingsPageViewModel(string name, string id)
+        public SettingsPageViewModel(string name, string id, object header = null)
         {
             Name = name;
             SettingsId = id;
+            Header = header;
         }
 
         public string Name { get; set; }
-        public ImageSource Icon { get; set; }
+        public object Header { get; set; }
         public SettingsPageViewModelCollection SubSettings { get; set; }
         public string SettingsId { get; set; }
         public SettingsPageViewModel Parent { get; set; }

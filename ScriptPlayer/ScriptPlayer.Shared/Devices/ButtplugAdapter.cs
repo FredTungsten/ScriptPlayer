@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Buttplug.Client;
+using Buttplug.Core;
 using Buttplug.Core.Messages;
 using JetBrains.Annotations;
 
@@ -25,8 +26,8 @@ namespace ScriptPlayer.Shared
 
         private void Client_DeviceAddedOrRemoved(object sender, DeviceEventArgs deviceEventArgs)
         {
-            var device = DirtyHacks.GetPrivateField<ButtplugClientDevice>(deviceEventArgs, "device");
-            var action = DirtyHacks.GetPrivateField<DeviceEventArgs.DeviceAction>(deviceEventArgs, "action");
+            ButtplugClientDevice device = DirtyHacks.GetPrivateField<ButtplugClientDevice>(deviceEventArgs, "device");
+            DeviceEventArgs.DeviceAction action = DirtyHacks.GetPrivateField<DeviceEventArgs.DeviceAction>(deviceEventArgs, "action");
 
             switch (action)
             {
@@ -64,12 +65,7 @@ namespace ScriptPlayer.Shared
 
         private void AddUnknownDevices(List<ButtplugClientDevice> devices)
         {
-            List<ButtplugClientDevice> newDevices = new List<ButtplugClientDevice>();
-            foreach (var device in devices)
-            {
-                if(_devices.All(d => d.Index != device.Index))
-                    newDevices.Add(device);
-            }
+            List<ButtplugClientDevice> newDevices = devices.Where(device => _devices.All(d => d.Index != device.Index)).ToList();
 
             foreach (ButtplugClientDevice device in newDevices)
             {
@@ -77,13 +73,18 @@ namespace ScriptPlayer.Shared
             }
         }
 
+        private void RemoveDevice(ButtplugDevice device)
+        {
+            if (device == null) return;
+
+            _devices.Remove(device);
+            OnDeviceRemoved(device);
+        }
+
         private void RemoveDevice(ButtplugClientDevice device)
         {
             ButtplugDevice localDevice = _devices.SingleOrDefault(dev => dev.Index == device.Index);
-            if (localDevice == null) return;
-
-            _devices.Remove(localDevice);
-            OnDeviceRemoved(localDevice);
+            RemoveDevice(localDevice);
         }
 
         private void AddDevice(ButtplugClientDevice device)
@@ -118,8 +119,10 @@ namespace ScriptPlayer.Shared
                 double speed = Math.Min(1,
                     Math.Max(0, speedFrom * (1 - information.Progress) + speedTo * information.Progress));
 
-                var response = await _client.SendDeviceMessage(device,
+                ButtplugMessage response = await _client.SendDeviceMessage(device,
                     new SingleMotorVibrateCmd(device.Index, speed));
+
+                await CheckResponse(response);
             }
         }
 
@@ -127,36 +130,46 @@ namespace ScriptPlayer.Shared
         {
             if (_client == null) return;
 
+            ButtplugMessage response = null;
+
             if (device.AllowedMessages.Contains(nameof(FleshlightLaunchFW12Cmd)))
             {
-                var response = await _client.SendDeviceMessage(device, new FleshlightLaunchFW12Cmd(device.Index, information.SpeedTransformed, information.PositionToTransformed));
+                response = await _client.SendDeviceMessage(device, new FleshlightLaunchFW12Cmd(device.Index, information.SpeedTransformed, information.PositionToTransformed));
             }
             else if (device.AllowedMessages.Contains(nameof(KiirooCmd)))
             {
-                var response = await _client.SendDeviceMessage(device, new KiirooCmd(device.Index, LaunchToKiiroo(information.PositionToOriginal, 0, 4)));
+                response = await _client.SendDeviceMessage(device, new KiirooCmd(device.Index, LaunchToKiiroo(information.PositionToOriginal, 0, 4)));
             }
             else if (device.AllowedMessages.Contains(nameof(SingleMotorVibrateCmd)))
             {
-                var response = await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.PositionFromOriginal)));
-
-                /*
-#pragma warning disable CS4014
-                Task.Run(new Action(async () =>
-                {
-                    TimeSpan duration = TimeSpan.FromMilliseconds(Math.Min(1000, information.Duration.TotalMilliseconds / 2.0));
-                    await Task.Delay(duration);
-                    await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, 0));
-                }));
-#pragma warning restore CS4014
-*/
+                response = await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.PositionFromOriginal)));
             }
             else if (device.AllowedMessages.Contains(nameof(VorzeA10CycloneCmd)))
             {
-                var response = await _client.SendDeviceMessage(device, new VorzeA10CycloneCmd(device.Index, LaunchToVorze(information.SpeedOriginal), information.PositionToOriginal > information.PositionFromOriginal));
+                response = await _client.SendDeviceMessage(device, new VorzeA10CycloneCmd(device.Index, LaunchToVorze(information.SpeedOriginal), information.PositionToOriginal > information.PositionFromOriginal));
             }
             else if (device.AllowedMessages.Contains(nameof(LovenseCmd)))
             {
+                return;
                 //await _client.SendDeviceMessage(device, new LovenseCmd(device.Index, LaunchToLovense(position, speed)));
+            }
+
+            await CheckResponse(response);
+        }
+
+        /*
+        private string LaunchToLovense(byte position, byte speed)
+        {
+            return "https://github.com/metafetish/lovesense-rs";
+        }
+        */
+
+        private async Task CheckResponse(ButtplugMessage response)
+        {
+            if (response is Error error)
+            {
+                if (error.ErrorCode == Error.ErrorClass.ERROR_UNKNOWN)
+                    await Disconnect();
             }
         }
 
@@ -164,10 +177,10 @@ namespace ScriptPlayer.Shared
         {
             if (_client == null) return;
 
-            if (device.AllowedMessages.Contains(nameof(StopDeviceCmd)))
-            {
-                var response = await _client.SendDeviceMessage(device, new StopDeviceCmd(device.Index));
-            }
+            if (!device.AllowedMessages.Contains(nameof(StopDeviceCmd))) return;
+
+            ButtplugMessage response = await _client.SendDeviceMessage(device, new StopDeviceCmd(device.Index));
+            await CheckResponse(response);
         }
 
         private uint LaunchToVorze(byte speed)
@@ -185,11 +198,6 @@ namespace ScriptPlayer.Shared
             return Math.Min(max, Math.Max(min, result));
         }
 
-        private string LaunchToLovense(byte position, byte speed)
-        {
-            return "https://github.com/metafetish/lovesense-rs";
-        }
-
         private uint LaunchToKiiroo(byte position, uint min, uint max)
         {
             double pos = position / 0.99;
@@ -201,9 +209,19 @@ namespace ScriptPlayer.Shared
 
         public async Task Disconnect()
         {
-            if (_client == null) return;
-            _devices.Clear();
-            await _client.Disconnect();
+            try
+            {
+                if (_client == null) return;
+                foreach (var device in _devices.ToList())
+                {
+                    RemoveDevice(device);
+                }
+                await _client.Disconnect();
+            }
+            finally
+            {
+                OnDisconnected();
+            }
         }
 
         public async Task StartScanning()
@@ -241,9 +259,9 @@ namespace ScriptPlayer.Shared
             {
                 await Disconnect();
             }
-            catch
+            catch (Exception e)
             {
-                
+                Debug.WriteLine("Exception in ButtplugAdapter.Dispose: " + e.Message);
             }
         }
     }

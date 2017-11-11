@@ -20,6 +20,9 @@ namespace ScriptPlayer.Shared
             _event.Set();
             Thread.Yield();
             _event.Set();
+            Thread.Yield();
+
+            _event.Close();
         }
 
         public int Count
@@ -44,24 +47,31 @@ namespace ScriptPlayer.Shared
 
         public T Deqeue()
         {
-            if (_closed) return null;
-
-            T result;
-
-            while (!_queue.TryDequeue(out result))
+            try
             {
                 if (_closed) return null;
 
-                while (_queue.IsEmpty)
+                T result;
+
+                while (!_queue.TryDequeue(out result))
                 {
                     if (_closed) return null;
 
-                    _event.WaitOne();
-                    _event.Reset();
-                }
-            }
+                    while (_queue.IsEmpty)
+                    {
+                        if (_closed) return null;
 
-            return result;
+                        _event.WaitOne();
+                        _event.Reset();
+                    }
+                }
+
+                return result;
+            }
+            catch (ObjectDisposedException)
+            {
+                return null;
+            }
         }
 
         private void DeleteTill(Func<T, T, bool> func, T comparison)

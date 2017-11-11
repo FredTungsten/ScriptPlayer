@@ -4,6 +4,8 @@ namespace ScriptPlayer.Shared
 {
     public abstract class DeviceController
     {
+        public event EventHandler Disconnected;
+
         public event EventHandler<Device> DeviceFound;
 
         public event EventHandler<Device> DeviceRemoved;
@@ -17,6 +19,11 @@ namespace ScriptPlayer.Shared
         protected virtual void OnDeviceRemoved(Device e)
         {
             DeviceRemoved?.Invoke(this, e);
+        }
+
+        protected virtual void OnDisconnected()
+        {
+            Disconnected?.Invoke(this, EventArgs.Empty);
         }
     }
 }

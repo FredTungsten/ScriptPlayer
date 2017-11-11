@@ -8,6 +8,8 @@
         xmlns:converters1="clr-namespace:ScriptPlayer.Shared.Converters;assembly=ScriptPlayer.Shared"
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
+        xmlns:fa="clr-namespace:FontAwesome.Net;assembly=FontAwesome.Net"
+        xmlns:dialogs="clr-namespace:ScriptPlayer.Dialogs"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
         WindowStartupLocation="CenterOwner"
         WindowStyle="ToolWindow" Loaded="SettingsDialog_OnLoaded"
@@ -34,6 +36,18 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="TextAlignment" Value="Right"/>
         </Style>
+
+        <HierarchicalDataTemplate DataType="{x:Type dialogs:SettingsPageViewModel}" ItemsSource="{Binding SubSettings}">
+            <StackPanel Orientation="Horizontal" Margin="0,1">
+                <StackPanel.Resources>
+                    <Style TargetType="controls:AwesomeTextBlock">
+                        <Setter Property="FontSize" Value="14"/>
+                    </Style>
+                </StackPanel.Resources>
+                <ContentPresenter Content="{Binding Header}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock FontSize="14" Text="{Binding Name}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </HierarchicalDataTemplate>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -47,25 +61,19 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <TreeView Grid.Column="0" Grid.Row="0" Margin="10,10,0,10" ItemsSource="{Binding Pages}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
+            <!-- <TreeView Grid.Column="0" Grid.Row="0" Margin="10,10,0,10" ItemsSource="{Binding Pages}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem">
                         <Setter Property="IsExpanded" Value="True"/>
                     </Style>
                 </TreeView.ItemContainerStyle>
-                <TreeView.ItemTemplate>
-                    <HierarchicalDataTemplate ItemsSource="{Binding SubSettings}">
-                        <StackPanel Orientation="Horizontal">
-                            <!--<Image Width="16" Height="16" Source="{Binding Icon}" Margin="1,1,8,1"/>-->
-                            <TextBlock Text="{Binding Name}"/>
-                        </StackPanel>
-                    </HierarchicalDataTemplate>
-                </TreeView.ItemTemplate>
-            </TreeView>
+            </TreeView> -->
+
+            <ListBox Grid.Column="0" Grid.Row="0" Margin="10,10,0,10" ItemsSource="{Binding Pages}" SelectedItem="{Binding SelectedPage}"/>
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Input" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Whirligig" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -75,6 +83,9 @@
                 </controls:PageSelector.Template>
                 <controls:PageSelector.Elements>
                     <Grid controls:PageSelector.ContentIdentifier="Notifications">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_bell}"/>
+                        </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyPlayPause}" Content="Play / Pause"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyPosition}" Content="Position"/>
@@ -85,6 +96,9 @@
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Debug">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_bug}"/>
+                        </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ShowHeatMap}" Content="Show Heat Map"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ShowScriptPositions}" Content="Show Script Positions"/>
@@ -92,24 +106,55 @@
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="General">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_cog}"/>
+                        </controls:PageSelector.Header>
                         <CheckBox Margin="4" IsChecked="{Binding Settings.CheckForNewVersionOnStartup}" Content="Check for new version on startup"/>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Whirligig">
-                        <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Top"/>
-                        <TextBox Text="{Binding Settings.WhirligigEndpoint}" Height="23" Margin="81,10,10,0" VerticalAlignment="Top"/>
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_external_link_square}"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock HorizontalAlignment="Left" Margin="4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding Settings.WhirligigEndpoint}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <Button Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnWhirligigDefault_Click"/>
+                        </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Buttplug">
-                        <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="WS URL" VerticalAlignment="Top"/>
-                        <TextBox Text="{Binding Settings.ButtplugUrl}" Height="23" Margin="81,10,10,0" VerticalAlignment="Top"/>
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_plug}"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock HorizontalAlignment="Left" Margin="4" TextWrapping="Wrap" Text="Web Socket URL" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding Settings.ButtplugUrl}" Height="23" Margin="0,4,4,4" VerticalAlignment="Top"/>
+                            </DockPanel>
+                            <Button Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnButtplugDefault_Click"/>
+                        </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="VLC">
-                        <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Top"/>
-                        <TextBox Text="{Binding Settings.VlcEndpoint}" Height="23" Margin="81,10,10,0" VerticalAlignment="Top"/>
-
-                        <TextBlock HorizontalAlignment="Left" Margin="10,39,0,0" TextWrapping="Wrap" Text="Password" VerticalAlignment="Top"/>
-                        <PasswordBox x:Name="txtPasswordVlcPassword" PasswordChanged="TxtPasswordVlcPassword_OnPasswordChanged" Height="23" Margin="81,38,10,0" VerticalAlignment="Top"/>
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_play}"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock Width="80" HorizontalAlignment="Left" Margin="4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding Settings.VlcEndpoint}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBlock Width="80" HorizontalAlignment="Left" Margin="4" TextWrapping="Wrap" Text="Password" VerticalAlignment="Center"/>
+                                <PasswordBox x:Name="txtPasswordVlcPassword" PasswordChanged="TxtPasswordVlcPassword_OnPasswordChanged" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <Button Margin="4" Width="75" Height="21" HorizontalAlignment="Left" Content="Use Default" Click="BtnVlcDefault_Click"/>
+                        </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Input">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_keyboard_o}"/>
+                        </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ClickToPlayPause}" Content="Toggle playback when clicking video"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.DoubleClickToFullscreen}" Content="Toggle fullscreen when double-clicking video"/>
@@ -117,6 +162,9 @@
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Range">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_sliders}"/>
+                        </controls:PageSelector.Header>
                         <StackPanel>
                             <DockPanel Margin="4" ToolTip="Minimum and maximum position of the Launch. Values received from the script will be scaled accordingly.">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Range"/>
@@ -165,6 +213,9 @@
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Speed">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_exchange}"/>
+                        </controls:PageSelector.Header>
                         <StackPanel>
                             <DockPanel Margin="4" ToolTip="Minimum and maximum speed of the Launch.">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Speed"/>
@@ -187,6 +238,9 @@
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Gaps">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_forward}"/>
+                        </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.AutoSkip}" Content="Auto-skip gaps"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.SoftSeek}" Content="Soft seek"/>
@@ -195,6 +249,9 @@
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Timings">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_clock_o}"/>
+                        </controls:PageSelector.Header>
                         <StackPanel>
                             <DockPanel Margin="4" ToolTip="Timespan by which every script command will be delayed. Negative values will cause the commands to be executed ahead of time.">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Script Delay"/>
@@ -210,6 +267,9 @@
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Paths">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_folder_o}"/>
+                        </controls:PageSelector.Header>
                         <ListBox Margin="10,10,10,38" ItemsSource="{Binding Settings.AdditionalPaths}" SelectedItem="{Binding SelectedAdditionalPath}"/>
 
                         <Button Content="+" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,38,10" Width="23" Click="BtnAddPath_Click" Height="23"/>
@@ -217,6 +277,9 @@
                         <TextBox Height="23" Margin="10,0,66,10" TextWrapping="Wrap" Text="{Binding AdditionalPath}" VerticalAlignment="Bottom" RenderTransformOrigin="0.275,0.739"/>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Playlist">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_list}"/>
+                        </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" Content="Remember" IsChecked="{Binding Settings.RememberPlaylist}"/>
                             <CheckBox Margin="4" Content="Shuffle" IsChecked="{Binding Settings.ShufflePlaylist}"/>
@@ -225,7 +288,7 @@
                     </Grid>
                 </controls:PageSelector.Elements>
             </controls:PageSelector>
-            <TextBlock Grid.Column="2" HorizontalAlignment="Left" Margin="0,10,0,0" TextWrapping="Wrap" Text="{Binding SettingsTitle}" VerticalAlignment="Top" Width="414"/>
+            <TextBlock FontSize="16" FontWeight="SemiBold" Grid.Column="2" HorizontalAlignment="Left" Margin="0,10,0,0" TextWrapping="Wrap" Text="{Binding SettingsTitle}" VerticalAlignment="Top" Width="414"/>
         </Grid>
 
         <Grid Grid.Column="0" Grid.Row="1" Background="LightGray">

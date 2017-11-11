@@ -9,6 +9,7 @@ namespace ScriptPlayer.Shared
         private readonly ButtplugAdapter _buttplugAdapter;
 
         public uint Index => _device.Index;
+        public ButtplugClientDevice Device => _device;
 
         public ButtplugDevice(ButtplugClientDevice device, ButtplugAdapter buttplugAdapter)
         {
