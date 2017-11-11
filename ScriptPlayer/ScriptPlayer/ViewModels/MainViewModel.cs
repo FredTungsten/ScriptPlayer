@@ -1018,9 +1018,6 @@ namespace ScriptPlayer.ViewModels
             if (string.IsNullOrWhiteSpace(videoFileName))
                 return false;
 
-            /*if (Path.GetDirectoryName(OpenedScript) != Path.GetDirectoryName(videoFileName))
-                return false;*/
-
             return Path.GetFileNameWithoutExtension(OpenedScript).Equals(Path.GetFileNameWithoutExtension(videoFileName));
         }
 
@@ -1031,9 +1028,6 @@ namespace ScriptPlayer.ViewModels
 
             if (string.IsNullOrWhiteSpace(_openVideo))
                 return false;
-
-            /*if (Path.GetDirectoryName(scriptFileName) != Path.GetDirectoryName(_openVideo))
-                return false;*/
 
             return Path.GetFileNameWithoutExtension(scriptFileName).Equals(Path.GetFileNameWithoutExtension(_openVideo));
         }
@@ -1260,12 +1254,9 @@ namespace ScriptPlayer.ViewModels
 
         private void RemoveDevice(Device device)
         {
-            if (!Application.Current.Dispatcher.CheckAccess())
-            {
-                Application.Current.Dispatcher.Invoke(() => RemoveDevice(device));
-                return;
-            }
+            if (ShouldInvokeInstead(() => RemoveDevice(device))) return;
 
+            device.Disconnected -= Device_Disconnected;
             _devices.Remove(device);
 
             if (Settings.NotifyDevices)
@@ -1279,28 +1270,31 @@ namespace ScriptPlayer.ViewModels
 
         private void AddDevice(Device device)
         {
-            if (!Application.Current.Dispatcher.CheckAccess())
-            {
-                Application.Current.Dispatcher.Invoke(() => AddDevice(device));
-                return;
-            }
+            if (ShouldInvokeInstead(() => AddDevice(device))) return;
 
             _devices.Add(device);
             device.IsEnabled = true;
-            //TODO Handle Disconnect
-            //_launch.Disconnected += LaunchOnDisconnected;
+            device.Disconnected += Device_Disconnected;
 
             if (Settings.NotifyDevices)
                 OnRequestOverlay("Device Connected: " + device.Name, TimeSpan.FromSeconds(8));
         }
 
-        /*private void LaunchOnDisconnected(object sender, Exception exception)
+        private bool ShouldInvokeInstead(Action action)
         {
-            _launch.Disconnected -= LaunchOnDisconnected;
-            _launch = null;
+            if (Application.Current.Dispatcher.CheckAccess()) return false;
 
-            OnRequestOverlay("Launch Disconnected", TimeSpan.FromSeconds(8), "Launch");
-        }*/
+            Application.Current.Dispatcher.Invoke(action);
+            return true;
+        }
+
+        private void Device_Disconnected(object sender, Exception exception)
+        {
+            Device device = sender as Device;
+            if (device == null) return;
+
+            RemoveDevice(device);
+        }
 
         private void PlaylistOnPlayEntry(object sender, PlaylistEntry playlistEntry)
         {
@@ -1987,7 +1981,7 @@ namespace ScriptPlayer.ViewModels
 
         public async void ConnectButtplug()
         {
-            var controller = _controllers.OfType<ButtplugAdapter>().SingleOrDefault();
+            ButtplugAdapter controller = _controllers.OfType<ButtplugAdapter>().SingleOrDefault();
 
             if (controller != null)
             {

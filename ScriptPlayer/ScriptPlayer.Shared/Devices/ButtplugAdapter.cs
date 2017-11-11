@@ -97,9 +97,7 @@ namespace ScriptPlayer.Shared
         {
             try
             {
-                //TODO Still not working?
                 await _client.RequestDeviceList();
-                //await Task.Delay(2000);
                 return _client.getDevices();
             }
             catch

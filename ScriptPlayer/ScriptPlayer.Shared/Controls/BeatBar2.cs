@@ -15,8 +15,8 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan FlashDuration
         {
-            get { return (TimeSpan)GetValue(FlashDurationProperty); }
-            set { SetValue(FlashDurationProperty, value); }
+            get => (TimeSpan)GetValue(FlashDurationProperty);
+            set => SetValue(FlashDurationProperty, value);
         }
 
         public static readonly DependencyProperty FlashAfterBeatProperty = DependencyProperty.Register(
@@ -24,8 +24,8 @@ namespace ScriptPlayer.Shared
 
         public bool FlashAfterBeat
         {
-            get { return (bool)GetValue(FlashAfterBeatProperty); }
-            set { SetValue(FlashAfterBeatProperty, value); }
+            get => (bool)GetValue(FlashAfterBeatProperty);
+            set => SetValue(FlashAfterBeatProperty, value);
         }
 
         public static readonly DependencyProperty HighlightBeatsProperty = DependencyProperty.Register(
@@ -33,8 +33,8 @@ namespace ScriptPlayer.Shared
 
         public bool HighlightBeats
         {
-            get { return (bool)GetValue(HighlightBeatsProperty); }
-            set { SetValue(HighlightBeatsProperty, value); }
+            get => (bool)GetValue(HighlightBeatsProperty);
+            set => SetValue(HighlightBeatsProperty, value);
         }
 
         public static readonly DependencyProperty HighlightIntervalProperty = DependencyProperty.Register(
@@ -42,8 +42,8 @@ namespace ScriptPlayer.Shared
 
         public int HighlightInterval
         {
-            get { return (int)GetValue(HighlightIntervalProperty); }
-            set { SetValue(HighlightIntervalProperty, value); }
+            get => (int)GetValue(HighlightIntervalProperty);
+            set => SetValue(HighlightIntervalProperty, value);
         }
 
         public static readonly DependencyProperty HighlightOffsetProperty = DependencyProperty.Register(
@@ -51,8 +51,8 @@ namespace ScriptPlayer.Shared
 
         public int HighlightOffset
         {
-            get { return (int)GetValue(HighlightOffsetProperty); }
-            set { SetValue(HighlightOffsetProperty, value); }
+            get => (int)GetValue(HighlightOffsetProperty);
+            set => SetValue(HighlightOffsetProperty, value);
         }
 
         public static readonly DependencyProperty Marker1Property = DependencyProperty.Register(
@@ -60,8 +60,8 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan Marker1
         {
-            get { return (TimeSpan)GetValue(Marker1Property); }
-            set { SetValue(Marker1Property, value); }
+            get => (TimeSpan)GetValue(Marker1Property);
+            set => SetValue(Marker1Property, value);
         }
 
         public static readonly DependencyProperty Marker2Property = DependencyProperty.Register(
@@ -69,8 +69,8 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan Marker2
         {
-            get { return (TimeSpan)GetValue(Marker2Property); }
-            set { SetValue(Marker2Property, value); }
+            get => (TimeSpan)GetValue(Marker2Property);
+            set => SetValue(Marker2Property, value);
         }
 
         public event EventHandler<TimeSpan> TimeMouseDown;
@@ -84,8 +84,8 @@ namespace ScriptPlayer.Shared
 
         public Color LineColor
         {
-            get { return (Color)GetValue(LineColorProperty); }
-            set { SetValue(LineColorProperty, value); }
+            get => (Color)GetValue(LineColorProperty);
+            set => SetValue(LineColorProperty, value);
         }
 
         public static readonly DependencyProperty HighlightColorProperty = DependencyProperty.Register(
@@ -93,8 +93,8 @@ namespace ScriptPlayer.Shared
 
         public Color HighlightColor
         {
-            get { return (Color)GetValue(HighlightColorProperty); }
-            set { SetValue(HighlightColorProperty, value); }
+            get => (Color)GetValue(HighlightColorProperty);
+            set => SetValue(HighlightColorProperty, value);
         }
 
         public static readonly DependencyProperty LineWidthProperty = DependencyProperty.Register(
@@ -102,8 +102,8 @@ namespace ScriptPlayer.Shared
 
         public double LineWidth
         {
-            get { return (double)GetValue(LineWidthProperty); }
-            set { SetValue(LineWidthProperty, value); }
+            get => (double)GetValue(LineWidthProperty);
+            set => SetValue(LineWidthProperty, value);
         }
 
         public static readonly DependencyProperty BeatsProperty = DependencyProperty.Register(
@@ -111,8 +111,8 @@ namespace ScriptPlayer.Shared
 
         public BeatCollection Beats
         {
-            get { return (BeatCollection)GetValue(BeatsProperty); }
-            set { SetValue(BeatsProperty, value); }
+            get => (BeatCollection)GetValue(BeatsProperty);
+            set => SetValue(BeatsProperty, value);
         }
 
         public static readonly DependencyProperty TotalDisplayedDurationProperty = DependencyProperty.Register(
@@ -120,8 +120,8 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan TotalDisplayedDuration
         {
-            get { return (TimeSpan)GetValue(TotalDisplayedDurationProperty); }
-            set { SetValue(TotalDisplayedDurationProperty, value); }
+            get => (TimeSpan)GetValue(TotalDisplayedDurationProperty);
+            set => SetValue(TotalDisplayedDurationProperty, value);
         }
 
         public static readonly DependencyProperty MidpointProperty = DependencyProperty.Register(
@@ -129,8 +129,8 @@ namespace ScriptPlayer.Shared
 
         public double Midpoint
         {
-            get { return (double)GetValue(MidpointProperty); }
-            set { SetValue(MidpointProperty, value); }
+            get => (double)GetValue(MidpointProperty);
+            set => SetValue(MidpointProperty, value);
         }
 
         public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
@@ -138,7 +138,6 @@ namespace ScriptPlayer.Shared
 
         private bool _rightdown;
         private double _lastMousePosition;
-        private TimeSpan _previouslyRendered;
 
         private static void OnVisualPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -148,8 +147,8 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan Progress
         {
-            get { return (TimeSpan)GetValue(ProgressProperty); }
-            set { SetValue(ProgressProperty, value); }
+            get => (TimeSpan)GetValue(ProgressProperty);
+            set => SetValue(ProgressProperty, value);
         }
 
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -217,9 +216,7 @@ namespace ScriptPlayer.Shared
 
         protected override void OnRender(DrawingContext drawingContext)
         {
-            //bool numbers = Keyboard.IsKeyToggled(Key.NumLock);
-
-            #region Selection
+            #region Background and Selection
 
             TimeSpan timeFrom = Progress - TotalDisplayedDuration.Multiply(Midpoint);
             TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
@@ -300,8 +297,6 @@ namespace ScriptPlayer.Shared
             #endregion
 
             drawingContext.Pop();
-
-            _previouslyRendered = Progress;
         }
 
         private bool IsInSelectedRange(TimeSpan timePos)

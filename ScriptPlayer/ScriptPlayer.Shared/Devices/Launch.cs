@@ -12,8 +12,6 @@ namespace ScriptPlayer.Shared
     {
         public bool SendCommandsWithResponse { get; set; } = false;
 
-        public event EventHandler<Exception> Disconnected; 
-
         // Just to make sure it doesn't get disposed or something like that
         // ReSharper disable once NotAccessedField.Local
         private BluetoothLEDevice _device;
@@ -99,12 +97,6 @@ namespace ScriptPlayer.Shared
             public static Guid WriteCharacteristics = Guid.Parse("88f80581-0000-01e6-aace-0002a5d5c51b");
             public static Guid StatusNotificationCharacteristics = Guid.Parse("88f80582-0000-01e6-aace-0002a5d5c51b");
             public static Guid CommandCharacteristics = Guid.Parse("88f80583-0000-01e6-aace-0002a5d5c51b");
-        }
-
-        protected virtual void OnDisconnected(Exception e)
-        {
-            Dispose();
-            Disconnected?.Invoke(this, e);
         }
 
         public override async Task Set(DeviceCommandInformation information)

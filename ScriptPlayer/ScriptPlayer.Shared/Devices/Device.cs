@@ -10,6 +10,14 @@ namespace ScriptPlayer.Shared
 {
     public abstract class Device : INotifyPropertyChanged, IDisposable
     {
+        public event EventHandler<Exception> Disconnected;
+
+        protected virtual void OnDisconnected(Exception e)
+        {
+            Dispose();
+            Disconnected?.Invoke(this, e);
+        }
+
         private bool _running;
         private bool _isEnabled;
 

@@ -43,7 +43,7 @@
         <Grid Name="GridVideo"  Grid.Row="1"  Grid.ColumnSpan="2" Background="Black" MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" AllowDrop="True" Drop="GridVideo_Drop">
 
             <!-- VIDEO PLAYER -->
-            <shared:VideoPlayer IsHitTestVisible="False" Volume="{Binding Volume}" SoftSeekFreezeFrame="{Binding Settings.SeekFreezeFrame}" HideMouse="true" x:Name="VideoPlayer">
+            <shared:VideoPlayer Volume="{Binding Volume}" SoftSeekFreezeFrame="{Binding Settings.SeekFreezeFrame}" HideMouse="true" x:Name="VideoPlayer">
                 <shared:VideoPlayer.Style>
                     <Style TargetType="{x:Type shared:VideoPlayer}">
                         <Setter Property="Visibility" Value="Hidden"/>
