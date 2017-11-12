@@ -269,7 +269,7 @@ namespace ScriptPlayer.ViewModels
                             WhirligigConnectionSettings settings =
                                 OnRequestWhirligigConnectionSettings(new WhirligigConnectionSettings
                                 {
-                                    IpAndPort = "127.0.0.1:2000"
+                                    IpAndPort = WhirligigConnectionSettings.DefaultEndpoint
                                 });
     
                             if (settings == null)
