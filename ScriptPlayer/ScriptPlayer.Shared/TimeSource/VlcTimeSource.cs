@@ -11,7 +11,7 @@ namespace ScriptPlayer.Shared
 {
     public class VlcTimeSource : TimeSource, IDisposable
     {
-        private readonly VlcConnectionSettings _connectionSettings;
+        private VlcConnectionSettings _connectionSettings;
 
         public static readonly DependencyProperty IsConnectedProperty = DependencyProperty.Register(
             "IsConnected", typeof(bool), typeof(VlcTimeSource), new PropertyMetadata(default(bool)));
@@ -42,6 +42,11 @@ namespace ScriptPlayer.Shared
 
             _clientLoop = new Thread(ClientLoop);
             _clientLoop.Start();
+        }
+
+        public void UpdateConnectionSettings(VlcConnectionSettings connectionSettings)
+        {
+            _connectionSettings = connectionSettings;
         }
 
         private void TimeSourceOnProgressChanged(object sender, TimeSpan progress)
@@ -175,7 +180,8 @@ namespace ScriptPlayer.Shared
                 string password = _connectionSettings.Password;
                 string baseUrl = $"http://{_connectionSettings.IpAndPort}";
 
-                string credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(userName + ":" + password));
+                //string credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(userName + ":" + password));
+                string credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(userName + ":" + password));
                 client.Headers[HttpRequestHeader.Authorization] = $"Basic {credentials}";
 
                 return client.DownloadString(new Uri($"{baseUrl}/requests/{filename}"));

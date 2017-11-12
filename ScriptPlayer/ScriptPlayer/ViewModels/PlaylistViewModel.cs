@@ -19,7 +19,7 @@ namespace ScriptPlayer.ViewModels
 
         public ObservableCollection<PlaylistEntry> Entries
         {
-            get { return _entries; }
+            get => _entries;
             set
             {
                 if (Equals(value, _entries)) return;
@@ -42,14 +42,14 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void EntriesChanged(object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
+        private static void EntriesChanged(object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
         {
             CommandManager.InvalidateRequerySuggested();
         }
 
         public bool Shuffle
         {
-            get { return _shuffle; }
+            get => _shuffle;
             set
             {
                 if (value == _shuffle) return;
@@ -61,7 +61,7 @@ namespace ScriptPlayer.ViewModels
 
         public bool Repeat
         {
-            get { return _repeat; }
+            get => _repeat;
             set
             {
                 if (value == _repeat) return;
@@ -73,7 +73,7 @@ namespace ScriptPlayer.ViewModels
 
         public PlaylistEntry SelectedEntry
         {
-            get { return _selectedEntry; }
+            get => _selectedEntry;
             set
             {
                 if (Equals(value, _selectedEntry)) return;
@@ -83,8 +83,8 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public RelayCommand<string> PlayNextEntryCommand { get; set; }
-        public RelayCommand<string> PlayPreviousEntryCommand { get; set; }
+        public RelayCommand<string[]> PlayNextEntryCommand { get; set; }
+        public RelayCommand<string[]> PlayPreviousEntryCommand { get; set; }
         public RelayCommand MoveSelectedEntryUpCommand { get; set; }
         public RelayCommand MoveSelectedEntryDownCommand { get; set; }
         public RelayCommand RemoveSelectedEntryCommand { get; set; }
@@ -99,8 +99,8 @@ namespace ScriptPlayer.ViewModels
             MoveSelectedEntryUpCommand = new RelayCommand(ExecuteMoveSelectedEntryUp, CanMoveSelectedEntryUp);
             RemoveSelectedEntryCommand = new RelayCommand(ExecuteRemoveSelectedEntry, CanRemoveSelectedEntry);
             ClearPlaylistCommand = new RelayCommand(ExecuteClearPlaylist, CanClearPlaylist);
-            PlayNextEntryCommand = new RelayCommand<string>(ExecutePlayNextEntry, CanPlayNextEntry);
-            PlayPreviousEntryCommand = new RelayCommand<string>(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
+            PlayNextEntryCommand = new RelayCommand<string[]>(ExecutePlayNextEntry, CanPlayNextEntry);
+            PlayPreviousEntryCommand = new RelayCommand<string[]>(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
         }
 
         private bool CanClearPlaylist()
@@ -113,7 +113,7 @@ namespace ScriptPlayer.ViewModels
             Clear();
         }
 
-        private bool CanPlayPreviousEntry(string currentFile)
+        private bool CanPlayPreviousEntry(params string[] currentFiles)
         {
             if (Entries.Count == 0)
                 return false;
@@ -121,7 +121,10 @@ namespace ScriptPlayer.ViewModels
             if (Repeat)
                 return true;
 
-            var currentEntry = Entries.FirstOrDefault(p => p.Fullname == currentFile);
+            if (currentFiles == null)
+                return true;
+
+            var currentEntry = Entries.FirstOrDefault(p => currentFiles.Contains(p.Fullname));
             if (currentEntry == null)
                 return false;
 
@@ -133,7 +136,7 @@ namespace ScriptPlayer.ViewModels
             return index > 0;
         }
 
-        private bool CanPlayNextEntry(string currentFile)
+        private bool CanPlayNextEntry(params string[] currentFiles)
         {
             if (Entries.Count == 0)
                 return false;
@@ -141,7 +144,10 @@ namespace ScriptPlayer.ViewModels
             if (Repeat)
                 return true;
 
-            var currentEntry = Entries.FirstOrDefault(p => p.Fullname == currentFile);
+            if (currentFiles == null)
+                return true;
+
+            var currentEntry = Entries.FirstOrDefault(p => currentFiles.Contains(p.Fullname));
             if (currentEntry == null)
                 return true;
 
@@ -152,28 +158,39 @@ namespace ScriptPlayer.ViewModels
 
             return index < Entries.Count -1;
         }
-        private void ExecutePlayPreviousEntry(string currentFile)
+        private void ExecutePlayPreviousEntry(string[] currentFiles)
         {
-            if (!CanPlayPreviousEntry(currentFile))
+            PlayPreviousEntry(currentFiles);
+        }
+
+        public void PlayPreviousEntry(params string[] currentFiles)
+        {
+            if (!CanPlayPreviousEntry(currentFiles))
                 return;
 
-            PlaylistEntry entry = GetPreviousEntry(currentFile);
+            PlaylistEntry entry = GetPreviousEntry(currentFiles);
             if (entry == null)
                 return;
 
             OnPlayEntry(entry);
         }
 
-        private void ExecutePlayNextEntry(string currentFile)
+
+        public void PlayNextEntry(params string[] currentFiles)
         {
-            if (!CanPlayNextEntry(currentFile))
+            if (!CanPlayNextEntry(currentFiles))
                 return;
 
-            PlaylistEntry entry = GetNextEntry(currentFile);
+            PlaylistEntry entry = GetNextEntry(currentFiles);
             if (entry == null)
                 return;
 
             OnPlayEntry(entry);
+        }
+
+        private void ExecutePlayNextEntry(string[] currentFiles)
+        {
+            PlayNextEntry(currentFiles);
         }
 
         private bool CanRemoveSelectedEntry()
@@ -264,12 +281,12 @@ namespace ScriptPlayer.ViewModels
             return Entries.FirstOrDefault();
         }
 
-        public PlaylistEntry GetNextEntry(string currentEntryFile)
+        public PlaylistEntry GetNextEntry(params string[] currentEntryFiles)
         {
             if(Shuffle)
-                return AnythingButThis(currentEntryFile);
+                return AnythingButThis(currentEntryFiles);
 
-            var currentEntry = Entries.FirstOrDefault(p => p.Fullname == currentEntryFile);
+            var currentEntry = Entries.FirstOrDefault(p => currentEntryFiles.Contains(p.Fullname));
 
             if (currentEntry == null)
                 return FirstEntry();
@@ -286,12 +303,12 @@ namespace ScriptPlayer.ViewModels
             return nextEntry;
         }
 
-        public PlaylistEntry GetPreviousEntry(string currentEntryFile)
+        public PlaylistEntry GetPreviousEntry(params string[] currentEntryFiles)
         {
             if (Shuffle)
-                return AnythingButThis(currentEntryFile);
+                return AnythingButThis(currentEntryFiles);
 
-            var currentEntry = Entries.FirstOrDefault(p => p.Fullname == currentEntryFile);
+            var currentEntry = Entries.FirstOrDefault(p => currentEntryFiles.Contains(p.Fullname));
 
             if (currentEntry == null)
                 return FirstEntry();
@@ -310,14 +327,14 @@ namespace ScriptPlayer.ViewModels
 
         readonly Random _rng = new Random();
 
-        private PlaylistEntry AnythingButThis(string currentEntryFile)
+        private PlaylistEntry AnythingButThis(params string[] currentEntryFiles)
         {
             if (Entries.Count == 0)
                 return null;
             if (Entries.Count == 1)
                 return Entries.Single();
 
-            var currentEntry = Entries.FirstOrDefault(p => p.Fullname == currentEntryFile);
+            var currentEntry = Entries.FirstOrDefault(p => currentEntryFiles.Contains(p.Fullname));
             var otherEntries = Entries.ToList();
             if(currentEntry != null)
                 otherEntries.Remove(currentEntry);

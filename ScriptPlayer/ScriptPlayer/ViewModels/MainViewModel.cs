@@ -46,8 +46,29 @@ namespace ScriptPlayer.ViewModels
         private byte _maxScriptPosition;
         private byte _minScriptPosition;
 
-        private string _openedScript;
-        private string _openVideo;
+        public string LoadedScript
+        {
+            get => _loadedScript;
+            private set
+            {
+                if (value == _loadedScript) return;
+                _loadedScript = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(LoadedFiles));
+            }
+        }
+
+        public string LoadedVideo
+        {
+            get => _loadedVideo;
+            private set
+            {
+                if (value == _loadedVideo) return;
+                _loadedVideo = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(LoadedFiles));
+            }
+        }
 
         private PatternGenerator _pattern;
         private PatternSource _patternSource = PatternSource.Video;
@@ -83,6 +104,8 @@ namespace ScriptPlayer.ViewModels
         private bool _blurVideo;
         private bool _canDirectConnectLaunch;
         private SettingsViewModel _settings;
+        private string _loadedScript;
+        private string _loadedVideo;
 
         public ObservableCollection<Device> Devices => _devices;
 
@@ -240,8 +263,9 @@ namespace ScriptPlayer.ViewModels
                 ClearScript();
 
                 Title = "";
-                OpenedScript = null;
-                _openVideo = null;
+
+                LoadedScript = null;
+                LoadedVideo = null;
 
                 switch (newValue)
                 {
@@ -668,16 +692,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public string OpenedScript
-        {
-            get => _openedScript;
-            set
-            {
-                if (value == _openedScript) return;
-                _openedScript = value;
-                OnPropertyChanged();
-            }
-        }
+        public string[] LoadedFiles => new []{LoadedVideo, LoadedScript};
 
         public RelayCommand ExecuteSelectedTestPatternCommand { get; set; }
 
@@ -905,16 +920,16 @@ namespace ScriptPlayer.ViewModels
             }
             else if (Playlist.EntryCount > 0)
             {
-                LoadScript(Playlist.FirstEntry().Fullname, true);
+                LoadFile(Playlist.FirstEntry().Fullname);
             }
         }
 
         private bool EntryLoaded()
         {
             if (PlaybackMode != PlaybackMode.Local)
-                return !string.IsNullOrWhiteSpace(_openedScript);
+                return !string.IsNullOrWhiteSpace(LoadedScript);
 
-            return !string.IsNullOrWhiteSpace(_openVideo);
+            return !string.IsNullOrWhiteSpace(LoadedVideo);
         }
 
         public void TogglePlayback()
@@ -1026,13 +1041,13 @@ namespace ScriptPlayer.ViewModels
 
         private bool IsMatchingScriptLoaded(string videoFileName)
         {
-            if (string.IsNullOrWhiteSpace(OpenedScript))
+            if (string.IsNullOrWhiteSpace(LoadedScript))
                 return false;
 
             if (string.IsNullOrWhiteSpace(videoFileName))
                 return false;
 
-            return Path.GetFileNameWithoutExtension(OpenedScript).Equals(Path.GetFileNameWithoutExtension(videoFileName));
+            return Path.GetFileNameWithoutExtension(LoadedScript).Equals(Path.GetFileNameWithoutExtension(videoFileName));
         }
 
         private bool IsMatchingVideoLoaded(string scriptFileName)
@@ -1040,10 +1055,10 @@ namespace ScriptPlayer.ViewModels
             if (string.IsNullOrWhiteSpace(scriptFileName))
                 return false;
 
-            if (string.IsNullOrWhiteSpace(_openVideo))
+            if (string.IsNullOrWhiteSpace(LoadedVideo))
                 return false;
 
-            return Path.GetFileNameWithoutExtension(scriptFileName).Equals(Path.GetFileNameWithoutExtension(_openVideo));
+            return Path.GetFileNameWithoutExtension(scriptFileName).Equals(Path.GetFileNameWithoutExtension(LoadedVideo));
         }
 
         private void StartPattern(PatternGenerator generator)
@@ -1412,7 +1427,7 @@ namespace ScriptPlayer.ViewModels
             if (checkForScript)
                 TryFindMatchingScript(videoFileName);
 
-            _openVideo = videoFileName;
+            LoadedVideo = videoFileName;
 
             if (PlaybackMode == PlaybackMode.Local)
             {
@@ -1461,7 +1476,7 @@ namespace ScriptPlayer.ViewModels
 
             _scriptHandler.SetScript(actions);
             RefreshManualDuration();
-            OpenedScript = fileName;
+            LoadedScript = fileName;
 
             FindMaxPositions();
             UpdateHeatMap();
@@ -1591,7 +1606,7 @@ namespace ScriptPlayer.ViewModels
             if (eventArgs.NextAction == null)
             {
                 if (Settings.AutoSkip)
-                    Playlist.PlayNextEntryCommand.Execute(OpenedScript);
+                    Playlist.PlayNextEntry(LoadedFiles);
                 else if (Settings.NotifyGaps)
                     OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
                 return;
@@ -1779,13 +1794,13 @@ namespace ScriptPlayer.ViewModels
         private void PlayNextPlaylistEntry()
         {
             if (!TimeSource.CanOpenMedia) return;
-            Playlist.PlayNextEntryCommand.Execute(OpenedScript);
+            Playlist.PlayNextEntry(LoadedFiles);
         }
 
         private void PlayPreviousPlaylistEntry()
         {
             if (!TimeSource.CanOpenMedia) return;
-            Playlist.PlayPreviousEntryCommand.Execute(OpenedScript);
+            Playlist.PlayPreviousEntry(LoadedFiles);
         }
 
         private void VideoPlayer_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -1795,11 +1810,11 @@ namespace ScriptPlayer.ViewModels
 
             try
             {
-                if (string.IsNullOrWhiteSpace(_openVideo))
+                if (string.IsNullOrWhiteSpace(LoadedVideo))
                     return;
 
                 TimeSpan position = TimeSource.Progress;
-                string logFile = Path.ChangeExtension(_openVideo, ".log");
+                string logFile = Path.ChangeExtension(LoadedVideo, ".log");
                 if (logFile == null)
                     return;
 
@@ -2110,6 +2125,25 @@ namespace ScriptPlayer.ViewModels
         public void ApplySettings(SettingsViewModel settings)
         {
             Settings = settings;
+
+            switch (PlaybackMode)
+            {
+                case PlaybackMode.Whirligig:
+                    if(TimeSource is WhirligigTimeSource whirligig)
+                        whirligig.UpdateConnectionSettings(new WhirligigConnectionSettings
+                        {
+                            IpAndPort = settings.WhirligigEndpoint
+                        });
+                    break;
+                case PlaybackMode.Vlc:
+                    if(TimeSource is VlcTimeSource vlc)
+                        vlc.UpdateConnectionSettings(new VlcConnectionSettings
+                        {
+                            IpAndPort = settings.VlcEndpoint,
+                            Password = settings.VlcPassword
+                        });
+                    break;
+            }
         }
     }
 }

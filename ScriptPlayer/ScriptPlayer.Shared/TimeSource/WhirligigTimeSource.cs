@@ -10,7 +10,7 @@ namespace ScriptPlayer.Shared
 {
     public class WhirligigTimeSource : TimeSource, IDisposable
     {
-        private readonly WhirligigConnectionSettings _connectionSettings;
+        private WhirligigConnectionSettings _connectionSettings;
 
         public static readonly DependencyProperty IsConnectedProperty = DependencyProperty.Register(
             "IsConnected", typeof(bool), typeof(WhirligigTimeSource), new PropertyMetadata(default(bool)));
@@ -41,6 +41,11 @@ namespace ScriptPlayer.Shared
 
             _clientLoop = new Thread(ClientLoop);
             _clientLoop.Start();
+        }
+
+        public void UpdateConnectionSettings(WhirligigConnectionSettings connectionSettings)
+        {
+            _connectionSettings = connectionSettings;
         }
 
         private void TimeSourceOnProgressChanged(object sender, TimeSpan progress)
