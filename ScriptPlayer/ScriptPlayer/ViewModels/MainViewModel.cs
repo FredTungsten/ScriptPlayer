@@ -2125,6 +2125,7 @@ namespace ScriptPlayer.ViewModels
         public void ApplySettings(SettingsViewModel settings)
         {
             Settings = settings;
+            SaveSettings();
 
             switch (PlaybackMode)
             {
