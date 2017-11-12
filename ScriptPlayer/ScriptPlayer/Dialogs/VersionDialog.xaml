@@ -8,7 +8,7 @@
         DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Title="Version" Height="254.873" Width="383.898" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
     <Grid>
-        <Image HorizontalAlignment="Left" Height="159" Margin="10,10,0,0" VerticalAlignment="Top" Width="100" Source="/ScriptPlayer;component/Images/ScriptPlayerIcon.png"/>
+        <Image RenderOptions.BitmapScalingMode="HighQuality" HorizontalAlignment="Left" Height="159" Margin="10,10,0,0" VerticalAlignment="Top" Width="100" Source="/ScriptPlayer;component/Images/ScriptPlayerIcon.png"/>
         <TextBlock HorizontalAlignment="Left" Margin="115,10,0,0" TextWrapping="Wrap" Text="ScriptPlayer" VerticalAlignment="Top" Width="167"/>
         <TextBlock HorizontalAlignment="Left" Margin="115,31,0,0" TextWrapping="Wrap" Text="Installed Version:" VerticalAlignment="Top"/>
         <TextBlock HorizontalAlignment="Left" Margin="115,52,0,0" TextWrapping="Wrap" Text="Latest Version:" VerticalAlignment="Top"/>

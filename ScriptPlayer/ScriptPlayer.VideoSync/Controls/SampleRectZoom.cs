@@ -19,8 +19,8 @@ namespace ScriptPlayer.VideoSync.Controls
 
         public VideoPlayer Player
         {
-            get { return (VideoPlayer)GetValue(PlayerProperty); }
-            set { SetValue(PlayerProperty, value); }
+            get => (VideoPlayer)GetValue(PlayerProperty);
+            set => SetValue(PlayerProperty, value);
         }
 
         public static readonly DependencyProperty SampleRectProperty = DependencyProperty.Register(
@@ -28,8 +28,8 @@ namespace ScriptPlayer.VideoSync.Controls
 
         public Rect SampleRect
         {
-            get { return (Rect)GetValue(SampleRectProperty); }
-            set { SetValue(SampleRectProperty, value); }
+            get => (Rect)GetValue(SampleRectProperty);
+            set => SetValue(SampleRectProperty, value);
         }
 
         public static readonly DependencyProperty ResolutionProperty = DependencyProperty.Register(
@@ -37,8 +37,8 @@ namespace ScriptPlayer.VideoSync.Controls
 
         public Resolution Resolution
         {
-            get { return (Resolution)GetValue(ResolutionProperty); }
-            set { SetValue(ResolutionProperty, value); }
+            get => (Resolution)GetValue(ResolutionProperty);
+            set => SetValue(ResolutionProperty, value);
         }
 
         public static readonly DependencyProperty VideoBrushProperty = DependencyProperty.Register(
@@ -46,8 +46,8 @@ namespace ScriptPlayer.VideoSync.Controls
 
         public Brush VideoBrush
         {
-            get { return (Brush)GetValue(VideoBrushProperty); }
-            set { SetValue(VideoBrushProperty, value); }
+            get => (Brush)GetValue(VideoBrushProperty);
+            set => SetValue(VideoBrushProperty, value);
         }
 
         public SampleRectZoom()

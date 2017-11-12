@@ -372,7 +372,7 @@
 
                         <StackPanel Margin="4" ToolTip="Timespan by which every script command will be delayed. Negative values will cause the commands to be executed ahead of time.">
                             <TextBlock TextAlignment="Center" Margin="0" Text="Script Delay"/>
-                            <Slider Value="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-500" Maximum="500" SmallChange="25" LargeChange="100"/>
+                            <Slider Value="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-500" Maximum="500" SmallChange="25" LargeChange="100" IsSnapToTickEnabled="True" TickFrequency="25"/>
                             <TextBlock TextAlignment="Center" Margin="0" Text="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
                         </StackPanel>
                         <Separator/>
@@ -420,7 +420,7 @@
 
                         <StackPanel Margin="4" ToolTip="Static multiplier that is applied after the automatic speed detection.">
                             <TextBlock Margin="0" Text="Speed Multiplier" TextAlignment="Center"/>
-                            <Slider Margin="0,4" Minimum="0.5" Maximum="2.0" Value="{Binding Settings.SpeedMultiplier}"/>
+                            <Slider Margin="0,4" Minimum="0.5" Maximum="2.0" Value="{Binding Settings.SpeedMultiplier}"  IsSnapToTickEnabled="True" TickFrequency="0.1"/>
                             <TextBlock Margin="0" Text="{Binding Settings.SpeedMultiplier, StringFormat={}x{0:f1}}" TextAlignment="Center"/>
                         </StackPanel>
 
@@ -428,7 +428,7 @@
 
                         <StackPanel Margin="4" ToolTip="Minimal delay between two script commands">
                             <TextBlock Margin="0" Text="Min Command Delay" TextAlignment="Center"/>
-                            <Slider LargeChange="1" Margin="0,4" Minimum="100" Maximum="300"  Value="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"/>
+                            <Slider LargeChange="1" Margin="0,4" Minimum="100" Maximum="300"  Value="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"  IsSnapToTickEnabled="True" TickFrequency="1"/>
                             <TextBlock Margin="0" Text="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}" TextAlignment="Center"/>
                         </StackPanel>
 
