@@ -1,7 +1,7 @@
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/FredTungsten/ScriptPlayer?branch=master&svg=true)](https://ci.appveyor.com/project/FredTungsten/ScriptPlayer/branch/master)
-[![Current Version](https://img.shields.io/github/release/FredTungsten/ScriptPlayer.svg?maxAge=60000)](https://github.com/FredTungsten/ScriptPlayer/releases)
-[![Commits since release](https://img.shields.io/github/commits-since/FredTungsten/ScriptPlayer/latest.svg?maxAge=60000)](https://github.com/FredTungsten/ScriptPlayer/commits/master)
-[![Total Downloads](https://img.shields.io/github/downloads/FredTungsten/ScriptPlayer/total.svg)](https://github.com/FredTungsten/ScriptPlayer/releases)
+[![Current Version](https://img.shields.io/github/release/FredTungsten/ScriptPlayer.svg?maxAge=3600)](https://github.com/FredTungsten/ScriptPlayer/releases)
+[![Commits since release](https://img.shields.io/github/commits-since/FredTungsten/ScriptPlayer/latest.svg?maxAge=3600)](https://github.com/FredTungsten/ScriptPlayer/commits/master)
+[![Total Downloads](https://img.shields.io/github/downloads/FredTungsten/ScriptPlayer/total.svg?maxAge=3600)](https://github.com/FredTungsten/ScriptPlayer/releases)
 [![License](https://img.shields.io/badge/licence-BSD%203-blue.svg?style=flat)](https://github.com/FredTungsten/ScriptPlayer/blob/master/LICENSE)
 
 ScriptPlayer is a video player that controls the Fleshlight Launch and other toys in sync with videos.  
