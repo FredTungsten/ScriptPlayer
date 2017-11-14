@@ -10,6 +10,9 @@ namespace ScriptPlayer.Shared.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            if (!(value is ConversionMode))
+                return "Unknown";
+
             switch ((ConversionMode)value)
             {
                 case ConversionMode.UpOrDown:
