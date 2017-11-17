@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using Buttplug.Client;
 using Buttplug.Core;
 using Buttplug.Core.Messages;
 using JetBrains.Annotations;
+using ScriptPlayer.Shared.Helpers;
 
 namespace ScriptPlayer.Shared
 {
@@ -26,8 +29,12 @@ namespace ScriptPlayer.Shared
 
         private void Client_DeviceAddedOrRemoved(object sender, DeviceEventArgs deviceEventArgs)
         {
-            ButtplugClientDevice device = DirtyHacks.GetPrivateField<ButtplugClientDevice>(deviceEventArgs, "device");
-            DeviceEventArgs.DeviceAction action = DirtyHacks.GetPrivateField<DeviceEventArgs.DeviceAction>(deviceEventArgs, "action");
+            
+            //deviceEventArgs.Device;
+            ButtplugClientDevice device = DirtyHacks.GetAnythingWithThatName<ButtplugClientDevice>(deviceEventArgs, "device");
+
+            //deviceEventArgs.Action;
+            DeviceEventArgs.DeviceAction action = DirtyHacks.GetAnythingWithThatName<DeviceEventArgs.DeviceAction>(deviceEventArgs, "action");
 
             switch (action)
             {
@@ -56,8 +63,10 @@ namespace ScriptPlayer.Shared
 
                 return true;
             }
-            catch(Exception)
+            catch(Exception e)
             {
+                Debug.WriteLine(e.Message);
+                File.AppendAllText(Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\ButtplugConnectionError.log"), ExceptionHelper.BuildException(e));
                 _client = null;
                 return false;
             }

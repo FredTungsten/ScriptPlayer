@@ -1514,7 +1514,7 @@ namespace ScriptPlayer.ViewModels
             if (TimeSource == null)
                 return;
 
-            List<TimeSpan> timeStamps = FilterDuplicates(_scriptHandler.GetScript().ToList()).Select(s => s.TimeStamp).ToList();
+            List<TimeSpan> timeStamps = FilterDuplicates(_scriptHandler.GetUnfilledScript().ToList()).Select(s => s.TimeStamp).ToList();
             Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, TimeSource.Duration);
             HeatMap = heatmap;
         }

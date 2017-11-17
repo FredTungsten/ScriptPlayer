@@ -14,6 +14,7 @@ namespace ScriptPlayer.Shared.Scripts
         private ConversionMode _conversionMode = ConversionMode.UpOrDown;
         private static TimeSpan _delay = TimeSpan.Zero;
         private List<TimeSpan> _beats;
+        private List<ScriptAction> _unfilledActions;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> IntermediateScriptActionRaised;
 
@@ -31,10 +32,9 @@ namespace ScriptPlayer.Shared.Scripts
 
         public void Clear()
         {
-            ResetCache();
             _actions?.Clear();
             _beats?.Clear();
-            UpdatePositions();
+            ProcessScript();
         }
 
         private void SaveBeatFile()
@@ -59,8 +59,7 @@ namespace ScriptPlayer.Shared.Scripts
                 .Cast<ScriptAction>()
                 .ToList();
 
-            UpdatePositions();
-            ResetCache();
+            ProcessScript();
         }
 
         private void UpdatePositions()
@@ -98,6 +97,14 @@ namespace ScriptPlayer.Shared.Scripts
             return _actions.AsReadOnly();
         }
 
+        public IEnumerable<ScriptAction> GetUnfilledScript()
+        {
+            if (_unfilledActions == null)
+                return new List<ScriptAction>();
+
+            return _unfilledActions.AsReadOnly();
+        } 
+
         public void SetScript(IEnumerable<ScriptAction> script)
         {
             var actions = new List<ScriptAction>(script);
@@ -107,8 +114,57 @@ namespace ScriptPlayer.Shared.Scripts
             
             SaveBeatFile();
             ConvertBeatFile();
+
+            ProcessScript();
+        }
+
+        private void ProcessScript()
+        {
+            //TODO Test and add a setting
+            //FillGaps();
             UpdatePositions();
             ResetCache();
+        }
+
+        private void FillGaps()
+        {
+            _unfilledActions = new List<ScriptAction>(_actions);
+
+            List<ScriptAction> additionalActions = new List<ScriptAction>();
+
+            TimeSpan previous = TimeSpan.MinValue;
+            foreach (ScriptAction action in _actions)
+            {
+                if (previous != TimeSpan.MinValue)
+                {
+                    TimeSpan duration = action.TimeStamp - previous;
+                    if (duration > TimeSpan.FromSeconds(10))
+                    {
+                        TimeSpan start = previous + TimeSpan.FromSeconds(2);
+                        TimeSpan end = action.TimeStamp - TimeSpan.FromSeconds(2);
+                        TimeSpan gapduration = end - start;
+
+                        int fillers = (int)Math.Round(gapduration.Divide(TimeSpan.FromMilliseconds(500)));
+
+                        bool up = true;
+
+                        for (int i = 0; i <= fillers; i++)
+                        {
+                            up ^= true;
+                            additionalActions.Add(new FunScriptAction
+                            {
+                                Position = (byte)(up ? 99 : 0), 
+                                TimeStamp = start + gapduration.Multiply(i).Divide(fillers)
+                            });
+                        }
+                    }
+                }
+
+                previous = action.TimeStamp;
+            }
+
+            _actions.AddRange(additionalActions);
+            _actions.Sort((a,b) => a.TimeStamp.CompareTo(b.TimeStamp));
         }
 
         public void SetTimesource(TimeSource timesource)

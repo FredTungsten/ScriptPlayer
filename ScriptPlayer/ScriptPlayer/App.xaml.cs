@@ -3,14 +3,42 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Principal;
+using System.Threading;
 using System.Windows;
+using System.Windows.Forms;
+using System.Windows.Threading;
 using ScriptPlayer.Shared.Elevation;
 using ScriptPlayer.Shared.Helpers;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace ScriptPlayer
 {
     public partial class App : Application
-    { 
+    {
+        public App()
+        {
+            if (AppDomain.CurrentDomain.FriendlyName.EndsWith("vshost.exe")) return;
+
+            Application.Current.DispatcherUnhandledException += CurrentOnDispatcherUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+        }
+
+        private void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs args)
+        {
+            string message = "Unhandled Exception!";
+            if (args.ExceptionObject is Exception e)
+                message = ExceptionHelper.BuildException(e);
+
+            File.AppendAllText(Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\Crash.log"), message);
+        }
+
+        private void CurrentOnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs args)
+        {
+            string message = ExceptionHelper.BuildException(args.Exception);
+            File.AppendAllText(Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\Crash.log"), message);
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
 
@@ -56,11 +84,10 @@ namespace ScriptPlayer
                 }
             }
 
-            if (IsElevated())
-            {
-                LaunchCurrentAppAgain();
-                Environment.Exit((int)result);
-            }
+            if (!IsElevated()) return;
+
+            LaunchCurrentAppAgain();
+            Environment.Exit((int)result);
         }
 
         private void LaunchCurrentAppAgain()
@@ -85,7 +112,7 @@ namespace ScriptPlayer
         /// <summary>
         /// Determine if the current process was started with the "/elevated" argument
         /// </summary>
-        private bool IsElevated()
+        private static bool IsElevated()
         {
             return Environment.GetCommandLineArgs().Contains("/elevated");
         }
@@ -94,7 +121,7 @@ namespace ScriptPlayer
         /// Determine if the current process was started with admin privileges
         /// </summary>
         /// <returns></returns>
-        private bool UserIsAdmin()
+        private static bool UserIsAdmin()
         {
             WindowsIdentity identity = WindowsIdentity.GetCurrent();
             WindowsPrincipal principal = new WindowsPrincipal(identity);
@@ -104,7 +131,7 @@ namespace ScriptPlayer
         /// <summary>
         /// Try to launch the program as admin, return result
         /// </summary>
-        private void LaunchCurrentAppAsAdmin()
+        private static void LaunchCurrentAppAsAdmin()
         {
             ProcessStartInfo info = new ProcessStartInfo
             {
