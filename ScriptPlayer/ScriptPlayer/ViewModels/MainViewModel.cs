@@ -1739,7 +1739,7 @@ namespace ScriptPlayer.ViewModels
 
         private void StopDevices()
         {
-            foreach (Device device in _devices)
+            foreach (Device device in _devices.ToList())
                 device.Stop();
         }
 

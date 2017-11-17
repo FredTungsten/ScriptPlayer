@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Buttplug.Client;
 using Buttplug.Core;
@@ -18,6 +19,7 @@ namespace ScriptPlayer.Shared
     public class ButtplugAdapter : DeviceController, INotifyPropertyChanged, IDisposable
     {
         private ButtplugWSClient _client;
+        private readonly SemaphoreSlim _clientLock = new SemaphoreSlim(1);
         private readonly string _url;
         private readonly List<ButtplugDevice> _devices;
 
@@ -59,7 +61,7 @@ namespace ScriptPlayer.Shared
 
                 return true;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Debug.WriteLine(e.Message);
                 File.AppendAllText(Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\ButtplugConnectionError.log"), ExceptionHelper.BuildException(e));
@@ -124,10 +126,19 @@ namespace ScriptPlayer.Shared
                 double speed = Math.Min(1,
                     Math.Max(0, speedFrom * (1 - information.Progress) + speedTo * information.Progress));
 
-                ButtplugMessage response = await _client.SendDeviceMessage(device,
-                    new SingleMotorVibrateCmd(device.Index, speed));
+                try
+                {
+                    await _clientLock.WaitAsync();
 
-                await CheckResponse(response);
+                    ButtplugMessage response = await _client.SendDeviceMessage(device,
+                        new SingleMotorVibrateCmd(device.Index, speed));
+
+                    await CheckResponse(response);
+                }
+                finally
+                {
+                    _clientLock.Release();
+                }
             }
         }
 
@@ -135,31 +146,51 @@ namespace ScriptPlayer.Shared
         {
             if (_client == null) return;
 
-            ButtplugMessage response = null;
+            try
+            {
+                await _clientLock.WaitAsync();
 
-            if (device.AllowedMessages.Contains(nameof(FleshlightLaunchFW12Cmd)))
-            {
-                response = await _client.SendDeviceMessage(device, new FleshlightLaunchFW12Cmd(device.Index, information.SpeedTransformed, information.PositionToTransformed));
-            }
-            else if (device.AllowedMessages.Contains(nameof(KiirooCmd)))
-            {
-                response = await _client.SendDeviceMessage(device, new KiirooCmd(device.Index, LaunchToKiiroo(information.PositionToOriginal, 0, 4)));
-            }
-            else if (device.AllowedMessages.Contains(nameof(SingleMotorVibrateCmd)))
-            {
-                response = await _client.SendDeviceMessage(device, new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.PositionFromOriginal)));
-            }
-            else if (device.AllowedMessages.Contains(nameof(VorzeA10CycloneCmd)))
-            {
-                response = await _client.SendDeviceMessage(device, new VorzeA10CycloneCmd(device.Index, LaunchToVorze(information.SpeedOriginal), information.PositionToOriginal > information.PositionFromOriginal));
-            }
-            else if (device.AllowedMessages.Contains(nameof(LovenseCmd)))
-            {
-                return;
-                //await _client.SendDeviceMessage(device, new LovenseCmd(device.Index, LaunchToLovense(position, speed)));
-            }
 
-            await CheckResponse(response);
+                ButtplugMessage response = null;
+
+                if (device.AllowedMessages.Contains(nameof(FleshlightLaunchFW12Cmd)))
+                {
+                    Debug.WriteLine("Sending FleshlightLaunchFW12Cmd to device " + device.Index);
+                    response = await _client.SendDeviceMessage(device,
+                        new FleshlightLaunchFW12Cmd(device.Index, information.SpeedTransformed,
+                            information.PositionToTransformed));
+                }
+                else if (device.AllowedMessages.Contains(nameof(KiirooCmd)))
+                {
+                    Debug.WriteLine("Sending KiirooCmd to device " + device.Index);
+                    response = await _client.SendDeviceMessage(device,
+                        new KiirooCmd(device.Index, LaunchToKiiroo(information.PositionToOriginal, 0, 4)));
+                }
+                else if (device.AllowedMessages.Contains(nameof(SingleMotorVibrateCmd)))
+                {
+                    Debug.WriteLine("Sending SingleMotorVibrateCmd to device " + device.Index);
+                    response = await _client.SendDeviceMessage(device,
+                        new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.PositionFromOriginal)));
+                }
+                else if (device.AllowedMessages.Contains(nameof(VorzeA10CycloneCmd)))
+                {
+                    Debug.WriteLine("Sending VorzeA10CycloneCmd to device " + device.Index);
+                    response = await _client.SendDeviceMessage(device,
+                        new VorzeA10CycloneCmd(device.Index, LaunchToVorze(information.SpeedOriginal),
+                            information.PositionToOriginal > information.PositionFromOriginal));
+                }
+                else if (device.AllowedMessages.Contains(nameof(LovenseCmd)))
+                {
+                    return;
+                    //await _client.SendDeviceMessage(device, new LovenseCmd(device.Index, LaunchToLovense(position, speed)));
+                }
+
+                await CheckResponse(response);
+            }
+            finally
+            {
+                _clientLock.Release();
+            }
         }
 
         /*
@@ -199,7 +230,7 @@ namespace ScriptPlayer.Shared
             const double min = 0.1;
 
             double speedRelative = 1.0 - ((position + 1) / 100.0);
-            double result = min + (max-min) * speedRelative;
+            double result = min + (max - min) * speedRelative;
             return Math.Min(max, Math.Max(min, result));
         }
 
