@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using System.Linq;
 using System.Reflection;
 
 namespace ScriptPlayer.Shared
@@ -21,7 +23,10 @@ namespace ScriptPlayer.Shared
             if (field != null)
                 return (T)field.GetValue(obj);
 
-            return (T)obj?.GetType().GetProperty(fieldOrProperty)?.GetValue(obj);
+            return (T)obj?.GetType()
+                .GetProperties()
+                .FirstOrDefault(p => string.Equals(p.Name, fieldOrProperty, StringComparison.InvariantCultureIgnoreCase))
+                ?.GetValue(obj);
         }
     }
 }

@@ -29,12 +29,8 @@ namespace ScriptPlayer.Shared
 
         private void Client_DeviceAddedOrRemoved(object sender, DeviceEventArgs deviceEventArgs)
         {
-            
-            //deviceEventArgs.Device;
-            ButtplugClientDevice device = DirtyHacks.GetAnythingWithThatName<ButtplugClientDevice>(deviceEventArgs, "device");
-
-            //deviceEventArgs.Action;
-            DeviceEventArgs.DeviceAction action = DirtyHacks.GetAnythingWithThatName<DeviceEventArgs.DeviceAction>(deviceEventArgs, "action");
+            ButtplugClientDevice device = deviceEventArgs.Device; // DirtyHacks.GetAnythingWithThatName<ButtplugClientDevice>(deviceEventArgs, "device");
+            DeviceEventArgs.DeviceAction action = deviceEventArgs.Action; // DirtyHacks.GetAnythingWithThatName<DeviceEventArgs.DeviceAction>(deviceEventArgs, "action");
 
             switch (action)
             {
