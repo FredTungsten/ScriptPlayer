@@ -73,7 +73,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Whirligig" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Gaps" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -246,6 +246,7 @@
                             <CheckBox Margin="4" IsChecked="{Binding Settings.SoftSeek}" Content="Soft seek"/>
                             <RadioButton IsEnabled="{Binding Settings.SoftSeek}" Margin="12,4,4,4" IsChecked="{Binding Settings.SeekFreezeFrame}" Content="Freeze frame"/>
                             <RadioButton IsEnabled="{Binding Settings.SoftSeek}" Margin="12,4,4,4" IsChecked="{Binding Settings.SeekFreezeFrame, Converter={StaticResource Inverter}}" Content="Fade to black"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.FillGaps}" IsEnabled="{Binding Path=Settings.AutoSkip, Converter={StaticResource Inverter}}" Content="Fill gaps with slow movement"/>
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Timings">

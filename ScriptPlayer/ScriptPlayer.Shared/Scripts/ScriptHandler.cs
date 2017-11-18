@@ -15,6 +15,7 @@ namespace ScriptPlayer.Shared.Scripts
         private static TimeSpan _delay = TimeSpan.Zero;
         private List<TimeSpan> _beats;
         private List<ScriptAction> _unfilledActions;
+        private bool _fillGaps;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> IntermediateScriptActionRaised;
 
@@ -22,11 +23,21 @@ namespace ScriptPlayer.Shared.Scripts
 
         public ConversionMode ConversionMode  
         {
-            get { return _conversionMode; }
+            get => _conversionMode;
             set
             {
                 _conversionMode = value;
-                ConvertBeatFile();
+                ProcessScript();
+            }
+        }
+
+        public bool FillGaps
+        {
+            get => _fillGaps;
+            set
+            {
+                _fillGaps = value;
+                ProcessScript();
             }
         }
 
@@ -120,15 +131,16 @@ namespace ScriptPlayer.Shared.Scripts
 
         private void ProcessScript()
         {
-            //TODO Test and add a setting
-            //FillGaps();
+            FillScriptGaps();
             UpdatePositions();
             ResetCache();
         }
 
-        private void FillGaps()
+        private void FillScriptGaps()
         {
             _unfilledActions = new List<ScriptAction>(_actions);
+
+            if (!FillGaps) return;
 
             List<ScriptAction> additionalActions = new List<ScriptAction>();
 

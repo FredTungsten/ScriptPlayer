@@ -56,6 +56,7 @@ namespace ScriptPlayer.ViewModels
         private bool _notifyPlayPause = true;
         private bool _notifyVolume = true;
         private bool _notifyLogging = true;
+        private bool _fillGaps;
 
         public SettingsViewModel()
         {
@@ -357,6 +358,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _logMarkers) return;
                 _logMarkers = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool FillGaps
+        {
+            get => _fillGaps;
+            set
+            {
+                if (value == _fillGaps) return;
+                _fillGaps = value;
                 OnPropertyChanged();
             }
         }

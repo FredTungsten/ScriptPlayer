@@ -749,11 +749,9 @@ namespace ScriptPlayer.ViewModels
             if (oldValue != null)
                 oldValue.PropertyChanged -= Settings_PropertyChanged;
 
-            if (newValue != null)
-            {
-                newValue.PropertyChanged += Settings_PropertyChanged;
-                UpdateAllFromSettings();
-            }
+            if (newValue == null) return;
+            newValue.PropertyChanged += Settings_PropertyChanged;
+            UpdateAllFromSettings();
         }
 
         private void UpdateAllFromSettings()
@@ -764,6 +762,7 @@ namespace ScriptPlayer.ViewModels
             UpdateConversionMode();
             UpdatePlaylistShuffle();
             UpdatePlaylistRepeat();
+            UpdateFillGaps();
         }
 
         private void UpdatePlaylistRepeat()
@@ -815,7 +814,17 @@ namespace ScriptPlayer.ViewModels
                     UpdatePlaylistRepeat();
                     break;
                 }
+                case nameof(SettingsViewModel.FillGaps):
+                {
+                    UpdateFillGaps();
+                    break;
+                }
             }
+        }
+
+        private void UpdateFillGaps()
+        {
+            _scriptHandler.FillGaps = Settings.FillGaps;
         }
 
         private void UpdateConversionMode()
@@ -1721,20 +1730,18 @@ namespace ScriptPlayer.ViewModels
 
         private void SetDevices(DeviceCommandInformation information, bool requirePlaying = true)
         {
-            if (TimeSource.IsPlaying || !requirePlaying)
-            {
-                foreach (Device device in _devices)
-                    device.Enqueue(information);
-            }
+            if (!TimeSource.IsPlaying && requirePlaying) return;
+
+            foreach (Device device in _devices)
+                device.Enqueue(information);
         }
 
         private void SetDevices(IntermediateCommandInformation intermediateInfo, bool requirePlaying = true)
         {
-            if (TimeSource.IsPlaying || !requirePlaying)
-            {
-                foreach (Device device in _devices)
-                    device.Set(intermediateInfo);
-            }
+            if (!TimeSource.IsPlaying && requirePlaying) return;
+
+            foreach (Device device in _devices)
+                device.Set(intermediateInfo);
         }
 
         private void StopDevices()
@@ -1755,13 +1762,10 @@ namespace ScriptPlayer.ViewModels
 
             RequestFile?.Invoke(this, e);
 
-            if (e.Handled)
-            {
-                filterIndex = e.FilterIndex;
-                return e.SelectedFile;
-            }
+            if (!e.Handled) return null;
 
-            return null;
+            filterIndex = e.FilterIndex;
+            return e.SelectedFile;
         }
 
         protected virtual string[] OnRequestFiles(string filter, ref int filterIndex)
