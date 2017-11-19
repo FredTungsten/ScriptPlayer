@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using ScriptPlayer.Shared.Properties;
 
@@ -60,13 +61,22 @@ namespace ScriptPlayer.Shared
 
         private readonly List<Notification> _notifications = new List<Notification>();
 
-        public void AddNotification(object content, TimeSpan duration, string group = null)
+        public void RemoveNotification(string group)
+        {
+            Notification existing = _notifications.FirstOrDefault(n => String.Equals(n.Group, group, StringComparison.InvariantCultureIgnoreCase));
+            if (existing == null) return;
+
+            VanishingContainer container = GetContainer(existing);
+            container.Vanish(TimeSpan.Zero);
+        }
+
+        public void AddNotification(object content, TimeSpan duration, string group = null, ICommand command = null)
         {
             if (!CheckAccess())
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    AddNotification(content, duration, group);
+                    AddNotification(content, duration, group, command);
                 }));
                 return;
             }
@@ -80,24 +90,38 @@ namespace ScriptPlayer.Shared
             if (existing != null)
             {
                 existing.Content = content;
+                if (existing is NotificationCommand com)
+                    com.Command = command;
 
                 VanishingContainer container = GetContainer(existing);
-                container.Vanish(duration);
+                if(duration < TimeSpan.MaxValue)
+                    container.Vanish(duration);
             }
             else
             {
-                var newNotification = new Notification
-                {
-                    Group = group,
-                    Content = content
-                };
+                Notification newNotification;
+                
+                if(command == null)
+                    newNotification = new Notification
+                    {
+                        Group = group,
+                        Content = content
+                    };
+                else
+                    newNotification = new NotificationCommand
+                    {
+                        Group = group,
+                        Content = content,
+                        Command = command
+                    };
 
                 _notifications.Add(newNotification);
 
                 VanishingContainer control = new VanishingContainer { Content = newNotification };
                 control.Gone += ControlOnGone;
                 AddChild(control);
-                control.Vanish(duration);
+                if (duration < TimeSpan.MaxValue)
+                    control.Vanish(duration);
             }
         }
 
@@ -145,6 +169,11 @@ namespace ScriptPlayer.Shared
 
             return arrangeBounds;
         }
+    }
+
+    public class NotificationCommand : Notification
+    {
+        public ICommand Command { get; set; }
     }
 
     public class Notification : INotifyPropertyChanged

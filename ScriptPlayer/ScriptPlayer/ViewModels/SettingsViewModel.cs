@@ -57,6 +57,9 @@ namespace ScriptPlayer.ViewModels
         private bool _notifyVolume = true;
         private bool _notifyLogging = true;
         private bool _fillGaps;
+        private bool _fillFirstGap;
+        private bool _fillLastGap;
+        private bool _showFilledGapsInHeatMap;
 
         public SettingsViewModel()
         {
@@ -369,6 +372,39 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _fillGaps) return;
                 _fillGaps = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool FillFirstGap
+        {
+            get => _fillFirstGap;
+            set
+            {
+                if (value == _fillFirstGap) return;
+                _fillFirstGap = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool FillLastGap
+        {
+            get => _fillLastGap;
+            set
+            {
+                if (value == _fillLastGap) return;
+                _fillLastGap = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowFilledGapsInHeatMap
+        {
+            get { return _showFilledGapsInHeatMap; }
+            set
+            {
+                if (value == _showFilledGapsInHeatMap) return;
+                _showFilledGapsInHeatMap = value;
                 OnPropertyChanged();
             }
         }

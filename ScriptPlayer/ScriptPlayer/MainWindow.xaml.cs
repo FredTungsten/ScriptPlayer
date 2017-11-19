@@ -11,6 +11,7 @@ using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
 using Application = System.Windows.Application;
+using Button = System.Windows.Controls.Button;
 using DataFormats = System.Windows.DataFormats;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
@@ -59,8 +60,21 @@ namespace ScriptPlayer
             ViewModel.RequestWhirligigConnectionSettings += ViewModelOnRequestWhirligigConnectionSettings;
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
+            ViewModel.RequestShowSkipButton += ViewModelOnRequestShowSkipButton;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
+        }
+
+        private void ViewModelOnRequestShowSkipButton(object sender, bool b)
+        {
+            if (b)
+            {
+                Notifications.AddNotification(((DataTemplate)Resources["SkipButton"]).LoadContent(), TimeSpan.MaxValue, "SkipButton", ViewModel.SkipToNextEventCommand);
+            }
+            else
+            {
+                Notifications.RemoveNotification("SkipButton");
+            }
         }
 
         private void ViewModelOnRequestWhirligigConnectionSettings(object sender, RequestEventArgs<WhirligigConnectionSettings> args)

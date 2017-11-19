@@ -28,6 +28,12 @@
         <converters1:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
         <converters:BooleanInverter x:Key="Inverter"/>
         <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
+        <DataTemplate x:Key="SkipButton">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Skip" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                <TextBlock FontFamily="Webdings" Text="8" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -211,11 +217,26 @@
             </Grid>
 
             <!-- NOTIFICATIONS -->
-            <shared:NotificationList IsHitTestVisible="False" x:Name="Notifications" Margin="10">
+            <shared:NotificationList x:Name="Notifications" Margin="10">
                 <shared:NotificationList.Resources>
+                    <DataTemplate DataType="{x:Type shared:NotificationCommand}">
+                        <Button Command="{Binding Command}" Margin="0,0,0,8" Padding="8,0,8,4" SnapsToDevicePixels="True" Background="#FF3E4587" 
+                                TextElement.Foreground="White" TextElement.FontSize="20"
+                                BorderThickness="1" BorderBrush="LightGray" HorizontalAlignment="Left" VerticalAlignment="Top" Content="{Binding Content}">
+                        </Button>
+                    </DataTemplate>
                     <DataTemplate DataType="{x:Type shared:Notification}">
-                        <Border Margin="0,0,0,8" SnapsToDevicePixels="True" Background="DimGray" BorderThickness="1" BorderBrush="LightGray" HorizontalAlignment="Left" VerticalAlignment="Top">
-                            <TextBlock Name="TextBlock" Foreground="White" FontSize="20" Text="{Binding Content}" Padding="8,0,8,4" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        <Border Margin="0,0,0,8" Padding="8,0,8,4" SnapsToDevicePixels="True" Background="DimGray" BorderThickness="1" BorderBrush="LightGray" 
+                                HorizontalAlignment="Left" VerticalAlignment="Top">
+                            
+                                <Border.Resources>
+                                <Style TargetType="{x:Type ContentControl}">
+                                    <Setter Property="TextElement.FontSize" Value="20"/>
+                                    <Setter Property="TextElement.Foreground" Value="White"/>
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                </Style>
+                            </Border.Resources>
+                            <ContentControl Content="{Binding Content}"/>
                         </Border>
                     </DataTemplate>
                 </shared:NotificationList.Resources>

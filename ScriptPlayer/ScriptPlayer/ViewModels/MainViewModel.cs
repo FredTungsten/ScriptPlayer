@@ -29,6 +29,7 @@ namespace ScriptPlayer.ViewModels
 
         public event EventHandler<RequestEventArgs<VlcConnectionSettings>> RequestVlcConnectionSettings;
         public event EventHandler<RequestEventArgs<WhirligigConnectionSettings>> RequestWhirligigConnectionSettings;
+        public event EventHandler<bool> RequestShowSkipButton; 
 
         private readonly string[] _supportedScriptExtensions;
 
@@ -408,16 +409,16 @@ namespace ScriptPlayer.ViewModels
         private void RefreshManualDuration()
         {
             if (TimeSource is ManualTimeSource source)
-                source.SetDuration(_scriptHandler.GetDuration().Add(TimeSpan.FromSeconds(5)));
+                source.SetDuration(_scriptHandler.GetOriginalScriptDuration().Add(TimeSpan.FromSeconds(5)));
 
             if (TimeSource is WhirligigTimeSource whirli)
-                whirli.SetDuration(_scriptHandler.GetDuration().Add(TimeSpan.FromSeconds(5)));
+                whirli.SetDuration(_scriptHandler.GetOriginalScriptDuration().Add(TimeSpan.FromSeconds(5)));
         }
 
         private void TimeSourceChanged()
         {
             _scriptHandler.SetTimesource(TimeSource);
-            UpdateHeatMap();
+            TimeSourceDurationChanged();
         }
 
         public void Load()
@@ -531,6 +532,12 @@ namespace ScriptPlayer.ViewModels
 
         private void TimeSourceOnDurationChanged(object sender, TimeSpan timeSpan)
         {
+            TimeSourceDurationChanged();
+        }
+
+        private void TimeSourceDurationChanged()
+        {
+            _scriptHandler.Duration = TimeSource.Duration;
             UpdateHeatMap();
         }
 
@@ -763,6 +770,7 @@ namespace ScriptPlayer.ViewModels
             UpdatePlaylistShuffle();
             UpdatePlaylistRepeat();
             UpdateFillGaps();
+            UpdateHeatMap();
         }
 
         private void UpdatePlaylistRepeat()
@@ -781,6 +789,11 @@ namespace ScriptPlayer.ViewModels
         {
             switch (eventArgs.PropertyName)
             {
+                case nameof(SettingsViewModel.ShowFilledGapsInHeatMap):
+                {
+                    UpdateHeatMap();
+                    break;
+                }
                 case nameof(SettingsViewModel.FilterRange):
                 case nameof(SettingsViewModel.FilterMode):
                 case nameof(SettingsViewModel.MinPosition):
@@ -815,6 +828,8 @@ namespace ScriptPlayer.ViewModels
                     break;
                 }
                 case nameof(SettingsViewModel.FillGaps):
+                case nameof(SettingsViewModel.FillFirstGap):
+                case nameof(SettingsViewModel.FillLastGap):
                 {
                     UpdateFillGaps();
                     break;
@@ -825,6 +840,8 @@ namespace ScriptPlayer.ViewModels
         private void UpdateFillGaps()
         {
             _scriptHandler.FillGaps = Settings.FillGaps;
+            _scriptHandler.FillFirstGap = Settings.FillFirstGap;
+            _scriptHandler.FillLastGap = Settings.FillLastGap;
         }
 
         private void UpdateConversionMode()
@@ -1523,7 +1540,9 @@ namespace ScriptPlayer.ViewModels
             if (TimeSource == null)
                 return;
 
-            List<TimeSpan> timeStamps = FilterDuplicates(_scriptHandler.GetUnfilledScript().ToList()).Select(s => s.TimeStamp).ToList();
+            IEnumerable<ScriptAction> actions = Settings.ShowFilledGapsInHeatMap ? _scriptHandler.GetScript() : _scriptHandler.GetUnfilledScript();
+
+            List<TimeSpan> timeStamps = FilterDuplicates(actions.ToList()).Select(s => s.TimeStamp).ToList();
             Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, TimeSource.Duration);
             HeatMap = heatmap;
         }
@@ -1654,8 +1673,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (Settings.AutoSkip)
                     SkipToNextEvent();
-                else if (Settings.NotifyGaps)
-                    OnRequestOverlay($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4), "Events");
+                else
+                {
+                    if (Settings.NotifyGaps)
+                        OnRequestOverlay($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4),
+                            "Events");
+                    OnRequestShowSkipButton(true);
+                }
+            }
+            else
+            {
+                OnRequestShowSkipButton(false);
             }
         }
 
@@ -1843,11 +1871,10 @@ namespace ScriptPlayer.ViewModels
             //TODO Skip duplicates too!
 
             TimeSpan currentPosition = TimeSource.Progress;
-            ScriptAction nextAction = _scriptHandler.FirstEventAfter(currentPosition - _scriptHandler.Delay);
+            ScriptAction nextAction = _scriptHandler.FirstOriginalEventAfter(currentPosition - _scriptHandler.Delay);
             if (nextAction == null)
             {
-                if (Settings.NotifyGaps)
-                    OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
+                Playlist.PlayNextEntry(LoadedFiles);
                 return;
             }
 
@@ -2149,6 +2176,11 @@ namespace ScriptPlayer.ViewModels
                         });
                     break;
             }
+        }
+
+        protected virtual void OnRequestShowSkipButton(bool isVisible)
+        {
+            RequestShowSkipButton?.Invoke(this, isVisible);
         }
     }
 }

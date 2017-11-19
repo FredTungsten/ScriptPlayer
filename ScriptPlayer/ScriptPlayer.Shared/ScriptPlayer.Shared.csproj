@@ -210,6 +210,7 @@
       <DependentUpon>RangeSlider.xaml</DependentUpon>
     </Compile>
     <Compile Include="Classes\RelayCommand.cs" />
+    <Compile Include="Scripts\IntermediateScriptActionEventArgs.cs" />
     <Compile Include="Scripts\RepeatingScriptActions.cs" />
     <Compile Include="Colors\SampleAnalyser.cs" />
     <Compile Include="Scripts\BeatsToFunScriptConverter.cs" />

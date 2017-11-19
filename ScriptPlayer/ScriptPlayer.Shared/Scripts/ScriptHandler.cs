@@ -9,13 +9,19 @@ namespace ScriptPlayer.Shared.Scripts
         public event EventHandler<PositionCollection> PositionsChanged;
         private int _lastIndex;
         private TimeSpan _lastTimestamp;
-        private List<ScriptAction> _actions;
+
+        private List<TimeSpan> _beats;
+        private List<ScriptAction> _originalActions;
+        private List<ScriptAction> _filledActions;
+
         private TimeSource _timesource;
         private ConversionMode _conversionMode = ConversionMode.UpOrDown;
         private static TimeSpan _delay = TimeSpan.Zero;
-        private List<TimeSpan> _beats;
-        private List<ScriptAction> _unfilledActions;
+        
         private bool _fillGaps;
+        private bool _fillFirstGap;
+        private bool _fillLastGap;
+        private TimeSpan _duration;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> IntermediateScriptActionRaised;
 
@@ -41,18 +47,48 @@ namespace ScriptPlayer.Shared.Scripts
             }
         }
 
+        public bool FillFirstGap
+        {
+            get => _fillFirstGap;
+            set
+            {
+                _fillFirstGap = value;
+                ProcessScript();
+            }
+        }
+
+        public bool FillLastGap
+        {
+            get => _fillLastGap;
+            set
+            {
+                _fillLastGap = value; 
+                ProcessScript();
+            }
+        }
+
+        public TimeSpan Duration
+        {
+            get { return _duration; }
+            set
+            {
+                _duration = value; 
+                ProcessScript();
+            }
+        }
+
         public void Clear()
         {
-            _actions?.Clear();
+            _originalActions?.Clear();
             _beats?.Clear();
             ProcessScript();
         }
 
         private void SaveBeatFile()
         {
-            if (_actions.FirstOrDefault() is BeatScriptAction)
+            if (_originalActions.FirstOrDefault() is BeatScriptAction)
             {
-                _beats = _actions.Select(a => a.TimeStamp).ToList();
+                _beats = _originalActions.Select(a => a.TimeStamp).ToList();
             }
             else
             {
@@ -65,7 +101,7 @@ namespace ScriptPlayer.Shared.Scripts
             if (_beats == null)
                 return;
 
-            _actions = BeatsToFunScriptConverter.Convert(_beats, _conversionMode)
+            _originalActions = BeatsToFunScriptConverter.Convert(_beats, _conversionMode)
                 .OrderBy(a => a.TimeStamp)
                 .Cast<ScriptAction>()
                 .ToList();
@@ -75,7 +111,7 @@ namespace ScriptPlayer.Shared.Scripts
 
         private void UpdatePositions()
         {
-            PositionCollection collection = new PositionCollection(_actions.OfType<FunScriptAction>().Select(f => new TimedPosition
+            PositionCollection collection = new PositionCollection(_filledActions.OfType<FunScriptAction>().Select(f => new TimedPosition
             {
                 Position = f.Position,
                 TimeStamp = f.TimeStamp
@@ -86,7 +122,8 @@ namespace ScriptPlayer.Shared.Scripts
 
         public ScriptHandler()
         {
-            _actions = new List<ScriptAction>();
+            _originalActions = new List<ScriptAction>();
+            _filledActions = new List<ScriptAction>();
             Delay = new TimeSpan(0);
         }
 
@@ -102,30 +139,29 @@ namespace ScriptPlayer.Shared.Scripts
 
         public IEnumerable<ScriptAction> GetScript()
         {
-            if (_actions == null)
+            if (_filledActions == null)
                 return new List<ScriptAction>();
 
-            return _actions.AsReadOnly();
+            return _filledActions.AsReadOnly();
         }
 
         public IEnumerable<ScriptAction> GetUnfilledScript()
         {
-            if (_unfilledActions == null)
+            if (_originalActions == null)
                 return new List<ScriptAction>();
 
-            return _unfilledActions.AsReadOnly();
+            return _originalActions.AsReadOnly();
         } 
 
         public void SetScript(IEnumerable<ScriptAction> script)
         {
-            var actions = new List<ScriptAction>(script);
+            List<ScriptAction> actions = new List<ScriptAction>(script);
             actions.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
 
-            _actions = actions;
+            _originalActions = actions;
             
             SaveBeatFile();
             ConvertBeatFile();
-
             ProcessScript();
         }
 
@@ -138,46 +174,75 @@ namespace ScriptPlayer.Shared.Scripts
 
         private void FillScriptGaps()
         {
-            _unfilledActions = new List<ScriptAction>(_actions);
+            _filledActions = new List<ScriptAction>(_originalActions);
 
             if (!FillGaps) return;
 
             List<ScriptAction> additionalActions = new List<ScriptAction>();
 
             TimeSpan previous = TimeSpan.MinValue;
-            foreach (ScriptAction action in _actions)
+            foreach (ScriptAction action in _originalActions)
             {
-                if (previous != TimeSpan.MinValue)
+                if (action == _originalActions.First())
+                {
+                    if (FillFirstGap)
+                    {
+                        if (action.TimeStamp > MinGapDuration)
+                        {
+                            additionalActions.AddRange(GenerateGapFiller(TimeSpan.Zero, action.TimeStamp.Subtract(GapBuffer)));
+                        }
+                    }
+                }
+                else if (action == _originalActions.Last())
+                {
+                    if (FillLastGap)
+                    {
+                        if (Duration - action.TimeStamp > MinGapDuration)
+                        {
+                            additionalActions.AddRange(GenerateGapFiller(action.TimeStamp.Add(GapBuffer), Duration));
+                        }
+                    }
+                }
+                else
                 {
                     TimeSpan duration = action.TimeStamp - previous;
-                    if (duration > TimeSpan.FromSeconds(10))
+                    if (duration > MinGapDuration)
                     {
-                        TimeSpan start = previous + TimeSpan.FromSeconds(2);
-                        TimeSpan end = action.TimeStamp - TimeSpan.FromSeconds(2);
-                        TimeSpan gapduration = end - start;
-
-                        int fillers = (int)Math.Round(gapduration.Divide(TimeSpan.FromMilliseconds(500)));
-
-                        bool up = true;
-
-                        for (int i = 0; i <= fillers; i++)
-                        {
-                            up ^= true;
-                            additionalActions.Add(new FunScriptAction
-                            {
-                                Position = (byte)(up ? 99 : 0), 
-                                TimeStamp = start + gapduration.Multiply(i).Divide(fillers)
-                            });
-                        }
+                        additionalActions.AddRange(GenerateGapFiller(previous.Add(GapBuffer), action.TimeStamp.Subtract(GapBuffer)));
                     }
                 }
 
                 previous = action.TimeStamp;
             }
 
-            _actions.AddRange(additionalActions);
-            _actions.Sort((a,b) => a.TimeStamp.CompareTo(b.TimeStamp));
+            _filledActions.AddRange(additionalActions);
+            _filledActions.Sort((a,b) => a.TimeStamp.CompareTo(b.TimeStamp));
         }
+
+        private static IEnumerable<ScriptAction> GenerateGapFiller(TimeSpan start, TimeSpan end)
+        {
+            List<FunScriptAction> additionalActions = new List<FunScriptAction>();
+            TimeSpan gapduration = end - start;
+
+            int fillers = (int)Math.Round(gapduration.Divide(TimeSpan.FromMilliseconds(500)));
+
+            bool up = true;
+
+            for (int i = 0; i <= fillers; i++)
+            {
+                up ^= true;
+                additionalActions.Add(new FunScriptAction
+                {
+                    Position = (byte)(up ? 99 : 0),
+                    TimeStamp = start + gapduration.Multiply(i).Divide(fillers)
+                });
+            }
+
+            return additionalActions;
+        }
+
+        public TimeSpan MinGapDuration { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan GapBuffer { get; set; } = TimeSpan.FromSeconds(2);
 
         public void SetTimesource(TimeSource timesource)
         {
@@ -208,50 +273,50 @@ namespace ScriptPlayer.Shared.Scripts
 
             int passedIndex = -1;
 
-            if (_actions == null) return;
+            if (_filledActions == null) return;
 
-            for (int i = _lastIndex + 1; i < _actions.Count; i++)
+            for (int i = _lastIndex + 1; i < _filledActions.Count; i++)
             {
-                if (GetTimestamp(i) > newTimeSpan)
+                if (GetFilledTimestamp(i) > newTimeSpan)
                     break;
 
-                if (GetTimestamp(i) <= newTimeSpan)
+                if (GetFilledTimestamp(i) <= newTimeSpan)
                     passedIndex = i;
             }
 
             if (passedIndex >= 0)
             {
                 _lastIndex = passedIndex;
-                _lastTimestamp = GetTimestamp(passedIndex);
+                _lastTimestamp = GetFilledTimestamp(passedIndex);
 
-                ScriptActionEventArgs args = new ScriptActionEventArgs(_actions[passedIndex]);
+                ScriptActionEventArgs args = new ScriptActionEventArgs(_filledActions[passedIndex]);
 
-                if (passedIndex + 1 < _actions.Count)
-                    args.RawNextAction = _actions[passedIndex + 1];
+                if (passedIndex + 1 < _filledActions.Count)
+                    args.RawNextAction = _filledActions[passedIndex + 1];
 
                 if (passedIndex > 0)
-                    args.RawPreviousAction = _actions[passedIndex - 1];
+                    args.RawPreviousAction = _filledActions[passedIndex - 1];
 
                 OnScriptActionRaised(args);
             }
-            else if (_lastIndex >= 0 && _lastIndex < _actions.Count - 1)
+            else if (_lastIndex >= 0 && _lastIndex < _filledActions.Count - 1)
             {
-                TimeSpan previous = GetTimestamp(_lastIndex);
-                TimeSpan next = GetTimestamp(_lastIndex + 1);
+                TimeSpan previous = GetFilledTimestamp(_lastIndex);
+                TimeSpan next = GetFilledTimestamp(_lastIndex + 1);
 
                 double progress = (newTimeSpan - previous).Divide(next - previous);
 
                 if (progress >= 0.0 && progress <= 1.0)
                 {
-                    IntermediateScriptActionEventArgs args = new IntermediateScriptActionEventArgs(_actions[_lastIndex],_actions[_lastIndex + 1], progress);
+                    IntermediateScriptActionEventArgs args = new IntermediateScriptActionEventArgs(_filledActions[_lastIndex], _filledActions[_lastIndex + 1], progress);
                     OnIntermediateScriptActionRaised(args);
                 }
             }
         }
 
-        private TimeSpan GetTimestamp(int i)
+        private TimeSpan GetFilledTimestamp(int index)
         {
-            return _actions[i].TimeStamp + Delay;
+            return _filledActions[index].TimeStamp + Delay;
         }
 
         public static void SetDelay(TimeSpan delay)
@@ -259,70 +324,22 @@ namespace ScriptPlayer.Shared.Scripts
             _delay = delay;
         }
 
-        public ScriptAction FirstEventAfter(TimeSpan currentPosition)
+        public ScriptAction FirstOriginalEventAfter(TimeSpan currentPosition)
         {
-            return _actions?.FirstOrDefault(a => a.TimeStamp > currentPosition);
+            return _originalActions?.FirstOrDefault(a => a.TimeStamp > currentPosition);
         }
 
-        public TimeSpan GetDuration()
+        public TimeSpan GetOriginalScriptDuration()
         {
-            if (_actions == null)
+            if (_originalActions == null)
                 return TimeSpan.Zero;
 
-            if (_actions.Count == 0)
-                return TimeSpan.Zero;
-
-            return _actions.Max(a => a.TimeStamp);
+            return _originalActions.Count == 0 ? TimeSpan.Zero : _originalActions.Max(a => a.TimeStamp);
         }
 
         protected virtual void OnPositionsChanged(PositionCollection e)
         {
             PositionsChanged?.Invoke(this, e);
-        }
-    }
-
-    public class IntermediateScriptActionEventArgs : EventArgs
-    {
-        public double Progress;
-        public ScriptAction RawPreviousAction;
-        public ScriptAction RawNextAction;
-
-        public IntermediateScriptActionEventArgs(ScriptAction previous, ScriptAction next, double progress)
-        {
-            RawPreviousAction = previous;
-            RawNextAction = next;
-            Progress = progress;
-        }
-
-        public IntermediateScriptActionEventArgs<T> Cast<T>() where T : ScriptAction
-        {
-            return new IntermediateScriptActionEventArgs<T>(RawPreviousAction as T, RawNextAction as T, Progress);
-        }
-    }
-
-    public class ScriptActionEventArgs : EventArgs
-    {
-        public ScriptAction RawPreviousAction;
-        public ScriptAction RawCurrentAction;
-        public ScriptAction RawNextAction;
-
-        public ScriptActionEventArgs(ScriptAction previous, ScriptAction current, ScriptAction next)
-        {
-            RawPreviousAction = previous;
-            RawCurrentAction = current;
-            RawNextAction = next;
-        }
-
-        public ScriptActionEventArgs(ScriptAction current)
-        {
-            RawPreviousAction = null;
-            RawCurrentAction = current;
-            RawNextAction = null;
-        }
-
-        public ScriptActionEventArgs<T> Cast<T>() where T : ScriptAction
-        {
-            return new ScriptActionEventArgs<T>(RawPreviousAction as T, RawCurrentAction as T, RawNextAction as T);
         }
     }
 }

@@ -11,6 +11,7 @@ namespace ScriptPlayer.Shared
     {
         private readonly ScaleTransform _scale;
         private DoubleAnimationUsingKeyFrames _animation;
+        private bool _isDead;
         public event EventHandler Gone;
 
         public VanishingContainer()
@@ -21,6 +22,13 @@ namespace ScriptPlayer.Shared
 
         public void Vanish(TimeSpan duration)
         {
+            if (_isDead) return;
+
+            if (duration == TimeSpan.Zero)
+            {
+                _isDead = true;
+            }
+
             if (_animation != null)
             {
                 _animation.Completed -= StoryboardOnCompleted;

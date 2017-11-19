@@ -1,5 +1,33 @@
+using System;
+
 namespace ScriptPlayer.Shared.Scripts
 {
+    public class ScriptActionEventArgs : EventArgs
+    {
+        public ScriptAction RawPreviousAction;
+        public ScriptAction RawCurrentAction;
+        public ScriptAction RawNextAction;
+
+        public ScriptActionEventArgs(ScriptAction previous, ScriptAction current, ScriptAction next)
+        {
+            RawPreviousAction = previous;
+            RawCurrentAction = current;
+            RawNextAction = next;
+        }
+
+        public ScriptActionEventArgs(ScriptAction current)
+        {
+            RawPreviousAction = null;
+            RawCurrentAction = current;
+            RawNextAction = null;
+        }
+
+        public ScriptActionEventArgs<T> Cast<T>() where T : ScriptAction
+        {
+            return new ScriptActionEventArgs<T>(RawPreviousAction as T, RawCurrentAction as T, RawNextAction as T);
+        }
+    }
+
     public class ScriptActionEventArgs<T> : ScriptActionEventArgs where T : ScriptAction
     {
         public T PreviousAction => (T)RawPreviousAction;
