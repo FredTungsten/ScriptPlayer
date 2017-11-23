@@ -174,6 +174,9 @@ namespace ScriptPlayer.Shared.Scripts
 
         private void FillScriptGaps()
         {
+            foreach (ScriptAction action in _originalActions)
+                action.OriginalAction = true;
+
             _filledActions = new List<ScriptAction>(_originalActions);
 
             if (!FillGaps) return;
@@ -234,7 +237,8 @@ namespace ScriptPlayer.Shared.Scripts
                 additionalActions.Add(new FunScriptAction
                 {
                     Position = (byte)(up ? 99 : 0),
-                    TimeStamp = start + gapduration.Multiply(i).Divide(fillers)
+                    TimeStamp = start + gapduration.Multiply(i).Divide(fillers),
+                    OriginalAction = false
                 });
             }
 

@@ -1669,14 +1669,25 @@ namespace ScriptPlayer.ViewModels
                 SetDevices(info);
             }
 
-            if (duration > TimeSpan.FromSeconds(10) && TimeSource.IsPlaying)
+            TimeSpan timeToNextOriginalEvent = duration;
+            if (!eventArgs.NextAction.OriginalAction)
+            {
+                ScriptAction nextOriginalAction =
+                    _scriptHandler.FirstOriginalEventAfter(eventArgs.CurrentAction.TimeStamp);
+                if (nextOriginalAction == null)
+                    return;
+
+                timeToNextOriginalEvent = nextOriginalAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
+            }
+
+            if (timeToNextOriginalEvent > TimeSpan.FromSeconds(10) && TimeSource.IsPlaying)
             {
                 if (Settings.AutoSkip)
                     SkipToNextEvent();
                 else
                 {
                     if (Settings.NotifyGaps)
-                        OnRequestOverlay($"Next event in {duration.TotalSeconds:f0}s", TimeSpan.FromSeconds(4),
+                        OnRequestOverlay($"Next event in {timeToNextOriginalEvent.TotalSeconds:f0}s", TimeSpan.FromSeconds(4),
                             "Events");
                     OnRequestShowSkipButton(true);
                 }

@@ -8,6 +8,9 @@ namespace ScriptPlayer.Shared.Scripts
         [JsonIgnore]
         public TimeSpan TimeStamp;
 
+        [JsonIgnore]
+        public bool OriginalAction { get; set; }
+
         public abstract bool IsSameAction(ScriptAction action);
     }
 }

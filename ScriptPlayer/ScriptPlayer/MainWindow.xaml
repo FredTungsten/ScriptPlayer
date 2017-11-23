@@ -28,6 +28,7 @@
         <converters1:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
         <converters:BooleanInverter x:Key="Inverter"/>
         <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
+        <!-- ReSharper disable once Xaml.RedundantResource -->
         <DataTemplate x:Key="SkipButton">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Skip" Margin="0,0,8,0" VerticalAlignment="Center"/>
