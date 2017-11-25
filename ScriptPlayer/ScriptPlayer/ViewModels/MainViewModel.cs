@@ -1032,7 +1032,15 @@ namespace ScriptPlayer.ViewModels
 
         private static string FindFile(string filename, string[] extensions, string[] additionalPaths)
         {
-            //Same directory
+            //Same directory, appended Extension
+            foreach (string extension in extensions)
+            {
+                string path = AppendExtension(filename, extension);
+                if (File.Exists(path))
+                    return path;
+            }
+
+            //Same directory, exchanged extension
             foreach (string extension in extensions)
             {
                 string path = Path.ChangeExtension(filename, extension);
@@ -1040,10 +1048,29 @@ namespace ScriptPlayer.ViewModels
                     return path;
             }
 
-            //Additional Directories
             if (additionalPaths == null)
                 return null;
 
+            //Additional Directories, appended extension
+            string fileNameWithExtension = Path.GetFileName(filename);
+            if (string.IsNullOrWhiteSpace(fileNameWithExtension))
+                return null;
+
+            foreach (string path in additionalPaths)
+            {
+                if (!Directory.Exists(path)) continue;
+
+                string basePath = Path.Combine(path, fileNameWithExtension);
+
+                foreach (string extension in extensions)
+                {
+                    string expectedPath = AppendExtension(basePath, extension);
+                    if (File.Exists(expectedPath))
+                        return expectedPath;
+                }
+            }
+
+            //Additional Directories, exchanged extension
             string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filename);
             if (string.IsNullOrWhiteSpace(fileNameWithoutExtension))
                 return null;
@@ -1056,7 +1083,7 @@ namespace ScriptPlayer.ViewModels
 
                 foreach (string extension in extensions)
                 {
-                    string expectedPath = basePath + "." + extension;
+                    string expectedPath = AppendExtension(basePath, extension);
                     if (File.Exists(expectedPath))
                         return expectedPath;
                 }
@@ -1065,26 +1092,59 @@ namespace ScriptPlayer.ViewModels
             return null;
         }
 
+        private static string AppendExtension(string filename, string extension)
+        {
+            string result = filename;
+            if (!extension.StartsWith("."))
+                result += ".";
+            result += extension;
+            return result;
+        }
+
         private bool IsMatchingScriptLoaded(string videoFileName)
         {
-            if (string.IsNullOrWhiteSpace(LoadedScript))
+            if(IsAnyEmpty(LoadedScript, videoFileName))
                 return false;
 
-            if (string.IsNullOrWhiteSpace(videoFileName))
-                return false;
-
-            return Path.GetFileNameWithoutExtension(LoadedScript).Equals(Path.GetFileNameWithoutExtension(videoFileName));
+            return CheckIfExtensionsMatchOrHaveCommonName(LoadedScript,videoFileName);
         }
 
         private bool IsMatchingVideoLoaded(string scriptFileName)
         {
-            if (string.IsNullOrWhiteSpace(scriptFileName))
+            if (IsAnyEmpty(LoadedVideo, scriptFileName))
                 return false;
 
-            if (string.IsNullOrWhiteSpace(LoadedVideo))
-                return false;
+            return CheckIfExtensionsMatchOrHaveCommonName(scriptFileName, LoadedVideo);
+        }
 
-            return Path.GetFileNameWithoutExtension(scriptFileName).Equals(Path.GetFileNameWithoutExtension(LoadedVideo));
+        private static bool IsAnyEmpty(params string[] strings)
+        {
+            return strings.Any(string.IsNullOrWhiteSpace);
+        }
+
+        private static bool CheckIfExtensionsMatchOrHaveCommonName(string scriptFile, string videoFile)
+        {
+            string scriptWithoutExtension = Path.GetFileNameWithoutExtension(scriptFile);
+            string scriptWithExtension = Path.GetFileName(scriptFile);
+
+            string videoWithoutExtension = Path.GetFileNameWithoutExtension(videoFile);
+            string videoWithExtension = Path.GetFileName(videoFile);
+
+            // e.g.: File.mp4 - File.funscript
+            if (InvariantEquals(scriptWithoutExtension, videoWithoutExtension)) return true;
+
+            // e.g.: File.mp4 - File.mp4.funscript
+            if (InvariantEquals(scriptWithoutExtension, videoWithExtension)) return true;
+
+            // e.g.: File.funscript.mp4 - File.funscript
+            if (InvariantEquals(scriptWithExtension, videoWithoutExtension)) return true;
+
+            return false;
+        }
+
+        private static bool InvariantEquals(string stringA, string stringB)
+        {
+            return string.Equals(stringA, stringB, StringComparison.InvariantCultureIgnoreCase);
         }
 
         private void StartPattern(PatternGenerator generator)

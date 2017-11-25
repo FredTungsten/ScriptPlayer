@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Web.UI;
 using System.Windows.Media;
 
 namespace ScriptPlayer.Shared
@@ -14,6 +13,7 @@ namespace ScriptPlayer.Shared
             _player = player;
             _player.MediaOpened += PlayerOnMediaOpened;
             _player.MediaEnded += PlayerOnMediaEnded;
+
             _clock = clock;
             _clock.Tick += ClockOnTick;
         }
@@ -25,7 +25,9 @@ namespace ScriptPlayer.Shared
 
         private void PlayerOnMediaOpened(object sender, EventArgs eventArgs)
         {
-            Duration = _player.NaturalDuration.TimeSpan;
+            if(_player.NaturalDuration.HasTimeSpan)
+                Duration = _player.NaturalDuration.TimeSpan;
+
             _player.Play();
         }
 
@@ -58,7 +60,8 @@ namespace ScriptPlayer.Shared
         }
 
         public void Dispose()
-        {   
+        {
+            _clock.Tick -= ClockOnTick;
             _player.Stop();
             _player.Close();
         }
