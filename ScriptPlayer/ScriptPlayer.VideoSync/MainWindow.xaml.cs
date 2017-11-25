@@ -1699,7 +1699,7 @@ namespace ScriptPlayer.VideoSync
             if (dialog.ShowDialog(this) != true)
                 return;
 
-            OneTouchScriptLoader loader = new OneTouchScriptLoader();
+            RealTouchScriptLoader loader = new RealTouchScriptLoader();
             List<FunScriptAction> actions = loader.Load(dialog.FileName).Cast<FunScriptAction>().ToList();
 
             var pos = actions.Select(s => new TimedPosition

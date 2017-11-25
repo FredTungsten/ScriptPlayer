@@ -226,7 +226,7 @@
     <Compile Include="Scripts\FeelMe\FeelVrScriptLoader.cs" />
     <Compile Include="Scripts\FeelMe\IniReader.cs" />
     <Compile Include="Scripts\FeelMe\KiirooScriptConverter.cs" />
-    <Compile Include="Scripts\OneTouchScriptLoader.cs" />
+    <Compile Include="Scripts\RealTouchScriptLoader.cs" />
     <Compile Include="Scripts\ScriptActionEventArgs.cs" />
     <Compile Include="Scripts\ScriptFileFormat.cs" />
     <Compile Include="Scripts\ScriptFileFormatCollection.cs" />

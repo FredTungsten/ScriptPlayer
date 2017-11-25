@@ -22,6 +22,7 @@ namespace ScriptPlayer.Shared.Scripts
             RegisterLoader<VorzeScriptToFunscriptLoader>();
             RegisterLoader<FeelVrScriptLoader>();
             RegisterLoader<WankzVrScriptLoader>();
+            RegisterLoader<RealTouchScriptLoader>();
 
             RegisterLoader<FeelMeBruteForceLoader>();
             RegisterLoader<FeelMeBruteForceJsonLoader>();
@@ -38,7 +39,7 @@ namespace ScriptPlayer.Shared.Scripts
             Loaders.Add(loader);
             KnownLoaders.Add(typeof(T));
 
-            var formats = loader.GetSupportedFormats();
+            List<ScriptFileFormat> formats = loader.GetSupportedFormats();
 
             foreach (ScriptFileFormat format in formats)
             {
@@ -63,7 +64,7 @@ namespace ScriptPlayer.Shared.Scripts
 
         public static ScriptLoader[] GetLoaders(string filename)
         {
-            string extension = Path.GetExtension(filename).TrimStart('.').ToLower();
+            string extension = (Path.GetExtension(filename)??"").TrimStart('.').ToLower();
             return Loaders.Where(loader => loader.GetSupportedFormats().Any(f => f.Extensions.Contains(extension)))
                 .ToArray();
         }

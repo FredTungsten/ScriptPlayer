@@ -10,7 +10,7 @@ namespace ScriptPlayer.Shared
 {
     public class Launch : Device
     {
-        public bool SendCommandsWithResponse { get; set; } = true;
+        public bool SendCommandsWithResponse { get; set; } = false;
 
         // Just to make sure it doesn't get disposed or something like that
         // ReSharper disable once NotAccessedField.Local
