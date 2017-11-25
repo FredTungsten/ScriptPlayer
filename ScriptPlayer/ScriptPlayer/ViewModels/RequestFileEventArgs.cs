@@ -4,6 +4,7 @@ namespace ScriptPlayer.ViewModels
 {
     public class RequestFileEventArgs : EventArgs
     {
+        public bool SaveFile { get; set; }
         public string Filter { get; set; }
         public int FilterIndex { get; set; }
         public bool Handled { get; set; }

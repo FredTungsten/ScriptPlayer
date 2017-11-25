@@ -60,6 +60,8 @@ namespace ScriptPlayer.ViewModels
         private bool _fillFirstGap;
         private bool _fillLastGap;
         private bool _showFilledGapsInHeatMap;
+        private bool _showSkipButton;
+        private bool _notifyFileLoadedOnlyFailed;
 
         public SettingsViewModel()
         {
@@ -152,6 +154,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _notifyFileLoaded) return;
                 _notifyFileLoaded = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool NotifyFileLoadedOnlyFailed
+        {
+            get => _notifyFileLoadedOnlyFailed;
+            set
+            {
+                if (value == _notifyFileLoadedOnlyFailed) return;
+                _notifyFileLoadedOnlyFailed = value;
                 OnPropertyChanged();
             }
         }
@@ -575,6 +588,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _notifyLogging) return;
                 _notifyLogging = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowSkipButton
+        {
+            get => _showSkipButton;
+            set
+            {
+                if (value == _showSkipButton) return;
+                _showSkipButton = value;
                 OnPropertyChanged();
             }
         }

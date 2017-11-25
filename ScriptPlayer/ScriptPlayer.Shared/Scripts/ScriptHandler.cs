@@ -333,6 +333,11 @@ namespace ScriptPlayer.Shared.Scripts
             return _originalActions?.FirstOrDefault(a => a.TimeStamp > currentPosition);
         }
 
+        public ScriptAction FirstEventAfter(TimeSpan currentPosition)
+        {
+            return _filledActions?.FirstOrDefault(a => a.TimeStamp > currentPosition);
+        }
+
         public TimeSpan GetOriginalScriptDuration()
         {
             if (_originalActions == null)

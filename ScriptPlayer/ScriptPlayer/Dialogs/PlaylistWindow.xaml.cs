@@ -12,15 +12,15 @@ namespace ScriptPlayer.Dialogs
     public partial class PlaylistWindow : Window
     {
         public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
-            "ViewModel", typeof(PlaylistViewModel), typeof(PlaylistWindow), new PropertyMetadata(default(PlaylistViewModel)));
+            "ViewModel", typeof(MainViewModel), typeof(PlaylistWindow), new PropertyMetadata(default(PlaylistViewModel)));
 
-        public PlaylistViewModel ViewModel
+        public MainViewModel ViewModel
         {
-            get { return (PlaylistViewModel) GetValue(ViewModelProperty); }
+            get { return (MainViewModel) GetValue(ViewModelProperty); }
             set { SetValue(ViewModelProperty, value); }
         }
 
-        public PlaylistWindow(PlaylistViewModel viewmodel)
+        public PlaylistWindow(MainViewModel viewmodel)
         {
             ViewModel = viewmodel;
             InitializeComponent();
@@ -33,7 +33,7 @@ namespace ScriptPlayer.Dialogs
             if (entry == null)
                 return;
 
-            ViewModel.RequestPlayEntry(entry);
+            ViewModel.Playlist.RequestPlayEntry(entry);
         }
 
         private void ListBox_Drop(object sender, DragEventArgs e)
@@ -41,7 +41,7 @@ namespace ScriptPlayer.Dialogs
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
 
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            ViewModel.AddEntries(files);
+            ViewModel.Playlist.AddEntries(files);
         }
     }
 }

@@ -20,46 +20,47 @@
         <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}"></Style>
     </Window.Resources>
     <Grid>
-        <ListBox ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,42" ItemsSource="{Binding Path=Entries}" SelectedItem="{Binding Path=SelectedEntry, Mode=TwoWay}" AllowDrop="True" Drop="ListBox_Drop">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="257*"/>
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0" Background="White">
+            <MenuItem Header="File">
+                <MenuItem Header="Add Files" Command="{Binding AddScriptsToPlaylistCommand}"/>
+                <MenuItem Header="Load Playlist" Command="{Binding LoadPlaylistCommand}"/>
+                <MenuItem Header="Save Playlist" Command="{Binding SavePlaylistCommand}"/>
+                <MenuItem Header="Clear Playlist" Command="{Binding Playlist.ClearPlaylistCommand}"/>
+            </MenuItem>
+        </Menu>
+        <ListBox Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,42" ItemsSource="{Binding Path=Playlist.Entries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" AllowDrop="True" Drop="ListBox_Drop">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
+                    <Setter Property="ToolTip" Value="{Binding Fullname}"/>
                 </Style>
             </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="viewModels:PlaylistEntry">
-                    <TextBlock Text="{Binding Shortname}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Fullname}"/>
+                    <TextBlock Text="{Binding Shortname}" TextTrimming="CharacterEllipsis"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Grid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <Button ToolTip="Move Down" Command="{Binding MoveSelectedEntryDownCommand}" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <UniformGrid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom" Grid.Row="1" Columns="5">
+            <Button ToolTip="Move Down" Command="{Binding Playlist.MoveSelectedEntryDownCommand}" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_down}"/>
             </Button>
-            <Button ToolTip="Move Up" Command="{Binding MoveSelectedEntryUpCommand}" FontFamily="{StaticResource FontAwesome}" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Button ToolTip="Move Up" Command="{Binding Playlist.MoveSelectedEntryUpCommand}" FontFamily="{StaticResource FontAwesome}" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_up}"/>
             </Button>
-            <Button ToolTip="Remove" Command="{Binding RemoveSelectedEntryCommand}" FontFamily="{StaticResource FontAwesome}" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Button ToolTip="Remove" Command="{Binding Playlist.RemoveSelectedEntryCommand}" FontFamily="{StaticResource FontAwesome}" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_times}"/>
             </Button>
-            <Button ToolTip="Clear" Command="{Binding ClearPlaylistCommand}" FontFamily="{StaticResource FontAwesome}" Grid.Column="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_trash}"/>
-            </Button>
-            <CheckBox ToolTip="Shuffle" IsChecked="{Binding Shuffle}" FontFamily="{StaticResource FontAwesome}" Grid.Column="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <CheckBox ToolTip="Shuffle" IsChecked="{Binding Playlist.Shuffle}" FontFamily="{StaticResource FontAwesome}" Grid.Column="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_random}"/>
             </CheckBox>
-            <CheckBox ToolTip="Repeat" IsChecked="{Binding Repeat}" FontFamily="{StaticResource FontAwesome}" Grid.Column="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <CheckBox ToolTip="Repeat" IsChecked="{Binding Playlist.Repeat}" FontFamily="{StaticResource FontAwesome}" Grid.Column="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_repeat}"/>
             </CheckBox>
-        </Grid>
+        </UniformGrid>
     </Grid>
 </Window>

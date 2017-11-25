@@ -5,18 +5,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Input;
 using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
-using Application = System.Windows.Application;
-using Button = System.Windows.Controls.Button;
-using DataFormats = System.Windows.DataFormats;
-using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
-using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
-using Point = System.Windows.Point;
+using Microsoft.Win32;
 
 namespace ScriptPlayer
 {
@@ -61,20 +54,31 @@ namespace ScriptPlayer
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.RequestShowSkipButton += ViewModelOnRequestShowSkipButton;
+            ViewModel.RequestShowSkipNextButton += ViewModelOnRequestShowSkipNextButton;
+            ViewModel.RequestHideSkipButton += ViewModelOnRequestHideSkipButton;
+            ViewModel.RequestHideNotification += ViewModelOnRequestHideNotification;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
         }
 
-        private void ViewModelOnRequestShowSkipButton(object sender, bool b)
+        private void ViewModelOnRequestHideNotification(object sender, string designation)
         {
-            if (b)
-            {
-                Notifications.AddNotification(((DataTemplate)Resources["SkipButton"]).LoadContent(), TimeSpan.MaxValue, "SkipButton", ViewModel.SkipToNextEventCommand);
-            }
-            else
-            {
-                Notifications.RemoveNotification("SkipButton");
-            }
+            Notifications.RemoveNotification(designation);
+        }
+
+        private void ViewModelOnRequestHideSkipButton(object sender, EventArgs eventArgs)
+        {
+            Notifications.RemoveNotification("SkipButton");
+        }
+
+        private void ViewModelOnRequestShowSkipNextButton(object sender, EventArgs eventArgs)
+        {
+            Notifications.AddNotification(((DataTemplate)Resources["SkipNextButton"]).LoadContent(), TimeSpan.MaxValue, "SkipButton", ViewModel.SkipToNextEventCommand);
+        }
+
+        private void ViewModelOnRequestShowSkipButton(object sender, EventArgs eventArgs)
+        {
+            Notifications.AddNotification(((DataTemplate)Resources["SkipButton"]).LoadContent(), TimeSpan.MaxValue, "SkipButton", ViewModel.SkipToNextEventCommand);
         }
 
         private void ViewModelOnRequestWhirligigConnectionSettings(object sender, RequestEventArgs<WhirligigConnectionSettings> args)
@@ -124,12 +128,25 @@ namespace ScriptPlayer
 
         private void ViewModelOnRequestFile(object sender, RequestFileEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog
+            FileDialog dialog;
+
+            if (e.SaveFile)
             {
-                Filter = e.Filter,
-                FilterIndex = e.FilterIndex,
-                Multiselect = e.MultiSelect,
-            };
+                dialog = new SaveFileDialog
+                {
+                    Filter = e.Filter,
+                    FilterIndex = e.FilterIndex,
+                };
+            }
+            else
+            {
+                dialog = new OpenFileDialog
+                {
+                    Filter = e.Filter,
+                    FilterIndex = e.FilterIndex,
+                    Multiselect = e.MultiSelect,
+                };
+            }
 
             if (dialog.ShowDialog(this) != true)
                 return;
@@ -179,8 +196,8 @@ namespace ScriptPlayer
 
                 SaveCurrentWindowRect();
 
-                Width = Screen.PrimaryScreen.Bounds.Width;
-                Height = Screen.PrimaryScreen.Bounds.Height;
+                Width = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
+                Height = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
                 Left = 0;
                 Top = 0;
                 WindowState = WindowState.Normal;
@@ -401,7 +418,7 @@ namespace ScriptPlayer
 
         private void ShowDevices()
         {
-            var existing = Application.Current.Windows.OfType<DeviceManagerDialog>().FirstOrDefault();
+            DeviceManagerDialog existing = Application.Current.Windows.OfType<DeviceManagerDialog>().FirstOrDefault();
 
             if (existing == null || !existing.IsLoaded)
             {
@@ -420,11 +437,11 @@ namespace ScriptPlayer
 
         private void ShowPlaylist()
         {
-            var existing = Application.Current.Windows.OfType<PlaylistWindow>().FirstOrDefault();
+            PlaylistWindow existing = Application.Current.Windows.OfType<PlaylistWindow>().FirstOrDefault();
 
             if (existing == null || !existing.IsLoaded)
             {
-                PlaylistWindow playlist = new PlaylistWindow(ViewModel.Playlist);
+                PlaylistWindow playlist = new PlaylistWindow(ViewModel);
                 playlist.Show();
             }
             else
@@ -471,7 +488,7 @@ namespace ScriptPlayer
             ViewModel.Settings.ShowTimeLeft ^= true;
         }
 
-        private void GridVideo_Drop(object sender, System.Windows.DragEventArgs e)
+        private void GridVideo_Drop(object sender, DragEventArgs e)
         {
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
 

@@ -92,6 +92,7 @@
                             <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyPosition}" Content="Position"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyVolume}" Content="Volume"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyFileLoaded}" Content="File loading"/>
+                            <CheckBox Margin="12,4,4,4" IsChecked="{Binding Settings.NotifyFileLoadedOnlyFailed}" Content="only when loading fails"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyDevices}" Content="Devices"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyGaps}" Content="Gaps / Events"/>
                         </StackPanel>
@@ -245,34 +246,14 @@
                         <StackPanel>
                             <TextBlock>A "gap" is whenever two script actions are more than 10 seconds appart.</TextBlock>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.AutoSkip}" Content="Auto-skip gaps"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.ShowSkipButton}" Content="Show Skip Button"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.SoftSeek}" Content="Soft seek"/>
                             <RadioButton IsEnabled="{Binding Settings.SoftSeek}" Margin="12,4,4,4" IsChecked="{Binding Settings.SeekFreezeFrame}" Content="Freeze frame"/>
                             <RadioButton IsEnabled="{Binding Settings.SoftSeek}" Margin="12,4,4,4" IsChecked="{Binding Settings.SeekFreezeFrame, Converter={StaticResource Inverter}}" Content="Fade to black"/>
-                            <CheckBox Margin="4" IsChecked="{Binding Settings.FillGaps}" IsEnabled="{Binding Path=Settings.AutoSkip, Converter={StaticResource Inverter}}" Content="Fill gaps with slow movement"/>
-                            <CheckBox Margin="12,4,4,4"  IsChecked="{Binding Settings.ShowFilledGapsInHeatMap}" Content="Show filled gaps in heat map">
-                                <CheckBox.IsEnabled>
-                                    <MultiBinding Converter="{StaticResource AndConverter}">
-                                        <Binding Path="Settings.AutoSkip" Converter="{StaticResource Inverter}"/>
-                                        <Binding Path="Settings.FillGaps"/>
-                                    </MultiBinding>
-                                </CheckBox.IsEnabled>
-                            </CheckBox>
-                            <CheckBox Margin="12,4,4,4"  IsChecked="{Binding Settings.FillFirstGap}" Content="Fill gap before first action">
-                                <CheckBox.IsEnabled>
-                                    <MultiBinding Converter="{StaticResource AndConverter}">
-                                        <Binding Path="Settings.AutoSkip" Converter="{StaticResource Inverter}"/>
-                                        <Binding Path="Settings.FillGaps"/>
-                                    </MultiBinding>
-                                </CheckBox.IsEnabled>
-                            </CheckBox>
-                            <CheckBox Margin="12,4,4,4"  IsChecked="{Binding Settings.FillLastGap}" Content="Fill gap after last action">
-                                <CheckBox.IsEnabled>
-                                    <MultiBinding Converter="{StaticResource AndConverter}">
-                                        <Binding Path="Settings.AutoSkip" Converter="{StaticResource Inverter}"/>
-                                        <Binding Path="Settings.FillGaps"/>
-                                    </MultiBinding>
-                                </CheckBox.IsEnabled>
-                            </CheckBox>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.FillGaps}" Content="Fill gaps with slow movement"/>
+                            <CheckBox Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}" IsChecked="{Binding Settings.ShowFilledGapsInHeatMap}" Content="Show filled gaps in heat map"/>
+                            <CheckBox Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}" IsChecked="{Binding Settings.FillFirstGap}" Content="Fill gap before first action"/>
+                            <CheckBox Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}" IsChecked="{Binding Settings.FillLastGap}" Content="Fill gap after last action"/>
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Timings">

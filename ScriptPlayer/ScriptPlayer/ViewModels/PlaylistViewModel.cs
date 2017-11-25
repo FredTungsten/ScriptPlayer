@@ -136,7 +136,7 @@ namespace ScriptPlayer.ViewModels
             return index > 0;
         }
 
-        private bool CanPlayNextEntry(params string[] currentFiles)
+        public bool CanPlayNextEntry(params string[] currentFiles)
         {
             if (Entries.Count == 0)
                 return false;

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -29,7 +30,10 @@ namespace ScriptPlayer.ViewModels
 
         public event EventHandler<RequestEventArgs<VlcConnectionSettings>> RequestVlcConnectionSettings;
         public event EventHandler<RequestEventArgs<WhirligigConnectionSettings>> RequestWhirligigConnectionSettings;
-        public event EventHandler<bool> RequestShowSkipButton; 
+        public event EventHandler RequestHideSkipButton;
+        public event EventHandler RequestShowSkipButton;
+        public event EventHandler RequestShowSkipNextButton;
+        public event EventHandler<string> RequestHideNotification;
 
         private readonly string[] _supportedScriptExtensions;
 
@@ -37,7 +41,7 @@ namespace ScriptPlayer.ViewModels
             {"mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf"};
 
         private string _buttplugApiVersion = "Unknown";
-        
+
         private List<ConversionMode> _conversionModes;
 
         private Brush _heatMap;
@@ -89,15 +93,15 @@ namespace ScriptPlayer.ViewModels
 
         private bool _wasPlaying;
         private bool _loaded;
-        
+
         private Hook _hook;
         private PlaybackMode _playbackMode;
         private TimeSource _timeSource;
-        
+
         private List<Range> _filterRanges;
         private PositionCollection _positions;
         private TimeSpan _positionsViewport = TimeSpan.FromSeconds(5);
-        
+
         private readonly List<DeviceController> _controllers = new List<DeviceController>();
         private readonly ObservableCollection<Device> _devices = new ObservableCollection<Device>();
         private bool _showBanner = true;
@@ -107,10 +111,11 @@ namespace ScriptPlayer.ViewModels
         private SettingsViewModel _settings;
         private string _loadedScript;
         private string _loadedVideo;
+        private bool _isSkipping;
 
         public ObservableCollection<Device> Devices => _devices;
 
-        
+
 
         public TimeSpan PositionsViewport
         {
@@ -141,7 +146,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        
+
 
         public bool CanDirectConnectLaunch
         {
@@ -211,15 +216,15 @@ namespace ScriptPlayer.ViewModels
             switch (eventArgs.PropertyName)
             {
                 case nameof(PlaylistViewModel.Shuffle):
-                {
-                    Settings.ShufflePlaylist = Playlist.Shuffle;
-                    break;
-                }
+                    {
+                        Settings.ShufflePlaylist = Playlist.Shuffle;
+                        break;
+                    }
                 case nameof(PlaylistViewModel.Repeat):
-                {
-                    Settings.RepeatPlaylist = Playlist.Repeat;
-                    break;
-                }
+                    {
+                        Settings.RepeatPlaylist = Playlist.Repeat;
+                        break;
+                    }
             }
         }
 
@@ -271,88 +276,88 @@ namespace ScriptPlayer.ViewModels
                 switch (newValue)
                 {
                     case PlaybackMode.Local:
-                    {
-                        TimeSource = VideoPlayer.TimeSource;
-                        break;
-                    }
+                        {
+                            TimeSource = VideoPlayer.TimeSource;
+                            break;
+                        }
                     case PlaybackMode.Blind:
-                    {
-                        HideBanner();
-                        TimeSource = new ManualTimeSource(
-                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                                TimeSpan.FromMilliseconds(10)));
+                        {
+                            HideBanner();
+                            TimeSource = new ManualTimeSource(
+                                new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                    TimeSpan.FromMilliseconds(10)));
 
-                        RefreshManualDuration();
-                        break;
-                    }
+                            RefreshManualDuration();
+                            break;
+                        }
                     case PlaybackMode.Whirligig:
-                    {
-                        HideBanner();
-
-                        if (string.IsNullOrWhiteSpace(Settings.WhirligigEndpoint))
                         {
-                            WhirligigConnectionSettings settings =
-                                OnRequestWhirligigConnectionSettings(new WhirligigConnectionSettings
+                            HideBanner();
+
+                            if (string.IsNullOrWhiteSpace(Settings.WhirligigEndpoint))
+                            {
+                                WhirligigConnectionSettings settings =
+                                    OnRequestWhirligigConnectionSettings(new WhirligigConnectionSettings
+                                    {
+                                        IpAndPort = WhirligigConnectionSettings.DefaultEndpoint
+                                    });
+
+                                if (settings == null)
                                 {
-                                    IpAndPort = WhirligigConnectionSettings.DefaultEndpoint
+                                    PlaybackMode = PlaybackMode.Local;
+                                    return;
+                                }
+
+                                Settings.WhirligigEndpoint = settings.IpAndPort;
+                            }
+
+                            TimeSource = new WhirligigTimeSource(new DispatcherClock(
+                                Dispatcher.FromThread(Thread.CurrentThread),
+                                TimeSpan.FromMilliseconds(10)), new WhirligigConnectionSettings
+                                {
+                                    IpAndPort = Settings.WhirligigEndpoint
                                 });
-    
-                            if (settings == null)
-                            {
-                                PlaybackMode = PlaybackMode.Local;
-                                return;
-                            }
 
-                            Settings.WhirligigEndpoint = settings.IpAndPort;
+                            ((WhirligigTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+
+                            RefreshManualDuration();
+                            break;
                         }
-
-                        TimeSource = new WhirligigTimeSource(new DispatcherClock(
-                            Dispatcher.FromThread(Thread.CurrentThread),
-                            TimeSpan.FromMilliseconds(10)), new WhirligigConnectionSettings
-                            {
-                                IpAndPort = Settings.WhirligigEndpoint
-                            });
-
-                        ((WhirligigTimeSource) TimeSource).FileOpened += OnVideoFileOpened;
-
-                        RefreshManualDuration();
-                        break;
-                    }
                     case PlaybackMode.Vlc:
-                    {
-                        HideBanner();
-
-                        if (string.IsNullOrWhiteSpace(Settings.VlcEndpoint) ||
-                            string.IsNullOrWhiteSpace(Settings.VlcPassword))
                         {
-                            VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
-                            {
-                                IpAndPort = VlcConnectionSettings.DefaultEndpoint,
-                                Password = "test"
-                            });
+                            HideBanner();
 
-                            if (settings == null)
+                            if (string.IsNullOrWhiteSpace(Settings.VlcEndpoint) ||
+                                string.IsNullOrWhiteSpace(Settings.VlcPassword))
                             {
-                                PlaybackMode = PlaybackMode.Local;
-                                return;
+                                VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
+                                {
+                                    IpAndPort = VlcConnectionSettings.DefaultEndpoint,
+                                    Password = "test"
+                                });
+
+                                if (settings == null)
+                                {
+                                    PlaybackMode = PlaybackMode.Local;
+                                    return;
+                                }
+
+                                Settings.VlcPassword = settings.Password;
+                                Settings.VlcEndpoint = settings.IpAndPort;
                             }
 
-                            Settings.VlcPassword = settings.Password;
-                            Settings.VlcEndpoint = settings.IpAndPort;
+                            TimeSource = new VlcTimeSource(
+                                new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                    TimeSpan.FromMilliseconds(10)), new VlcConnectionSettings
+                                    {
+                                        IpAndPort = Settings.VlcEndpoint,
+                                        Password = Settings.VlcPassword
+                                    });
+
+                            ((VlcTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+
+                            break;
                         }
-
-                        TimeSource = new VlcTimeSource(
-                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                                TimeSpan.FromMilliseconds(10)), new VlcConnectionSettings
-                            {
-                                IpAndPort = Settings.VlcEndpoint,
-                                Password = Settings.VlcPassword
-                            });
-
-                        ((VlcTimeSource) TimeSource).FileOpened += OnVideoFileOpened;
-
-                        break;
-                    }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -429,7 +434,7 @@ namespace ScriptPlayer.ViewModels
             _loaded = true;
             HookUpMediaKeys();
             CheckForArguments();
-            if(Settings.CheckForNewVersionOnStartup)
+            if (Settings.CheckForNewVersionOnStartup)
                 Version.CheckIfYouHaventAlready();
         }
 
@@ -575,7 +580,7 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value.Equals(_volume)) return;
                 _volume = value;
-                if(Settings.NotifyVolume)
+                if (Settings.NotifyVolume)
                     OnRequestOverlay($"Volume: {Volume:f0}%", TimeSpan.FromSeconds(4), "Volume");
                 OnPropertyChanged();
             }
@@ -699,7 +704,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public string[] LoadedFiles => new []{LoadedVideo, LoadedScript};
+        public string[] LoadedFiles => new[] { LoadedVideo, LoadedScript };
 
         public RelayCommand ExecuteSelectedTestPatternCommand { get; set; }
 
@@ -722,6 +727,10 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand ConnectLaunchDirectlyCommand { get; set; }
 
         public RelayCommand AddScriptsToPlaylistCommand { get; set; }
+
+        public RelayCommand LoadPlaylistCommand { get; set; }
+
+        public RelayCommand SavePlaylistCommand { get; set; }
 
         public RelayCommand OpenVideoCommand { get; set; }
 
@@ -790,50 +799,50 @@ namespace ScriptPlayer.ViewModels
             switch (eventArgs.PropertyName)
             {
                 case nameof(SettingsViewModel.ShowFilledGapsInHeatMap):
-                {
-                    UpdateHeatMap();
-                    break;
-                }
+                    {
+                        UpdateHeatMap();
+                        break;
+                    }
                 case nameof(SettingsViewModel.FilterRange):
                 case nameof(SettingsViewModel.FilterMode):
                 case nameof(SettingsViewModel.MinPosition):
                 case nameof(SettingsViewModel.MaxPosition):
-                {
-                    UpdateFilter();
-                    break;
-                }
+                    {
+                        UpdateFilter();
+                        break;
+                    }
                 case nameof(SettingsViewModel.ScriptDelay):
-                {
-                    UpdateScriptDelay();
-                    break;
-                }
+                    {
+                        UpdateScriptDelay();
+                        break;
+                    }
                 case nameof(SettingsViewModel.CommandDelay):
-                {
-                    UpdateCommandDelay();
-                    break;
-                }
+                    {
+                        UpdateCommandDelay();
+                        break;
+                    }
                 case nameof(SettingsViewModel.ConversionMode):
-                {
-                    UpdateConversionMode();
-                    break;
-                }
+                    {
+                        UpdateConversionMode();
+                        break;
+                    }
                 case nameof(SettingsViewModel.ShufflePlaylist):
-                {
-                    UpdatePlaylistShuffle();
-                    break;
-                }
+                    {
+                        UpdatePlaylistShuffle();
+                        break;
+                    }
                 case nameof(SettingsViewModel.RepeatPlaylist):
-                {
-                    UpdatePlaylistRepeat();
-                    break;
-                }
+                    {
+                        UpdatePlaylistRepeat();
+                        break;
+                    }
                 case nameof(SettingsViewModel.FillGaps):
                 case nameof(SettingsViewModel.FillFirstGap):
                 case nameof(SettingsViewModel.FillLastGap):
-                {
-                    UpdateFillGaps();
-                    break;
-                }
+                    {
+                        UpdateFillGaps();
+                        break;
+                    }
             }
         }
 
@@ -934,14 +943,14 @@ namespace ScriptPlayer.ViewModels
             LoadVideo(selectedFile, true);
         }
 
-       
+
 
         private void Play()
         {
             if (EntryLoaded())
             {
                 TimeSource.Play();
-                if(Settings.NotifyPlayPause)
+                if (Settings.NotifyPlayPause)
                     OnRequestOverlay("Play", TimeSpan.FromSeconds(2), "Playback");
             }
             else if (Playlist.EntryCount > 0)
@@ -984,7 +993,7 @@ namespace ScriptPlayer.ViewModels
         {
             if (IsMatchingScriptLoaded(videoFileName))
             {
-                if(Settings.NotifyFileLoaded)
+                if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
                     OnRequestOverlay("Matching script alreadly loaded", TimeSpan.FromSeconds(6));
                 return;
             }
@@ -1014,7 +1023,7 @@ namespace ScriptPlayer.ViewModels
         {
             if (IsMatchingVideoLoaded(scriptFileName))
             {
-                if (Settings.NotifyFileLoaded)
+                if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
                     OnRequestOverlay("Matching video alreadly loaded", TimeSpan.FromSeconds(6));
                 return;
             }
@@ -1103,10 +1112,10 @@ namespace ScriptPlayer.ViewModels
 
         private bool IsMatchingScriptLoaded(string videoFileName)
         {
-            if(IsAnyEmpty(LoadedScript, videoFileName))
+            if (IsAnyEmpty(LoadedScript, videoFileName))
                 return false;
 
-            return CheckIfExtensionsMatchOrHaveCommonName(LoadedScript,videoFileName);
+            return CheckIfExtensionsMatchOrHaveCommonName(LoadedScript, videoFileName);
         }
 
         private bool IsMatchingVideoLoaded(string scriptFileName)
@@ -1251,6 +1260,30 @@ namespace ScriptPlayer.ViewModels
             VolumeDownCommand = new RelayCommand(VolumeDown);
             ExecuteSelectedTestPatternCommand = new RelayCommand(ExecuteSelectedTestPattern, CanExecuteSelectedTestPattern);
             ToggleFullScreenCommand = new RelayCommand(ExecuteToggleFullScreen);
+            LoadPlaylistCommand = new RelayCommand(ExecuteLoadPlaylist);
+            SavePlaylistCommand = new RelayCommand(ExecuteSavePlaylist);
+        }
+
+        private void ExecuteSavePlaylist()
+        {
+            string filter = "M3U Playlist|*.m3u";
+            int index = 0;
+            string filename = OnRequestFile(filter, ref index, true);
+            if (string.IsNullOrWhiteSpace(filename))
+                return;
+
+            SavePlaylist(filename);
+        }
+
+        private void ExecuteLoadPlaylist()
+        {
+            string filter = "M3U Playlist|*.m3u";
+            int index = 0;
+            string filename = OnRequestFile(filter, ref index);
+            if (string.IsNullOrWhiteSpace(filename))
+                return;
+
+            LoadPlaylist(filename);
         }
 
         private bool CanSkipToNextEvent()
@@ -1417,6 +1450,7 @@ namespace ScriptPlayer.ViewModels
         private void PlaylistOnPlayEntry(object sender, PlaylistEntry playlistEntry)
         {
             if (!TimeSource.CanOpenMedia) return;
+
             LoadFile(playlistEntry.Fullname);
             Play();
         }
@@ -1485,7 +1519,7 @@ namespace ScriptPlayer.ViewModels
 
             extension = extension.TrimStart('.').ToLower();
 
-            if(extension == "m3u")
+            if (extension == "m3u")
                 LoadPlaylist(fileToLoad);
             else if (_supportedVideoExtensions.Contains(extension))
                 LoadVideo(fileToLoad, true);
@@ -1523,7 +1557,7 @@ namespace ScriptPlayer.ViewModels
 
             Title = Path.GetFileNameWithoutExtension(videoFileName);
 
-            if (Settings.NotifyFileLoaded)
+            if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
                 OnRequestOverlay($"Loaded {Path.GetFileName(videoFileName)}", TimeSpan.FromSeconds(4), "VideoLoaded");
 
             Play();
@@ -1691,70 +1725,166 @@ namespace ScriptPlayer.ViewModels
 
         private void HandleFunScriptAction(ScriptActionEventArgs<FunScriptAction> eventArgs)
         {
+            SkipState skipState;
+            TimeSpan timeToNextOriginalEvent = TimeSpan.Zero;
+
             if (eventArgs.NextAction == null)
             {
-                if (Settings.AutoSkip)
-                    Playlist.PlayNextEntry(LoadedFiles);
-                else if (Settings.NotifyGaps)
-                    OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
-                return;
-            }
-
-            TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
-            byte currentPositionTransformed = TransformPosition(eventArgs.CurrentAction.Position, eventArgs.CurrentAction.TimeStamp);
-            byte nextPositionTransformed = TransformPosition(eventArgs.NextAction.Position, eventArgs.NextAction.TimeStamp);
-
-            if (currentPositionTransformed != nextPositionTransformed)
-            {
-
-                byte speedOriginal =
-                    SpeedPredictor.PredictSpeed(
-                        (byte)Math.Abs(eventArgs.CurrentAction.Position - eventArgs.NextAction.Position), duration);
-                byte speedTransformed =
-                    SpeedPredictor.PredictSpeed((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed),
-                        duration);
-                speedTransformed = ClampSpeed(speedTransformed * Settings.SpeedMultiplier);
-
-                DeviceCommandInformation info = new DeviceCommandInformation
-                {
-                    Duration = duration,
-                    SpeedTransformed = speedTransformed,
-                    SpeedOriginal = speedOriginal,
-                    PositionFromTransformed = currentPositionTransformed,
-                    PositionToTransformed = nextPositionTransformed,
-                    PositionFromOriginal = eventArgs.CurrentAction.Position,
-                    PositionToOriginal = eventArgs.NextAction.Position
-                };
-
-                SetDevices(info);
-            }
-
-            TimeSpan timeToNextOriginalEvent = duration;
-            if (!eventArgs.NextAction.OriginalAction)
-            {
-                ScriptAction nextOriginalAction =
-                    _scriptHandler.FirstOriginalEventAfter(eventArgs.CurrentAction.TimeStamp);
-                if (nextOriginalAction == null)
-                    return;
-
-                timeToNextOriginalEvent = nextOriginalAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
-            }
-
-            if (timeToNextOriginalEvent > TimeSpan.FromSeconds(10) && TimeSource.IsPlaying)
-            {
-                if (Settings.AutoSkip)
-                    SkipToNextEvent();
+                // Script Ended
+                if (Playlist.CanPlayNextEntry(LoadedFiles))
+                    skipState = SkipState.EndNext;
                 else
-                {
-                    if (Settings.NotifyGaps)
-                        OnRequestOverlay($"Next event in {timeToNextOriginalEvent.TotalSeconds:f0}s", TimeSpan.FromSeconds(4),
-                            "Events");
-                    OnRequestShowSkipButton(true);
-                }
+                    skipState = SkipState.End;
             }
             else
             {
-                OnRequestShowSkipButton(false);
+                skipState = SkipState.Available;
+
+                // Determine next movement
+
+                TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
+                byte currentPositionTransformed =
+                    TransformPosition(eventArgs.CurrentAction.Position, eventArgs.CurrentAction.TimeStamp);
+                byte nextPositionTransformed =
+                    TransformPosition(eventArgs.NextAction.Position, eventArgs.NextAction.TimeStamp);
+
+                // Execute next movement
+
+                if (currentPositionTransformed != nextPositionTransformed)
+                {
+
+                    byte speedOriginal =
+                        SpeedPredictor.PredictSpeed(
+                            (byte)Math.Abs(eventArgs.CurrentAction.Position - eventArgs.NextAction.Position),
+                            duration);
+                    byte speedTransformed =
+                        SpeedPredictor.PredictSpeed(
+                            (byte)Math.Abs(currentPositionTransformed - nextPositionTransformed),
+                            duration);
+                    speedTransformed = ClampSpeed(speedTransformed * Settings.SpeedMultiplier);
+
+                    DeviceCommandInformation info = new DeviceCommandInformation
+                    {
+                        Duration = duration,
+                        SpeedTransformed = speedTransformed,
+                        SpeedOriginal = speedOriginal,
+                        PositionFromTransformed = currentPositionTransformed,
+                        PositionToTransformed = nextPositionTransformed,
+                        PositionFromOriginal = eventArgs.CurrentAction.Position,
+                        PositionToOriginal = eventArgs.NextAction.Position
+                    };
+
+                    SetDevices(info);
+                }
+
+                if (eventArgs.NextAction.OriginalAction)
+                {
+                    timeToNextOriginalEvent = duration;
+
+                    if (timeToNextOriginalEvent > TimeSpan.FromSeconds(10))
+                    {
+                        skipState = SkipState.Gap;
+                    }
+                }
+                else
+                {
+                    //Next action was inserted (gap filler)
+
+                    ScriptAction nextOriginalAction = _scriptHandler.FirstOriginalEventAfter(eventArgs.CurrentAction.TimeStamp);
+                    if (nextOriginalAction == null)
+                    {
+                        // No more original actions
+                        if (Playlist.CanPlayNextEntry(LoadedFiles))
+                            skipState = SkipState.EndFillerNext;
+                        else
+                            skipState = SkipState.EndFiller;
+                    }
+                    else
+                    {
+                        timeToNextOriginalEvent = nextOriginalAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
+                        if (timeToNextOriginalEvent > TimeSpan.FromSeconds(10))
+                            skipState = SkipState.FillerGap;
+                        else
+                            skipState = SkipState.Filler;
+                    }
+                }
+            }
+
+            if (!TimeSource.IsPlaying || _isSkipping) return;
+
+            switch (skipState)
+            {
+                case SkipState.Available:
+                {
+                    OnRequestHideSkipButton();
+                    break;
+                }
+                case SkipState.Gap:
+                {
+                    if (Settings.AutoSkip)
+                    {
+                        SkipToNextEvent();
+                    }
+                    else
+                    {
+                        if (Settings.NotifyGaps)
+                            OnRequestOverlay($"Next event in {timeToNextOriginalEvent.TotalSeconds:f0}s",
+                                TimeSpan.FromSeconds(4), "Events");
+                        if(Settings.ShowSkipButton)
+                            OnRequestShowSkipButton();
+                    }
+                    break;
+                }
+                case SkipState.Filler:
+                {
+                    OnRequestHideSkipButton();
+                    break;
+                }
+                case SkipState.FillerGap:
+                {
+                    if (Settings.NotifyGaps)
+                        OnRequestOverlay($"Next original event in {timeToNextOriginalEvent.TotalSeconds:f0}s", TimeSpan.FromSeconds(4), "Events");
+                    if (Settings.ShowSkipButton)
+                            OnRequestShowSkipButton();
+                    break;
+                }
+                case SkipState.EndFillerNext:
+                {
+                    if (Settings.NotifyGaps)
+                        OnRequestOverlay("No more original events available", TimeSpan.FromSeconds(4), "Events");
+                    if (Settings.ShowSkipButton)
+                            OnRequestShowSkipNextButton();
+                    break;
+                }
+                case SkipState.EndFiller:
+                {
+                    if (Settings.NotifyGaps)
+                        OnRequestOverlay("No more original events available", TimeSpan.FromSeconds(4), "Events");
+                    break;
+                }
+                case SkipState.EndNext:
+                {
+                    if (Settings.AutoSkip)
+                    {
+                        SkipToNextEvent();
+                    }
+                    else
+                    {
+                        if (Settings.NotifyGaps)
+                            OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
+                        if (Settings.ShowSkipButton)
+                                OnRequestShowSkipNextButton();
+                    }
+                    break;
+                }
+                case SkipState.End:
+                {
+                    if (Settings.NotifyGaps)
+                        OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
+                    break;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -1849,14 +1979,15 @@ namespace ScriptPlayer.ViewModels
                 device.Stop();
         }
 
-        protected virtual string OnRequestFile(string filter, ref int filterIndex)
+        protected virtual string OnRequestFile(string filter, ref int filterIndex, bool save = false)
         {
             RequestFileEventArgs e = new RequestFileEventArgs
             {
                 Filter = filter,
                 FilterIndex = filterIndex,
                 Handled = false,
-                MultiSelect = false
+                MultiSelect = false,
+                SaveFile = save
             };
 
             RequestFile?.Invoke(this, e);
@@ -1874,7 +2005,8 @@ namespace ScriptPlayer.ViewModels
                 Filter = filter,
                 FilterIndex = filterIndex,
                 Handled = false,
-                MultiSelect = true
+                MultiSelect = true,
+                SaveFile = false
             };
 
             RequestFile?.Invoke(this, e);
@@ -1939,29 +2071,47 @@ namespace ScriptPlayer.ViewModels
 
         public async void SkipToNextEvent(bool isInitialSkip)
         {
-            //TODO Skip duplicates too!
+            OnRequestHideSkipButton();
+            OnRequestHideNotification("Events");
 
-            TimeSpan currentPosition = TimeSource.Progress;
-            ScriptAction nextAction = _scriptHandler.FirstOriginalEventAfter(currentPosition - _scriptHandler.Delay);
-            if (nextAction == null)
+            try
             {
-                Playlist.PlayNextEntry(LoadedFiles);
-                return;
+                _isSkipping = true;
+
+                //TODO Skip duplicates too!
+
+                TimeSpan currentPosition = TimeSource.Progress;
+                ScriptAction nextAction = isInitialSkip ?
+                    _scriptHandler.FirstEventAfter(currentPosition - _scriptHandler.Delay) :
+                    _scriptHandler.FirstOriginalEventAfter(currentPosition - _scriptHandler.Delay);
+
+                if (nextAction == null)
+                {
+                    if (isInitialSkip)
+                        return;
+
+                    Playlist.PlayNextEntry(LoadedFiles);
+                    return;
+                }
+
+                TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(2);
+                TimeSpan duration = skipTo - currentPosition;
+
+                if (skipTo < currentPosition)
+                    return;
+
+                if (PlaybackMode == PlaybackMode.Local && Settings.SoftSeek)
+                    await VideoPlayer.SoftSeek(skipTo, isInitialSkip);
+                else
+                    TimeSource.SetPosition(skipTo);
+
+                if (Settings.NotifyGaps)
+                    ShowPosition($"Skipped {duration.TotalSeconds:f0}s - ");
             }
-
-            TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(2);
-            TimeSpan duration = skipTo - currentPosition;
-
-            if (skipTo < currentPosition)
-                return;
-
-            if (PlaybackMode == PlaybackMode.Local && Settings.SoftSeek)
-                await VideoPlayer.SoftSeek(skipTo, isInitialSkip);
-            else
-                TimeSource.SetPosition(skipTo);
-
-            if (Settings.NotifyGaps)
-                ShowPosition($"Skipped {duration.TotalSeconds:f0}s - ");
+            finally
+            {
+                _isSkipping = false;
+            }
         }
 
         private void VideoPlayer_MediaOpened(object sender, EventArgs e)
@@ -2055,7 +2205,7 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
-            if (Settings.NotifyFileLoaded)
+            if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
                 OnRequestOverlay($"Loaded {Path.GetFileName(scriptFileName)}", TimeSpan.FromSeconds(4), "ScriptLoaded");
 
             Title = Path.GetFileNameWithoutExtension(scriptFileName);
@@ -2232,14 +2382,14 @@ namespace ScriptPlayer.ViewModels
             switch (PlaybackMode)
             {
                 case PlaybackMode.Whirligig:
-                    if(TimeSource is WhirligigTimeSource whirligig)
+                    if (TimeSource is WhirligigTimeSource whirligig)
                         whirligig.UpdateConnectionSettings(new WhirligigConnectionSettings
                         {
                             IpAndPort = settings.WhirligigEndpoint
                         });
                     break;
                 case PlaybackMode.Vlc:
-                    if(TimeSource is VlcTimeSource vlc)
+                    if (TimeSource is VlcTimeSource vlc)
                         vlc.UpdateConnectionSettings(new VlcConnectionSettings
                         {
                             IpAndPort = settings.VlcEndpoint,
@@ -2249,9 +2399,37 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        protected virtual void OnRequestShowSkipButton(bool isVisible)
+        protected virtual void OnRequestShowSkipButton()
         {
-            RequestShowSkipButton?.Invoke(this, isVisible);
+            RequestShowSkipButton?.Invoke(this, EventArgs.Empty);
         }
+
+        protected virtual void OnRequestShowSkipNextButton()
+        {
+            RequestShowSkipNextButton?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual void OnRequestHideSkipButton()
+        {
+            RequestHideSkipButton?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual void OnRequestHideNotification(string designation)
+        {
+            RequestHideNotification?.Invoke(this, designation);
+        }
+    }
+
+    public enum SkipState
+    {
+        Unknown,
+        Available,
+        Gap,
+        Filler,
+        FillerGap,
+        EndFillerNext,
+        EndFiller,
+        EndNext,
+        End,
     }
 }
