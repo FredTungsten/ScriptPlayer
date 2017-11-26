@@ -169,12 +169,12 @@
                                     <StackPanel Orientation="Vertical" Margin="2">
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="Beatbar Duration:"/>
                                         <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="2" Maximum="15" Value="{Binding BeatBarDuration, Mode=TwoWay, Converter={StaticResource TimeSpanConverter}}" 
-                                                SmallChange="0.01" LargeChange="0.01"/>
-                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=TotalDisplayedDuration.TotalSeconds, StringFormat={}{0:f1}s}"/>
+                                                SmallChange="0.005" LargeChange="0.005"/>
+                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=TotalDisplayedDuration.TotalSeconds, StringFormat={}{0:f2}s}"/>
                                         
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="Beatbar Midpoint:"/>
-                                        <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="0.1" Maximum="0.9" Value="{Binding BeatBarCenter, Mode=TwoWay}" SmallChange="0.002" LargeChange="0.002"/>
-                                        <TextBlock  Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=Midpoint, StringFormat={}{0:p1}}"/>
+                                        <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="0.05" Maximum="0.95" Value="{Binding BeatBarCenter, Mode=TwoWay}" SmallChange="0.001" LargeChange="0.001"/>
+                                        <TextBlock  Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=Midpoint, StringFormat={}{0:p2}}"/>
                                         
                                         <CheckBox Margin="2" VerticalAlignment="Center" Name="cckRTL" Checked="CckRTL_OnChecked" Unchecked="CckRTL_OnUnchecked">Right to Left</CheckBox>
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=HighlightBeats}">Highlight Beats</CheckBox>
