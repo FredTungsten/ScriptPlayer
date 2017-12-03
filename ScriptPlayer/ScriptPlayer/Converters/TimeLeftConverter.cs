@@ -10,6 +10,12 @@ namespace ScriptPlayer.Converters
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
+            if (values == null || values.Length < 2)
+                return "- / -";
+
+            if (!(values[0] is TimeSpan && values[1] is TimeSpan))
+                return "- / -";
+
             TimeSpan progress = (TimeSpan)values[0];
             TimeSpan duration = (TimeSpan)values[1];
             TimeSpan timeLeft = duration - progress;

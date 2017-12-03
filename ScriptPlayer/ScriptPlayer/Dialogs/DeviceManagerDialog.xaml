@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         xmlns:converters="clr-namespace:ScriptPlayer.Converters"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}" SizeToContent="Height"
@@ -25,55 +24,57 @@
             </Grid.Style>
             <TextBlock Text="No Devices Connected" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10"/>
         </Grid>
-        <ItemsControl ItemsSource="{Binding Devices}" Margin="10,10,10,31" HorizontalContentAlignment="Stretch">
-            <ItemsControl.Style>
-                <Style TargetType="ItemsControl">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Devices.Count}" Value="0">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </ItemsControl.Style>
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="{x:Type shared:Device}">
-                    <Border HorizontalAlignment="Stretch" Background="Azure" BorderBrush="CornflowerBlue" BorderThickness="1" Margin="2">
-                        <DockPanel LastChildFill="True" HorizontalAlignment="Stretch">
-                            <CheckBox Width="40" Height="40" IsChecked="{Binding IsEnabled}" DockPanel.Dock="Left">
-                                <CheckBox.Style>
-                                    <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}">
-                                        <Setter Property="Content">
-                                            <Setter.Value>
-                                                <TextBlock FontSize="25" FontFamily="Webdings" Text="a"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsChecked" Value="False">
-                                                <Setter Property="Content">
-                                                    <Setter.Value>
-                                                        <TextBlock FontSize="25" FontFamily="Webdings" Text="r"/>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </CheckBox.Style>
-                            </CheckBox>
-                            <Image Width="32" Height="32" Margin="4" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" VerticalAlignment="Center" DockPanel.Dock="Left" Source="{Binding Converter={StaticResource DeviceConverter}}"/>
-                            <TextBlock Margin="8,0" DockPanel.Dock="Left" Text="{Binding Name}" VerticalAlignment="Center"/>
-                        </DockPanel>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <Grid Margin="10,10,10,31">
+            <ItemsControl ItemsSource="{Binding Devices}" HorizontalContentAlignment="Stretch">
+                <ItemsControl.Style>
+                    <Style TargetType="ItemsControl">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Devices.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.Style>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type shared:Device}">
+                        <Border HorizontalAlignment="Stretch" Background="Azure" BorderBrush="CornflowerBlue" BorderThickness="1" Margin="2">
+                            <DockPanel LastChildFill="True" HorizontalAlignment="Stretch">
+                                <CheckBox Width="40" Height="40" IsChecked="{Binding IsEnabled}" DockPanel.Dock="Left">
+                                    <CheckBox.Style>
+                                        <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}">
+                                            <Setter Property="Content">
+                                                <Setter.Value>
+                                                    <TextBlock FontSize="25" FontFamily="Webdings" Text="a"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsChecked" Value="False">
+                                                    <Setter Property="Content">
+                                                        <Setter.Value>
+                                                            <TextBlock FontSize="25" FontFamily="Webdings" Text="r"/>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </CheckBox.Style>
+                                </CheckBox>
+                                <Image Width="32" Height="32" Margin="4" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor" VerticalAlignment="Center" DockPanel.Dock="Left" Source="{Binding Converter={StaticResource DeviceConverter}}"/>
+                                <TextBlock Margin="8,0" DockPanel.Dock="Left" Text="{Binding Name}" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
         <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" Orientation="Horizontal">
             <TextBlock Foreground="DimGray" TextWrapping="Wrap" Text="Device images by "/>
-        <Button Content="Funjack" Cursor="Hand" Click="btnFunjack_Click">
+        <Button Content="Funjack" Cursor="Hand" Click="BtnFunjack_Click">
             <Button.Template>
                 <ControlTemplate TargetType="Button">
                     <TextBlock TextDecorations="Underline">
