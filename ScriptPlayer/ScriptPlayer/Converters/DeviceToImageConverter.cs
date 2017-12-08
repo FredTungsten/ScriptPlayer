@@ -70,19 +70,20 @@ namespace ScriptPlayer.Converters
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            Device device = (Device) value;
+            if (value is Device device)
+            {
+                if (device.Name.Contains("Launch"))
+                    return DeviceImages.Launch;
 
-            if (device.Name.Contains("Launch"))
-                return DeviceImages.Launch;
+                if (device.Name.Contains("Hush"))
+                    return DeviceImages.Hush;
 
-            if (device.Name.Contains("Hush"))
-                return DeviceImages.Hush;
+                if (device.Name.Contains("Nora"))
+                    return DeviceImages.Nora;
 
-            if (device.Name.Contains("Nora"))
-                return DeviceImages.Nora;
-
-            if (device.Name.Contains("Gamepad"))
-                return DeviceImages.Controller;
+                if (device.Name.Contains("Gamepad"))
+                    return DeviceImages.Controller;
+            }
 
             return null;
         }

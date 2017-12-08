@@ -30,8 +30,8 @@ namespace ScriptPlayer.Shared
 
         private void Client_DeviceAddedOrRemoved(object sender, DeviceEventArgs deviceEventArgs)
         {
-            ButtplugClientDevice device = deviceEventArgs.Device; // DirtyHacks.GetAnythingWithThatName<ButtplugClientDevice>(deviceEventArgs, "device");
-            DeviceEventArgs.DeviceAction action = deviceEventArgs.Action; // DirtyHacks.GetAnythingWithThatName<DeviceEventArgs.DeviceAction>(deviceEventArgs, "action");
+            ButtplugClientDevice device = deviceEventArgs.Device; 
+            DeviceEventArgs.DeviceAction action = deviceEventArgs.Action;
 
             switch (action)
             {
@@ -174,7 +174,6 @@ namespace ScriptPlayer.Shared
 
                 if (message == null) return;
 
-                message.Id = _client.nextMsgId;
                 ButtplugMessage response = await _client.SendDeviceMessage(device, message);
                 await CheckResponse(response);
             }
@@ -200,7 +199,7 @@ namespace ScriptPlayer.Shared
             }
             else
             {
-                Console.WriteLine(response.Id);
+                //Console.WriteLine(response.Id);
             }
         }
 

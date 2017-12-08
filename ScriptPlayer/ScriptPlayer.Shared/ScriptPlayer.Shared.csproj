@@ -31,11 +31,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Buttplug.Client, Version=0.1.2.547, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Buttplug.Client.0.1.2.547-master\lib\net452\Buttplug.Client.dll</HintPath>
+    <Reference Include="Buttplug.Client, Version=0.1.2.551, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.Client.0.1.2.551-master\lib\net452\Buttplug.Client.dll</HintPath>
     </Reference>
-    <Reference Include="Buttplug.Core, Version=0.1.2.547, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Buttplug.Core.0.1.2.547-master\lib\net452\Buttplug.Core.dll</HintPath>
+    <Reference Include="Buttplug.Core, Version=0.1.2.551, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.Core.0.1.2.551-master\lib\net452\Buttplug.Core.dll</HintPath>
     </Reference>
     <Reference Include="FontAwesome.Net, Version=1.1.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FontAwesomeDotNet.1.1.1\lib\FontAwesome.Net.dll</HintPath>

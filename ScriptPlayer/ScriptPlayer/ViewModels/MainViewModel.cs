@@ -2314,6 +2314,8 @@ namespace ScriptPlayer.ViewModels
             controller.DeviceRemoved -= DeviceController_DeviceRemoved;
 
             _controllers.Remove(controller);
+
+            OnRequestOverlay("Disconnected from Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
         }
 
         private async void DisconnectButtplug()
@@ -2327,12 +2329,14 @@ namespace ScriptPlayer.ViewModels
 
             if (controller == null) return;
 
-            controller.DeviceFound -= DeviceController_DeviceFound;
-            controller.Disconnected -= DeviceController_Disconnected;
             await controller.Disconnect();
-            controller.DeviceRemoved -= DeviceController_DeviceRemoved;
 
-            _controllers.Remove(controller);
+            //controller.DeviceFound -= DeviceController_DeviceFound;
+            
+            //controller.DeviceRemoved -= DeviceController_DeviceRemoved;
+            //controller.Disconnected -= DeviceController_Disconnected;
+
+            //_controllers.Remove(controller);
         }
 
         protected virtual string OnRequestButtplugUrl(string defaultValue)
