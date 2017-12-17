@@ -871,7 +871,7 @@ namespace ScriptPlayer.ViewModels
 
             StopPattern();
 
-            foreach (DeviceController controller in _controllers)
+            foreach (DeviceController controller in _controllers.ToList())
             {
                 if (controller is IDisposable disposable)
                     disposable.Dispose();
