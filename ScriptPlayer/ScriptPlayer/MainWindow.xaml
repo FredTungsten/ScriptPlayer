@@ -221,8 +221,8 @@
                         <GradientStop Color="#7F000000" Offset="0.331"/>
                     </LinearGradientBrush>
                 </Grid.Background>
-                <shared:TimeLineHeader Background="Transparent" ViewPort="{Binding PositionsViewport, Mode=TwoWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Marker="{Binding Path=TimeSource.Progress, Mode=OneWay}"></shared:TimeLineHeader>
-                <shared:PositionBar TotalDisplayedDuration="{Binding PositionsViewport, Mode=OneWay}" IsReadOnly="True" Positions="{Binding Positions}" Progress="{Binding Path=TimeSource.Progress}"/>
+                <shared:TimeLineHeader ClipToBounds="True" Background="Transparent" ViewPort="{Binding PositionsViewport, Mode=TwoWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Marker="{Binding Path=TimeSource.Progress, Mode=OneWay}"></shared:TimeLineHeader>
+                <shared:PositionBar ClipToBounds="True" TotalDisplayedDuration="{Binding PositionsViewport, Mode=OneWay}" IsReadOnly="True" Positions="{Binding Positions}" Progress="{Binding Path=TimeSource.Progress}"/>
             </Grid>
 
             <!-- NOTIFICATIONS -->

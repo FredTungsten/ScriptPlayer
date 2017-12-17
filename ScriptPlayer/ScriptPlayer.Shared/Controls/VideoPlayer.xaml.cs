@@ -546,6 +546,7 @@ namespace ScriptPlayer.Shared
             g.Children.Add(new ScaleTransform(_scale, _scale));
             g.Children.Add(new TranslateTransform(_offset.X, _offset.Y));
 
+            BackgroundBorder.RenderTransform = g;
             Border.RenderTransform = g;
         }
 
