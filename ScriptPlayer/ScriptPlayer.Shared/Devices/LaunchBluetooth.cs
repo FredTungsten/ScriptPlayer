@@ -56,19 +56,27 @@ namespace ScriptPlayer.Shared
 
         private async void BleReceived(BluetoothLEAdvertisementWatcher w, BluetoothLEAdvertisementReceivedEventArgs btAdv)
         {
+            if (w == null) return;
+            if (btAdv == null) return;
+
             lock (_discoverylocker)
             {
                 if (!_discover) return;
                 Stop();
             }
 
-            Debug.WriteLine($"BLE RECEIVED, Services: {String.Join(", ", btAdv.Advertisement.ServiceUuids)}, aquiring device ...");
+            var uids = btAdv.Advertisement?.ServiceUuids;
+            if (uids == null) return;
+
+            Debug.WriteLine($"BLE RECEIVED, Services: {string.Join(", ", uids)}, aquiring device ...");
 
             var deviceAwaiting = BluetoothLEDevice.FromBluetoothAddressAsync(btAdv.BluetoothAddress);
 
             if (deviceAwaiting == null) return;
 
             BluetoothLEDevice device = await deviceAwaiting;
+
+            if (device == null) return;
 
             Debug.WriteLine($"BLEWATCHER Found: {device.Name}, {device.DeviceId}");
 
