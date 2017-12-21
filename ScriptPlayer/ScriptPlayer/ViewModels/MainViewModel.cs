@@ -839,6 +839,9 @@ namespace ScriptPlayer.ViewModels
                 case nameof(SettingsViewModel.FillGaps):
                 case nameof(SettingsViewModel.FillFirstGap):
                 case nameof(SettingsViewModel.FillLastGap):
+                case nameof(SettingsViewModel.FillGapIntervall):
+                case nameof(SettingsViewModel.MinGapDuration):
+                case nameof(SettingsViewModel.FillGapGap):
                     {
                         UpdateFillGaps();
                         break;
@@ -848,9 +851,12 @@ namespace ScriptPlayer.ViewModels
 
         private void UpdateFillGaps()
         {
-            _scriptHandler.FillGaps = Settings.FillGaps;
+            _scriptHandler.FillGapIntervall = Settings.FillGapIntervall;
+            _scriptHandler.FillGapGap = Settings.FillGapGap;
+            _scriptHandler.MinGapDuration = Settings.MinGapDuration;
             _scriptHandler.FillFirstGap = Settings.FillFirstGap;
             _scriptHandler.FillLastGap = Settings.FillLastGap;
+            _scriptHandler.FillGaps = Settings.FillGaps;
         }
 
         private void UpdateConversionMode()
@@ -955,7 +961,8 @@ namespace ScriptPlayer.ViewModels
             }
             else if (Playlist.EntryCount > 0)
             {
-                LoadFile(Playlist.FirstEntry().Fullname);
+                Playlist.PlayNextEntry(LoadedFiles);
+                //LoadFile(Playlist.FirstEntry().Fullname);
             }
         }
 

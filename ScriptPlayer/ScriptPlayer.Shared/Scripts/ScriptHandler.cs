@@ -10,9 +10,9 @@ namespace ScriptPlayer.Shared.Scripts
         private int _lastIndex;
         private TimeSpan _lastTimestamp;
 
-        private List<TimeSpan> _beats;
-        private List<ScriptAction> _originalActions;
-        private List<ScriptAction> _filledActions;
+        private List<ScriptAction> _originalScript;
+        private List<FunScriptAction> _originalActions;
+        private List<FunScriptAction> _filledActions;
 
         private TimeSource _timesource;
         private ConversionMode _conversionMode = ConversionMode.UpOrDown;
@@ -22,6 +22,9 @@ namespace ScriptPlayer.Shared.Scripts
         private bool _fillFirstGap;
         private bool _fillLastGap;
         private TimeSpan _duration;
+        private TimeSpan _fillGapGap;
+        private TimeSpan _fillGapIntervall;
+        private TimeSpan _minGapDuration;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> IntermediateScriptActionRaised;
 
@@ -67,9 +70,43 @@ namespace ScriptPlayer.Shared.Scripts
             }
         }
 
+        public TimeSpan FillGapIntervall
+        {
+            get => _fillGapIntervall;
+            set
+            {
+                if (value >= TimeSpan.FromMilliseconds(50))
+                    _fillGapIntervall = value;
+                else
+                    _fillGapIntervall = TimeSpan.FromMilliseconds(50);
+
+                ProcessScript();
+            }
+        }
+
+        public TimeSpan FillGapGap
+        {
+            get => _fillGapGap;
+            set
+            {
+                _fillGapGap = value;
+                ProcessScript();
+            }
+        }
+
+        public TimeSpan MinGapDuration
+        {
+            get => _minGapDuration;
+            set
+            {
+                _minGapDuration = value;
+                ProcessScript();
+            }
+        }
+
         public TimeSpan Duration
         {
-            get { return _duration; }
+            get => _duration;
             set
             {
                 _duration = value; 
@@ -80,38 +117,13 @@ namespace ScriptPlayer.Shared.Scripts
         public void Clear()
         {
             _originalActions?.Clear();
-            _beats?.Clear();
-            ProcessScript();
-        }
-
-        private void SaveBeatFile()
-        {
-            if (_originalActions.FirstOrDefault() is BeatScriptAction)
-            {
-                _beats = _originalActions.Select(a => a.TimeStamp).ToList();
-            }
-            else
-            {
-                _beats = null;
-            }
-        }
-
-        private void ConvertBeatFile()
-        {
-            if (_beats == null)
-                return;
-
-            _originalActions = BeatsToFunScriptConverter.Convert(_beats, _conversionMode)
-                .OrderBy(a => a.TimeStamp)
-                .Cast<ScriptAction>()
-                .ToList();
-
+            _originalScript?.Clear();
             ProcessScript();
         }
 
         private void UpdatePositions()
         {
-            PositionCollection collection = new PositionCollection(_filledActions.OfType<FunScriptAction>().Select(f => new TimedPosition
+            PositionCollection collection = new PositionCollection(_filledActions.Select(f => new TimedPosition
             {
                 Position = f.Position,
                 TimeStamp = f.TimeStamp
@@ -122,8 +134,10 @@ namespace ScriptPlayer.Shared.Scripts
 
         public ScriptHandler()
         {
-            _originalActions = new List<ScriptAction>();
-            _filledActions = new List<ScriptAction>();
+            _originalActions = new List<FunScriptAction>();
+            _filledActions = new List<FunScriptAction>();
+            _originalScript = new List<ScriptAction>();
+
             Delay = new TimeSpan(0);
         }
 
@@ -157,16 +171,28 @@ namespace ScriptPlayer.Shared.Scripts
         {
             List<ScriptAction> actions = new List<ScriptAction>(script);
             actions.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
+            _originalScript = actions;
 
-            _originalActions = actions;
-            
-            SaveBeatFile();
-            ConvertBeatFile();
             ProcessScript();
+        }
+
+        private void ConvertScript()
+        {
+            if (_originalScript.FirstOrDefault() is BeatScriptAction)
+            { 
+                _originalActions = BeatsToFunScriptConverter.Convert(_originalScript.Select(s => s.TimeStamp), _conversionMode)
+                    .OrderBy(a => a.TimeStamp)
+                    .ToList();
+            }
+            else if (_originalScript.FirstOrDefault() is FunScriptAction)
+            {
+                _originalActions = _originalScript.Cast<FunScriptAction>().ToList();
+            }
         }
 
         private void ProcessScript()
         {
+            ConvertScript();
             FillScriptGaps();
             UpdatePositions();
             ResetCache();
@@ -174,79 +200,149 @@ namespace ScriptPlayer.Shared.Scripts
 
         private void FillScriptGaps()
         {
-            foreach (ScriptAction action in _originalActions)
+            foreach (FunScriptAction action in _originalActions)
                 action.OriginalAction = true;
 
-            _filledActions = new List<ScriptAction>(_originalActions);
+            _filledActions = new List<FunScriptAction>(_originalActions);
 
             if (!FillGaps) return;
 
-            List<ScriptAction> additionalActions = new List<ScriptAction>();
+            TimeSpan gapgap = FillGapGap < FillGapIntervall ? FillGapIntervall : FillGapGap;
 
-            TimeSpan previous = TimeSpan.MinValue;
-            foreach (ScriptAction action in _originalActions)
+            List<FunScriptAction> additionalActions = new List<FunScriptAction>();
+
+            FunScriptAction previous = null;
+            for (int index = 0; index < _originalActions.Count; index++)
             {
-                if (action == _originalActions.First())
+                FunScriptAction action = _originalActions[index];
+
+                if (index == 0)
                 {
                     if (FillFirstGap)
                     {
+                        bool nextIsLow =  action.Position < 50;
                         if (action.TimeStamp > MinGapDuration)
                         {
-                            additionalActions.AddRange(GenerateGapFiller(TimeSpan.Zero, action.TimeStamp.Subtract(GapBuffer)));
+                            additionalActions.AddRange(GenerateGapFiller(TimeSpan.Zero,
+                                action.TimeStamp.Subtract(gapgap), null, nextIsLow));
                         }
                     }
                 }
-                else if (action == _originalActions.Last())
+                else if (index == _originalActions.Count - 1)
                 {
                     if (FillLastGap)
                     {
+                        bool previousIsLow = action.Position < 50;
+
                         if (Duration - action.TimeStamp > MinGapDuration)
                         {
-                            additionalActions.AddRange(GenerateGapFiller(action.TimeStamp.Add(GapBuffer), Duration));
+                            additionalActions.AddRange(GenerateGapFiller(action.TimeStamp.Add(gapgap), Duration,
+                                previousIsLow, null));
                         }
                     }
                 }
                 else
                 {
-                    TimeSpan duration = action.TimeStamp - previous;
+                    // Can't be null since it's not the first item
+                    // ReSharper disable once PossibleNullReferenceException
+
+                    bool previousIsLow = previous.Position < 50;
+                    bool nextIsLow = action.Position < 50;
+
+                    TimeSpan duration = action.TimeStamp - previous.TimeStamp;
                     if (duration > MinGapDuration)
                     {
-                        additionalActions.AddRange(GenerateGapFiller(previous.Add(GapBuffer), action.TimeStamp.Subtract(GapBuffer)));
+                        additionalActions.AddRange(GenerateGapFiller(previous.TimeStamp.Add(gapgap),
+                            action.TimeStamp.Subtract(gapgap), previousIsLow, nextIsLow));
                     }
                 }
 
-                previous = action.TimeStamp;
+                previous = action;
             }
 
             _filledActions.AddRange(additionalActions);
             _filledActions.Sort((a,b) => a.TimeStamp.CompareTo(b.TimeStamp));
         }
 
-        private static IEnumerable<ScriptAction> GenerateGapFiller(TimeSpan start, TimeSpan end)
+        private IEnumerable<FunScriptAction> GenerateGapFiller(TimeSpan start, TimeSpan end, bool? startHigh = false, bool? endHigh = false)
         {
             List<FunScriptAction> additionalActions = new List<FunScriptAction>();
             TimeSpan gapduration = end - start;
 
-            int fillers = (int)Math.Round(gapduration.Divide(TimeSpan.FromMilliseconds(500)));
+            double approximateFillers = gapduration.Divide(FillGapIntervall);
 
-            bool up = true;
+            bool up;
+            bool? shouldBeEven;
 
+            if (startHigh != null && endHigh != null)
+            {
+                up = (bool) startHigh;
+                shouldBeEven = startHigh != endHigh;
+            }
+            else if (startHigh != null)
+            {
+                up = (bool) startHigh;
+                shouldBeEven = null;
+            }
+            else if (endHigh != null)
+            {
+                bool wouldBeEven = Round(approximateFillers, null) % 2 == 0;
+                up = !(wouldBeEven ^ (bool) endHigh);
+                shouldBeEven = null;
+            }
+            else
+            {
+                up = false;
+                shouldBeEven = null;
+            }
+
+            //Since we add an additional entry automatically, invert even and odd
+            shouldBeEven = !shouldBeEven;
+
+            int fillers = Round(approximateFillers, shouldBeEven);
+            
             for (int i = 0; i <= fillers; i++)
             {
-                up ^= true;
                 additionalActions.Add(new FunScriptAction
                 {
                     Position = (byte)(up ? 99 : 0),
                     TimeStamp = start + gapduration.Multiply(i).Divide(fillers),
                     OriginalAction = false
                 });
+
+                up ^= true;
             }
 
             return additionalActions;
         }
 
-        public TimeSpan MinGapDuration { get; set; } = TimeSpan.FromSeconds(10);
-        public TimeSpan GapBuffer { get; set; } = TimeSpan.FromSeconds(2);
+        private int Round(double value, bool? shouldBeEven)
+        {
+            int result;
+
+            switch (shouldBeEven)
+            {
+                case true:
+                case false:
+                {
+                    if (((int) Math.Ceiling(value) % 2 == 0) == shouldBeEven)
+                        result = (int) Math.Ceiling(value);
+                    else
+                        result = (int) Math.Floor(value);
+                    break;
+                }
+                default:
+                {
+                    result = (int) Math.Round(value);
+                    break;
+                }
+            }
+
+            if (result <= 0)
+                result = 0;
+
+            return result;
+        }
 
         public void SetTimesource(TimeSource timesource)
         {

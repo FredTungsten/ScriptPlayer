@@ -250,10 +250,22 @@
                             <CheckBox Margin="4" IsChecked="{Binding Settings.SoftSeek}" Content="Soft seek"/>
                             <RadioButton IsEnabled="{Binding Settings.SoftSeek}" Margin="12,4,4,4" IsChecked="{Binding Settings.SeekFreezeFrame}" Content="Freeze frame"/>
                             <RadioButton IsEnabled="{Binding Settings.SoftSeek}" Margin="12,4,4,4" IsChecked="{Binding Settings.SeekFreezeFrame, Converter={StaticResource Inverter}}" Content="Fade to black"/>
-                            <CheckBox Margin="4" IsChecked="{Binding Settings.FillGaps}" Content="Fill gaps with slow movement"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.FillGaps}" Content="Fill gaps with movement"/>
                             <CheckBox Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}" IsChecked="{Binding Settings.ShowFilledGapsInHeatMap}" Content="Show filled gaps in heat map"/>
                             <CheckBox Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}" IsChecked="{Binding Settings.FillFirstGap}" Content="Fill gap before first action"/>
                             <CheckBox Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}" IsChecked="{Binding Settings.FillLastGap}" Content="Fill gap after last action"/>
+                            <DockPanel Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}">
+                                <TextBlock VerticalAlignment="Center" Text="Spacing before/after gap [ms] " Width="170" DockPanel.Dock="Left"/>
+                                <TextBlock Width="40" TextAlignment="Right" DockPanel.Dock="Right" Text="{Binding Settings.FillGapGap, Converter={StaticResource MillisecondsConverter}}"/>
+                                <Slider Value="{Binding Settings.FillGapGap, Converter={StaticResource MillisecondsConverter}}" VerticalAlignment="Center" DockPanel.Dock="Left"
+                                        Minimum="0" Maximum="2000" TickFrequency="50" IsSnapToTickEnabled="True"/>
+                            </DockPanel>
+                            <DockPanel Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}">
+                                <TextBlock VerticalAlignment="Center" Text="Filler Intervall [ms] " Width="170" DockPanel.Dock="Left"/>
+                                <TextBlock Width="40" TextAlignment="Right" DockPanel.Dock="Right" Text="{Binding Settings.FillGapIntervall, Converter={StaticResource MillisecondsConverter}}"/>
+                                <Slider Value="{Binding Settings.FillGapIntervall, Converter={StaticResource MillisecondsConverter}}" VerticalAlignment="Center" DockPanel.Dock="Left"
+                                        Minimum="200" Maximum="1000" TickFrequency="20" IsSnapToTickEnabled="True"/>
+                            </DockPanel>
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Timings">

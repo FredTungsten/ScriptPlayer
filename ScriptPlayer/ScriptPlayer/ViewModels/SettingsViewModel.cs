@@ -18,13 +18,13 @@ namespace ScriptPlayer.ViewModels
         private string _whirligigEndpoint;
         private string _buttplugUrl;
 
-        private ObservableCollection<string> _additionalPaths;
+        private ObservableCollection<string> _additionalPaths = new ObservableCollection<string>();
 
-        private bool _checkForNewVersionOnStartup;
+        private bool _checkForNewVersionOnStartup = true;
         private bool _autoSkip;
 
         private TimeSpan _commandDelay = TimeSpan.FromMilliseconds(166);
-        private TimeSpan _scriptDelay;
+        private TimeSpan _scriptDelay = TimeSpan.Zero;
 
         private ConversionMode _conversionMode = ConversionMode.UpOrDown;
         private bool _logMarkers;
@@ -41,14 +41,14 @@ namespace ScriptPlayer.ViewModels
         private bool _showScriptPositions;
 
         private bool _showTimeLeft;
-        private bool _filterDoubleClicks;
-        private bool _doubleClickToFullscreen;
-        private bool _clickToPlayPause;
-        private bool _rememberPlaylist;
+        private bool _filterDoubleClicks = true;
+        private bool _doubleClickToFullscreen = true;
+        private bool _clickToPlayPause = true;
+        private bool _rememberPlaylist = true;
         private bool _shufflePlaylist;
         private bool _repeatPlaylist;
-        private bool _softSeek;
-        private bool _seekFreezeFrame;
+        private bool _softSeek = true;
+        private bool _seekFreezeFrame = true;
         private bool _notifyGaps = true;
         private bool _notifyPosition = true;
         private bool _notifyDevices = true;
@@ -63,20 +63,15 @@ namespace ScriptPlayer.ViewModels
         private bool _showSkipButton;
         private bool _notifyFileLoadedOnlyFailed;
 
+        private TimeSpan _fillGapIntervall = TimeSpan.FromMilliseconds(500);
+        private TimeSpan _fillGapGap = TimeSpan.FromSeconds(2);
+        private TimeSpan _minGapDuration = TimeSpan.FromSeconds(10);
+
         public SettingsViewModel()
         {
             WhirligigEndpoint = null;
             VlcEndpoint = null;
             ButtplugUrl = null;
-
-            AdditionalPaths = new ObservableCollection<string>();
-            CheckForNewVersionOnStartup = true;
-            ClickToPlayPause = true;
-            DoubleClickToFullscreen = true;
-            FilterDoubleClicks = true;
-            RememberPlaylist = true;
-            SoftSeek = true;
-            SeekFreezeFrame = true;
         }
 
         public SettingsViewModel Duplicate()
@@ -89,40 +84,6 @@ namespace ScriptPlayer.ViewModels
             duplicate.AdditionalPaths = new ObservableCollection<string>(AdditionalPaths);
 
             return duplicate;
-
-            /*return new SettingsViewModel
-            {
-                AdditionalPaths = new ObservableCollection<string>(AdditionalPaths),
-                AutoSkip = AutoSkip,
-                ButtplugUrl = ButtplugUrl,
-                CheckForNewVersionOnStartup = CheckForNewVersionOnStartup,
-                ClickToPlayPause = ClickToPlayPause,
-                CommandDelay = CommandDelay,
-                ConversionMode = ConversionMode,
-                DisplayEventNotifications = DisplayEventNotifications,
-                DoubleClickToFullscreen = DoubleClickToFullscreen,
-                FilterDoubleClicks = FilterDoubleClicks,
-                FilterMode = FilterMode,
-                FilterRange = FilterRange,
-                LogMarkers = LogMarkers,
-                MaxPosition = MaxPosition,
-                MaxSpeed = MaxSpeed,
-                MinPosition = MinPosition,
-                MinSpeed = MinSpeed,
-                RememberPlaylist = RememberPlaylist,
-                RepeatPlaylist = RepeatPlaylist,
-                ScriptDelay = ScriptDelay,
-                ShowHeatMap = ShowHeatMap,
-                ShowScriptPositions = ShowScriptPositions,
-                ShowTimeLeft = ShowTimeLeft,
-                SpeedMultiplier = SpeedMultiplier,
-                ShufflePlaylist = ShufflePlaylist,
-                SoftSeek = SoftSeek,
-                SeekFreezeFrame = SeekFreezeFrame,
-                VlcEndpoint = VlcEndpoint,
-                VlcPassword = VlcPassword,
-                WhirligigEndpoint = WhirligigEndpoint
-            };*/
         }
 
         public bool NotifyVolume
@@ -413,13 +374,70 @@ namespace ScriptPlayer.ViewModels
 
         public bool ShowFilledGapsInHeatMap
         {
-            get { return _showFilledGapsInHeatMap; }
+            get => _showFilledGapsInHeatMap;
             set
             {
                 if (value == _showFilledGapsInHeatMap) return;
                 _showFilledGapsInHeatMap = value;
                 OnPropertyChanged();
             }
+        }
+
+        [XmlIgnore]
+        public TimeSpan FillGapIntervall
+        {
+            get => _fillGapIntervall;
+            set
+            {
+                if (value.Equals(_fillGapIntervall)) return;
+                _fillGapIntervall = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [XmlElement("FillGapIntervall")]
+        public long FillGapIntervallWrapper
+        {
+            get => FillGapIntervall.Ticks;
+            set => FillGapIntervall = TimeSpan.FromTicks(value);
+        }
+
+        [XmlIgnore]
+        public TimeSpan FillGapGap
+        {
+            get => _fillGapGap;
+            set
+            {
+                if (value.Equals(_fillGapGap)) return;
+                _fillGapGap = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [XmlElement("FillGapGap")]
+        public long FillGapGapWrapper
+        {
+            get => FillGapGap.Ticks;
+            set => FillGapGap = TimeSpan.FromTicks(value);
+        }
+
+        [XmlIgnore]
+        public TimeSpan MinGapDuration
+        {
+            get => _minGapDuration;
+            set
+            {
+                if (value.Equals(_minGapDuration)) return;
+                _minGapDuration = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [XmlElement("MinGapDuration")]
+        public long MinGapDurationWrapper
+        {
+            get => MinGapDuration.Ticks;
+            set => MinGapDuration = TimeSpan.FromTicks(value);
         }
 
         public bool AutoSkip
