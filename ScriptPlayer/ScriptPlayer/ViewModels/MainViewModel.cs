@@ -1977,7 +1977,8 @@ namespace ScriptPlayer.ViewModels
             if (!TimeSource.IsPlaying && requirePlaying) return;
 
             foreach (Device device in _devices)
-                device.Set(intermediateInfo);
+                if (device.IsEnabled)
+                    device.Set(intermediateInfo);
         }
 
         private void StopDevices()

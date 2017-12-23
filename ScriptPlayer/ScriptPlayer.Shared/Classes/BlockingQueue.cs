@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 
 namespace ScriptPlayer.Shared
@@ -16,13 +17,22 @@ namespace ScriptPlayer.Shared
 
         public void Close()
         {
-            _closed = true;
-            _event.Set();
-            Thread.Yield();
-            _event.Set();
-            Thread.Yield();
+            try
+            {
+                if (_closed) return;
 
-            _event.Close();
+                _closed = true;
+                _event.Set();
+                Thread.Yield();
+                _event.Set();
+                Thread.Yield();
+
+                _event.Close();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+            }
         }
 
         public int Count

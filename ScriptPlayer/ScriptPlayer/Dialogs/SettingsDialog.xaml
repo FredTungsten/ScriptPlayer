@@ -15,13 +15,9 @@
         WindowStyle="ToolWindow" Loaded="SettingsDialog_OnLoaded"
         Title="Settings" Height="492.373" Width="670.797">
     <Window.Resources>
-        <converters1:ConversionModeToNameConverter x:Key="ConversionConverter"/>
         <converters:DistinctValueToBooleanConverter x:Key="BooleanConverter"/>
         <converters:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
         <converters1:BooleanInverter x:Key="Inverter"/>
-        <converters:BooleanAndConverter x:Key="AndConverter"/>
-        <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
-
         <Style TargetType="TextBlock" x:Key="SettingName">
             <Setter Property="Margin" Value="0"/>
             <Setter Property="DockPanel.Dock" Value="Left"/>
