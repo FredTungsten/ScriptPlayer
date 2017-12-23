@@ -5,8 +5,11 @@
 [![License](https://img.shields.io/badge/licence-BSD%203-blue.svg?style=flat)](https://github.com/FredTungsten/ScriptPlayer/blob/master/LICENSE)
 
 ScriptPlayer is a video player that controls the Fleshlight Launch and other toys in sync with videos.  
-[Documentation](https://github.com/FredTungsten/ScriptPlayer/wiki)  
-[Releases](https://github.com/FredTungsten/ScriptPlayer/releases)  
+* [Installation](https://github.com/FredTungsten/ScriptPlayer/wiki/Installation)  
+* [Troubleshooting](https://github.com/FredTungsten/ScriptPlayer/wiki/Troubleshooting)  
+* [Report bugs or request features](https://github.com/FredTungsten/ScriptPlayer/wiki/Creating-Issues-to-report-bugs-or-request-features)  
+* [Documentation](https://github.com/FredTungsten/ScriptPlayer/wiki)  
+* [Releases](https://github.com/FredTungsten/ScriptPlayer/releases)  
 
 <div style="font-size:16px;margin:0 auto;width:300px">
     <div align="center">
