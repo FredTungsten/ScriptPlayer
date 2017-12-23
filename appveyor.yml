@@ -28,7 +28,7 @@ install:
         } Else {
           $gitVersion=git describe --tags --abbrev=0 $env:APPVEYOR_REPO_BRANCH
           $env:newVersion="$gitVersion.$env:APPVEYOR_BUILD_NUMBER"
-          $env:appveyor_info_version="$env:newVersion-alpha"
+          $env:appveyor_info_version="$env:newVersion"
         }      
         $env:appveyor_build_version="$env:newVersion"
         appveyor UpdateBuild -Version "$env:newVersion"
