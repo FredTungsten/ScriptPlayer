@@ -41,6 +41,7 @@
                 <MenuItem Header="Clear" Click="mnuClear_Click"/>
                 <Separator/>
                 <MenuItem Header="Convert Beats to Positions" Click="mnuBeatsToPositions_Click"/>
+                <MenuItem Header="Convert Positions to Beats" Click="mnuPositionsToBeats_Click"/>
                 <Separator/>
                 <MenuItem Header="Load">
                     <MenuItem Header="beats.txt" Click="mnuLoad_Click"/>

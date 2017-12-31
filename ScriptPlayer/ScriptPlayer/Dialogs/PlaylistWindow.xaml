@@ -9,15 +9,17 @@
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Title="Playlist" Height="300" Width="300" WindowStyle="ToolWindow">
     <Window.Resources>
-        <FontFamily x:Key="FontAwesome">pack://application:,,,/FontAwesome.Net;component/Fonts/#FontAwesome</FontFamily>
         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+            <Setter Property="Focusable" Value="False"/>
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="Opacity" Value="0.7"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}"></Style>
+        <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}">
+            <Setter Property="Focusable" Value="False"/>
+        </Style>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -46,19 +48,24 @@
             </ListBox.ItemTemplate>
         </ListBox>
         <UniformGrid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom" Grid.Row="1" Columns="5">
-            <Button ToolTip="Move Down" Command="{Binding Playlist.MoveSelectedEntryDownCommand}" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Button ToolTip="Move Down" Command="{Binding Playlist.MoveSelectedEntryDownCommand}"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_down}"/>
             </Button>
-            <Button ToolTip="Move Up" Command="{Binding Playlist.MoveSelectedEntryUpCommand}" FontFamily="{StaticResource FontAwesome}" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Button ToolTip="Move Up" Command="{Binding Playlist.MoveSelectedEntryUpCommand}" 
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_up}"/>
             </Button>
-            <Button ToolTip="Remove" Command="{Binding Playlist.RemoveSelectedEntryCommand}" FontFamily="{StaticResource FontAwesome}" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Button ToolTip="Remove" Command="{Binding Playlist.RemoveSelectedEntryCommand}" 
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_times}"/>
             </Button>
-            <CheckBox ToolTip="Shuffle" IsChecked="{Binding Playlist.Shuffle}" FontFamily="{StaticResource FontAwesome}" Grid.Column="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <CheckBox ToolTip="Shuffle" IsChecked="{Binding Playlist.Shuffle}"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_random}"/>
             </CheckBox>
-            <CheckBox ToolTip="Repeat" IsChecked="{Binding Playlist.Repeat}" FontFamily="{StaticResource FontAwesome}" Grid.Column="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <CheckBox ToolTip="Repeat" IsChecked="{Binding Playlist.Repeat}" 
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_repeat}"/>
             </CheckBox>
         </UniformGrid>

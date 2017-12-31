@@ -1736,5 +1736,10 @@ namespace ScriptPlayer.VideoSync
             Beats.Add(videoPlayer.GetPosition());
             SetAllBeats(Beats);
         }
+
+        private void mnuPositionsToBeats_Click(object sender, RoutedEventArgs e)
+        {
+            SetAllBeats(Positions.Select(p => p.TimeStamp));
+        }
     }
 }
