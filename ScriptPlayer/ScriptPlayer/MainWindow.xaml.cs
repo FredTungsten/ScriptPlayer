@@ -57,8 +57,22 @@ namespace ScriptPlayer
             ViewModel.RequestShowSkipNextButton += ViewModelOnRequestShowSkipNextButton;
             ViewModel.RequestHideSkipButton += ViewModelOnRequestHideSkipButton;
             ViewModel.RequestHideNotification += ViewModelOnRequestHideNotification;
+            ViewModel.Beat += ViewModelOnBeat;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
+        }
+
+        private void ViewModelOnBeat(object sender, EventArgs eventArgs)
+        {
+            return;
+
+            if (!CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action(() => { ViewModelOnBeat(sender, eventArgs); }));
+                return;
+            }
+
+            FlashOverlay.Flash();
         }
 
         private void ViewModelOnRequestHideNotification(object sender, string designation)

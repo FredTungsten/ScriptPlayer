@@ -1,0 +1,19 @@
+﻿<UserControl x:Class="ScriptPlayer.FlashOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             IsHitTestVisible="False"
+             mc:Ignorable="d" d:DesignHeight="172.669" d:DesignWidth="351.568">
+    <Grid>
+        <Grid.Background>
+            <RadialGradientBrush>
+                <GradientStopCollection>
+                    <GradientStop Color="Black" Offset="1"/>
+                    <GradientStop Color="#00000000" Offset="0.7"></GradientStop>
+                    <GradientStop Color="#00000000" Offset="0"></GradientStop>
+                </GradientStopCollection>
+            </RadialGradientBrush>
+        </Grid.Background>
+    </Grid>
+</UserControl>

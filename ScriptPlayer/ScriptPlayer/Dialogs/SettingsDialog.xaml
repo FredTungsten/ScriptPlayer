@@ -254,13 +254,13 @@
                                 <TextBlock VerticalAlignment="Center" Text="Spacing before/after gap [ms] " Width="170" DockPanel.Dock="Left"/>
                                 <TextBlock Width="40" TextAlignment="Right" DockPanel.Dock="Right" Text="{Binding Settings.FillGapGap, Converter={StaticResource MillisecondsConverter}}"/>
                                 <Slider Value="{Binding Settings.FillGapGap, Converter={StaticResource MillisecondsConverter}}" VerticalAlignment="Center" DockPanel.Dock="Left"
-                                        Minimum="0" Maximum="2000" TickFrequency="50" IsSnapToTickEnabled="True"/>
+                                        Minimum="0" Maximum="4000" TickFrequency="50" IsSnapToTickEnabled="True"/>
                             </DockPanel>
                             <DockPanel Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}">
                                 <TextBlock VerticalAlignment="Center" Text="Filler Intervall [ms] " Width="170" DockPanel.Dock="Left"/>
                                 <TextBlock Width="40" TextAlignment="Right" DockPanel.Dock="Right" Text="{Binding Settings.FillGapIntervall, Converter={StaticResource MillisecondsConverter}}"/>
                                 <Slider Value="{Binding Settings.FillGapIntervall, Converter={StaticResource MillisecondsConverter}}" VerticalAlignment="Center" DockPanel.Dock="Left"
-                                        Minimum="200" Maximum="1000" TickFrequency="20" IsSnapToTickEnabled="True"/>
+                                        Minimum="200" Maximum="2000" TickFrequency="20" IsSnapToTickEnabled="True"/>
                             </DockPanel>
                         </StackPanel>
                     </Grid>

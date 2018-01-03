@@ -34,6 +34,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler RequestShowSkipButton;
         public event EventHandler RequestShowSkipNextButton;
         public event EventHandler<string> RequestHideNotification;
+        public event EventHandler Beat;
 
         private readonly string[] _supportedScriptExtensions;
 
@@ -1735,6 +1736,8 @@ namespace ScriptPlayer.ViewModels
             SkipState skipState;
             TimeSpan timeToNextOriginalEvent = TimeSpan.Zero;
 
+            OnBeat();
+
             if (eventArgs.NextAction == null)
             {
                 // Script Ended
@@ -2429,6 +2432,11 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnRequestHideNotification(string designation)
         {
             RequestHideNotification?.Invoke(this, designation);
+        }
+
+        protected virtual void OnBeat()
+        {
+            Beat?.Invoke(this, EventArgs.Empty);
         }
     }
 
