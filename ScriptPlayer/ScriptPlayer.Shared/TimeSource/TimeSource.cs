@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading;
 using System.Windows;
 
 namespace ScriptPlayer.Shared
@@ -51,6 +53,7 @@ namespace ScriptPlayer.Shared
 
         private static void OnIsPlayingPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
+            Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: TimeSource.IsPlaying Changed! Old Value: {e.OldValue} NewValue: {e.NewValue}");
             ((TimeSource) d).OnIsPlayingChanged((bool) e.NewValue);
         }
 

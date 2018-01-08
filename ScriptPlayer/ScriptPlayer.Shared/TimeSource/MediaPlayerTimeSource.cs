@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading;
 using System.Windows.Media;
 
 namespace ScriptPlayer.Shared
@@ -20,6 +22,7 @@ namespace ScriptPlayer.Shared
 
         private void PlayerOnMediaEnded(object sender, EventArgs eventArgs)
         {
+            Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: MediaPlayerTimeSource.PlayerOnMediaEnded, Setting IsPlaying to false");
             IsPlaying = false;
         }
 
@@ -28,7 +31,9 @@ namespace ScriptPlayer.Shared
             if(_player.NaturalDuration.HasTimeSpan)
                 Duration = _player.NaturalDuration.TimeSpan;
 
+            Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: MediaPlayerTimeSource.PlayerOnMediaOpened, Invoking Play");
             _player.Play();
+            IsPlaying = true;
         }
 
         private void ClockOnTick(object sender, EventArgs eventArgs)
@@ -39,17 +44,25 @@ namespace ScriptPlayer.Shared
         public override void Play()
         {
             if (IsPlaying)
+            {
+                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: MediaPlayerTimeSource.Play will be ignored (is already playing)");
                 return;
+            }
 
-             IsPlaying = true;
+            Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: MediaPlayerTimeSource.Play, Setting IsPlaying to true");
+            IsPlaying = true;
             _player.Play();
         }
 
         public override void Pause()
         {
             if (!IsPlaying)
+            {
+                Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: MediaPlayerTimeSource.Pause will be ignored (is already paused)");
                 return;
+            }
 
+            Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: MediaPlayerTimeSource.Pause, Setting IsPlaying to false");
             IsPlaying = false;
             _player.Pause();
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -233,6 +234,8 @@ namespace ScriptPlayer.Shared
 
         public void Open(string filename)
         {
+            if(!File.Exists(filename)) return;
+
             OpenedFile = filename;
             _player.Open(new Uri(filename, UriKind.Absolute));
         }
