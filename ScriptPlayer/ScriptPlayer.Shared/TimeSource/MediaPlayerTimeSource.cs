@@ -7,17 +7,32 @@ namespace ScriptPlayer.Shared
 {
     public class MediaPlayerTimeSource : TimeSource, IDisposable
     {
-        private readonly MediaPlayer _player;
+        private MediaPlayer _player;
         private readonly ISampleClock _clock;
 
         public MediaPlayerTimeSource(MediaPlayer player, ISampleClock clock)
         {
-            _player = player;
-            _player.MediaOpened += PlayerOnMediaOpened;
-            _player.MediaEnded += PlayerOnMediaEnded;
-
+            SetPlayer(player);
+            
             _clock = clock;
             _clock.Tick += ClockOnTick;
+        }
+
+        public void SetPlayer(MediaPlayer player)
+        {
+            if (_player != null)
+            {
+                _player.MediaOpened -= PlayerOnMediaOpened;
+                _player.MediaEnded -= PlayerOnMediaEnded;
+            }
+
+            _player = player;
+
+            if (_player != null)
+            {
+                _player.MediaOpened += PlayerOnMediaOpened;
+                _player.MediaEnded += PlayerOnMediaEnded;
+            }
         }
 
         private void PlayerOnMediaEnded(object sender, EventArgs eventArgs)

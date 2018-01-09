@@ -35,8 +35,8 @@ namespace ScriptPlayer.Shared.Scripts
             {
                 case ConversionMode.UpOrDown:
                     centerLimit = TimeSpan.Zero;
-                    positionDown = 95;
-                    positionUp = 5;
+                    positionDown = 5;
+                    positionUp = 95;
                     break;
                 case ConversionMode.DownFast:
                     centerLimit = TimeSpan.FromMilliseconds(180);

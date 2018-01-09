@@ -1825,74 +1825,74 @@ namespace ScriptPlayer.ViewModels
             switch (skipState)
             {
                 case SkipState.Available:
-                {
-                    OnRequestHideSkipButton();
-                    break;
-                }
-                case SkipState.Gap:
-                {
-                    if (Settings.AutoSkip)
                     {
-                        SkipToNextEvent();
+                        OnRequestHideSkipButton();
+                        break;
                     }
-                    else
+                case SkipState.Gap:
+                    {
+                        if (Settings.AutoSkip)
+                        {
+                            SkipToNextEvent();
+                        }
+                        else
+                        {
+                            if (Settings.NotifyGaps)
+                                OnRequestOverlay($"Next event in {timeToNextOriginalEvent.TotalSeconds:f0}s",
+                                    TimeSpan.FromSeconds(4), "Events");
+                            if (Settings.ShowSkipButton)
+                                OnRequestShowSkipButton();
+                        }
+                        break;
+                    }
+                case SkipState.Filler:
+                    {
+                        OnRequestHideSkipButton();
+                        break;
+                    }
+                case SkipState.FillerGap:
                     {
                         if (Settings.NotifyGaps)
-                            OnRequestOverlay($"Next event in {timeToNextOriginalEvent.TotalSeconds:f0}s",
-                                TimeSpan.FromSeconds(4), "Events");
-                        if(Settings.ShowSkipButton)
+                            OnRequestOverlay($"Next original event in {timeToNextOriginalEvent.TotalSeconds:f0}s", TimeSpan.FromSeconds(4), "Events");
+                        if (Settings.ShowSkipButton)
                             OnRequestShowSkipButton();
+                        break;
                     }
-                    break;
-                }
-                case SkipState.Filler:
-                {
-                    OnRequestHideSkipButton();
-                    break;
-                }
-                case SkipState.FillerGap:
-                {
-                    if (Settings.NotifyGaps)
-                        OnRequestOverlay($"Next original event in {timeToNextOriginalEvent.TotalSeconds:f0}s", TimeSpan.FromSeconds(4), "Events");
-                    if (Settings.ShowSkipButton)
-                            OnRequestShowSkipButton();
-                    break;
-                }
                 case SkipState.EndFillerNext:
-                {
-                    if (Settings.NotifyGaps)
-                        OnRequestOverlay("No more original events available", TimeSpan.FromSeconds(4), "Events");
-                    if (Settings.ShowSkipButton)
-                            OnRequestShowSkipNextButton();
-                    break;
-                }
-                case SkipState.EndFiller:
-                {
-                    if (Settings.NotifyGaps)
-                        OnRequestOverlay("No more original events available", TimeSpan.FromSeconds(4), "Events");
-                    break;
-                }
-                case SkipState.EndNext:
-                {
-                    if (Settings.AutoSkip)
                     {
-                        SkipToNextEvent();
+                        if (Settings.NotifyGaps)
+                            OnRequestOverlay("No more original events available", TimeSpan.FromSeconds(4), "Events");
+                        if (Settings.ShowSkipButton)
+                            OnRequestShowSkipNextButton();
+                        break;
                     }
-                    else
+                case SkipState.EndFiller:
+                    {
+                        if (Settings.NotifyGaps)
+                            OnRequestOverlay("No more original events available", TimeSpan.FromSeconds(4), "Events");
+                        break;
+                    }
+                case SkipState.EndNext:
+                    {
+                        if (Settings.AutoSkip)
+                        {
+                            SkipToNextEvent();
+                        }
+                        else
+                        {
+                            if (Settings.NotifyGaps)
+                                OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
+                            if (Settings.ShowSkipButton)
+                                OnRequestShowSkipNextButton();
+                        }
+                        break;
+                    }
+                case SkipState.End:
                     {
                         if (Settings.NotifyGaps)
                             OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
-                        if (Settings.ShowSkipButton)
-                                OnRequestShowSkipNextButton();
+                        break;
                     }
-                    break;
-                }
-                case SkipState.End:
-                {
-                    if (Settings.NotifyGaps)
-                        OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
-                    break;
-                }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -2105,7 +2105,7 @@ namespace ScriptPlayer.ViewModels
                     return;
                 }
 
-                TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(2);
+                TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(1);
                 TimeSpan duration = skipTo - currentPosition;
 
                 if (skipTo < currentPosition)
@@ -2343,7 +2343,7 @@ namespace ScriptPlayer.ViewModels
             await controller.Disconnect();
 
             //controller.DeviceFound -= DeviceController_DeviceFound;
-            
+
             //controller.DeviceRemoved -= DeviceController_DeviceRemoved;
             //controller.Disconnected -= DeviceController_Disconnected;
 
