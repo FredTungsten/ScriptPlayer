@@ -808,6 +808,7 @@ namespace ScriptPlayer.ViewModels
                 case nameof(SettingsViewModel.FilterMode):
                 case nameof(SettingsViewModel.MinPosition):
                 case nameof(SettingsViewModel.MaxPosition):
+                case nameof(SettingsViewModel.InvertPosition):
                     {
                         UpdateFilter();
                         break;
@@ -1460,7 +1461,8 @@ namespace ScriptPlayer.ViewModels
             if (!TimeSource.CanOpenMedia) return;
 
             LoadFile(playlistEntry.Fullname);
-            Play();
+            if(EntryLoaded())
+                Play();
         }
 
         [NotifyPropertyChangedInvocator]
@@ -1910,6 +1912,10 @@ namespace ScriptPlayer.ViewModels
 
             byte minPosition = Settings.MinPosition;
             byte maxPosition = Settings.MaxPosition;
+            bool invert = Settings.InvertPosition;
+
+            if (invert)
+                relative = 1.0 - relative;
 
             const double secondsPercycle = 10.0;
             double cycle = timestamp / secondsPercycle;

@@ -70,7 +70,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Gaps" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Range" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -176,6 +176,12 @@
                                 </TextBlock>
 
                                 <shared:RangeSlider Margin="0,4" Minimum="0" Maximum="99" LowerValue="{Binding Settings.MinPosition, Mode=TwoWay}" UpperValue="{Binding Settings.MaxPosition, Mode=TwoWay}"/>
+                            </DockPanel>
+
+                            <DockPanel Margin="4" ToolTip="Inverts the input position before calculating the output position.">
+                                <TextBlock Style="{StaticResource SettingName}" Text="Invert Positions"/>
+   
+                                <CheckBox IsChecked="{Binding Settings.InvertPosition}"/>
                             </DockPanel>
 
                             <DockPanel>

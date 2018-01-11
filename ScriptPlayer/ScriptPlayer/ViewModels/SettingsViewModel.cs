@@ -66,6 +66,7 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _fillGapIntervall = TimeSpan.FromMilliseconds(500);
         private TimeSpan _fillGapGap = TimeSpan.FromSeconds(2);
         private TimeSpan _minGapDuration = TimeSpan.FromSeconds(10);
+        private bool _invertPosition;
 
         public SettingsViewModel()
         {
@@ -491,6 +492,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _maxPosition) return;
                 _maxPosition = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool InvertPosition
+        {
+            get => _invertPosition;
+            set
+            {
+                if (value == _invertPosition) return;
+                _invertPosition = value;
                 OnPropertyChanged();
             }
         }
