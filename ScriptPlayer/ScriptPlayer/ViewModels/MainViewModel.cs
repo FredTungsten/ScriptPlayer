@@ -113,11 +113,8 @@ namespace ScriptPlayer.ViewModels
         private string _loadedScript;
         private string _loadedVideo;
         private bool _isSkipping;
-
+        private bool _loading;
         public ObservableCollection<Device> Devices => _devices;
-
-
-
         public TimeSpan PositionsViewport
         {
             get => _positionsViewport;
@@ -209,6 +206,7 @@ namespace ScriptPlayer.ViewModels
                 LoadPlaylist();
 
             Playlist.Repeat = Settings.RepeatPlaylist;
+            Playlist.RandomChapters = Settings.RandomChapters;
             Playlist.Shuffle = Settings.ShufflePlaylist;
         }
 
@@ -224,6 +222,11 @@ namespace ScriptPlayer.ViewModels
                 case nameof(PlaylistViewModel.Repeat):
                     {
                         Settings.RepeatPlaylist = Playlist.Repeat;
+                        break;
+                    }
+                case nameof(PlaylistViewModel.RandomChapters):
+                    {
+                        Settings.RandomChapters = Playlist.RandomChapters;
                         break;
                     }
             }
@@ -1461,7 +1464,7 @@ namespace ScriptPlayer.ViewModels
             if (!TimeSource.CanOpenMedia) return;
 
             LoadFile(playlistEntry.Fullname);
-            if(EntryLoaded())
+            if (EntryLoaded())
                 Play();
         }
 
@@ -1552,25 +1555,64 @@ namespace ScriptPlayer.ViewModels
                 Playlist.AddEntry(new PlaylistEntry(entry));
         }
 
-        private void LoadVideo(string videoFileName, bool checkForScript)
+        private async void LoadVideo(string videoFileName, bool checkForScript)
         {
-            if (checkForScript)
-                TryFindMatchingScript(videoFileName);
-
-            LoadedVideo = videoFileName;
-
-            if (PlaybackMode == PlaybackMode.Local)
+            try
             {
-                HideBanner();
-                VideoPlayer.Open(videoFileName);
+                _loading = true;
+
+                if (checkForScript)
+                    TryFindMatchingScript(videoFileName);
+
+                LoadedVideo = videoFileName;
+
+                TimeSpan start = TimeSpan.Zero;
+
+                if (Settings.AutoSkip)
+                {
+                    if (Settings.RandomChapters)
+                        start = GetRandomChapter();
+                    else
+                        start = GetFirstEvent();
+                }
+
+                if (PlaybackMode == PlaybackMode.Local)
+                {
+                    HideBanner();
+                    await VideoPlayer.Open(videoFileName, start);
+                }
+
+                Title = Path.GetFileNameWithoutExtension(videoFileName);
+
+                if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
+                    OnRequestOverlay($"Loaded {Path.GetFileName(videoFileName)}", TimeSpan.FromSeconds(4),
+                        "VideoLoaded");
+
+                Play();
+
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+            }
+            finally
+            {
+                _loading = false;
+            }
+        }
+
+        private TimeSpan GetFirstEvent()
+        {
+            TimeSpan currentPosition = TimeSource.Progress;
+            ScriptAction nextAction = _scriptHandler.FirstOriginalEventAfter(TimeSpan.MinValue);
+
+            if (nextAction == null)
+            {
+                return TimeSpan.Zero;
             }
 
-            Title = Path.GetFileNameWithoutExtension(videoFileName);
-
-            if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
-                OnRequestOverlay($"Loaded {Path.GetFileName(videoFileName)}", TimeSpan.FromSeconds(4), "VideoLoaded");
-
-            Play();
+            TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(1);
+            return skipTo;
         }
 
         private bool LoadScript(ScriptLoader[] loaders, string fileName)
@@ -1651,6 +1693,51 @@ namespace ScriptPlayer.ViewModels
             HeatMap = heatmap;
         }
 
+        private List<Tuple<TimeSpan, TimeSpan>> GetChapters(TimeSpan minChapterDuration, TimeSpan gapDuration)
+        {
+            List<Tuple<TimeSpan, TimeSpan>> result = new List<Tuple<TimeSpan, TimeSpan>>();
+
+            if (TimeSource == null)
+                return result;
+
+            IEnumerable<ScriptAction> actions = _scriptHandler.GetUnfilledScript();
+
+            List<TimeSpan> timeStamps = FilterDuplicates(actions.ToList()).Select(s => s.TimeStamp).ToList();
+
+            if (timeStamps.Count < 2)
+                return result;
+
+            TimeSpan chapterBegin = TimeSpan.MinValue;
+            TimeSpan chapterEnd = TimeSpan.MinValue;
+
+            foreach (TimeSpan span in timeStamps)
+            {
+                if (chapterBegin == TimeSpan.MinValue)
+                {
+                    chapterBegin = span;
+                    chapterEnd = span;
+                }
+                else if (span - chapterEnd < gapDuration)
+                {
+                    chapterEnd = span;
+                }
+                else
+                {
+                    result.Add(new Tuple<TimeSpan, TimeSpan>(chapterBegin, chapterEnd));
+
+                    chapterBegin = span;
+                    chapterEnd = span;
+                }
+            }
+
+            if (chapterBegin != TimeSpan.MinValue && chapterEnd != TimeSpan.MinValue)
+            {
+                result.Add(new Tuple<TimeSpan, TimeSpan>(chapterBegin, chapterEnd));
+            }
+
+            return result.Where(t => t.Item2 - t.Item1 >= minChapterDuration).ToList();
+        }
+
         private List<ScriptAction> FilterDuplicates(List<ScriptAction> timestamps)
         {
             List<ScriptAction> result = new List<ScriptAction>();
@@ -1727,6 +1814,9 @@ namespace ScriptPlayer.ViewModels
         private void ScriptHandlerOnScriptActionRaised(object sender, ScriptActionEventArgs eventArgs)
         {
             if (PatternSource != PatternSource.Video)
+                return;
+
+            if (_loading)
                 return;
 
             if (eventArgs.RawCurrentAction is FunScriptAction)
@@ -2083,13 +2173,55 @@ namespace ScriptPlayer.ViewModels
 
         public void SkipToNextEvent()
         {
-            SkipToNextEvent(false);
+            if (Settings.RandomChapters)
+                Playlist.PlayNextEntry(LoadedFiles);
+            else
+                SkipToNextEvent(false);
+        }
+
+        private async void SkipToRandomChapter()
+        {
+            OnRequestHideSkipButton();
+            OnRequestHideNotification("Events");
+
+            if (_isSkipping)
+                return;
+
+            try
+            {
+                _isSkipping = true;
+
+                TimeSpan skipTo = GetRandomChapter();
+                if (skipTo == TimeSpan.Zero)
+                    return;
+
+                await SkipTo(skipTo, true);
+            }
+            finally
+            {
+                _isSkipping = false;
+            }
+        }
+
+        private TimeSpan GetRandomChapter()
+        {
+            var chapters = GetChapters(TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(10));
+
+            if (chapters.Count == 0)
+                return TimeSpan.Zero;
+
+            Random r = new Random();
+            TimeSpan skipTo = chapters[r.Next(chapters.Count)].Item1 - TimeSpan.FromSeconds(1);
+            return skipTo;
         }
 
         public async void SkipToNextEvent(bool isInitialSkip)
         {
             OnRequestHideSkipButton();
             OnRequestHideNotification("Events");
+
+            if (_isSkipping)
+                return;
 
             try
             {
@@ -2117,13 +2249,7 @@ namespace ScriptPlayer.ViewModels
                 if (skipTo < currentPosition)
                     return;
 
-                if (PlaybackMode == PlaybackMode.Local && Settings.SoftSeek)
-                    await VideoPlayer.SoftSeek(skipTo, isInitialSkip);
-                else
-                    TimeSource.SetPosition(skipTo);
-
-                if (Settings.NotifyGaps)
-                    ShowPosition($"Skipped {duration.TotalSeconds:f0}s - ");
+                await SkipTo(skipTo, isInitialSkip);
             }
             finally
             {
@@ -2131,10 +2257,27 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        private async Task SkipTo(TimeSpan position, bool isInitialSkip)
+        {
+            if (PlaybackMode == PlaybackMode.Local && Settings.SoftSeek)
+                await VideoPlayer.SoftSeek(position, isInitialSkip);
+            else
+                TimeSource.SetPosition(position);
+
+            if (Settings.NotifyGaps)
+                ShowPosition($"Skipped {position.TotalSeconds:f0}s - ");
+        }
+
         private void VideoPlayer_MediaOpened(object sender, EventArgs e)
         {
+            /*
             if (Settings.AutoSkip)
-                SkipToNextEvent(true);
+            {
+                if (Settings.RandomChapters)
+                    SkipToRandomChapter();
+                else
+                    SkipToNextEvent(true);
+            }*/
 
             UpdateHeatMap();
         }

@@ -59,6 +59,17 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public bool RandomChapters
+        {
+            get => _randomChapters;
+            set
+            {
+                if (value == _randomChapters) return;
+                _randomChapters = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool Repeat
         {
             get => _repeat;
@@ -326,6 +337,7 @@ namespace ScriptPlayer.ViewModels
         }
 
         readonly Random _rng = new Random();
+        private bool _randomChapters;
 
         private PlaylistEntry AnythingButThis(params string[] currentEntryFiles)
         {

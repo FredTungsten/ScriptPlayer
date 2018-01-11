@@ -32,6 +32,9 @@ namespace ScriptPlayer.Shared
             {
                 _player.MediaOpened += PlayerOnMediaOpened;
                 _player.MediaEnded += PlayerOnMediaEnded;
+
+                if(_player.NaturalDuration.HasTimeSpan)
+                    OnOpened();
             }
         }
 
@@ -43,7 +46,12 @@ namespace ScriptPlayer.Shared
 
         private void PlayerOnMediaOpened(object sender, EventArgs eventArgs)
         {
-            if(_player.NaturalDuration.HasTimeSpan)
+            OnOpened();
+        }
+
+        private void OnOpened()
+        {
+            if (_player.NaturalDuration.HasTimeSpan)
                 Duration = _player.NaturalDuration.TimeSpan;
 
             Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: MediaPlayerTimeSource.PlayerOnMediaOpened, Invoking Play");

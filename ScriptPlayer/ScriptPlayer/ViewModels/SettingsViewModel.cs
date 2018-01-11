@@ -67,6 +67,7 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _fillGapGap = TimeSpan.FromSeconds(2);
         private TimeSpan _minGapDuration = TimeSpan.FromSeconds(10);
         private bool _invertPosition;
+        private bool _randomChapters;
 
         public SettingsViewModel()
         {
@@ -160,6 +161,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _notifyGaps) return;
                 _notifyGaps = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool RandomChapters
+        {
+            get => _randomChapters;
+            set
+            {
+                if (value == _randomChapters) return;
+                _randomChapters = value;
                 OnPropertyChanged();
             }
         }

@@ -264,13 +264,46 @@ namespace ScriptPlayer.Shared
             UpdateMouseHider();
         }
 
-        public void Open(string filename)
+        public async void Open(string filename)
+        {
+            await Open(filename, TimeSpan.Zero);
+        }
+
+        public async Task Open(string filename, TimeSpan startAt)
         {
             if (!File.Exists(filename)) return;
 
             OpenedFile = filename;
+
+            /*
             _player.Open(new Uri(filename, UriKind.Absolute));
             _standByPlayer.Open(new Uri(filename, UriKind.Absolute));
+            // */
+
+            //*
+            await OpenAndWaitFor(_standByPlayer, filename);
+
+            await CrossFade(startAt);
+
+            await OpenAndWaitFor(_standByPlayer, filename);
+            // */
+        }
+
+        public async Task OpenAndWaitFor(MediaPlayer player, string filename)
+        {
+            ManualResetEvent loadEvent = new ManualResetEvent(false);
+            EventHandler success = (sender, args) => { loadEvent.Set(); };
+            EventHandler<ExceptionEventArgs> failure = (sender, args) => { loadEvent.Set(); };
+
+            player.MediaOpened += success;
+            player.MediaFailed += failure;
+
+            player.Open(new Uri(filename, UriKind.Absolute));
+
+            await Task.Run(() => loadEvent.WaitOne());
+
+            player.MediaOpened -= success;
+            player.MediaFailed -= failure;
         }
 
         private void SwapPlayers()
@@ -386,6 +419,11 @@ namespace ScriptPlayer.Shared
             else if (ReferenceEquals(player, _standByPlayer))
             {
                 //_standByPlayer.Pause();
+
+                Duration = player.NaturalDuration.TimeSpan;
+                ActualResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
+                UpdateResolution();
+                OnMediaOpened();
             }
         }
 
