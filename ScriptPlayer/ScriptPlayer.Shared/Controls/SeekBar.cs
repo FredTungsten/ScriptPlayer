@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -10,65 +9,68 @@ namespace ScriptPlayer.Shared
 {
     public class SeekBar : Control
     {
-
         public delegate void ClickedEventHandler(object sender, double relative, TimeSpan absolute, int downMoveUp);
 
-        public event ClickedEventHandler Seek;
+        public static readonly DependencyProperty OverlayProperty = DependencyProperty.Register(
+            "Overlay", typeof(Brush), typeof(SeekBar),
+            new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty OverlayOpacityProperty = DependencyProperty.Register(
+            "OverlayOpacity", typeof(Brush), typeof(SeekBar),
+            new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
+            "Progress", typeof(TimeSpan), typeof(SeekBar),
+            new PropertyMetadata(default(TimeSpan), OnVisualPropertyChanged));
+
+        public static readonly DependencyProperty DurationProperty = DependencyProperty.Register(
+            "Duration", typeof(TimeSpan), typeof(SeekBar),
+            new PropertyMetadata(default(TimeSpan), OnVisualPropertyChanged));
+
+        private bool _down;
+        private Popup _popup;
+        private TextBox _txt;
 
         static SeekBar()
         {
-            BackgroundProperty.OverrideMetadata(typeof(SeekBar), new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+            BackgroundProperty.OverrideMetadata(typeof(SeekBar),
+                new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
         }
-
-        public static readonly DependencyProperty OverlayProperty = DependencyProperty.Register(
-            "Overlay", typeof(Brush), typeof(SeekBar), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
-
-        public Brush Overlay
-        {
-            get { return (Brush) GetValue(OverlayProperty); }
-            set { SetValue(OverlayProperty, value); }
-        }
-
-        public static readonly DependencyProperty OverlayOpacityProperty = DependencyProperty.Register(
-            "OverlayOpacity", typeof(Brush), typeof(SeekBar), new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
-
-        public Brush OverlayOpacity
-        {
-            get { return (Brush) GetValue(OverlayOpacityProperty); }
-            set { SetValue(OverlayOpacityProperty, value); }
-        }
-
-        public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
-            "Progress", typeof(TimeSpan), typeof(SeekBar), new PropertyMetadata(default(TimeSpan), OnVisualPropertyChanged));
-
-        public static readonly DependencyProperty DurationProperty = DependencyProperty.Register(
-            "Duration", typeof(TimeSpan), typeof(SeekBar), new PropertyMetadata(default(TimeSpan), OnVisualPropertyChanged));
-
-        private bool _down;
-
-        public TimeSpan Duration
-        {
-            get { return (TimeSpan) GetValue(DurationProperty); }
-            set { SetValue(DurationProperty, value); }
-        }
-
-        private static void OnVisualPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            ((SeekBar)d).InvalidateVisual();
-        }
-
-        public TimeSpan Progress
-        {
-            get { return (TimeSpan) GetValue(ProgressProperty); }
-            set { SetValue(ProgressProperty, value); }
-        }
-
-        private Popup _popup;
-        private TextBox _txt;
 
         public SeekBar()
         {
             InitializePopup();
+        }
+
+        public Brush Overlay
+        {
+            get => (Brush) GetValue(OverlayProperty);
+            set => SetValue(OverlayProperty, value);
+        }
+
+        public Brush OverlayOpacity
+        {
+            get => (Brush) GetValue(OverlayOpacityProperty);
+            set => SetValue(OverlayOpacityProperty, value);
+        }
+
+        public TimeSpan Duration
+        {
+            get => (TimeSpan) GetValue(DurationProperty);
+            set => SetValue(DurationProperty, value);
+        }
+
+        public TimeSpan Progress
+        {
+            get => (TimeSpan) GetValue(ProgressProperty);
+            set => SetValue(ProgressProperty, value);
+        }
+
+        public event ClickedEventHandler Seek;
+
+        private static void OnVisualPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((SeekBar) d).InvalidateVisual();
         }
 
         private void InitializePopup()
@@ -96,7 +98,7 @@ namespace ScriptPlayer.Shared
 
         protected override void OnRender(DrawingContext dc)
         {
-            var rect = new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight));
+            Rect rect = new Rect(new Point(0, 0), new Size(ActualWidth, ActualHeight));
 
             dc.PushClip(new RectangleGeometry(rect));
 
@@ -111,12 +113,10 @@ namespace ScriptPlayer.Shared
 
             double linePosition = Progress.Divide(Duration) * ActualWidth;
 
-            linePosition = Math.Round(linePosition - 0.5)+0.5;
-
-            //dc.DrawRectangle(new LinearGradientBrush(HeatMapGenerator.GradientsSmoothFromColors(0.5, Color.FromArgb(0,0,0,0), Color.FromArgb(150,0,0,0), Color.FromArgb(0, 0, 0, 0)), new Point(0,0), new Point(1,0)), null, new Rect(linePosition-10,0,20, ActualHeight));
+            linePosition = Math.Round(linePosition - 0.5) + 0.5;
 
             dc.DrawLine(new Pen(Brushes.Black, 3), new Point(linePosition, 0), new Point(linePosition, ActualHeight));
-            dc.DrawLine(new Pen(Brushes.White, 1), new Point(linePosition,0), new Point(linePosition, ActualHeight));
+            dc.DrawLine(new Pen(Brushes.White, 1), new Point(linePosition, 0), new Point(linePosition, ActualHeight));
 
             dc.Pop();
         }
@@ -131,13 +131,9 @@ namespace ScriptPlayer.Shared
             Point p = e.GetPosition(this);
 
             if (IsMouseOver)
-            {
                 UpdatePopup(p);
-            }
             else
-            {
                 ClosePopup();
-            }
 
             double relativePosition = GetRelativePosition(p.X);
             TimeSpan absolutePosition = Duration.Multiply(relativePosition);
@@ -185,13 +181,13 @@ namespace ScriptPlayer.Shared
             double relativePosition = GetRelativePosition(point.X);
             TimeSpan absolutePosition = Duration.Multiply(relativePosition);
 
-            if(Duration >= TimeSpan.FromHours(1))
-                _txt.Text = $"{absolutePosition.Hours:00}:{absolutePosition.Minutes:00}:{absolutePosition.Seconds:00}";
-            else
-                _txt.Text = $"{absolutePosition.Minutes:00}:{absolutePosition.Seconds:00}";
+            _txt.Text = Duration >= TimeSpan.FromHours(1) ? 
+                $"{absolutePosition.Hours:00}:{absolutePosition.Minutes:00}:{absolutePosition.Seconds:00}" : 
+                $"{absolutePosition.Minutes:00}:{absolutePosition.Seconds:00}";
 
             _popup.IsOpen = true;
-            _popup.HorizontalOffset = relativePosition * ActualWidth - ((FrameworkElement)_popup.Child).ActualWidth / 2.0;
+            _popup.HorizontalOffset = relativePosition * ActualWidth -
+                                      ((FrameworkElement) _popup.Child).ActualWidth / 2.0;
         }
 
         private double GetRelativePosition(double x)

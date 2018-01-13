@@ -38,7 +38,6 @@ namespace ScriptPlayer
             ViewModel = new MainViewModel();
         }
 
-
         private void OnClosed(object sender, EventArgs eventArgs)
         {
             ViewModel.Unload();

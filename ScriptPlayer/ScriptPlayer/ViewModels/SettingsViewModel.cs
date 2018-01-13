@@ -48,7 +48,6 @@ namespace ScriptPlayer.ViewModels
         private bool _shufflePlaylist;
         private bool _repeatPlaylist;
         private bool _softSeek = true;
-        private bool _seekFreezeFrame = true;
         private bool _notifyGaps = true;
         private bool _notifyPosition = true;
         private bool _notifyDevices = true;
@@ -608,17 +607,6 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _softSeek) return;
                 _softSeek = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool SeekFreezeFrame
-        {
-            get => _seekFreezeFrame;
-            set
-            {
-                if (value == _seekFreezeFrame) return;
-                _seekFreezeFrame = value;
                 OnPropertyChanged();
             }
         }

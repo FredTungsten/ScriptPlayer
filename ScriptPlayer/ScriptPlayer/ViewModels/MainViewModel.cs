@@ -8,7 +8,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -1569,12 +1568,7 @@ namespace ScriptPlayer.ViewModels
                 TimeSpan start = TimeSpan.Zero;
 
                 if (Settings.AutoSkip)
-                {
-                    if (Settings.RandomChapters)
-                        start = GetRandomChapter();
-                    else
-                        start = GetFirstEvent();
-                }
+                    start = Settings.RandomChapters ? GetRandomChapter() : GetFirstEvent();
 
                 if (PlaybackMode == PlaybackMode.Local)
                 {
@@ -1603,7 +1597,6 @@ namespace ScriptPlayer.ViewModels
 
         private TimeSpan GetFirstEvent()
         {
-            TimeSpan currentPosition = TimeSource.Progress;
             ScriptAction nextAction = _scriptHandler.FirstOriginalEventAfter(TimeSpan.MinValue);
 
             if (nextAction == null)
@@ -1833,10 +1826,7 @@ namespace ScriptPlayer.ViewModels
             if (eventArgs.NextAction == null)
             {
                 // Script Ended
-                if (Playlist.CanPlayNextEntry(LoadedFiles))
-                    skipState = SkipState.EndNext;
-                else
-                    skipState = SkipState.End;
+                skipState = Playlist.CanPlayNextEntry(LoadedFiles) ? SkipState.EndNext : SkipState.End;
             }
             else
             {
@@ -1896,18 +1886,12 @@ namespace ScriptPlayer.ViewModels
                     if (nextOriginalAction == null)
                     {
                         // No more original actions
-                        if (Playlist.CanPlayNextEntry(LoadedFiles))
-                            skipState = SkipState.EndFillerNext;
-                        else
-                            skipState = SkipState.EndFiller;
+                        skipState = Playlist.CanPlayNextEntry(LoadedFiles) ? SkipState.EndFillerNext : SkipState.EndFiller;
                     }
                     else
                     {
                         timeToNextOriginalEvent = nextOriginalAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
-                        if (timeToNextOriginalEvent > TimeSpan.FromSeconds(10))
-                            skipState = SkipState.FillerGap;
-                        else
-                            skipState = SkipState.Filler;
+                        skipState = timeToNextOriginalEvent > TimeSpan.FromSeconds(10) ? SkipState.FillerGap : SkipState.Filler;
                     }
                 }
             }
@@ -2176,32 +2160,32 @@ namespace ScriptPlayer.ViewModels
             if (Settings.RandomChapters)
                 Playlist.PlayNextEntry(LoadedFiles);
             else
-                SkipToNextEvent(false);
+                SkipToNextEventInternal();
         }
 
-        private async void SkipToRandomChapter()
-        {
-            OnRequestHideSkipButton();
-            OnRequestHideNotification("Events");
+        //private async void SkipToRandomChapter()
+        //{
+        //    OnRequestHideSkipButton();
+        //    OnRequestHideNotification("Events");
 
-            if (_isSkipping)
-                return;
+        //    if (_isSkipping)
+        //        return;
 
-            try
-            {
-                _isSkipping = true;
+        //    try
+        //    {
+        //        _isSkipping = true;
 
-                TimeSpan skipTo = GetRandomChapter();
-                if (skipTo == TimeSpan.Zero)
-                    return;
+        //        TimeSpan skipTo = GetRandomChapter();
+        //        if (skipTo == TimeSpan.Zero)
+        //            return;
 
-                await SkipTo(skipTo, true);
-            }
-            finally
-            {
-                _isSkipping = false;
-            }
-        }
+        //        await SkipTo(skipTo, true);
+        //    }
+        //    finally
+        //    {
+        //        _isSkipping = false;
+        //    }
+        //}
 
         private TimeSpan GetRandomChapter()
         {
@@ -2215,7 +2199,7 @@ namespace ScriptPlayer.ViewModels
             return skipTo;
         }
 
-        public async void SkipToNextEvent(bool isInitialSkip)
+        public async void SkipToNextEventInternal()
         {
             OnRequestHideSkipButton();
             OnRequestHideNotification("Events");
@@ -2230,26 +2214,20 @@ namespace ScriptPlayer.ViewModels
                 //TODO Skip duplicates too!
 
                 TimeSpan currentPosition = TimeSource.Progress;
-                ScriptAction nextAction = isInitialSkip ?
-                    _scriptHandler.FirstEventAfter(currentPosition - _scriptHandler.Delay) :
-                    _scriptHandler.FirstOriginalEventAfter(currentPosition - _scriptHandler.Delay);
+                ScriptAction nextAction = _scriptHandler.FirstOriginalEventAfter(currentPosition - _scriptHandler.Delay);
 
                 if (nextAction == null)
                 {
-                    if (isInitialSkip)
-                        return;
-
                     Playlist.PlayNextEntry(LoadedFiles);
                     return;
                 }
 
                 TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(1);
-                TimeSpan duration = skipTo - currentPosition;
 
                 if (skipTo < currentPosition)
                     return;
 
-                await SkipTo(skipTo, isInitialSkip);
+                await SkipTo(skipTo);
             }
             finally
             {
@@ -2257,10 +2235,10 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private async Task SkipTo(TimeSpan position, bool isInitialSkip)
+        private async Task SkipTo(TimeSpan position)
         {
             if (PlaybackMode == PlaybackMode.Local && Settings.SoftSeek)
-                await VideoPlayer.SoftSeek(position, isInitialSkip);
+                await VideoPlayer.SoftSeek(position);
             else
                 TimeSource.SetPosition(position);
 
@@ -2270,15 +2248,6 @@ namespace ScriptPlayer.ViewModels
 
         private void VideoPlayer_MediaOpened(object sender, EventArgs e)
         {
-            /*
-            if (Settings.AutoSkip)
-            {
-                if (Settings.RandomChapters)
-                    SkipToRandomChapter();
-                else
-                    SkipToNextEvent(true);
-            }*/
-
             UpdateHeatMap();
         }
 
@@ -2296,10 +2265,7 @@ namespace ScriptPlayer.ViewModels
             };
 
             RequestMessageBox?.Invoke(this, e);
-            if (e.Handled)
-                return e.Result;
-
-            return MessageBoxResult.None;
+            return e.Handled ? e.Result : MessageBoxResult.None;
         }
 
         public void AddToPlaylist()

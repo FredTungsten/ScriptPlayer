@@ -58,7 +58,7 @@
 
         <Grid Name="GridVideo"  Grid.Row="1"  Grid.ColumnSpan="2" Background="Black" MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" AllowDrop="True" Drop="GridVideo_Drop">
             <!-- VIDEO PLAYER -->
-            <shared:VideoPlayer Volume="{Binding Volume}" SoftSeekFreezeFrame="{Binding Settings.SeekFreezeFrame}" HideMouse="true" x:Name="VideoPlayer">
+            <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true" x:Name="VideoPlayer">
                 <shared:VideoPlayer.Style>
                     <Style TargetType="{x:Type shared:VideoPlayer}">
                         <Setter Property="Visibility" Value="Hidden"/>
@@ -86,6 +86,7 @@
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                         <ProgressBar Orientation="Vertical" Minimum="0" Maximum="100" Width="20" Value="{Binding ElementName=VideoPlayer, Path=Volume}"/>
                         <ProgressBar Orientation="Vertical" Minimum="0" Maximum="100" Width="20" Value="{Binding ElementName=VideoPlayer, Path=StandByVolume}"/>
+                        <ProgressBar Orientation="Vertical" Minimum="0" Maximum="1" Width="20" Value="{Binding ElementName=VideoPlayer, Path=Border.Opacity}"/>
                     </StackPanel>
                     <StackPanel Orientation="Vertical" DockPanel.Dock="Right">
                         <Rectangle Width="300" Height="200" Fill="{Binding ElementName=VideoPlayer, Path=VideoBrush}"/>
@@ -94,7 +95,7 @@
                 </DockPanel>
             </Grid>
             -->
-
+            
             <!-- BLIND MODE -->
             <Grid IsHitTestVisible="False">
                 <Grid.Style>

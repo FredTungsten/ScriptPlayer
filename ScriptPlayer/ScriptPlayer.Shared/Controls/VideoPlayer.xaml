@@ -10,9 +10,10 @@
         <Border Background="Black" Grid.Column="0">
             <Viewbox LayoutUpdated="Viewbox_LayoutUpdated">
                 <Grid>
-                    <Border Opacity="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=FadeOutOpacity}" x:Name="BackgroundBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    <Border x:Name="BackgroundBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                             Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=Resolution.Horizontal}" 
-                            Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=Resolution.Vertical}">
+                            Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=Resolution.Vertical}"
+                            Background="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=StandByBrush}">
                     </Border>
                     <Border x:Name="Border" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MouseLeftButtonDown="Border_MouseLeftButtonDown" MouseLeftButtonUp="Border_MouseLeftButtonUp"
                         Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=Resolution.Horizontal}" 
