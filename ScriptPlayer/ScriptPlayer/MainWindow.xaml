@@ -319,10 +319,17 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="Playback">
-                <MenuItem Header="Local" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Local}}"/>
-                <MenuItem Header="Blind" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Blind}}"/>
-                <MenuItem Header="Whirligig" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Whirligig}}"/>
-                <MenuItem Header="VLC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Vlc}}"/>
+                <MenuItem Header="Mode">
+                    <MenuItem Header="Local" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Local}}"/>
+                    <MenuItem Header="Blind" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Blind}}"/>
+                    <MenuItem Header="Whirligig" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Whirligig}}"/>
+                    <MenuItem Header="VLC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Vlc}}"/>
+                </MenuItem>
+                <MenuItem Header="Loop">
+                    <MenuItem Header="Set A" Command="{Binding SetLoopACommand}"/>
+                    <MenuItem Header="Set B" Command="{Binding SetLoopBCommand}"/>
+                    <MenuItem Header="Clear" Command="{Binding ClearLoopCommand}"/>
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="View">
                 <MenuItem Header="Toggle Fullscreen" Command="{Binding ToggleFullScreenCommand}"/>

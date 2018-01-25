@@ -46,6 +46,9 @@ namespace ScriptPlayer.ViewModels
 
         private Brush _heatMap;
 
+        private TimeSpan _loopA = TimeSpan.MinValue;
+        private TimeSpan _loopB = TimeSpan.MinValue;
+
         private int _lastScriptFilterIndex = 1;
         private int _lastVideoFilterIndex = 1;
         private byte _maxScriptPosition;
@@ -532,10 +535,37 @@ namespace ScriptPlayer.ViewModels
         private void HandleTimeSourceEvents(TimeSource oldValue, TimeSource newValue)
         {
             if (oldValue != null)
+            {
+                oldValue.ProgressChanged -= TimeSourceOnProgressChanged;
                 oldValue.DurationChanged -= TimeSourceOnDurationChanged;
+            }
 
             if (newValue != null)
+            {
+                newValue.ProgressChanged += TimeSourceOnProgressChanged;
                 newValue.DurationChanged += TimeSourceOnDurationChanged;
+            }
+        }
+
+        private async void TimeSourceOnProgressChanged(object sender, TimeSpan e)
+        {
+            if (_isSkipping) return;
+            if (_loopA == TimeSpan.MinValue || _loopB == TimeSpan.MinValue) return;
+
+            if (e >= _loopB)
+            {
+                try
+                {
+                    _isSkipping = true;
+                    await SkipTo(_loopA);
+                    
+                }
+                finally
+                {
+                    _isSkipping = false;
+                }
+            }
+                
         }
 
         private void TimeSourceOnDurationChanged(object sender, TimeSpan timeSpan)
@@ -720,6 +750,11 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand SkipToNextEventCommand { get; set; }
 
         public RelayCommand StartScanningButtplugCommand { get; set; }
+
+        public RelayCommand SetLoopACommand { get; set; }
+        public RelayCommand SetLoopBCommand { get; set; }
+
+        public RelayCommand ClearLoopCommand { get; set; }
 
         public RelayCommand ConnectButtplugCommand { get; set; }
 
@@ -1273,6 +1308,26 @@ namespace ScriptPlayer.ViewModels
             ToggleFullScreenCommand = new RelayCommand(ExecuteToggleFullScreen);
             LoadPlaylistCommand = new RelayCommand(ExecuteLoadPlaylist);
             SavePlaylistCommand = new RelayCommand(ExecuteSavePlaylist);
+
+            SetLoopACommand = new RelayCommand(ExecuteSetLoopA);
+            SetLoopBCommand = new RelayCommand(ExecuteSetLoopB);
+            ClearLoopCommand = new RelayCommand(ExecuteClearLoop);
+        }
+
+        private void ExecuteClearLoop()
+        {
+            _loopA = TimeSpan.MinValue;
+            _loopB = TimeSpan.MinValue;
+        }
+
+        private void ExecuteSetLoopB()
+        {
+            _loopB = TimeSource.Progress;
+        }
+
+        private void ExecuteSetLoopA()
+        {
+            _loopA = TimeSource.Progress;
         }
 
         private void ExecuteSavePlaylist()

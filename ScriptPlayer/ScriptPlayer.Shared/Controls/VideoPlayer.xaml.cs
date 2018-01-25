@@ -511,7 +511,7 @@ namespace ScriptPlayer.Shared
             position = ClampTimestamp(position);
             TimeSpan diff = position - _player.Position;
 
-            if (diff < TimeSpan.FromSeconds(4))
+            if (position > _player.Position && diff < TimeSpan.FromSeconds(4))
                 return;
 
             await CrossFade(position);
