@@ -6,8 +6,10 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Microsoft.Win32;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Controls;
+using ScriptPlayer.Shared.Scripts;
 using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Dialogs
@@ -250,6 +252,16 @@ namespace ScriptPlayer.Dialogs
         private void BtnWhirligigDefault_Click(object sender, RoutedEventArgs e)
         {
             Settings.WhirligigEndpoint = WhirligigConnectionSettings.DefaultEndpoint;
+        }
+
+        private void BtnSelectFallBackScript_Click(object sender, RoutedEventArgs e)
+        {
+            ScriptFileFormatCollection formats = ScriptLoaderManager.GetFormats();
+
+            OpenFileDialog dialog = new OpenFileDialog { Filter = formats.BuildFilter(true) };
+            if (dialog.ShowDialog(this) != true) return;
+
+            Settings.FallbackScriptFile = dialog.FileName;
         }
     }
 

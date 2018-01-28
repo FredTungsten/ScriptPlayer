@@ -422,7 +422,7 @@ namespace ScriptPlayer.Shared
             MediaPlayer player = sender as MediaPlayer;
             if (player == null) return;
 
-            if (ReferenceEquals(player, _player))
+            /*if (ReferenceEquals(player, _player))
             {
                 Duration = player.NaturalDuration.TimeSpan;
                 ActualResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
@@ -430,14 +430,21 @@ namespace ScriptPlayer.Shared
                 OnMediaOpened();
             }
             else if (ReferenceEquals(player, _standByPlayer))
-            {
-                //_standByPlayer.Pause();
+            {*/
 
+
+            if(player.NaturalDuration.HasTimeSpan)
                 Duration = player.NaturalDuration.TimeSpan;
+
+            if (player.HasVideo)
+            {
                 ActualResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
                 UpdateResolution();
-                OnMediaOpened();
             }
+
+            OnMediaOpened();
+
+            //}
         }
 
         private void UpdateResolution()

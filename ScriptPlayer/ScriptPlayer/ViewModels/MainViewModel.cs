@@ -1049,6 +1049,8 @@ namespace ScriptPlayer.ViewModels
             {
                 if (Settings.NotifyFileLoaded)
                     OnRequestOverlay($"No script for '{Path.GetFileName(videoFileName)}' found!", TimeSpan.FromSeconds(6));
+
+                ExecuteFallbackBehaviour();
                 return;
             }
 
@@ -1661,47 +1663,6 @@ namespace ScriptPlayer.ViewModels
 
             TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(1);
             return skipTo;
-        }
-
-        private bool LoadScript(ScriptLoader[] loaders, string fileName)
-        {
-            const long maxScriptSize = 4 * 1024 * 1024; //4 MB
-
-            if (!File.Exists(fileName)) return false;
-            if (new FileInfo(fileName).Length > maxScriptSize) return false;
-
-            List<ScriptAction> actions = null;
-
-            foreach (ScriptLoader loader in loaders)
-            {
-                try
-                {
-                    actions = loader.Load(fileName);
-                    if (actions == null)
-                        continue;
-                    if (actions.Count == 0)
-                        continue;
-
-                    Debug.WriteLine("Script with {0} actions successfully loaded with {1}", actions.Count,
-                        loader.GetType().Name);
-                    break;
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine("Loader {0} failed to open {1}: {2}", loader.GetType().Name, Path.GetFileName(fileName), e.Message);
-                }
-            }
-
-            if (actions == null) return false;
-
-            _scriptHandler.SetScript(actions);
-            RefreshManualDuration();
-            LoadedScript = fileName;
-
-            FindMaxPositions();
-            UpdateHeatMap();
-
-            return true;
         }
 
         private void FindMaxPositions()
@@ -2348,7 +2309,9 @@ namespace ScriptPlayer.ViewModels
             if (scriptFileName == null)
                 return;
 
-            ScriptFileFormat[] format = formats.GetFormats(_lastScriptFilterIndex - 1, scriptFileName);
+            LoadScript(scriptFileName, true);
+
+            /*ScriptFileFormat[] format = formats.GetFormats(_lastScriptFilterIndex - 1, scriptFileName);
 
             ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(format);
 
@@ -2365,15 +2328,14 @@ namespace ScriptPlayer.ViewModels
 
             TryFindMatchingVideo(scriptFileName);
 
-            UpdateHeatMap();
+            UpdateHeatMap();*/
         }
 
-        //TODO: Maybe merge some code with OpenScript()?
-        private void LoadScript(string scriptFileName, bool checkForVideo)
+        private bool LoadScript(string scriptFileName, bool checkForVideo, bool isFallbackScript = false)
         {
             ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(scriptFileName);
             if (loaders == null)
-                return;
+                return false;
 
             if (!LoadScript(loaders, scriptFileName))
             {
@@ -2382,7 +2344,12 @@ namespace ScriptPlayer.ViewModels
                 {
                     if (Settings.NotifyFileLoaded)
                         OnRequestOverlay($"The script file '{scriptFileName}' could not be loaded!", TimeSpan.FromSeconds(6));
-                    return;
+
+                    if (isFallbackScript)
+                        return false;
+
+                    if (!ExecuteFallbackBehaviour())
+                        return false;
                 }
             }
 
@@ -2393,6 +2360,71 @@ namespace ScriptPlayer.ViewModels
 
             if (checkForVideo)
                 TryFindMatchingVideo(scriptFileName);
+
+            return true;
+        }
+
+        private bool ExecuteFallbackBehaviour()
+        {
+            switch (Settings.NoScriptBehavior)
+            {
+                case NoScriptBehaviors.KeepLastScript:
+                {
+                    return false;
+                }
+                case NoScriptBehaviors.ClearScript:
+                {
+                    _scriptHandler.Clear();
+                    return false;
+                }
+                case NoScriptBehaviors.FallbackScript:
+                {
+                    return LoadScript(Settings.FallbackScriptFile, false, true);
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private bool LoadScript(ScriptLoader[] loaders, string fileName)
+        {
+            const long maxScriptSize = 4 * 1024 * 1024; //4 MB
+
+            if (!File.Exists(fileName)) return false;
+            if (new FileInfo(fileName).Length > maxScriptSize) return false;
+
+            List<ScriptAction> actions = null;
+
+            foreach (ScriptLoader loader in loaders)
+            {
+                try
+                {
+                    actions = loader.Load(fileName);
+                    if (actions == null)
+                        continue;
+                    if (actions.Count == 0)
+                        continue;
+
+                    Debug.WriteLine("Script with {0} actions successfully loaded with {1}", actions.Count,
+                        loader.GetType().Name);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Loader {0} failed to open {1}: {2}", loader.GetType().Name, Path.GetFileName(fileName), e.Message);
+                }
+            }
+
+            if (actions == null) return false;
+
+            _scriptHandler.SetScript(actions);
+            RefreshManualDuration();
+            LoadedScript = fileName;
+
+            FindMaxPositions();
+            UpdateHeatMap();
+
+            return true;
         }
 
         public void ConnectLaunchDirectly()
