@@ -70,7 +70,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Gaps" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="SoftSeek" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -241,6 +241,35 @@
                             </DockPanel>
                         </StackPanel>
                     </Grid>
+                    <Grid controls:PageSelector.ContentIdentifier="SoftSeek">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_forward}"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <TextBlock>"Soft Seek" blends two videos slowly into each other to smooth transistions</TextBlock>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.SoftSeekFiles}" Content="Soft Seek between videos"/>
+                            <DockPanel Margin="12,4,4,4" IsEnabled="{Binding Settings.SoftSeekFiles}">
+                                <TextBlock VerticalAlignment="Center" Text="Duration [ms] " Width="100" DockPanel.Dock="Left"/>
+                                <TextBlock Width="40" TextAlignment="Right" DockPanel.Dock="Right" Text="{Binding Settings.SoftSeekFilesDuration, Converter={StaticResource MillisecondsConverter}}"/>
+                                <Slider Value="{Binding Settings.SoftSeekFilesDuration, Converter={StaticResource MillisecondsConverter}}" VerticalAlignment="Center" DockPanel.Dock="Left"
+                                        Minimum="200" Maximum="10000" TickFrequency="100" IsSnapToTickEnabled="True"/>
+                            </DockPanel>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.SoftSeekGaps}" Content="Soft Seek Gaps"/>
+                            <DockPanel Margin="12,4,4,4" IsEnabled="{Binding Settings.SoftSeekGaps}">
+                                <TextBlock VerticalAlignment="Center" Text="Duration [ms] " Width="100" DockPanel.Dock="Left"/>
+                                <TextBlock Width="40" TextAlignment="Right" DockPanel.Dock="Right" Text="{Binding Settings.SoftSeekGapDuration, Converter={StaticResource MillisecondsConverter}}"/>
+                                <Slider Value="{Binding Settings.SoftSeekGapDuration, Converter={StaticResource MillisecondsConverter}}" VerticalAlignment="Center" DockPanel.Dock="Left"
+                                        Minimum="200" Maximum="10000" TickFrequency="100" IsSnapToTickEnabled="True"/>
+                            </DockPanel>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.SoftSeekLoops}" Content="Soft Seek Loops"/>
+                            <DockPanel Margin="12,4,4,4" IsEnabled="{Binding Settings.SoftSeekLoops}">
+                                <TextBlock VerticalAlignment="Center" Text="Duration [ms] " Width="100" DockPanel.Dock="Left"/>
+                                <TextBlock Width="40" TextAlignment="Right" DockPanel.Dock="Right" Text="{Binding Settings.SoftSeekLoopsDuration, Converter={StaticResource MillisecondsConverter}}"/>
+                                <Slider Value="{Binding Settings.SoftSeekLoopsDuration, Converter={StaticResource MillisecondsConverter}}" VerticalAlignment="Center" DockPanel.Dock="Left"
+                                        Minimum="200" Maximum="10000" TickFrequency="100" IsSnapToTickEnabled="True"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Gaps">
                         <controls:PageSelector.Header>
                             <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_forward}"/>
@@ -249,7 +278,6 @@
                             <TextBlock>A "gap" is whenever two script actions are more than 10 seconds appart.</TextBlock>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.AutoSkip}" Content="Auto-skip gaps"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ShowSkipButton}" Content="Show Skip Button"/>
-                            <CheckBox Margin="4" IsChecked="{Binding Settings.SoftSeek}" Content="Soft seek"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.FillGaps}" Content="Fill gaps with movement"/>
                             <CheckBox Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}" IsChecked="{Binding Settings.ShowFilledGapsInHeatMap}" Content="Show filled gaps in heat map"/>
                             <CheckBox Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}" IsChecked="{Binding Settings.FillFirstGap}" Content="Fill gap before first action"/>

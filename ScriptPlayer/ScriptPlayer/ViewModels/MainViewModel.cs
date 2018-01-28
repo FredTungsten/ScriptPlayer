@@ -557,7 +557,7 @@ namespace ScriptPlayer.ViewModels
                 try
                 {
                     _isSkipping = true;
-                    await SkipTo(_loopA);
+                    await SkipTo(_loopA, Settings.SoftSeekLoops, Settings.SoftSeekLoopsDuration);
                     
                 }
                 finally
@@ -1628,7 +1628,7 @@ namespace ScriptPlayer.ViewModels
                 if (PlaybackMode == PlaybackMode.Local)
                 {
                     HideBanner();
-                    await VideoPlayer.Open(videoFileName, start);
+                    await VideoPlayer.Open(videoFileName, start, Settings.SoftSeekFiles ? Settings.SoftSeekFilesDuration : TimeSpan.Zero);
                 }
 
                 Title = Path.GetFileNameWithoutExtension(videoFileName);
@@ -2282,7 +2282,7 @@ namespace ScriptPlayer.ViewModels
                 if (skipTo < currentPosition)
                     return;
 
-                await SkipTo(skipTo);
+                await SkipTo(skipTo, Settings.SoftSeekGaps, Settings.SoftSeekGapDuration);
             }
             finally
             {
@@ -2290,10 +2290,10 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private async Task SkipTo(TimeSpan position)
+        private async Task SkipTo(TimeSpan position, bool softSeek, TimeSpan duration)
         {
-            if (PlaybackMode == PlaybackMode.Local && Settings.SoftSeek)
-                await VideoPlayer.SoftSeek(position);
+            if (PlaybackMode == PlaybackMode.Local && softSeek)
+                await VideoPlayer.SoftSeek(position, duration);
             else
                 TimeSource.SetPosition(position);
 

@@ -96,7 +96,7 @@ namespace ScriptPlayer.Shared.Scripts
             foreach (string command in commands)
             {
                 int commaPosition = command.IndexOf(valueDelimiter+"", StringComparison.Ordinal);
-                string timestampString = command.Substring(0, commaPosition);
+                string timestampString = command.Substring(0, commaPosition).Trim(' ','\t','\r','\n','"','\'');
                 double timestampValue = double.Parse(timestampString, ScriptLoader.Culture);
                 TimeSpan timestamp = TimeSpan.FromSeconds(timestampValue);
 

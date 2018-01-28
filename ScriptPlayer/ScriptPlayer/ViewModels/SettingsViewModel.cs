@@ -47,7 +47,7 @@ namespace ScriptPlayer.ViewModels
         private bool _rememberPlaylist = true;
         private bool _shufflePlaylist;
         private bool _repeatPlaylist;
-        private bool _softSeek = true;
+        private bool _softSeekGaps = true;
         private bool _notifyGaps = true;
         private bool _notifyPosition = true;
         private bool _notifyDevices = true;
@@ -67,6 +67,13 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _minGapDuration = TimeSpan.FromSeconds(10);
         private bool _invertPosition;
         private bool _randomChapters;
+        private bool _softSeekFiles = true;
+        private bool _softSeekLoops = true;
+        private NoScriptBehaviors _noScriptBehavior;
+        private string _fallbackScriptFile;
+        private TimeSpan _softSeekGapDuration = TimeSpan.FromSeconds(3);
+        private TimeSpan _softSeekFilesDuration = TimeSpan.FromSeconds(3);
+        private TimeSpan _softSeekLoopsDuration = TimeSpan.FromSeconds(3);
 
         public SettingsViewModel()
         {
@@ -600,15 +607,94 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public bool SoftSeek
+        public bool SoftSeekGaps
         {
-            get => _softSeek;
+            get => _softSeekGaps;
             set
             {
-                if (value == _softSeek) return;
-                _softSeek = value;
+                if (value == _softSeekGaps) return;
+                _softSeekGaps = value;
                 OnPropertyChanged();
             }
+        }
+
+        [XmlIgnore]
+        public TimeSpan SoftSeekGapDuration
+        {
+            get => _softSeekGapDuration;
+            set
+            {
+                if (value.Equals(_softSeekGapDuration)) return;
+                _softSeekGapDuration = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [XmlElement("SoftSeekGapDuration")]
+        public long SoftSeekGapDurationWrapper
+        {
+            get => SoftSeekGapDuration.Ticks;
+            set => SoftSeekGapDuration = TimeSpan.FromTicks(value);
+        }
+
+        public bool SoftSeekFiles
+        {
+            get => _softSeekFiles;
+            set
+            {
+                if (value == _softSeekFiles) return;
+                _softSeekFiles = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [XmlIgnore]
+        public TimeSpan SoftSeekFilesDuration
+        {
+            get => _softSeekFilesDuration;
+            set
+            {
+                if (value.Equals(_softSeekFilesDuration)) return;
+                _softSeekFilesDuration = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [XmlElement("SoftSeekFilesDuration")]
+        public long SoftSeekFilesDurationWrapper
+        {
+            get => SoftSeekFilesDuration.Ticks;
+            set => SoftSeekFilesDuration = TimeSpan.FromTicks(value);
+        }
+
+        public bool SoftSeekLoops
+        {
+            get => _softSeekLoops;
+            set
+            {
+                if (value == _softSeekLoops) return;
+                _softSeekLoops = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [XmlIgnore]
+        public TimeSpan SoftSeekLoopsDuration
+        {
+            get => _softSeekLoopsDuration;
+            set
+            {
+                if (value.Equals(_softSeekLoopsDuration)) return;
+                _softSeekLoopsDuration = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [XmlElement("SoftSeekLoopsDuration")]
+        public long SoftSeekLoopsDurationWrapper
+        {
+            get => SoftSeekLoopsDuration.Ticks;
+            set => SoftSeekLoopsDuration = TimeSpan.FromTicks(value);
         }
 
         public bool NotifyLogging
@@ -629,6 +715,28 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _showSkipButton) return;
                 _showSkipButton = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string FallbackScriptFile
+        {
+            get => _fallbackScriptFile;
+            set
+            {
+                if (value == _fallbackScriptFile) return;
+                _fallbackScriptFile = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public NoScriptBehaviors NoScriptBehavior
+        {
+            get { return _noScriptBehavior; }
+            set
+            {
+                if (value == _noScriptBehavior) return;
+                _noScriptBehavior = value;
                 OnPropertyChanged();
             }
         }
@@ -680,5 +788,12 @@ namespace ScriptPlayer.ViewModels
                 Debug.WriteLine(e);
             }
         }
+    }
+
+    public enum NoScriptBehaviors
+    {
+        KeepLastScript = 1,
+        ClearScript = 2,
+        FallbackScript = 3
     }
 }

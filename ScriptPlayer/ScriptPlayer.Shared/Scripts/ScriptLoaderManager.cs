@@ -54,7 +54,9 @@ namespace ScriptPlayer.Shared.Scripts
 
         public static ScriptLoader[] GetLoaders(ScriptFileFormat[] formats)
         {
-            return formats.Select(format => LoaderByFileFormat[format]).ToArray();
+            return formats.Select(format => LoaderByFileFormat[format])
+                          .OrderBy(loader => Loaders.IndexOf(loader))
+                          .ToArray();
         }
 
         public static string[] GetSupportedExtensions()
@@ -64,8 +66,9 @@ namespace ScriptPlayer.Shared.Scripts
 
         public static ScriptLoader[] GetLoaders(string filename)
         {
-            string extension = (Path.GetExtension(filename)??"").TrimStart('.').ToLower();
+            string extension = (Path.GetExtension(filename) ?? "").TrimStart('.').ToLower();
             return Loaders.Where(loader => loader.GetSupportedFormats().Any(f => f.Extensions.Contains(extension)))
+                .OrderBy(loader => Loaders.IndexOf(loader))
                 .ToArray();
         }
 
@@ -96,7 +99,8 @@ namespace ScriptPlayer.Shared.Scripts
         }
     }
 
-    public class BeatScriptAction : ScriptAction {
+    public class BeatScriptAction : ScriptAction
+    {
         public override bool IsSameAction(ScriptAction action)
         {
             return false;

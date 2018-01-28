@@ -274,10 +274,10 @@ namespace ScriptPlayer.Shared
 
         public async void Open(string filename)
         {
-            await Open(filename, TimeSpan.Zero);
+            await Open(filename, TimeSpan.Zero, TimeSpan.Zero);
         }
 
-        public async Task Open(string filename, TimeSpan startAt)
+        public async Task Open(string filename, TimeSpan startAt, TimeSpan duration)
         {
             if (!File.Exists(filename)) return;
 
@@ -285,7 +285,7 @@ namespace ScriptPlayer.Shared
 
             await OpenAndWaitFor(_standByPlayer, filename);
 
-            await CrossFade(startAt);
+            await CrossFade(startAt, duration);
 
             await OpenAndWaitFor(_standByPlayer, filename);
         }
@@ -506,7 +506,7 @@ namespace ScriptPlayer.Shared
             return position;
         }
 
-        public async Task SoftSeek(TimeSpan position)
+        public async Task SoftSeek(TimeSpan position, TimeSpan duration)
         {
             position = ClampTimestamp(position);
             TimeSpan diff = position - _player.Position;
@@ -514,14 +514,14 @@ namespace ScriptPlayer.Shared
             if (position > _player.Position && diff < TimeSpan.FromSeconds(4))
                 return;
 
-            await CrossFade(position);
+            await CrossFade(position, duration);
         }
 
-        private async Task CrossFade(TimeSpan position)
+        private async Task CrossFade(TimeSpan position, TimeSpan duration)
         {
             TimeSpan seekDelay = TimeSpan.FromSeconds(0.5);
             TimeSpan playDelay = TimeSpan.FromSeconds(0.05);
-            TimeSpan fadeDuration = TimeSpan.FromSeconds(3);
+            TimeSpan fadeDuration = duration;
 
             _standByPlayer.Position = position.Subtract(fadeDuration);
 
