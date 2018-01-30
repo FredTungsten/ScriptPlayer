@@ -35,6 +35,11 @@ namespace ScriptPlayer.Shared
 
                 if(_player.NaturalDuration.HasTimeSpan)
                     OnOpened();
+
+                if(IsPlaying)
+                    _player.Play();
+                else
+                    _player.Pause();
             }
         }
 

@@ -1520,8 +1520,8 @@ namespace ScriptPlayer.ViewModels
             if (!TimeSource.CanOpenMedia) return;
 
             LoadFile(playlistEntry.Fullname);
-            if (EntryLoaded())
-                Play();
+            /*if (EntryLoaded())
+                Play();*/
         }
 
         [NotifyPropertyChangedInvocator]
@@ -1630,7 +1630,9 @@ namespace ScriptPlayer.ViewModels
                 if (PlaybackMode == PlaybackMode.Local)
                 {
                     HideBanner();
+                    _isSkipping = true;
                     await VideoPlayer.Open(videoFileName, start, Settings.SoftSeekFiles ? Settings.SoftSeekFilesDuration : TimeSpan.Zero);
+                    _isSkipping = false;
                 }
 
                 Title = Path.GetFileNameWithoutExtension(videoFileName);
@@ -1639,7 +1641,7 @@ namespace ScriptPlayer.ViewModels
                     OnRequestOverlay($"Loaded {Path.GetFileName(videoFileName)}", TimeSpan.FromSeconds(4),
                         "VideoLoaded");
 
-                Play();
+                //Play();
 
             }
             catch (Exception e)
@@ -2129,6 +2131,8 @@ namespace ScriptPlayer.ViewModels
 
         private void VideoPlayer_MediaEnded(object sender, EventArgs e)
         {
+            if (_isSkipping) return;
+
             StopDevices();
             PlayNextPlaylistEntry();
         }
@@ -2253,13 +2257,15 @@ namespace ScriptPlayer.ViewModels
 
         private async Task SkipTo(TimeSpan position, bool softSeek, TimeSpan duration)
         {
+            TimeSpan from = TimeSource.Progress;
+
             if (PlaybackMode == PlaybackMode.Local && softSeek)
                 await VideoPlayer.SoftSeek(position, duration);
             else
                 TimeSource.SetPosition(position);
 
             if (Settings.NotifyGaps)
-                ShowPosition($"Skipped {position.TotalSeconds:f0}s - ");
+                ShowPosition($"Skipped {(position - from).TotalSeconds:f0}s - ");
         }
 
         private void VideoPlayer_MediaOpened(object sender, EventArgs e)

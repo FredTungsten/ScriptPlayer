@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -72,6 +73,8 @@ namespace ScriptPlayer.Shared
         private double _scale;
         private bool _sideBySide;
         private MediaPlayer _standByPlayer;
+
+        private ulong loadIteration = 0;
 
         public VideoPlayer()
         {
@@ -281,14 +284,44 @@ namespace ScriptPlayer.Shared
         {
             if (!File.Exists(filename)) return;
 
+            IsSeeking = true;
+
+            ulong iteration = ++loadIteration;
+
             OpenedFile = filename;
 
+            SetEventSource(_standByPlayer);
+
             await OpenAndWaitFor(_standByPlayer, filename);
+
+            if (iteration != loadIteration) return;
 
             await CrossFade(startAt, duration);
 
+            if (iteration != loadIteration) return;
+
             await OpenAndWaitFor(_standByPlayer, filename);
+
+            if (iteration != loadIteration) return;
+
+            IsSeeking = false;
         }
+
+        private void SetEventSource(MediaPlayer player)
+        {
+            _player.MediaOpened -= PlayerOnMediaOpened;
+            _player.MediaEnded -= PlayerOnMediaEnded;
+            _standByPlayer.MediaOpened -= PlayerOnMediaOpened;
+            _standByPlayer.MediaEnded -= PlayerOnMediaEnded;
+
+            if (player != null)
+            {
+                player.MediaOpened += PlayerOnMediaOpened;
+                player.MediaEnded += PlayerOnMediaEnded;
+            }
+        }
+
+        public bool IsSeeking { get; set; }
 
         public async Task OpenAndWaitFor(MediaPlayer player, string filename)
         {
@@ -333,13 +366,9 @@ namespace ScriptPlayer.Shared
         private void InitializePlayer()
         {
             _player = new MediaPlayer {ScrubbingEnabled = true};
-            _player.MediaOpened += PlayerOnMediaOpened;
-            _player.MediaEnded += PlayerOnMediaEnded;
             _player.Volume = MainVolume;
 
             _standByPlayer = new MediaPlayer {ScrubbingEnabled = true};
-            _standByPlayer.MediaOpened += PlayerOnMediaOpened;
-            _standByPlayer.MediaEnded += PlayerOnMediaEnded;
             _standByPlayer.Volume = StandByVolume;
 
             TimeSource = new MediaPlayerTimeSource(_player,
@@ -353,6 +382,12 @@ namespace ScriptPlayer.Shared
 
         private void TimeSourceOnIsPlayingChanged(object sender, bool isPlaying)
         {
+
+            if (isPlaying)
+            {
+                Debug.WriteLine("now playing");
+            }
+
             SetIsPlaying(isPlaying);
         }
 
@@ -515,6 +550,10 @@ namespace ScriptPlayer.Shared
 
         public async Task SoftSeek(TimeSpan position, TimeSpan duration)
         {
+            IsSeeking = true;
+
+            ulong iteration = ++loadIteration;
+
             position = ClampTimestamp(position);
             TimeSpan diff = position - _player.Position;
 
@@ -522,6 +561,11 @@ namespace ScriptPlayer.Shared
                 return;
 
             await CrossFade(position, duration);
+
+            if (iteration != loadIteration)
+                return;
+
+            IsSeeking = false;
         }
 
         private async Task CrossFade(TimeSpan position, TimeSpan duration)
@@ -535,6 +579,7 @@ namespace ScriptPlayer.Shared
             await Task.Delay(seekDelay);
 
             _standByPlayer.Play();
+
             await Task.Delay(playDelay);
 
             SetPrimaryPlayer(_standByPlayer);
@@ -550,7 +595,7 @@ namespace ScriptPlayer.Shared
             OnStandByVolumeChanged();
 
             _standByPlayer.Pause();
-            _player.Play();
+            //_player.Play();
 
             Border.Opacity = 1;
         }
