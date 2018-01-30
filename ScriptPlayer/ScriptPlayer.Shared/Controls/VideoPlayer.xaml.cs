@@ -284,23 +284,87 @@ namespace ScriptPlayer.Shared
         {
             if (!File.Exists(filename)) return;
 
+            await AddSeekEntry(new SeekEntry
+            {
+                FileName = filename,
+                Position = startAt,
+                Duration = duration
+            });
+        }
+
+        private async Task AddSeekEntry(SeekEntry seekEntry)
+        {
+            await ProcessSeekEntry(seekEntry);
+        }
+
+        private readonly SemaphoreSlim _seekSemaphore = new SemaphoreSlim(1, 1);
+        private uint _seekPriority = 0;
+
+        private async Task ProcessSeekEntry(SeekEntry seekEntry)
+        {
+            try
+            {
+                uint myPriority = ++_seekPriority;
+
+                await _seekSemaphore.WaitAsync();
+
+                if (_seekPriority != myPriority)
+                    return;
+
+                if (seekEntry.FileName != OpenedFile)
+                {
+                    await ProcessFileSeekEntry(seekEntry);
+                }
+                else
+                {
+                    await ProcessPositionSeekEntry(seekEntry);
+                }
+            }
+            finally
+            {
+                _seekSemaphore.Release(1);
+            }
+        }
+
+        private async Task ProcessPositionSeekEntry(SeekEntry seekEntry)
+        {
             IsSeeking = true;
 
             ulong iteration = ++loadIteration;
 
-            OpenedFile = filename;
+            TimeSpan position = ClampTimestamp(seekEntry.Position);
+            TimeSpan diff = position - _player.Position;
+
+            if (position > _player.Position && diff < TimeSpan.FromSeconds(4))
+                return;
+
+            await CrossFade(position, seekEntry.Duration);
+
+            if (iteration != loadIteration)
+                return;
+
+            IsSeeking = false;
+        }
+
+        private async Task ProcessFileSeekEntry(SeekEntry seekEntry)
+        {
+            IsSeeking = true;
+
+            ulong iteration = ++loadIteration;
+
+            OpenedFile = seekEntry.FileName;
 
             SetEventSource(_standByPlayer);
 
-            await OpenAndWaitFor(_standByPlayer, filename);
+            await OpenAndWaitFor(_standByPlayer, seekEntry.FileName);
 
             if (iteration != loadIteration) return;
 
-            await CrossFade(startAt, duration);
+            await CrossFade(seekEntry.Position, seekEntry.Duration);
 
             if (iteration != loadIteration) return;
 
-            await OpenAndWaitFor(_standByPlayer, filename);
+            await OpenAndWaitFor(_standByPlayer, seekEntry.FileName);
 
             if (iteration != loadIteration) return;
 
@@ -550,22 +614,12 @@ namespace ScriptPlayer.Shared
 
         public async Task SoftSeek(TimeSpan position, TimeSpan duration)
         {
-            IsSeeking = true;
-
-            ulong iteration = ++loadIteration;
-
-            position = ClampTimestamp(position);
-            TimeSpan diff = position - _player.Position;
-
-            if (position > _player.Position && diff < TimeSpan.FromSeconds(4))
-                return;
-
-            await CrossFade(position, duration);
-
-            if (iteration != loadIteration)
-                return;
-
-            IsSeeking = false;
+            await AddSeekEntry(new SeekEntry
+            {
+                FileName = OpenedFile,
+                Position = position,
+                Duration = duration
+            });
         }
 
         private async Task CrossFade(TimeSpan position, TimeSpan duration)
@@ -721,5 +775,12 @@ namespace ScriptPlayer.Shared
         {
             MediaEnded?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    public class SeekEntry
+    {
+        public string FileName { get; set; }
+        public TimeSpan Position { get; set; }
+        public TimeSpan Duration { get; set; }
     }
 }
