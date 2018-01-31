@@ -555,14 +555,14 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private async void TimeSourceOnProgressChanged(object sender, TimeSpan e)
+        private void TimeSourceOnProgressChanged(object sender, TimeSpan e)
         {
             if (!TimeSource.IsPlaying || IsSeeking) return;
             if (_loopA == TimeSpan.MinValue || _loopB == TimeSpan.MinValue) return;
 
             if (e >= _loopB)
             {
-                await SkipTo(_loopA, Settings.SoftSeekLoops, Settings.SoftSeekLoopsDuration);
+                SkipTo(_loopA, Settings.SoftSeekLoops, Settings.SoftSeekLoopsDuration);
             }
 
         }
@@ -1610,7 +1610,7 @@ namespace ScriptPlayer.ViewModels
                 Playlist.AddEntry(new PlaylistEntry(entry));
         }
 
-        private async void LoadVideo(string videoFileName, bool checkForScript)
+        private void LoadVideo(string videoFileName, bool checkForScript)
         {
             try
             {
@@ -1629,9 +1629,7 @@ namespace ScriptPlayer.ViewModels
                 if (PlaybackMode == PlaybackMode.Local)
                 {
                     HideBanner();
-                    if (!await VideoPlayer.Open(videoFileName, start,
-                        Settings.SoftSeekFiles ? Settings.SoftSeekFilesDuration : TimeSpan.Zero))
-                        return;
+                    VideoPlayer.Open(videoFileName, start, Settings.SoftSeekFiles ? Settings.SoftSeekFilesDuration : TimeSpan.Zero);
                 }
 
                 Title = Path.GetFileNameWithoutExtension(videoFileName);
@@ -2218,7 +2216,7 @@ namespace ScriptPlayer.ViewModels
             return skipTo;
         }
 
-        public async void SkipToNextEventInternal()
+        public void SkipToNextEventInternal()
         {
             OnRequestHideSkipButton();
             OnRequestHideNotification("Events");
@@ -2242,16 +2240,15 @@ namespace ScriptPlayer.ViewModels
             if (skipTo < currentPosition)
                 return;
 
-            await SkipTo(skipTo, Settings.SoftSeekGaps, Settings.SoftSeekGapDuration);
+            SkipTo(skipTo, Settings.SoftSeekGaps, Settings.SoftSeekGapDuration);
         }
 
-        private async Task SkipTo(TimeSpan position, bool softSeek, TimeSpan duration)
+        private void SkipTo(TimeSpan position, bool softSeek, TimeSpan duration)
         {
             TimeSpan from = TimeSource.Progress;
 
             if (PlaybackMode == PlaybackMode.Local && softSeek)
-                if (!await VideoPlayer.SoftSeek(position, duration))
-                    return;
+                VideoPlayer.SoftSeek(position, duration);
             else
                 TimeSource.SetPosition(position);
 
