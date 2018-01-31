@@ -114,7 +114,15 @@ namespace ScriptPlayer.ViewModels
         private SettingsViewModel _settings;
         private string _loadedScript;
         private string _loadedVideo;
-        private bool _isSkipping;
+
+        private bool IsSeeking
+        {
+            get
+            {
+                if (PlaybackMode != PlaybackMode.Local) return false;
+                return _videoPlayer.IsSeeking;
+            }
+        }
         private bool _loading;
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
@@ -549,23 +557,14 @@ namespace ScriptPlayer.ViewModels
 
         private async void TimeSourceOnProgressChanged(object sender, TimeSpan e)
         {
-            if (_isSkipping) return;
+            if (!TimeSource.IsPlaying || IsSeeking) return;
             if (_loopA == TimeSpan.MinValue || _loopB == TimeSpan.MinValue) return;
 
             if (e >= _loopB)
             {
-                try
-                {
-                    _isSkipping = true;
-                    await SkipTo(_loopA, Settings.SoftSeekLoops, Settings.SoftSeekLoopsDuration);
-                    
-                }
-                finally
-                {
-                    _isSkipping = false;
-                }
+                await SkipTo(_loopA, Settings.SoftSeekLoops, Settings.SoftSeekLoopsDuration);
             }
-                
+
         }
 
         private void TimeSourceOnDurationChanged(object sender, TimeSpan timeSpan)
@@ -1630,9 +1629,9 @@ namespace ScriptPlayer.ViewModels
                 if (PlaybackMode == PlaybackMode.Local)
                 {
                     HideBanner();
-                    _isSkipping = true;
-                    await VideoPlayer.Open(videoFileName, start, Settings.SoftSeekFiles ? Settings.SoftSeekFilesDuration : TimeSpan.Zero);
-                    _isSkipping = false;
+                    if (!await VideoPlayer.Open(videoFileName, start,
+                        Settings.SoftSeekFiles ? Settings.SoftSeekFilesDuration : TimeSpan.Zero))
+                        return;
                 }
 
                 Title = Path.GetFileNameWithoutExtension(videoFileName);
@@ -1914,7 +1913,7 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
-            if (!TimeSource.IsPlaying || _isSkipping) return;
+            if (!TimeSource.IsPlaying || IsSeeking) return;
 
             switch (skipState)
             {
@@ -2131,7 +2130,7 @@ namespace ScriptPlayer.ViewModels
 
         private void VideoPlayer_MediaEnded(object sender, EventArgs e)
         {
-            if (_isSkipping) return;
+            if (IsSeeking) return;
 
             StopDevices();
             PlayNextPlaylistEntry();
@@ -2188,12 +2187,12 @@ namespace ScriptPlayer.ViewModels
         //    OnRequestHideSkipButton();
         //    OnRequestHideNotification("Events");
 
-        //    if (_isSkipping)
+        //    if (IsSeeking)
         //        return;
 
         //    try
         //    {
-        //        _isSkipping = true;
+        //        IsSeeking = true;
 
         //        TimeSpan skipTo = GetRandomChapter();
         //        if (skipTo == TimeSpan.Zero)
@@ -2203,7 +2202,7 @@ namespace ScriptPlayer.ViewModels
         //    }
         //    finally
         //    {
-        //        _isSkipping = false;
+        //        IsSeeking = false;
         //    }
         //}
 
@@ -2224,35 +2223,26 @@ namespace ScriptPlayer.ViewModels
             OnRequestHideSkipButton();
             OnRequestHideNotification("Events");
 
-            if (_isSkipping)
+            if (IsSeeking)
                 return;
 
-            try
+            //TODO Skip duplicates too!
+
+            TimeSpan currentPosition = TimeSource.Progress;
+            ScriptAction nextAction = _scriptHandler.FirstOriginalEventAfter(currentPosition - _scriptHandler.Delay);
+
+            if (nextAction == null)
             {
-                _isSkipping = true;
-
-                //TODO Skip duplicates too!
-
-                TimeSpan currentPosition = TimeSource.Progress;
-                ScriptAction nextAction = _scriptHandler.FirstOriginalEventAfter(currentPosition - _scriptHandler.Delay);
-
-                if (nextAction == null)
-                {
-                    Playlist.PlayNextEntry(LoadedFiles);
-                    return;
-                }
-
-                TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(1);
-
-                if (skipTo < currentPosition)
-                    return;
-
-                await SkipTo(skipTo, Settings.SoftSeekGaps, Settings.SoftSeekGapDuration);
+                Playlist.PlayNextEntry(LoadedFiles);
+                return;
             }
-            finally
-            {
-                _isSkipping = false;
-            }
+
+            TimeSpan skipTo = nextAction.TimeStamp - TimeSpan.FromSeconds(1);
+
+            if (skipTo < currentPosition)
+                return;
+
+            await SkipTo(skipTo, Settings.SoftSeekGaps, Settings.SoftSeekGapDuration);
         }
 
         private async Task SkipTo(TimeSpan position, bool softSeek, TimeSpan duration)
@@ -2260,7 +2250,8 @@ namespace ScriptPlayer.ViewModels
             TimeSpan from = TimeSource.Progress;
 
             if (PlaybackMode == PlaybackMode.Local && softSeek)
-                await VideoPlayer.SoftSeek(position, duration);
+                if (!await VideoPlayer.SoftSeek(position, duration))
+                    return;
             else
                 TimeSource.SetPosition(position);
 
@@ -2375,18 +2366,18 @@ namespace ScriptPlayer.ViewModels
             switch (Settings.NoScriptBehavior)
             {
                 case NoScriptBehaviors.KeepLastScript:
-                {
-                    return false;
-                }
+                    {
+                        return false;
+                    }
                 case NoScriptBehaviors.ClearScript:
-                {
-                    _scriptHandler.Clear();
-                    return false;
-                }
+                    {
+                        _scriptHandler.Clear();
+                        return false;
+                    }
                 case NoScriptBehaviors.FallbackScript:
-                {
-                    return LoadScript(Settings.FallbackScriptFile, false, true);
-                }
+                    {
+                        return LoadScript(Settings.FallbackScriptFile, false, true);
+                    }
                 default:
                     throw new ArgumentOutOfRangeException();
             }

@@ -280,11 +280,11 @@ namespace ScriptPlayer.Shared
             await Open(filename, TimeSpan.Zero, TimeSpan.Zero);
         }
 
-        public async Task Open(string filename, TimeSpan startAt, TimeSpan duration)
+        public async Task<bool> Open(string filename, TimeSpan startAt, TimeSpan duration)
         {
-            if (!File.Exists(filename)) return;
+            if (!File.Exists(filename)) return false;
 
-            await AddSeekEntry(new SeekEntry
+            return await AddSeekEntry(new SeekEntry
             {
                 FileName = filename,
                 Position = startAt,
@@ -292,24 +292,25 @@ namespace ScriptPlayer.Shared
             });
         }
 
-        private async Task AddSeekEntry(SeekEntry seekEntry)
+        private async Task<bool> AddSeekEntry(SeekEntry seekEntry)
         {
-            await ProcessSeekEntry(seekEntry);
+            return await ProcessSeekEntry(seekEntry);
         }
 
         private readonly SemaphoreSlim _seekSemaphore = new SemaphoreSlim(1, 1);
         private uint _seekPriority = 0;
 
-        private async Task ProcessSeekEntry(SeekEntry seekEntry)
+        private async Task<bool> ProcessSeekEntry(SeekEntry seekEntry)
         {
             try
             {
                 uint myPriority = ++_seekPriority;
 
                 await _seekSemaphore.WaitAsync();
+                IsSeeking = true;
 
                 if (_seekPriority != myPriority)
-                    return;
+                    return false;
 
                 if (seekEntry.FileName != OpenedFile)
                 {
@@ -319,17 +320,18 @@ namespace ScriptPlayer.Shared
                 {
                     await ProcessPositionSeekEntry(seekEntry);
                 }
+
+                return true;
             }
             finally
             {
+                IsSeeking = false;
                 _seekSemaphore.Release(1);
             }
         }
 
         private async Task ProcessPositionSeekEntry(SeekEntry seekEntry)
         {
-            IsSeeking = true;
-
             ulong iteration = ++loadIteration;
 
             TimeSpan position = ClampTimestamp(seekEntry.Position);
@@ -342,14 +344,10 @@ namespace ScriptPlayer.Shared
 
             if (iteration != loadIteration)
                 return;
-
-            IsSeeking = false;
         }
 
         private async Task ProcessFileSeekEntry(SeekEntry seekEntry)
         {
-            IsSeeking = true;
-
             ulong iteration = ++loadIteration;
 
             OpenedFile = seekEntry.FileName;
@@ -365,10 +363,6 @@ namespace ScriptPlayer.Shared
             if (iteration != loadIteration) return;
 
             await OpenAndWaitFor(_standByPlayer, seekEntry.FileName);
-
-            if (iteration != loadIteration) return;
-
-            IsSeeking = false;
         }
 
         private void SetEventSource(MediaPlayer player)
@@ -612,9 +606,9 @@ namespace ScriptPlayer.Shared
             return position;
         }
 
-        public async Task SoftSeek(TimeSpan position, TimeSpan duration)
+        public async Task<bool> SoftSeek(TimeSpan position, TimeSpan duration)
         {
-            await AddSeekEntry(new SeekEntry
+            return await AddSeekEntry(new SeekEntry
             {
                 FileName = OpenedFile,
                 Position = position,
