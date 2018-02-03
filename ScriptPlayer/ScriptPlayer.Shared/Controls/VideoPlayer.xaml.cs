@@ -74,7 +74,11 @@ namespace ScriptPlayer.Shared
         private bool _sideBySide;
         private MediaPlayer _standByPlayer;
 
-        private ulong loadIteration = 0;
+        private readonly SemaphoreSlim _seekSemaphore = new SemaphoreSlim(1, 1);
+        private ulong _seekPriority;
+        private ulong _loadIteration;
+
+        public bool IsSeeking { get; set; }
 
         public VideoPlayer()
         {
@@ -297,15 +301,12 @@ namespace ScriptPlayer.Shared
             return await ProcessSeekEntry(seekEntry);
         }
 
-        private readonly SemaphoreSlim _seekSemaphore = new SemaphoreSlim(1, 1);
-        private uint _seekPriority = 0;
-
         private async Task<bool> ProcessSeekEntry(SeekEntry seekEntry)
         {
+            ulong myPriority = ++_seekPriority;
+
             try
             {
-                uint myPriority = ++_seekPriority;
-
                 await _seekSemaphore.WaitAsync();
                 IsSeeking = true;
 
@@ -325,14 +326,16 @@ namespace ScriptPlayer.Shared
             }
             finally
             {
-                IsSeeking = false;
+                if(myPriority == _seekPriority)
+                    IsSeeking = false;
+
                 _seekSemaphore.Release(1);
             }
         }
 
         private async Task ProcessPositionSeekEntry(SeekEntry seekEntry)
         {
-            ++loadIteration;
+            ++_loadIteration;
 
             TimeSpan position = ClampTimestamp(seekEntry.Position);
 
@@ -353,10 +356,12 @@ namespace ScriptPlayer.Shared
 
         private async Task ProcessFileSeekEntry(SeekEntry seekEntry)
         {
-            ulong iteration = ++loadIteration;
+            ulong iteration = ++_loadIteration;
 
             if (seekEntry.Duration == TimeSpan.Zero)
             {
+                SetPrimaryPlayer(_player);
+                SetEventSource(_player);
                 await OpenAndWaitFor(_player, seekEntry.FileName);
             }
             else
@@ -367,11 +372,11 @@ namespace ScriptPlayer.Shared
 
                 await OpenAndWaitFor(_standByPlayer, seekEntry.FileName);
 
-                if (iteration != loadIteration) return;
+                if (iteration != _loadIteration) return;
 
                 await CrossFade(seekEntry.Position, seekEntry.Duration);
 
-                if (iteration != loadIteration) return;
+                if (iteration != _loadIteration) return;
 
                 await OpenAndWaitFor(_standByPlayer, seekEntry.FileName);
             }
@@ -390,8 +395,6 @@ namespace ScriptPlayer.Shared
                 player.MediaEnded += PlayerOnMediaEnded;
             }
         }
-
-        public bool IsSeeking { get; set; }
 
         public async Task OpenAndWaitFor(MediaPlayer player, string filename)
         {
@@ -435,15 +438,19 @@ namespace ScriptPlayer.Shared
 
         private void InitializePlayer()
         {
-            _player = new MediaPlayer {ScrubbingEnabled = true};
-            _player.Volume = MainVolume;
+            _player = new MediaPlayer
+            {
+                ScrubbingEnabled = true,
+                Volume = MainVolume
+            };
 
-            _standByPlayer = new MediaPlayer {ScrubbingEnabled = true};
-            _standByPlayer.Volume = StandByVolume;
+            _standByPlayer = new MediaPlayer
+            {
+                ScrubbingEnabled = true,
+                Volume = StandByVolume
+            };
 
-            TimeSource = new MediaPlayerTimeSource(_player,
-                new DispatcherClock(Dispatcher, TimeSpan.FromMilliseconds(10)));
-
+            TimeSource = new MediaPlayerTimeSource(_player, new DispatcherClock(Dispatcher, TimeSpan.FromMilliseconds(10)));
             TimeSource.IsPlayingChanged += TimeSourceOnIsPlayingChanged;
 
             UpdateVideoBrush();

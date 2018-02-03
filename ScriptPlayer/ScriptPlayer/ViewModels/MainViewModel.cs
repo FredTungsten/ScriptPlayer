@@ -338,40 +338,74 @@ namespace ScriptPlayer.ViewModels
                             break;
                         }
                     case PlaybackMode.Vlc:
+                    {
+                        HideBanner();
+
+                        if (string.IsNullOrWhiteSpace(Settings.VlcEndpoint) ||
+                            string.IsNullOrWhiteSpace(Settings.VlcPassword))
                         {
-                            HideBanner();
-
-                            if (string.IsNullOrWhiteSpace(Settings.VlcEndpoint) ||
-                                string.IsNullOrWhiteSpace(Settings.VlcPassword))
+                            VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
                             {
-                                VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
-                                {
-                                    IpAndPort = VlcConnectionSettings.DefaultEndpoint,
-                                    Password = "test"
-                                });
+                                IpAndPort = VlcConnectionSettings.DefaultEndpoint,
+                                Password = "test"
+                            });
 
-                                if (settings == null)
-                                {
-                                    PlaybackMode = PlaybackMode.Local;
-                                    return;
-                                }
-
-                                Settings.VlcPassword = settings.Password;
-                                Settings.VlcEndpoint = settings.IpAndPort;
+                            if (settings == null)
+                            {
+                                PlaybackMode = PlaybackMode.Local;
+                                return;
                             }
 
-                            TimeSource = new VlcTimeSource(
-                                new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                                    TimeSpan.FromMilliseconds(10)), new VlcConnectionSettings
-                                    {
-                                        IpAndPort = Settings.VlcEndpoint,
-                                        Password = Settings.VlcPassword
-                                    });
-
-                            ((VlcTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
-
-                            break;
+                            Settings.VlcPassword = settings.Password;
+                            Settings.VlcEndpoint = settings.IpAndPort;
                         }
+
+                        TimeSource = new VlcTimeSource(
+                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                TimeSpan.FromMilliseconds(10)), new VlcConnectionSettings
+                            {
+                                IpAndPort = Settings.VlcEndpoint,
+                                Password = Settings.VlcPassword
+                            });
+
+                        ((VlcTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+
+                        break;
+                    }
+                    case PlaybackMode.MpcHc:
+                    {
+                        HideBanner();
+
+                        /*if (string.IsNullOrWhiteSpace(Settings.VlcEndpoint) ||
+                            string.IsNullOrWhiteSpace(Settings.VlcPassword))
+                        {
+                            VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
+                            {
+                                IpAndPort = VlcConnectionSettings.DefaultEndpoint,
+                                Password = "test"
+                            });
+
+                            if (settings == null)
+                            {
+                                PlaybackMode = PlaybackMode.Local;
+                                return;
+                            }
+
+                            Settings.VlcPassword = settings.Password;
+                            Settings.VlcEndpoint = settings.IpAndPort;
+                        }*/
+
+                        TimeSource = new MpcTimeSource(
+                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                TimeSpan.FromMilliseconds(10)), new MpcConnectionSettings
+                            {
+                                IpAndPort = "localhost:13579"
+                                });
+
+                        ((MpcTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+
+                        break;
+                    }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -486,6 +520,10 @@ namespace ScriptPlayer.ViewModels
                             }
                         case PlaybackMode.Whirligig:
                             break;
+                        case PlaybackMode.Vlc:
+                            break;
+                        case PlaybackMode.MpcHc:
+                            break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
@@ -504,6 +542,10 @@ namespace ScriptPlayer.ViewModels
                                 break;
                             }
                         case PlaybackMode.Whirligig:
+                            break;
+                        case PlaybackMode.Vlc:
+                            break;
+                        case PlaybackMode.MpcHc:
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -558,13 +600,23 @@ namespace ScriptPlayer.ViewModels
         private void TimeSourceOnProgressChanged(object sender, TimeSpan e)
         {
             if (!TimeSource.IsPlaying || IsSeeking) return;
-            if (_loopA == TimeSpan.MinValue || _loopB == TimeSpan.MinValue) return;
 
-            if (e >= _loopB)
+            if (_loopA != TimeSpan.MinValue && _loopB != TimeSpan.MinValue)
             {
-                SkipTo(_loopA, Settings.SoftSeekLoops, Settings.SoftSeekLoopsDuration);
+                if (e >= _loopB)
+                {
+                    SkipTo(_loopA, Settings.SoftSeekLoops, Settings.SoftSeekLoopsDuration);
+                    return;
+                }
             }
 
+            if (Settings.SoftSeekFiles)
+            {
+                if (e + Settings.SoftSeekFilesDuration >= TimeSource.Duration)
+                {
+                    MediaCanBeConsideredEnded();
+                }
+            }
         }
 
         private void TimeSourceOnDurationChanged(object sender, TimeSpan timeSpan)
@@ -2127,6 +2179,11 @@ namespace ScriptPlayer.ViewModels
         }
 
         private void VideoPlayer_MediaEnded(object sender, EventArgs e)
+        {
+            MediaCanBeConsideredEnded();
+        }
+
+        private void MediaCanBeConsideredEnded()
         {
             if (IsSeeking) return;
 

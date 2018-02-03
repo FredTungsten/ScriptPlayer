@@ -15,7 +15,7 @@ namespace ScriptPlayer.Shared
         public override bool CanSeek => true;
         public override bool CanOpenMedia => true;
 
-        public ManualTimeSource(ISampleClock clock) : this(clock, TimeSpan.FromMilliseconds(100))
+        public ManualTimeSource(ISampleClock clock) : this(clock, TimeSpan.FromMilliseconds(30))
         { }
 
         public ManualTimeSource(ISampleClock clock, TimeSpan maxOffset)

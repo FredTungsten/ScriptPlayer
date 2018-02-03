@@ -5,6 +5,7 @@ namespace ScriptPlayer.ViewModels
         Local,
         Blind,
         Whirligig,
-        Vlc
+        Vlc,
+        MpcHc
     }
 }
