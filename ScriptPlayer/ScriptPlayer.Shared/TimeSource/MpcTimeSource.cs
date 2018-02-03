@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Windows;
-using HtmlAgilityPack;
 
 namespace ScriptPlayer.Shared
 {
@@ -33,7 +33,7 @@ namespace ScriptPlayer.Shared
             _connectionSettings = connectionSettings;
             _previousStatus = new MpcStatus { IsValid = false };
 
-            _timeSource = new ManualTimeSource(clock, TimeSpan.FromMilliseconds(20));
+            _timeSource = new ManualTimeSource(clock, TimeSpan.FromMilliseconds(35));
             _timeSource.DurationChanged += TimeSourceOnDurationChanged;
             _timeSource.IsPlayingChanged += TimeSourceOnIsPlayingChanged;
             _timeSource.ProgressChanged += TimeSourceOnProgressChanged;
@@ -106,7 +106,16 @@ namespace ScriptPlayer.Shared
             if (CheckAccess())
                 IsConnected = isConnected;
             else
-                Dispatcher.Invoke(() => { SetConnected(isConnected); });
+            {
+                try
+                {
+                    Dispatcher.Invoke(() => { SetConnected(isConnected); });
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Exception in MpcTimeSource.SetConnected: " + e.Message);
+                }
+            }
         }
 
         private void InterpretStatus(string statusXml)
@@ -168,19 +177,39 @@ namespace ScriptPlayer.Shared
             }
         }
 
+        private void PostCommand(MpcCommandCodes commandCode, params string[] keyValuePairs)
+        {
+            try
+            {
+                WebClient client = new WebClient();
+                Uri uri = new Uri($"http://{_connectionSettings.IpAndPort}/command.html");
+                NameValueCollection values =
+                    new NameValueCollection {{"wm_command", ((int) commandCode).ToString("D")}};
+
+                for (int i = 0; i < keyValuePairs.Length / 2; i++)
+                    values.Add(keyValuePairs[i * 2], keyValuePairs[i * 2 + 1]);
+
+                client.UploadValues(uri, values);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Exception in MpcTimeSource.PostCommand: " + e.Message);
+            }
+        }
+
         public override void Play()
         {
-            //Request("status.xml?command=pl_forceresume");
+            PostCommand(MpcCommandCodes.Play);
         }
 
         public override void Pause()
         {
-            //Request("status.xml?command=pl_forcepause");
+            PostCommand(MpcCommandCodes.Pause);
         }
 
         public override void SetPosition(TimeSpan position)
         {
-            //Request("status.xml?command=seek&val=" + (int)position.TotalSeconds);
+            PostCommand(MpcCommandCodes.Custom, "position", position.ToString("hh\\:mm\\:ss"));
         }
 
         public void SetDuration(TimeSpan duration)
@@ -200,75 +229,8 @@ namespace ScriptPlayer.Shared
             _clientLoop?.Abort();
         }
 
-        public override bool CanPlayPause => false;
-        public override bool CanSeek => false;
+        public override bool CanPlayPause => true;
+        public override bool CanSeek => true;
         public override bool CanOpenMedia => false;
-    }
-
-    public enum MpcCommandCodes
-    {
-        Play = 887,
-        Pause = 888
-    }
-
-    public enum MpcPlaybackState
-    {
-        Stopped = 0,
-        Paused = 1,
-        Playing = 2
-    }
-
-    public class MpcStatus
-    {
-        public bool IsValid { get; set; }
-
-        public string FilePath { get; set; }
-
-        public string File { get; set; }
-
-        public string FileDir { get; set; }
-
-        public MpcPlaybackState State { get; set; }
-
-        public long Position { get; set; }
-
-        public long Duration { get; set; }
-
-        public int VolumeLevel { get; set; }
-
-        public MpcStatus()
-        {
-            IsValid = false;
-        }
-
-        public MpcStatus(string statusHtml)
-        {
-            try
-            {
-                HtmlDocument document = new HtmlDocument();
-                document.LoadHtml(statusHtml);
-
-                File = document.GetElementbyId("file").InnerText;
-                FilePath = document.GetElementbyId("filepath").InnerText;
-                FileDir = document.GetElementbyId("filedir").InnerText;
-                State = (MpcPlaybackState)int.Parse(document.GetElementbyId("State").InnerText);
-                Position = long.Parse(document.GetElementbyId("position").InnerText);
-                Duration = long.Parse(document.GetElementbyId("duration").InnerText);
-                VolumeLevel = int.Parse(document.GetElementbyId("volumelevel").InnerText);
-                IsValid = true;
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("Couldn't load MPC-HC status page! " + e.Message);
-                IsValid = false;
-            }
-        }
-    }
-
-    public class MpcConnectionSettings
-    {
-        public string IpAndPort { get; set; }
-
-        // http://localhost:13579/variables.html
     }
 }

@@ -90,6 +90,9 @@
     </ApplicationDefinition>
     <Compile Include="Converters\BooleanAndConverter.cs" />
     <Compile Include="Converters\CollectionNullOrEmptyToVisibilityConverter.cs" />
+    <Compile Include="Dialogs\MpcConnectionSettingsDialog.xaml.cs">
+      <DependentUpon>MpcConnectionSettingsDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="FlashOverlay.xaml.cs">
       <DependentUpon>FlashOverlay.xaml</DependentUpon>
     </Compile>
@@ -151,6 +154,10 @@
     <Page Include="Dialogs\VersionDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\MpcConnectionSettingsDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialogs\WhirligigConnectionSettingsDialog.xaml">
       <Generator>MSBuild:Compile</Generator>

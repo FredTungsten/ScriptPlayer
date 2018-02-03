@@ -74,12 +74,14 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _softSeekGapDuration = TimeSpan.FromSeconds(3);
         private TimeSpan _softSeekFilesDuration = TimeSpan.FromSeconds(3);
         private TimeSpan _softSeekLoopsDuration = TimeSpan.FromSeconds(3);
+        private string _mpcHcEndpoint;
 
         public SettingsViewModel()
         {
             WhirligigEndpoint = null;
             VlcEndpoint = null;
             ButtplugUrl = null;
+            MpcHcEndpoint = null;
         }
 
         public SettingsViewModel Duplicate()
@@ -299,6 +301,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _whirligigEndpoint) return;
                 _whirligigEndpoint = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string MpcHcEndpoint
+        {
+            get => _mpcHcEndpoint;
+            set
+            {
+                if (value == _mpcHcEndpoint) return;
+                _mpcHcEndpoint = value;
                 OnPropertyChanged();
             }
         }

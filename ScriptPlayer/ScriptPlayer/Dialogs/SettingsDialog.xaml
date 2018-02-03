@@ -70,7 +70,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Scripts" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="MPC HC" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -137,6 +137,18 @@
                                 <TextBox Text="{Binding Settings.WhirligigEndpoint}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                             </DockPanel>
                             <Button Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnWhirligigDefault_Click"/>
+                        </StackPanel>
+                    </Grid>
+                    <Grid controls:PageSelector.ContentIdentifier="MPC HC">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_external_link_square}"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock HorizontalAlignment="Left" Margin="4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding Settings.MpcHcEndpoint}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <Button Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnMpcHcDefault_Click"/>
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Buttplug">

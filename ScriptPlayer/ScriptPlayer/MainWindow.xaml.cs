@@ -50,6 +50,7 @@ namespace ScriptPlayer
             ViewModel.RequestButtplugUrl += ViewModelOnRequestButtplugUrl;
             ViewModel.RequestVlcConnectionSettings += ViewModelOnRequestVlcConnectionSettings;
             ViewModel.RequestWhirligigConnectionSettings += ViewModelOnRequestWhirligigConnectionSettings;
+            ViewModel.RequestMpcConnectionSettings += ViewModelOnRequestMpcConnectionSettings;
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.RequestShowSkipButton += ViewModelOnRequestShowSkipButton;
@@ -101,6 +102,18 @@ namespace ScriptPlayer
 
             args.Handled = true;
             args.Value = new WhirligigConnectionSettings
+            {
+                IpAndPort = dialog.IpAndPort
+            };
+        }
+
+        private void ViewModelOnRequestMpcConnectionSettings(object sender, RequestEventArgs<MpcConnectionSettings> args)
+        {
+            MpcConnectionSettingsDialog dialog = new MpcConnectionSettingsDialog(args.Value.IpAndPort) { Owner = this };
+            if (dialog.ShowDialog() != true) return;
+
+            args.Handled = true;
+            args.Value = new MpcConnectionSettings
             {
                 IpAndPort = dialog.IpAndPort
             };

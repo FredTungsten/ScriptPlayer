@@ -258,6 +258,10 @@
     <Compile Include="TimeSource\ManualTimeSource.cs" />
     <Compile Include="TimeSource\MediaPlayerTimeSource.cs" />
     <Compile Include="TimeSource\ISampleClock.cs" />
+    <Compile Include="TimeSource\MpcCommandCodes.cs" />
+    <Compile Include="TimeSource\MpcConnectionSettings.cs" />
+    <Compile Include="TimeSource\MpcPlaybackState.cs" />
+    <Compile Include="TimeSource\MpcStatus.cs" />
     <Compile Include="TimeSource\MpcTimeSource.cs" />
     <Compile Include="TimeSource\TimeSource.cs" />
     <Compile Include="TimeSource\VlcConnectionSettings.cs" />

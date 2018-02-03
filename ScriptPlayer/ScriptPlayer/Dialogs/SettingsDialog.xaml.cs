@@ -254,6 +254,11 @@ namespace ScriptPlayer.Dialogs
             Settings.WhirligigEndpoint = WhirligigConnectionSettings.DefaultEndpoint;
         }
 
+        private void BtnMpcHcDefault_Click(object sender, RoutedEventArgs e)
+        {
+            Settings.MpcHcEndpoint = MpcConnectionSettings.DefaultEndpoint;
+        }
+
         private void BtnSelectFallBackScript_Click(object sender, RoutedEventArgs e)
         {
             ScriptFileFormatCollection formats = ScriptLoaderManager.GetFormats();

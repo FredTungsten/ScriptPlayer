@@ -5,10 +5,11 @@ namespace ScriptPlayer.Shared
 {
     public class ManualTimeSource : TimeSource
     {
-        private ISampleClock _clock;
+        private readonly ISampleClock _clock;
+        private readonly object _clocklock = new object();
+
         private TimeSpan _lastProgress;
         private DateTime _lastCheckpoint;
-        private object _clocklock = new object();
         private TimeSpan _maxOffset;
 
         public override bool CanPlayPause => true;

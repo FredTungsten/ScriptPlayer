@@ -29,6 +29,7 @@ namespace ScriptPlayer.ViewModels
 
         public event EventHandler<RequestEventArgs<VlcConnectionSettings>> RequestVlcConnectionSettings;
         public event EventHandler<RequestEventArgs<WhirligigConnectionSettings>> RequestWhirligigConnectionSettings;
+        public event EventHandler<RequestEventArgs<MpcConnectionSettings>> RequestMpcConnectionSettings;
         public event EventHandler RequestHideSkipButton;
         public event EventHandler RequestShowSkipButton;
         public event EventHandler RequestShowSkipNextButton;
@@ -376,14 +377,13 @@ namespace ScriptPlayer.ViewModels
                     {
                         HideBanner();
 
-                        /*if (string.IsNullOrWhiteSpace(Settings.VlcEndpoint) ||
-                            string.IsNullOrWhiteSpace(Settings.VlcPassword))
+                        if (string.IsNullOrWhiteSpace(Settings.MpcHcEndpoint))
                         {
-                            VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
-                            {
-                                IpAndPort = VlcConnectionSettings.DefaultEndpoint,
-                                Password = "test"
-                            });
+                            MpcConnectionSettings settings =
+                                OnRequestMpcConnectionSettings(new MpcConnectionSettings
+                                {
+                                    IpAndPort = MpcConnectionSettings.DefaultEndpoint
+                                });
 
                             if (settings == null)
                             {
@@ -391,15 +391,14 @@ namespace ScriptPlayer.ViewModels
                                 return;
                             }
 
-                            Settings.VlcPassword = settings.Password;
-                            Settings.VlcEndpoint = settings.IpAndPort;
-                        }*/
+                            Settings.MpcHcEndpoint = settings.IpAndPort;
+                        }
 
-                        TimeSource = new MpcTimeSource(
+                            TimeSource = new MpcTimeSource(
                             new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
                                 TimeSpan.FromMilliseconds(10)), new MpcConnectionSettings
                             {
-                                IpAndPort = "localhost:13579"
+                                IpAndPort = Settings.MpcHcEndpoint
                                 });
 
                         ((MpcTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
@@ -435,6 +434,16 @@ namespace ScriptPlayer.ViewModels
         {
             RequestEventArgs<WhirligigConnectionSettings> args = new RequestEventArgs<WhirligigConnectionSettings>(currentSettings);
             RequestWhirligigConnectionSettings?.Invoke(this, args);
+
+            if (!args.Handled)
+                return null;
+            return args.Value;
+        }
+
+        private MpcConnectionSettings OnRequestMpcConnectionSettings(MpcConnectionSettings currentSettings)
+        {
+            RequestEventArgs<MpcConnectionSettings> args = new RequestEventArgs<MpcConnectionSettings>(currentSettings);
+            RequestMpcConnectionSettings?.Invoke(this, args);
 
             if (!args.Handled)
                 return null;
@@ -2662,6 +2671,13 @@ namespace ScriptPlayer.ViewModels
                         {
                             IpAndPort = settings.VlcEndpoint,
                             Password = settings.VlcPassword
+                        });
+                    break;
+                case PlaybackMode.MpcHc:
+                    if (TimeSource is MpcTimeSource mpc)
+                        mpc.UpdateConnectionSettings(new MpcConnectionSettings
+                        {
+                            IpAndPort = settings.MpcHcEndpoint
                         });
                     break;
             }
