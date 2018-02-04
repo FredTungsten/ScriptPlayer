@@ -80,6 +80,7 @@ namespace ScriptPlayer.Shared
                             InterpretStatus(status);
                             SetConnected(true);
                         }
+                        Thread.Sleep(5);
                     }
                 }
                 catch (ThreadAbortException)
@@ -122,7 +123,14 @@ namespace ScriptPlayer.Shared
         {
             if (!_timeSource.CheckAccess())
             {
-                _timeSource.Dispatcher.Invoke(() => InterpretStatus(statusXml));
+                try
+                {
+                    _timeSource.Dispatcher.Invoke(() => InterpretStatus(statusXml));
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Exception in McpTimeSource.InterpretStatus: " + e.Message);
+                }
                 return;
             }
 
