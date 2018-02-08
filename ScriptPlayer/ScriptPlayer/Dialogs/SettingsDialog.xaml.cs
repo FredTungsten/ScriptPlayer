@@ -268,6 +268,16 @@ namespace ScriptPlayer.Dialogs
 
             Settings.FallbackScriptFile = dialog.FileName;
         }
+
+        private void BtnZoomDefault_Click(object sender, RoutedEventArgs e)
+        {
+            Settings.ZoomPlayerEndpoint = ZoomPlayerConnectionSettings.DefaultEndpoint;
+        }
+
+        private void BtnSamsungDefault_Click(object sender, RoutedEventArgs e)
+        {
+            Settings.SamsungVrUdpPort = SamsungVrConnectionSettings.DefaultPort;
+        }
     }
 
     public class SettingsPageViewModelCollection : List<SettingsPageViewModel>

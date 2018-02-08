@@ -90,6 +90,9 @@
     </ApplicationDefinition>
     <Compile Include="Converters\BooleanAndConverter.cs" />
     <Compile Include="Converters\CollectionNullOrEmptyToVisibilityConverter.cs" />
+    <Compile Include="Dialogs\ZoomPlayerConnectionSettingsDialog.xaml.cs">
+      <DependentUpon>ZoomPlayerConnectionSettingsDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\MpcConnectionSettingsDialog.xaml.cs">
       <DependentUpon>MpcConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
@@ -145,6 +148,10 @@
     <Page Include="Dialogs\DeviceManagerDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\ZoomPlayerConnectionSettingsDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialogs\ScriptDownloadDialog.xaml">
       <SubType>Designer</SubType>

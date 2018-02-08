@@ -270,6 +270,8 @@
     <Compile Include="TimeSource\VlcPlaybackState.cs" />
     <Compile Include="TimeSource\VlcStatus.cs" />
     <Compile Include="TimeSource\VlcTimeSource.cs" />
+    <Compile Include="TimeSource\ZoomPlayerConnectionSettings.cs" />
+    <Compile Include="TimeSource\ZoomPlayerTimeSource.cs" />
     <Compile Include="TimeSource\WhirligigTimeSource.cs" />
     <Compile Include="TimeSource\WhirligigConnectionSettings.cs" />
     <Compile Include="Beats\TimeSpanExtensions.cs" />

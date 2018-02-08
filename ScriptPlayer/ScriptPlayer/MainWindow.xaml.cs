@@ -49,6 +49,7 @@ namespace ScriptPlayer
             ViewModel.RequestOverlay += ViewModelOnRequestOverlay;
             ViewModel.RequestButtplugUrl += ViewModelOnRequestButtplugUrl;
             ViewModel.RequestVlcConnectionSettings += ViewModelOnRequestVlcConnectionSettings;
+            ViewModel.RequestZoomPlayerConnectionSettings += ViewModelOnRequestZoomPlayerConnectionSettings;
             ViewModel.RequestWhirligigConnectionSettings += ViewModelOnRequestWhirligigConnectionSettings;
             ViewModel.RequestMpcConnectionSettings += ViewModelOnRequestMpcConnectionSettings;
             ViewModel.RequestSamsungVrConnectionSettings += ViewModelOnRequestSamsungVrConnectionSettings;
@@ -62,6 +63,7 @@ namespace ScriptPlayer
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
         }
+
 
         private void ViewModelOnBeat(object sender, EventArgs eventArgs)
         {
@@ -94,6 +96,19 @@ namespace ScriptPlayer
         private void ViewModelOnRequestShowSkipButton(object sender, EventArgs eventArgs)
         {
             Notifications.AddNotification(((DataTemplate)Resources["SkipButton"]).LoadContent(), TimeSpan.MaxValue, "SkipButton", ViewModel.SkipToNextEventCommand);
+        }
+
+
+        private void ViewModelOnRequestZoomPlayerConnectionSettings(object sender, RequestEventArgs<ZoomPlayerConnectionSettings> args)
+        {
+            ZoomPlayerConnectionSettingsDialog dialog = new ZoomPlayerConnectionSettingsDialog(args.Value.IpAndPort) { Owner = this };
+            if (dialog.ShowDialog() != true) return;
+
+            args.Handled = true;
+            args.Value = new ZoomPlayerConnectionSettings
+            {
+                IpAndPort = dialog.IpAndPort
+            };
         }
 
         private void ViewModelOnRequestSamsungVrConnectionSettings(object sender, RequestEventArgs<SamsungVrConnectionSettings> args)

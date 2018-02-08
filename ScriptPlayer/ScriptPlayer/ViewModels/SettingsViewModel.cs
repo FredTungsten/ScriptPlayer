@@ -76,6 +76,7 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _softSeekLoopsDuration = TimeSpan.FromSeconds(3);
         private string _mpcHcEndpoint;
         private int _samsungVrUdpPort;
+        private string _zoomPlayerEndpoint;
 
         public SettingsViewModel()
         {
@@ -83,6 +84,8 @@ namespace ScriptPlayer.ViewModels
             VlcEndpoint = null;
             ButtplugUrl = null;
             MpcHcEndpoint = null;
+            SamsungVrUdpPort = 0;
+            ZoomPlayerEndpoint = null;
         }
 
         public SettingsViewModel Duplicate()
@@ -762,6 +765,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _samsungVrUdpPort) return;
                 _samsungVrUdpPort = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ZoomPlayerEndpoint
+        {
+            get => _zoomPlayerEndpoint;
+            set
+            {
+                if (value == _zoomPlayerEndpoint) return;
+                _zoomPlayerEndpoint = value;
                 OnPropertyChanged();
             }
         }

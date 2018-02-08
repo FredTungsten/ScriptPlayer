@@ -31,6 +31,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<WhirligigConnectionSettings>> RequestWhirligigConnectionSettings;
         public event EventHandler<RequestEventArgs<MpcConnectionSettings>> RequestMpcConnectionSettings;
         public event EventHandler<RequestEventArgs<SamsungVrConnectionSettings>> RequestSamsungVrConnectionSettings;
+        public event EventHandler<RequestEventArgs<ZoomPlayerConnectionSettings>> RequestZoomPlayerConnectionSettings;
 
         public event EventHandler RequestHideSkipButton;
         public event EventHandler RequestShowSkipButton;
@@ -340,104 +341,137 @@ namespace ScriptPlayer.ViewModels
                             RefreshManualDuration();
                             break;
                         }
-                    case PlaybackMode.Vlc:
-                    {
-                        HideBanner();
-
-                        if (string.IsNullOrWhiteSpace(Settings.VlcEndpoint) ||
-                            string.IsNullOrWhiteSpace(Settings.VlcPassword))
+                    case PlaybackMode.ZoomPlayer:
                         {
-                            VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
-                            {
-                                IpAndPort = VlcConnectionSettings.DefaultEndpoint,
-                                Password = "test"
-                            });
+                            HideBanner();
 
-                            if (settings == null)
+                            if (string.IsNullOrWhiteSpace(Settings.ZoomPlayerEndpoint))
                             {
-                                PlaybackMode = PlaybackMode.Local;
-                                return;
+                                ZoomPlayerConnectionSettings settings =
+                                    OnRequestZoomPlayerConnectionSettings(new ZoomPlayerConnectionSettings
+                                    {
+                                        IpAndPort = ZoomPlayerConnectionSettings.DefaultEndpoint
+                                    });
+
+                                if (settings == null)
+                                {
+                                    PlaybackMode = PlaybackMode.Local;
+                                    return;
+                                }
+
+                                Settings.ZoomPlayerEndpoint = settings.IpAndPort;
                             }
 
-                            Settings.VlcPassword = settings.Password;
-                            Settings.VlcEndpoint = settings.IpAndPort;
-                        }
-
-                        TimeSource = new VlcTimeSource(
-                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                                TimeSpan.FromMilliseconds(10)), new VlcConnectionSettings
-                            {
-                                IpAndPort = Settings.VlcEndpoint,
-                                Password = Settings.VlcPassword
-                            });
-
-                        ((VlcTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
-
-                        break;
-                    }
-                    case PlaybackMode.MpcHc:
-                    {
-                        HideBanner();
-
-                        if (string.IsNullOrWhiteSpace(Settings.MpcHcEndpoint))
-                        {
-                            MpcConnectionSettings settings =
-                                OnRequestMpcConnectionSettings(new MpcConnectionSettings
+                            TimeSource = new ZoomPlayerTimeSource(new DispatcherClock(
+                                Dispatcher.FromThread(Thread.CurrentThread),
+                                TimeSpan.FromMilliseconds(10)), new ZoomPlayerConnectionSettings
                                 {
-                                    IpAndPort = MpcConnectionSettings.DefaultEndpoint
+                                    IpAndPort = Settings.ZoomPlayerEndpoint
                                 });
 
-                            if (settings == null)
+                            ((ZoomPlayerTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+
+                            RefreshManualDuration();
+                            break;
+                        }
+                    case PlaybackMode.Vlc:
+                        {
+                            HideBanner();
+
+                            if (string.IsNullOrWhiteSpace(Settings.VlcEndpoint) ||
+                                string.IsNullOrWhiteSpace(Settings.VlcPassword))
                             {
-                                PlaybackMode = PlaybackMode.Local;
-                                return;
+                                VlcConnectionSettings settings = OnRequestVlcConnectionSettings(new VlcConnectionSettings
+                                {
+                                    IpAndPort = VlcConnectionSettings.DefaultEndpoint,
+                                    Password = "test"
+                                });
+
+                                if (settings == null)
+                                {
+                                    PlaybackMode = PlaybackMode.Local;
+                                    return;
+                                }
+
+                                Settings.VlcPassword = settings.Password;
+                                Settings.VlcEndpoint = settings.IpAndPort;
                             }
 
-                            Settings.MpcHcEndpoint = settings.IpAndPort;
+                            TimeSource = new VlcTimeSource(
+                                new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                    TimeSpan.FromMilliseconds(10)), new VlcConnectionSettings
+                                    {
+                                        IpAndPort = Settings.VlcEndpoint,
+                                        Password = Settings.VlcPassword
+                                    });
+
+                            ((VlcTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+
+                            break;
                         }
+                    case PlaybackMode.MpcHc:
+                        {
+                            HideBanner();
+
+                            if (string.IsNullOrWhiteSpace(Settings.MpcHcEndpoint))
+                            {
+                                MpcConnectionSettings settings =
+                                    OnRequestMpcConnectionSettings(new MpcConnectionSettings
+                                    {
+                                        IpAndPort = MpcConnectionSettings.DefaultEndpoint
+                                    });
+
+                                if (settings == null)
+                                {
+                                    PlaybackMode = PlaybackMode.Local;
+                                    return;
+                                }
+
+                                Settings.MpcHcEndpoint = settings.IpAndPort;
+                            }
 
                             TimeSource = new MpcTimeSource(
                             new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
                                 TimeSpan.FromMilliseconds(10)), new MpcConnectionSettings
-                            {
-                                IpAndPort = Settings.MpcHcEndpoint
-                                });
-
-                        ((MpcTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
-
-                        break;
-                    }
-                    case PlaybackMode.SamsungVr:
-                    {
-                        HideBanner();
-
-                        if (Settings.SamsungVrUdpPort == 0)
-                        {
-                            SamsungVrConnectionSettings settings =
-                                OnRequestSamsungVrConnectionSettings(new SamsungVrConnectionSettings
                                 {
-                                    UdpPort = SamsungVrConnectionSettings.DefaultPort
+                                    IpAndPort = Settings.MpcHcEndpoint
                                 });
 
-                            if (settings == null)
+                            ((MpcTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+
+                            break;
+                        }
+                    case PlaybackMode.SamsungVr:
+                        {
+                            HideBanner();
+
+                            if (Settings.SamsungVrUdpPort == 0)
                             {
-                                PlaybackMode = PlaybackMode.Local;
-                                return;
+                                SamsungVrConnectionSettings settings =
+                                    OnRequestSamsungVrConnectionSettings(new SamsungVrConnectionSettings
+                                    {
+                                        UdpPort = SamsungVrConnectionSettings.DefaultPort
+                                    });
+
+                                if (settings == null)
+                                {
+                                    PlaybackMode = PlaybackMode.Local;
+                                    return;
+                                }
+
+                                Settings.SamsungVrUdpPort = settings.UdpPort;
                             }
 
-                            Settings.SamsungVrUdpPort = settings.UdpPort;
-                        }
+                            TimeSource = new SamsungVrTimeSource(
+                                new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                    TimeSpan.FromMilliseconds(10)), new SamsungVrConnectionSettings
+                                    {
+                                        UdpPort = Settings.SamsungVrUdpPort
+                                    });
 
-                        TimeSource = new SamsungVrTimeSource(
-                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                                TimeSpan.FromMilliseconds(10)), new SamsungVrConnectionSettings
-                            {
-                                UdpPort = Settings.SamsungVrUdpPort
-                            });
-
-                        ((SamsungVrTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
-
-                        break;
+                            ((SamsungVrTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+                            RefreshManualDuration();
+                            break;
                         }
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -458,6 +492,16 @@ namespace ScriptPlayer.ViewModels
         {
             RequestEventArgs<VlcConnectionSettings> args = new RequestEventArgs<VlcConnectionSettings>(currentSettings);
             RequestVlcConnectionSettings?.Invoke(this, args);
+
+            if (!args.Handled)
+                return null;
+            return args.Value;
+        }
+
+        private ZoomPlayerConnectionSettings OnRequestZoomPlayerConnectionSettings(ZoomPlayerConnectionSettings currentSettings)
+        {
+            RequestEventArgs<ZoomPlayerConnectionSettings> args = new RequestEventArgs<ZoomPlayerConnectionSettings>(currentSettings);
+            RequestZoomPlayerConnectionSettings?.Invoke(this, args);
 
             if (!args.Handled)
                 return null;
@@ -502,6 +546,9 @@ namespace ScriptPlayer.ViewModels
         private void DisposeTimeSource()
         {
             TimeSource?.Pause();
+
+            if (ReferenceEquals(TimeSource, _videoPlayer.TimeSource))
+                return;
 
             if (TimeSource is IDisposable disposable)
                 disposable.Dispose();
@@ -580,6 +627,10 @@ namespace ScriptPlayer.ViewModels
                             break;
                         case PlaybackMode.MpcHc:
                             break;
+                        case PlaybackMode.SamsungVr:
+                            break;
+                        case PlaybackMode.ZoomPlayer:
+                            break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
@@ -602,6 +653,10 @@ namespace ScriptPlayer.ViewModels
                         case PlaybackMode.Vlc:
                             break;
                         case PlaybackMode.MpcHc:
+                            break;
+                        case PlaybackMode.SamsungVr:
+                            break;
+                        case PlaybackMode.ZoomPlayer:
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -2725,6 +2780,20 @@ namespace ScriptPlayer.ViewModels
                         mpc.UpdateConnectionSettings(new MpcConnectionSettings
                         {
                             IpAndPort = settings.MpcHcEndpoint
+                        });
+                    break;
+                case PlaybackMode.ZoomPlayer:
+                    if(TimeSource is ZoomPlayerTimeSource zoom)
+                        zoom.UpdateConnectionSettings(new ZoomPlayerConnectionSettings
+                        {
+                            IpAndPort = settings.ZoomPlayerEndpoint
+                        });
+                    break;
+                case PlaybackMode.SamsungVr:
+                    if(TimeSource is SamsungVrTimeSource samsung)
+                        samsung.UpdateConnectionSettings(new SamsungVrConnectionSettings
+                        {
+                            UdpPort = settings.SamsungVrUdpPort
                         });
                     break;
             }

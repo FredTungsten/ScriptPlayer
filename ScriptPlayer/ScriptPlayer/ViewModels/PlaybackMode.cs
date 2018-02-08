@@ -7,6 +7,7 @@ namespace ScriptPlayer.ViewModels
         Whirligig,
         Vlc,
         MpcHc,
-        SamsungVr
+        SamsungVr,
+        ZoomPlayer
     }
 }

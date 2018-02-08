@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Net;
 
 namespace ScriptPlayer.Shared
 {
-    public class WhirligigConnectionSettings
+    public class ZoomPlayerConnectionSettings
     {
         public string IpAndPort { get; set; }
-        public const string DefaultEndpoint = "127.0.0.1:2000";
+        public const string DefaultEndpoint = "127.0.0.1:4769";
 
         public IPEndPoint ToEndpoint()
         {
@@ -33,11 +33,11 @@ namespace ScriptPlayer.Shared
             catch (Exception e)
             {
                 Debug.WriteLine("Could not parse Whirligig Connection Settings: " + e.Message);
-                return new IPEndPoint(IPAddress.Loopback, 2000);
+                return new IPEndPoint(IPAddress.Loopback, 4769);
             }
         }
 
-        public WhirligigConnectionSettings()
+        public ZoomPlayerConnectionSettings()
         {
             IpAndPort = DefaultEndpoint;
         }
