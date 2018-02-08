@@ -69,7 +69,7 @@ namespace ScriptPlayer.ViewModels
         private bool _randomChapters;
         private bool _softSeekFiles = true;
         private bool _softSeekLoops = true;
-        private NoScriptBehaviors _noScriptBehavior;
+        private NoScriptBehaviors _noScriptBehavior = NoScriptBehaviors.KeepLastScript;
         private string _fallbackScriptFile;
         private TimeSpan _softSeekGapDuration = TimeSpan.FromSeconds(3);
         private TimeSpan _softSeekFilesDuration = TimeSpan.FromSeconds(3);
