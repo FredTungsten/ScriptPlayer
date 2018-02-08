@@ -51,6 +51,7 @@ namespace ScriptPlayer
             ViewModel.RequestVlcConnectionSettings += ViewModelOnRequestVlcConnectionSettings;
             ViewModel.RequestWhirligigConnectionSettings += ViewModelOnRequestWhirligigConnectionSettings;
             ViewModel.RequestMpcConnectionSettings += ViewModelOnRequestMpcConnectionSettings;
+            ViewModel.RequestSamsungVrConnectionSettings += ViewModelOnRequestSamsungVrConnectionSettings;
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.RequestShowSkipButton += ViewModelOnRequestShowSkipButton;
@@ -95,6 +96,17 @@ namespace ScriptPlayer
             Notifications.AddNotification(((DataTemplate)Resources["SkipButton"]).LoadContent(), TimeSpan.MaxValue, "SkipButton", ViewModel.SkipToNextEventCommand);
         }
 
+        private void ViewModelOnRequestSamsungVrConnectionSettings(object sender, RequestEventArgs<SamsungVrConnectionSettings> args)
+        {
+            SamsungVrConnectionSettingsDialog dialog = new SamsungVrConnectionSettingsDialog(args.Value.UdpPort) { Owner = this };
+            if (dialog.ShowDialog() != true) return;
+
+            args.Handled = true;
+            args.Value = new SamsungVrConnectionSettings
+            {
+                UdpPort = dialog.UdpPort
+            };
+        }
         private void ViewModelOnRequestWhirligigConnectionSettings(object sender, RequestEventArgs<WhirligigConnectionSettings> args)
         {
             WhirligigConnectionSettingsDialog dialog = new WhirligigConnectionSettingsDialog(args.Value.IpAndPort) { Owner = this };

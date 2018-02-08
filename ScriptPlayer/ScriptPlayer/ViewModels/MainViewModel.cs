@@ -30,6 +30,8 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<VlcConnectionSettings>> RequestVlcConnectionSettings;
         public event EventHandler<RequestEventArgs<WhirligigConnectionSettings>> RequestWhirligigConnectionSettings;
         public event EventHandler<RequestEventArgs<MpcConnectionSettings>> RequestMpcConnectionSettings;
+        public event EventHandler<RequestEventArgs<SamsungVrConnectionSettings>> RequestSamsungVrConnectionSettings;
+
         public event EventHandler RequestHideSkipButton;
         public event EventHandler RequestShowSkipButton;
         public event EventHandler RequestShowSkipNextButton;
@@ -405,6 +407,38 @@ namespace ScriptPlayer.ViewModels
 
                         break;
                     }
+                    case PlaybackMode.SamsungVr:
+                    {
+                        HideBanner();
+
+                        if (Settings.SamsungVrUdpPort == 0)
+                        {
+                            SamsungVrConnectionSettings settings =
+                                OnRequestSamsungVrConnectionSettings(new SamsungVrConnectionSettings
+                                {
+                                    UdpPort = SamsungVrConnectionSettings.DefaultPort
+                                });
+
+                            if (settings == null)
+                            {
+                                PlaybackMode = PlaybackMode.Local;
+                                return;
+                            }
+
+                            Settings.SamsungVrUdpPort = settings.UdpPort;
+                        }
+
+                        TimeSource = new SamsungVrTimeSource(
+                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                TimeSpan.FromMilliseconds(10)), new SamsungVrConnectionSettings
+                            {
+                                UdpPort = Settings.SamsungVrUdpPort
+                            });
+
+                        ((SamsungVrTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+
+                        break;
+                        }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -434,6 +468,16 @@ namespace ScriptPlayer.ViewModels
         {
             RequestEventArgs<WhirligigConnectionSettings> args = new RequestEventArgs<WhirligigConnectionSettings>(currentSettings);
             RequestWhirligigConnectionSettings?.Invoke(this, args);
+
+            if (!args.Handled)
+                return null;
+            return args.Value;
+        }
+
+        private SamsungVrConnectionSettings OnRequestSamsungVrConnectionSettings(SamsungVrConnectionSettings currentSettings)
+        {
+            RequestEventArgs<SamsungVrConnectionSettings> args = new RequestEventArgs<SamsungVrConnectionSettings>(currentSettings);
+            RequestSamsungVrConnectionSettings?.Invoke(this, args);
 
             if (!args.Handled)
                 return null;
@@ -475,6 +519,9 @@ namespace ScriptPlayer.ViewModels
 
             if (TimeSource is WhirligigTimeSource whirli)
                 whirli.SetDuration(_scriptHandler.GetOriginalScriptDuration().Add(TimeSpan.FromSeconds(5)));
+
+            if (TimeSource is SamsungVrTimeSource samsung)
+                samsung.SetDuration(_scriptHandler.GetOriginalScriptDuration().Add(TimeSpan.FromSeconds(5)));
         }
 
         private void TimeSourceChanged()

@@ -1,0 +1,16 @@
+﻿<Window x:Class="ScriptPlayer.Dialogs.SamsungVrConnectionSettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        mc:Ignorable="d" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow"
+        Title="Samsung VR Connection Settings" Height="107.62" Width="282.839">
+    <Grid>
+        <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="UDP Port" VerticalAlignment="Top"/>
+        <TextBox Text="{Binding UdpPort}" Height="23" Margin="81,10,10,0" VerticalAlignment="Top"/>
+
+        <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,11" VerticalAlignment="Bottom" Width="75" Click="BtnOk_OnClick"/>
+        <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,11" VerticalAlignment="Bottom" Width="75"/>
+    </Grid>
+</Window>

@@ -93,6 +93,9 @@
     <Compile Include="Dialogs\MpcConnectionSettingsDialog.xaml.cs">
       <DependentUpon>MpcConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\SamsungVrConnectionSettingsDialog.xaml.cs">
+      <DependentUpon>SamsungVrConnectionSettingsDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="FlashOverlay.xaml.cs">
       <DependentUpon>FlashOverlay.xaml</DependentUpon>
     </Compile>
@@ -156,6 +159,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\MpcConnectionSettingsDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialogs\SamsungVrConnectionSettingsDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

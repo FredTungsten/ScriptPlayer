@@ -6,6 +6,7 @@ namespace ScriptPlayer.ViewModels
         Blind,
         Whirligig,
         Vlc,
-        MpcHc
+        MpcHc,
+        SamsungVr
     }
 }

@@ -75,6 +75,7 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _softSeekFilesDuration = TimeSpan.FromSeconds(3);
         private TimeSpan _softSeekLoopsDuration = TimeSpan.FromSeconds(3);
         private string _mpcHcEndpoint;
+        private int _samsungVrUdpPort;
 
         public SettingsViewModel()
         {
@@ -745,11 +746,22 @@ namespace ScriptPlayer.ViewModels
 
         public NoScriptBehaviors NoScriptBehavior
         {
-            get { return _noScriptBehavior; }
+            get => _noScriptBehavior;
             set
             {
                 if (value == _noScriptBehavior) return;
                 _noScriptBehavior = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int SamsungVrUdpPort
+        {
+            get => _samsungVrUdpPort;
+            set
+            {
+                if (value == _samsungVrUdpPort) return;
+                _samsungVrUdpPort = value;
                 OnPropertyChanged();
             }
         }

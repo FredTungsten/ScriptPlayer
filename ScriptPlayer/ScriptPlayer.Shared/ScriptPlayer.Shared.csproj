@@ -263,6 +263,8 @@
     <Compile Include="TimeSource\MpcPlaybackState.cs" />
     <Compile Include="TimeSource\MpcStatus.cs" />
     <Compile Include="TimeSource\MpcTimeSource.cs" />
+    <Compile Include="TimeSource\SamsungVrConnectionSettings.cs" />
+    <Compile Include="TimeSource\SamsungVrTimesource.cs" />
     <Compile Include="TimeSource\TimeSource.cs" />
     <Compile Include="TimeSource\VlcConnectionSettings.cs" />
     <Compile Include="TimeSource\VlcPlaybackState.cs" />

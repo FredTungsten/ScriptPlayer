@@ -344,7 +344,7 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuFrameSampler_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new FrameSamplerDialog(_videoFile, _captureRect);
+            var dialog = new FrameSamplerDialog(_videoFile, _captureRect, videoPlayer.Duration);
             if (dialog.ShowDialog() != true) return;
 
             SetSamples(dialog.Result);

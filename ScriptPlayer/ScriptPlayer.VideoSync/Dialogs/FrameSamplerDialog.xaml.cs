@@ -38,13 +38,15 @@ namespace ScriptPlayer.VideoSync
         private Thread _t;
         private bool _running;
         private bool _isClosing;
+        private TimeSpan _backupDuration;
 
-        public FrameSamplerDialog(string videoFile, Int32Rect captureRect)
+        public FrameSamplerDialog(string videoFile, Int32Rect captureRect, TimeSpan backupDuration)
         {
             TaskbarItemInfo = new TaskbarItemInfo
             {
                 ProgressState = TaskbarItemProgressState.Normal
             };
+            _backupDuration = backupDuration;
             _videoFile = videoFile;   
             _captureRect = captureRect;
             InitializeComponent();
@@ -78,9 +80,19 @@ namespace ScriptPlayer.VideoSync
             System.Drawing.Color[] samples = new System.Drawing.Color[_captureRect.Width * _captureRect.Height];
 
             FrameCaptureCollection frameSamples = new FrameCaptureCollection();
+
             frameSamples.TotalFramesInVideo = (int) reader.FrameCount;
             frameSamples.DurationNumerator = reader.FrameCount * reader.FrameRate.Denominator;
             frameSamples.DurationDenominator = reader.FrameRate.Numerator;
+
+            if (frameSamples.TotalFramesInVideo == 0)
+            {
+                frameSamples.DurationDenominator = 1000;
+                frameSamples.DurationNumerator = (long) _backupDuration.TotalMilliseconds;
+                frameSamples.TotalFramesInVideo = (int) (reader.FrameRate.Numerator * _backupDuration.TotalSeconds /
+                                                         reader.FrameRate.Denominator);
+            }
+
             frameSamples.VideoFile = _videoFile;
             frameSamples.CaptureRect = _captureRect;
 
