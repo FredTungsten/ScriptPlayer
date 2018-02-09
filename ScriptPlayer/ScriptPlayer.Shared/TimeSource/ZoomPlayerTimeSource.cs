@@ -77,6 +77,7 @@ namespace ScriptPlayer.Shared
                     SetConnected(true);
 
                     SendCommand(ZoomPlayerCommandCodes.RequestPlayingFileName, "");
+                    SendCommand(ZoomPlayerCommandCodes.SendTimelineUpdate, "1");
                     SendCommand(ZoomPlayerCommandCodes.SendTimelineUpdate, "2");
 
                     using (NetworkStream stream = _client.GetStream())
@@ -106,6 +107,7 @@ namespace ScriptPlayer.Shared
                 }
                 finally
                 {
+                    _timeSource.Pause();
                     _client.Dispose();
                     _client = null;
                     SetConnected(false);
@@ -118,7 +120,16 @@ namespace ScriptPlayer.Shared
             if (CheckAccess())
                 IsConnected = isConnected;
             else
-                Dispatcher.Invoke(() => { SetConnected(isConnected); });
+            {
+                try
+                {
+                    Dispatcher.Invoke(() => { SetConnected(isConnected); });
+                }
+                catch
+                {
+                    
+                }
+            }
         }
 
         private void InterpretLine(string line)
@@ -141,7 +152,7 @@ namespace ScriptPlayer.Shared
 
                         break;
                     case ZoomPlayerMessageCodes.PositionUpdate:
-                        string[] parts = parameter.Split(new char[] {'/'}, StringSplitOptions.RemoveEmptyEntries)
+                        string[] parts = parameter.Split(new [] {'/'}, StringSplitOptions.RemoveEmptyEntries)
                             .Select(s => s.Trim()).ToArray();
 
                         string[] timeFormats = {"hh\\:mm\\:ss", "mm\\:ss"};
@@ -153,9 +164,8 @@ namespace ScriptPlayer.Shared
                         _timeSource.SetPosition(position);
                         break;
                     case ZoomPlayerMessageCodes.CurrentlyLoadedFile:
-                        OnFileOpened(parameter);
-                        break;
-                    default:
+                        if(!String.IsNullOrWhiteSpace(parameter))
+                            OnFileOpened(parameter);
                         break;
                 }
             }
