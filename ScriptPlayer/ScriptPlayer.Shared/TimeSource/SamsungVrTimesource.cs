@@ -26,9 +26,8 @@ namespace ScriptPlayer.Shared
 
         private readonly Thread _clientLoop;
         private readonly ManualTimeSource _timeSource;
-
+        private readonly ManualResetEvent _allDone = new ManualResetEvent(false);
         private bool _running = true;
-        private static ManualResetEvent allDone = new ManualResetEvent(false);
 
 
         private TimeSpan _lastReceivedTimestamp = TimeSpan.MaxValue;
@@ -69,57 +68,51 @@ namespace ScriptPlayer.Shared
         private void ClientLoop()
         {
             IPEndPoint endpoint = new IPEndPoint(IPAddress.Any, _connectionSettings.UdpPort);
-            UdpClient socketv = new UdpClient(endpoint);
-
-            try
+            using (UdpClient socketv = new UdpClient(endpoint))
             {
-                while (_running)
+                try
                 {
-                    allDone.Reset();
-                    socketv.BeginReceive(OnUdpData, socketv);
-                    allDone.WaitOne();
-                    SetConnected(true);
+                    while (_running)
+                    {
+                        _allDone.Reset();
+                        socketv.BeginReceive(OnUdpData, socketv);
+                        _allDone.WaitOne();
+                        SetConnected(true);
+                    }
                 }
-            }
-            catch (ThreadAbortException)
-            {
-                return;
-            }
-            catch (ThreadInterruptedException)
-            {
-                return;
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-            }
-            finally
-            {
-                socketv.Dispose();
-                socketv = null;
-                SetConnected(false);
+                catch (ThreadAbortException)
+                {
+                }
+                catch (ThreadInterruptedException)
+                {
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.Message);
+                }
+                finally
+                {
+                    SetConnected(false);
+                }
             }
         }
 
         private void OnUdpData(IAsyncResult result)
         {
-            allDone.Set();
+            _allDone.Set();
 
             try
             {
-                UdpClient socketv = result.AsyncState as UdpClient;
+                UdpClient socketv = (UdpClient)result.AsyncState;
                 IPEndPoint source = new IPEndPoint(IPAddress.Any, 5000);
 
                 byte[] datagram = socketv.EndReceive(result, ref source);
                 string message = Encoding.UTF8.GetString(datagram);
-                JObject data = JObject.Parse(message);
-
-                InterpretData(data);
-                Console.WriteLine("Got '" + message + "' from " + source);
+                InterpretMessage(message, source);
             }
             catch (Exception e)
             {
-                Debug.WriteLine("Couldn't interpret Samsung VR Status: " + e.Message);
+                Debug.WriteLine($"Couldn't interpret Samsung VR Status: {e.Message}");
             }
 
         }
@@ -131,14 +124,17 @@ namespace ScriptPlayer.Shared
                 Dispatcher.Invoke(() => { SetConnected(isConnected); });
         }
 
-        private void InterpretData(JObject data)
+        private void InterpretMessage(string message, IPEndPoint source)
         {
             if (!_timeSource.CheckAccess())
             {
-                _timeSource.Dispatcher.Invoke(() => InterpretData(data));
+                _timeSource.Dispatcher.Invoke(() => InterpretMessage(message, source));
                 return;
             }
 
+            JObject data = JObject.Parse(message);
+
+            bool outputCommand = true;
             string command = data["cmd"].Value<string>();
 
             switch (command)
@@ -165,38 +161,17 @@ namespace ScriptPlayer.Shared
                     }
                 case "load":
                     {
-                        /*int res1 = line.IndexOf("title") + 8;
-                        int res2 = line.IndexOf("looping") - 3;
-                        string resFile = line.Substring(res1, res2 - res1);
-
-                        string file = resFile + ".funscript";
-                        Debug.WriteLine("Samsung VR opened '{0}'", file);
-                        OnFileOpened(file);
-                        _timeSource.Play();*/
-
-
-
-                        // Appending ".funscript" shouldn't be necessary - we expect it to be a video so the filename should be fine.
-                        // Maybe we can get the full path from "url"?
                         string title = data["data"]["title"].Value<string>();
                         string filename = title + ".mp4";
 
 
                         OnFileOpened(filename);
+                        _timeSource.Play();
 
                         break;
                     }
                 case "seekTo":
                     {
-                        /*string timeStamp = line.Substring(24, line.Length - 26);
-                        double seconds = double.Parse(timeStamp, CultureInfo.InvariantCulture);
-
-                            TimeSpan position = TimeSpan.FromMilliseconds(seconds);
-                        if (position == _lastReceivedTimestamp)
-                            return;
-                        _lastReceivedTimestamp = position;
-                        _timeSource.SetPosition(position);*/
-
                         double miliseconds = data["data"].Value<double>();
                         TimeSpan position = TimeSpan.FromMilliseconds(miliseconds);
 
@@ -207,7 +182,15 @@ namespace ScriptPlayer.Shared
                         _timeSource.SetPosition(position);
                         break;
                     }
+                case "headpos2":
+                    {
+                        outputCommand = false;
+                        break;
+                    }
             }
+
+            if (outputCommand)
+                Debug.WriteLine("Got '" + message + "' from " + source);
         }
 
         public override bool CanPlayPause => true;
@@ -235,8 +218,7 @@ namespace ScriptPlayer.Shared
             {
                 byte[] data = Encoding.UTF8.GetBytes(command);
 
-                Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                socket.EnableBroadcast = true;
+                Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) {EnableBroadcast = true};
                 socket.Connect(IPAddress.Broadcast, 5000);
                 socket.Send(data);
             }
