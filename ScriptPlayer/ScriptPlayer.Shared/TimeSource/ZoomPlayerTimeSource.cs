@@ -107,10 +107,27 @@ namespace ScriptPlayer.Shared
                 }
                 finally
                 {
-                    _timeSource.Pause();
+                    DispatchPause();
                     _client.Dispose();
                     _client = null;
                     SetConnected(false);
+                }
+            }
+        }
+
+        private void DispatchPause()
+        {
+            if (CheckAccess())
+                _timeSource.Pause();
+            else
+            {
+                try
+                {
+                    Dispatcher.Invoke(DispatchPause);
+                }
+                catch
+                {
+
                 }
             }
         }
