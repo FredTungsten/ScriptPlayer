@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -77,7 +77,9 @@ namespace ScriptPlayer.Shared
                     SetConnected(true);
 
                     SendCommand(ZoomPlayerCommandCodes.RequestPlayingFileName, "");
+                    Thread.Sleep(1000);
                     SendCommand(ZoomPlayerCommandCodes.SendTimelineUpdate, "1");
+                    Thread.Sleep(1000);
                     SendCommand(ZoomPlayerCommandCodes.SendTimelineUpdate, "2");
 
                     using (NetworkStream stream = _client.GetStream())
