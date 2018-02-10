@@ -108,7 +108,10 @@ namespace ScriptPlayer.Shared
 
                 byte[] datagram = socketv.EndReceive(result, ref source);
                 string message = Encoding.UTF8.GetString(datagram);
-                InterpretMessage(message, source);
+                if(CouldBeJsonObject(message))
+                    InterpretMessage(message, source);
+                else
+                    Debug.WriteLine($"Udp Message wasn't Json, will be ignored: '{message}'");
             }
             catch (Exception e)
             {
@@ -124,6 +127,12 @@ namespace ScriptPlayer.Shared
                 Dispatcher.Invoke(() => { SetConnected(isConnected); });
         }
 
+        private static bool CouldBeJsonObject(string input)
+        {
+            input = input.Trim();
+            return input.StartsWith("{") && input.EndsWith("}");
+        }
+
         private void InterpretMessage(string message, IPEndPoint source)
         {
             if (!_timeSource.CheckAccess())
@@ -131,6 +140,8 @@ namespace ScriptPlayer.Shared
                 _timeSource.Dispatcher.Invoke(() => InterpretMessage(message, source));
                 return;
             }
+
+            
 
             JObject data = JObject.Parse(message);
 
