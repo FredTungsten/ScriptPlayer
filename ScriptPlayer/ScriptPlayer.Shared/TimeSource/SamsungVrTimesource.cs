@@ -104,12 +104,13 @@ namespace ScriptPlayer.Shared
             try
             {
                 UdpClient socketv = (UdpClient)result.AsyncState;
-                IPEndPoint source = new IPEndPoint(IPAddress.Any, 5000);
+                IPEndPoint source = new IPEndPoint(IPAddress.Any, _connectionSettings.UdpPort);
 
                 byte[] datagram = socketv.EndReceive(result, ref source);
                 string message = Encoding.UTF8.GetString(datagram);
                 if(CouldBeJsonObject(message))
-                    InterpretMessage(message, source);
+                    if(!message.Contains("\"headpos2\"")) // unfortunately that command contains invalid Json
+                        InterpretMessage(message, source);
                 else
                     Debug.WriteLine($"Udp Message wasn't Json, will be ignored: '{message}'");
             }
@@ -230,7 +231,7 @@ namespace ScriptPlayer.Shared
                 byte[] data = Encoding.UTF8.GetBytes(command);
 
                 Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) {EnableBroadcast = true};
-                socket.Connect(IPAddress.Broadcast, 5000);
+                socket.Connect(IPAddress.Broadcast, _connectionSettings.UdpPort);
                 socket.Send(data);
             }
             catch (Exception e)
