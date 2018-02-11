@@ -70,7 +70,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Players" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="General" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -126,7 +126,10 @@
                         <controls:PageSelector.Header>
                             <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_cog}"/>
                         </controls:PageSelector.Header>
-                        <CheckBox Margin="4" IsChecked="{Binding Settings.CheckForNewVersionOnStartup}" Content="Check for new version on startup"/>
+                        <StackPanel>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.CheckForNewVersionOnStartup}" Content="Check for new version on startup"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.StayOnTop}" Content="Stay on top"/>
+                        </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Players">
                         <controls:PageSelector.Header>

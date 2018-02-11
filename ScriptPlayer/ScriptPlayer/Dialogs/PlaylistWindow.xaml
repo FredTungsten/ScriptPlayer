@@ -7,6 +7,7 @@
         xmlns:fa="clr-namespace:FontAwesome.Net;assembly=FontAwesome.Net"
         xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
+        Topmost="{Binding Settings.StayOnTop}"
         Title="Playlist" Height="300" Width="300" WindowStyle="ToolWindow">
     <Window.Resources>
         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">

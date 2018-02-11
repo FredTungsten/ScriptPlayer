@@ -77,6 +77,7 @@ namespace ScriptPlayer.ViewModels
         private string _mpcHcEndpoint;
         private int _samsungVrUdpPort;
         private string _zoomPlayerEndpoint;
+        private bool _stayOnTop;
 
         public SettingsViewModel()
         {
@@ -129,6 +130,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _notifyFileLoaded) return;
                 _notifyFileLoaded = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool StayOnTop
+        {
+            get => _stayOnTop;
+            set
+            {
+                if (value == _stayOnTop) return;
+                _stayOnTop = value;
                 OnPropertyChanged();
             }
         }

@@ -10,6 +10,7 @@
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
+        Topmost="{Binding Settings.StayOnTop}"
         Height="591" Width="954" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico">
     <Window.Style>
         <Style TargetType="Window">
@@ -406,18 +407,17 @@
                     <MenuItem Header="Scan for Devices" Command="{Binding StartScanningButtplugCommand}"/>
                 </MenuItem>
             </MenuItem>
+            <MenuItem Header="Video Player">
+                <MenuItem Header="Local" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Local}}"/>
+                <MenuItem Header="None (Script Only)" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Blind}}"/>
+                <Separator/>
+                <MenuItem Header="MPC-HC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.MpcHc}}"/>
+                <MenuItem Header="Samsung VR" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.SamsungVr}}"/>
+                <MenuItem Header="VLC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Vlc}}"/>
+                <MenuItem Header="Whirligig" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Whirligig}}"/>
+                <MenuItem Header="Zoom Player" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.ZoomPlayer}}"/>
+            </MenuItem>
             <MenuItem Header="Playback">
-                <MenuItem Header="Mode">
-                    <MenuItem Header="Local" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Local}}"/>
-                    <MenuItem Header="Blind" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Blind}}"/>
-                    <Separator/>
-                    <MenuItem Header="MPC-HC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.MpcHc}}"/>
-                    <MenuItem Header="Samsung VR" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.SamsungVr}}"/>
-                    <MenuItem Header="VLC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Vlc}}"/>
-                    <MenuItem Header="Whirligig" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Whirligig}}"/>
-                    <MenuItem Header="Zoom Player" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.ZoomPlayer}}"/>
-
-                </MenuItem>
                 <MenuItem Header="Loop">
                     <MenuItem Header="Set A" Command="{Binding SetLoopACommand}"/>
                     <MenuItem Header="Set B" Command="{Binding SetLoopBCommand}"/>
@@ -426,6 +426,7 @@
             </MenuItem>
             <MenuItem Header="View">
                 <MenuItem Header="Toggle Fullscreen" Command="{Binding ToggleFullScreenCommand}"/>
+                <MenuItem Header="Stay On Top" IsCheckable="True" IsChecked="{Binding Path=Settings.StayOnTop, Mode=TwoWay}"/>
             </MenuItem>
             <MenuItem Header="Settings" Click="mnuSettings_Click">
             </MenuItem>

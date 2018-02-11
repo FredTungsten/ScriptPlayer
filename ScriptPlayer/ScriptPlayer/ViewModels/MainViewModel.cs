@@ -947,6 +947,8 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+
+
         public SettingsViewModel Settings
         {
             get => _settings;
