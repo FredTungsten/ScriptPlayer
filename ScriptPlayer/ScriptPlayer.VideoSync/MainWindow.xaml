@@ -60,7 +60,7 @@
                 <MenuItem Header="Scale" Click="mnuScale_Click"/>
                 <MenuItem Header="Reset" Click="mnuReset_Click"/>
                 <Separator/>
-                <MenuItem Header="Jump to First" Click="mnuJumpToFirstBeat_Click"/>
+                <MenuItem Header="Jump to First" Click="mnuJumpToFirstBeat_Click" />
                 <MenuItem Header="Jump to Last" Click="mnuJumpToLastBeat_Click"/>
                 <Separator/>
                 <MenuItem Header="Find shortest" Click="mnuFindShortestBeat_Click"/>

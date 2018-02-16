@@ -18,7 +18,7 @@ namespace ScriptPlayer.VideoSync
 
         public List<TimeSpan> Result
         {
-            get { return (List<TimeSpan>) GetValue(ResultProperty); }
+            get { return (List<TimeSpan>)GetValue(ResultProperty); }
             set { SetValue(ResultProperty, value); }
         }
 
@@ -40,6 +40,7 @@ namespace ScriptPlayer.VideoSync
 
         public void Analyse()
         {
+            DateTime start = DateTime.Now;
             int frameIndex = 0;
 
             SampleAnalyser analyser = new SampleAnalyser(_condition, _parameters);
@@ -50,10 +51,17 @@ namespace ScriptPlayer.VideoSync
 
                 analyser.AddSample(frame);
 
-                if ((frameIndex+1) % 100 == 0)
+                if ((frameIndex + 1) % 100 == 0)
                 {
-                    double progress01 = (double) frameIndex / _frames.Count;
+                    double progress01 = (double)frameIndex / _frames.Count;
                     string progress = $"{frameIndex} / {_frames.Count} ({progress01:P})";
+
+                    TimeSpan elapsed = DateTime.Now - start;
+                    TimeSpan averagePerFrame = elapsed.Divide(frameIndex + 1);
+                    int left = Math.Max(0, _frames.Count - frameIndex - 1);
+                    TimeSpan timeLeft = averagePerFrame.Multiply(left);
+
+                    progress += $" {timeLeft:mm\\:ss}";
 
                     Dispatcher.Invoke(() =>
                     {

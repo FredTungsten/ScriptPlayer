@@ -118,7 +118,7 @@ namespace ScriptPlayer.Shared
         public override  void Dispose()
         {
             base.Dispose();
-            _device.Dispose();
+            _device?.Dispose();
             _device = null;
         }
     }

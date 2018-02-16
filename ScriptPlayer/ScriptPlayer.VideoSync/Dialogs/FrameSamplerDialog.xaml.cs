@@ -81,22 +81,21 @@ namespace ScriptPlayer.VideoSync
 
             FrameCaptureCollection frameSamples = new FrameCaptureCollection();
 
-            frameSamples.TotalFramesInVideo = (int) reader.FrameCount;
-            frameSamples.DurationNumerator = reader.FrameCount * reader.FrameRate.Denominator;
-            frameSamples.DurationDenominator = reader.FrameRate.Numerator;
+            bool indeterminate = reader.FrameCount <= 0;
 
-            if (frameSamples.TotalFramesInVideo == 0)
+            if (!indeterminate)
             {
-                frameSamples.DurationDenominator = 1000;
-                frameSamples.DurationNumerator = (long) _backupDuration.TotalMilliseconds;
-                frameSamples.TotalFramesInVideo = (int) (reader.FrameRate.Numerator * _backupDuration.TotalSeconds /
-                                                         reader.FrameRate.Denominator);
+                frameSamples.TotalFramesInVideo = (int) reader.FrameCount;
+                frameSamples.DurationNumerator = reader.FrameCount * reader.FrameRate.Denominator;
+                frameSamples.DurationDenominator = reader.FrameRate.Numerator;
             }
 
             frameSamples.VideoFile = _videoFile;
             frameSamples.CaptureRect = _captureRect;
 
             long frame = 0;
+
+            DateTime start = DateTime.Now;
 
             do
             {
@@ -124,9 +123,26 @@ namespace ScriptPlayer.VideoSync
 
                     DeleteObject(hBitmap);
 
-                    var progress01 = (double) frame / reader.FrameCount;
+                    double progressValue;
+                    string progressText;
 
-                    string progress = $"{frame} / {reader.FrameCount} ({progress01:P})";
+                    if (!indeterminate)
+                    {
+                        progressValue = (double) frame / reader.FrameCount;
+                        progressText = $"{frame} / {reader.FrameCount} ({progressValue:P})";
+
+                        TimeSpan elapsed = DateTime.Now - start;
+                        TimeSpan averagePerFrame = elapsed.Divide(frame);
+                        long left = Math.Max(0, reader.FrameCount - frame - 1);
+                        TimeSpan timeLeft = averagePerFrame.Multiply(left);
+
+                        progressText += $" ETA {timeLeft:mm\\:ss}";
+                    }
+                    else
+                    {
+                        progressValue = 0.0;
+                        progressText = $"{frame} / Unknown";
+                    }
 
                     Dispatcher.Invoke(() =>
                     {
@@ -134,8 +150,15 @@ namespace ScriptPlayer.VideoSync
                             return;
 
                         Image = capture;
-                        txtProgress.Text = progress;
-                        TaskbarItemInfo.ProgressValue = progress01;
+                        txtProgress.Text = progressText;
+                        TaskbarItemInfo.ProgressValue = progressValue;
+                        proTotal.Value = progressValue;
+
+                        if (indeterminate)
+                        {
+                            TaskbarItemInfo.ProgressState = TaskbarItemProgressState.Indeterminate;
+                            proTotal.IsIndeterminate = true;
+                        }
                     });
                 }
 
@@ -145,6 +168,14 @@ namespace ScriptPlayer.VideoSync
             long framesSampled = frame;
             long expectedFrames = frameSamples.TotalFramesInVideo;
             long sampledFrames = frameSamples.Count;
+
+            if (frameSamples.TotalFramesInVideo == 0)
+            {
+                frameSamples.TotalFramesInVideo = (int)frame;
+                frameSamples.DurationNumerator = frame * reader.FrameRate.Denominator;
+                frameSamples.DurationDenominator = reader.FrameRate.Numerator;
+            }
+
 
             Dispatcher.BeginInvoke(new Action(() =>
             {

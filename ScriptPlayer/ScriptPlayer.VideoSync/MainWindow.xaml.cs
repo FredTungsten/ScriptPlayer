@@ -620,6 +620,11 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuJumpToFirstBeat_Click(object sender, RoutedEventArgs e)
         {
+            JumpToFirst();
+        }
+
+        private void JumpToFirst()
+        {
             if (Beats == null) return;
             if (Beats.Count == 0) return;
             TimeSpan beat = Beats.First();
@@ -627,6 +632,11 @@ namespace ScriptPlayer.VideoSync
         }
 
         private void mnuFindShortestBeat_Click(object sender, RoutedEventArgs e)
+        {
+            JumpToShortest();
+        }
+
+        private void JumpToShortest()
         {
             if (Beats == null) return;
             if (Beats.Count < 2) return;
@@ -645,10 +655,16 @@ namespace ScriptPlayer.VideoSync
             }
 
             videoPlayer.SetPosition(position);
-            MessageBox.Show("Shortest beat: " + shortest.TotalMilliseconds + " ms");
+
+            Fadeout.SetText("Shortest beat: " + shortest.TotalMilliseconds + " ms", TimeSpan.FromSeconds(4));
         }
 
         private void mnuJumpToLastBeat_Click(object sender, RoutedEventArgs e)
+        {
+            JumpToLast();
+        }
+
+        private void JumpToLast()
         {
             if (Beats == null) return;
             if (Beats.Count == 0) return;
@@ -1304,11 +1320,26 @@ namespace ScriptPlayer.VideoSync
                         FindShortestBeatLongerThanPrevious();
                         break;
                     }
+                case Key.F5:
+                {
+                    JumpToFirst();
+                    break;
+                }
                 case Key.F6:
                     {
                         SnapToClosestBeat();
                         break;
                     }
+                case Key.F7:
+                {
+                    JumpToShortest();
+                    break;
+                }
+                case Key.F8:
+                {
+                    JumpToLast();
+                    break;
+                }
                 case Key.Enter:
                     {
                         if (IsNumpadEnterKey(e))
