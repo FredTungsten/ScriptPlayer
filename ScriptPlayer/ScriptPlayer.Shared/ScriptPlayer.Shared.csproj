@@ -134,6 +134,7 @@
     <Compile Include="Classes\BlockingQueue.cs" />
     <Compile Include="Controls\AwesomeTextBlock.cs" />
     <Compile Include="Controls\PageSelector.cs" />
+    <Compile Include="Converters\SeekBarPositionConverter.cs" />
     <Compile Include="Devices\ButtplugAdapter.cs" />
     <Compile Include="Colors\ColorSampler.cs" />
     <Compile Include="Colors\HslConversion.cs" />

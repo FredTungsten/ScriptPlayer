@@ -2,8 +2,10 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using ScriptPlayer.Shared.Converters;
 
 namespace ScriptPlayer.Shared
 {
@@ -27,9 +29,18 @@ namespace ScriptPlayer.Shared
             "Duration", typeof(TimeSpan), typeof(SeekBar),
             new PropertyMetadata(default(TimeSpan), OnVisualPropertyChanged));
 
+        public static readonly DependencyProperty HoverPositionProperty = DependencyProperty.Register(
+            "HoverPosition", typeof(TimeSpan), typeof(SeekBar), new PropertyMetadata(default(TimeSpan)));
+
+        public TimeSpan HoverPosition
+        {
+            get { return (TimeSpan) GetValue(HoverPositionProperty); }
+            set { SetValue(HoverPositionProperty, value); }
+        }
+
         private bool _down;
         private Popup _popup;
-        private TextBox _txt;
+        private TextBlock _txt;
 
         static SeekBar()
         {
@@ -75,10 +86,12 @@ namespace ScriptPlayer.Shared
 
         private void InitializePopup()
         {
-            _txt = new TextBox
+            _txt = new TextBlock
             {
                 Padding = new Thickness(3)
             };
+
+            BindText(_txt);
 
             Border border = new Border
             {
@@ -94,6 +107,24 @@ namespace ScriptPlayer.Shared
                 PlacementTarget = this,
                 Child = border
             };
+        }
+
+        private void BindText(TextBlock txt)
+        {
+            MultiBinding binding = new MultiBinding{ Converter = new SeekBarPositionConverter()};
+            binding.Bindings.Add(new Binding { Source = this, Path = new PropertyPath(ProgressProperty) });
+            binding.Bindings.Add(new Binding { Source = this, Path = new PropertyPath(DurationProperty) });
+            binding.Bindings.Add(new Binding { Source = this, Path = new PropertyPath(HoverPositionProperty) });
+
+            BindingOperations.SetBinding(txt, TextBlock.TextProperty, binding);
+
+            //TimeSpan progress = (TimeSpan)values[0];
+            //TimeSpan duration = (TimeSpan)values[1];
+            //TimeSpan hoverposition = (TimeSpan)values[2];
+
+            /*_txt.Text = Duration >= TimeSpan.FromHours(1) ?
+                $"{absolutePosition.Hours:00}:{absolutePosition.Minutes:00}:{absolutePosition.Seconds:00}" :
+                $"{absolutePosition.Minutes:00}:{absolutePosition.Seconds:00}";*/
         }
 
         protected override void OnRender(DrawingContext dc)
@@ -181,9 +212,7 @@ namespace ScriptPlayer.Shared
             double relativePosition = GetRelativePosition(point.X);
             TimeSpan absolutePosition = Duration.Multiply(relativePosition);
 
-            _txt.Text = Duration >= TimeSpan.FromHours(1) ? 
-                $"{absolutePosition.Hours:00}:{absolutePosition.Minutes:00}:{absolutePosition.Seconds:00}" : 
-                $"{absolutePosition.Minutes:00}:{absolutePosition.Seconds:00}";
+            HoverPosition = absolutePosition;
 
             _popup.IsOpen = true;
             _popup.HorizontalOffset = relativePosition * ActualWidth -

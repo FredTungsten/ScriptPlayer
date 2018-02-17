@@ -5,7 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ScriptPlayer.Shared.Scripts
 {
@@ -28,14 +27,15 @@ namespace ScriptPlayer.Shared.Scripts
             }
 
             List<RawScriptAction> intermediateResult = ConvertToRawFunscript(commands);
-            List<FunScriptAction> finalResult = intermediateResult.Select(raw => new FunScriptAction
-            {
-                TimeStamp = raw.TimeStamp,
-                Position = raw.Position
-            }).ToList();
+
+            //List<FunScriptAction> finalResult = intermediateResult.Select(raw => new FunScriptAction
+            //{
+            //    TimeStamp = raw.TimeStamp,
+            //    Position = raw.Position
+            //}).ToList();
 
             //TODO Smooth movement (e.g. CH_Corruptors.ott @ 21:00)
-            finalResult = RawScriptConverter.Convert(intermediateResult);
+            List<FunScriptAction> finalResult = RawScriptConverter.Convert(intermediateResult);
 
             return finalResult.Cast<ScriptAction>().ToList();
         }
@@ -43,7 +43,7 @@ namespace ScriptPlayer.Shared.Scripts
         private static List<RawScriptAction> ConvertToRawFunscript(List<RealTouchCommand> allCommands)
         {
             List<RawScriptAction> actions = new List<RawScriptAction>();
-            List<RealTouchCommand> filteredcommands = FilterAndSortCommands(allCommands, RealTouchAxis.BothBelts, TimeSpan.FromMilliseconds(100));
+            List<RealTouchCommand> filteredcommands = FilterAndSortCommands(allCommands, RealTouchAxis.AnyBelt, TimeSpan.FromMilliseconds(100));
             List<RealTouchCommand> commands = RemoveRepeatingCommands(filteredcommands);
 
             for (int i = 0; i < commands.Count; i++)
@@ -192,6 +192,8 @@ namespace ScriptPlayer.Shared.Scripts
 
             switch (filterAxis)
             {
+                case RealTouchAxis.AnyBelt:
+                    return commandAxis == RealTouchAxis.TopBelt || commandAxis == RealTouchAxis.BottomBelt || commandAxis == RealTouchAxis.BothBelts;
                 case RealTouchAxis.TopBelt:
                     return commandAxis == RealTouchAxis.TopBelt || commandAxis == RealTouchAxis.BothBelts;
                 case RealTouchAxis.BottomBelt:
@@ -416,6 +418,7 @@ namespace ScriptPlayer.Shared.Scripts
         TopBelt,
         BottomBelt,
         BothBelts,
+        AnyBelt,
         Squeeze,
         Unknown
     }
