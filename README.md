@@ -10,8 +10,7 @@ ScriptPlayer is a video player that controls the Fleshlight Launch and other toy
 * [Report bugs or request features](https://github.com/FredTungsten/ScriptPlayer/wiki/Creating-Issues-to-report-bugs-or-request-features)  
 * [Documentation](https://github.com/FredTungsten/ScriptPlayer/wiki)  
 * [Releases](https://github.com/FredTungsten/ScriptPlayer/releases)  
-
-If you would like to test the latest build, go to [my AppVeyor](https://ci.appveyor.com/project/FredTungsten/ScriptPlayer/branch/master) and select ``Configuration: Debug``, ``Artifacts`` and download the latest installer.
+* [Beta Versions](https://github.com/FredTungsten/ScriptPlayer/wiki/Downloading-Beta-Builds)
 
 <div style="font-size:16px;margin:0 auto;width:300px">
     <div align="center">
