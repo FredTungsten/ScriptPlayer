@@ -19,7 +19,7 @@ namespace ScriptPlayer.Shared.Converters
 
             string prefix = timeLeft < TimeSpan.Zero ? "-" : "+";
 
-            string format = duration >= TimeSpan.FromHours(1) ? "HH\\:mm\\:ss" : "mm\\:ss";
+            string format = duration >= TimeSpan.FromHours(1) ? "hh\\:mm\\:ss" : "mm\\:ss";
 
             string result = hoverposition.ToString(format) + " (" + prefix + timeLeftAbs.ToString(format) + ")";
             return result;
