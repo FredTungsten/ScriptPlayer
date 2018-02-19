@@ -1998,6 +1998,8 @@ namespace ScriptPlayer.ViewModels
 
         private void HandleFunScriptAction(ScriptActionEventArgs<FunScriptAction> eventArgs)
         {
+            if (IsSeeking) return;
+
             SkipState skipState;
             TimeSpan timeToNextOriginalEvent = TimeSpan.Zero;
 
@@ -2076,7 +2078,7 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
-            if (!TimeSource.IsPlaying || IsSeeking) return;
+            if (!TimeSource.IsPlaying) return;
 
             switch (skipState)
             {

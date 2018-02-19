@@ -641,13 +641,13 @@ namespace ScriptPlayer.Shared
             TimeSpan playDelay = TimeSpan.FromSeconds(0.05);
             TimeSpan fadeDuration = duration;
 
-            _standByPlayer.Position = position.Subtract(fadeDuration);
-
-            await Task.Delay(seekDelay);
-
             _standByPlayer.Play();
 
             await Task.Delay(playDelay);
+
+            _standByPlayer.Position = position.Subtract(fadeDuration);
+
+            await Task.Delay(seekDelay);
 
             SetPrimaryPlayer(_standByPlayer);
 

@@ -1500,6 +1500,7 @@ namespace ScriptPlayer.VideoSync
 
         private void RemoveClosestBeat(TimeSpan timeSpan)
         {
+            if (Beats.Count < 1) return;
             TimeSpan closest = GetClosestBeat(timeSpan);
             Beats.Remove(closest);
         }
