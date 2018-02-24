@@ -278,6 +278,15 @@ namespace ScriptPlayer.Dialogs
         {
             Settings.SamsungVrUdpPort = SamsungVrConnectionSettings.DefaultPort;
         }
+
+        private void BtnReset_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(this,
+                    "All Settings will we reverted to their defaults. Are you sure you want to continue?",
+                    "Confirm Reset", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+
+            Settings = new SettingsViewModel();
+        }
     }
 
     public class SettingsPageViewModelCollection : List<SettingsPageViewModel>
