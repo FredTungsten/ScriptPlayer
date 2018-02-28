@@ -42,7 +42,7 @@ namespace ScriptPlayer.ViewModels
         private readonly string[] _supportedScriptExtensions;
 
         private readonly string[] _supportedVideoExtensions =
-            {"mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf"};
+            {"mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf", "webm"};
 
         private string _buttplugApiVersion = "Unknown";
 
