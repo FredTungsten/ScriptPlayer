@@ -142,6 +142,20 @@ namespace ScriptPlayer.Shared
                     _lastReceivedTimestamp = position;
                     _timeSource.SetPosition(position);
                 }
+                else if (line.StartsWith("dometype")) { }
+                else if (line.StartsWith("duration"))
+                {
+                    string timeStamp = line.Substring(10).Trim();
+                    double seconds = double.Parse(timeStamp, CultureInfo.InvariantCulture);
+                    _timeSource.SetDuration(TimeSpan.FromSeconds(seconds));
+                }
+                else
+                {
+                    Debug.WriteLine("Unknown Parameter: " + line);
+                }
+
+                //Unknown Parameter: dometype = 6180
+                //Unknown Parameter: duration = 1389.141
             }
             else
             {
