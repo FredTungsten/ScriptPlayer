@@ -238,6 +238,11 @@ namespace ScriptPlayer.ViewModels
                         Settings.RepeatPlaylist = Playlist.Repeat;
                         break;
                     }
+                case nameof(PlaylistViewModel.RepeatSingleFile):
+                    {
+                        Settings.RepeatSingleFile = Playlist.RepeatSingleFile;
+                        break;
+                    }
                 case nameof(PlaylistViewModel.RandomChapters):
                     {
                         Settings.RandomChapters = Playlist.RandomChapters;
@@ -980,8 +985,15 @@ namespace ScriptPlayer.ViewModels
             UpdateConversionMode();
             UpdatePlaylistShuffle();
             UpdatePlaylistRepeat();
+            UpdatePlaylistRepeatSingleFile();
             UpdateFillGaps();
             UpdateHeatMap();
+        }
+
+        private void UpdatePlaylistRepeatSingleFile()
+        {
+            if (Playlist == null) return;
+            Playlist.RepeatSingleFile = Settings.RepeatSingleFile;
         }
 
         private void UpdatePlaylistRepeat()
@@ -1037,6 +1049,11 @@ namespace ScriptPlayer.ViewModels
                 case nameof(SettingsViewModel.RepeatPlaylist):
                     {
                         UpdatePlaylistRepeat();
+                        break;
+                    }
+                case nameof(SettingsViewModel.RepeatSingleFile):
+                    {
+                        UpdatePlaylistRepeatSingleFile();
                         break;
                     }
                 case nameof(SettingsViewModel.FillGaps):
@@ -2787,14 +2804,14 @@ namespace ScriptPlayer.ViewModels
                         });
                     break;
                 case PlaybackMode.ZoomPlayer:
-                    if(TimeSource is ZoomPlayerTimeSource zoom)
+                    if (TimeSource is ZoomPlayerTimeSource zoom)
                         zoom.UpdateConnectionSettings(new ZoomPlayerConnectionSettings
                         {
                             IpAndPort = settings.ZoomPlayerEndpoint
                         });
                     break;
                 case PlaybackMode.SamsungVr:
-                    if(TimeSource is SamsungVrTimeSource samsung)
+                    if (TimeSource is SamsungVrTimeSource samsung)
                         samsung.UpdateConnectionSettings(new SamsungVrConnectionSettings
                         {
                             UdpPort = settings.SamsungVrUdpPort

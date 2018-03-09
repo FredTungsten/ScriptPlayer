@@ -82,6 +82,18 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public bool RepeatSingleFile
+        {
+            get => _repeatSingleFile;
+            set
+            {
+                if (value == _repeatSingleFile) return;
+                _repeatSingleFile = value;
+                CommandManager.InvalidateRequerySuggested();
+                OnPropertyChanged();
+            }
+        }
+
         public PlaylistEntry SelectedEntry
         {
             get => _selectedEntry;
@@ -126,11 +138,16 @@ namespace ScriptPlayer.ViewModels
 
         private bool CanPlayPreviousEntry(params string[] currentFiles)
         {
-            if (Entries.Count == 0)
-                return false;
+            bool canPlaySameAgain = currentFiles != null && currentFiles.Length > 0 && !string.IsNullOrWhiteSpace(currentFiles.First());
 
             if (Repeat)
-                return true;
+                return Entries.Count > 0 || canPlaySameAgain;
+
+            if (RepeatSingleFile)
+                return canPlaySameAgain;
+
+            if (Entries.Count == 0)
+                return false;
 
             if (currentFiles == null)
                 return true;
@@ -149,11 +166,16 @@ namespace ScriptPlayer.ViewModels
 
         public bool CanPlayNextEntry(params string[] currentFiles)
         {
-            if (Entries.Count == 0)
-                return false;
+            bool canPlaySameAgain = currentFiles != null && currentFiles.Length > 0 && !string.IsNullOrWhiteSpace(currentFiles.First());
 
             if (Repeat)
-                return true;
+                return Entries.Count > 0 || canPlaySameAgain;
+
+            if (RepeatSingleFile)
+                return canPlaySameAgain;
+
+            if (Entries.Count == 0)
+                return false;
 
             if (currentFiles == null)
                 return true;
@@ -294,6 +316,9 @@ namespace ScriptPlayer.ViewModels
 
         public PlaylistEntry GetNextEntry(params string[] currentEntryFiles)
         {
+            if(RepeatSingleFile && currentEntryFiles.Length > 0)
+                return new PlaylistEntry(currentEntryFiles.First());
+
             if(Shuffle)
                 return AnythingButThis(currentEntryFiles);
 
@@ -306,7 +331,14 @@ namespace ScriptPlayer.ViewModels
 
             if (currentIndex == Entries.Count - 1)
             {
-                return Repeat ? Entries.First() : null;
+                if (Repeat)
+                {
+                    if (Entries.Count > 0)
+                        return Entries.First();
+                    if(currentEntryFiles.Length > 0)
+                        return new PlaylistEntry(currentEntryFiles.First());
+                }
+                return null;
             }
 
             var nextEntry = Entries[currentIndex + 1];
@@ -316,6 +348,9 @@ namespace ScriptPlayer.ViewModels
 
         public PlaylistEntry GetPreviousEntry(params string[] currentEntryFiles)
         {
+            if (RepeatSingleFile && currentEntryFiles.Length > 0)
+                return new PlaylistEntry(currentEntryFiles.First());
+
             if (Shuffle)
                 return AnythingButThis(currentEntryFiles);
 
@@ -328,7 +363,14 @@ namespace ScriptPlayer.ViewModels
 
             if(currentIndex == 0)
             {
-                return Repeat ? Entries.Last() : null;
+                if (Repeat)
+                {
+                    if (Entries.Count > 0)
+                        return Entries.First();
+                    if(currentEntryFiles.Length > 0)
+                        return new PlaylistEntry(currentEntryFiles.First());
+                }
+                return null;
             }
 
             var previousEntry = Entries[currentIndex - 1];
@@ -338,6 +380,7 @@ namespace ScriptPlayer.ViewModels
 
         readonly Random _rng = new Random();
         private bool _randomChapters;
+        private bool _repeatSingleFile;
 
         private PlaylistEntry AnythingButThis(params string[] currentEntryFiles)
         {

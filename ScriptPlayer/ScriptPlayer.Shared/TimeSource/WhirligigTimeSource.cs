@@ -126,7 +126,7 @@ namespace ScriptPlayer.Shared
                 else if (line.StartsWith("C"))
                 {
                     string file = line.Substring(2).Trim('\t', ' ', '\"');
-                    Debug.WriteLine("Whirligig opened '{0}'", file);
+                    Debug.WriteLine($"Whirligig opened '{file}'");
                     OnFileOpened(file);
                 }
                 else if (line.StartsWith("P"))

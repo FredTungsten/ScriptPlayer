@@ -56,7 +56,6 @@ namespace ScriptPlayer.Shared
 
                 await client.Connect(new Uri(_url));
                 _client = client;
-                AddUnknownDevices((await GetDeviceList()).ToList());
 
                 return true;
             }
@@ -100,24 +99,11 @@ namespace ScriptPlayer.Shared
             OnDeviceFound(newDevice);
         }
 
-        private async Task<IEnumerable<ButtplugClientDevice>> GetDeviceList()
-        {
-            try
-            {
-                await _client.RequestDeviceList();
-                return _client.getDevices();
-            }
-            catch
-            {
-                return new List<ButtplugClientDevice>();
-            }
-        }
-
         public async Task Set(ButtplugClientDevice device, IntermediateCommandInformation information)
         {
             if (_client == null) return;
 
-            if (device.AllowedMessages.Contains(nameof(SingleMotorVibrateCmd)))
+            if (device.AllowedMessages.ContainsKey(nameof(SingleMotorVibrateCmd)))
             {
                 double speedFrom = LaunchToVibrator(information.DeviceInformation.PositionFromOriginal);
                 double speedTo = LaunchToVibrator(information.DeviceInformation.PositionToOriginal);
@@ -130,7 +116,7 @@ namespace ScriptPlayer.Shared
                     await _clientLock.WaitAsync();
 
                     ButtplugMessage response = await _client.SendDeviceMessage(device,
-                        new SingleMotorVibrateCmd(device.Index, speed, _client.nextMsgId));
+                        new SingleMotorVibrateCmd(device.Index, speed));
 
                     await CheckResponse(response);
                 }
@@ -151,23 +137,27 @@ namespace ScriptPlayer.Shared
 
                 ButtplugDeviceMessage message = null;
 
-                if (device.AllowedMessages.Contains(nameof(FleshlightLaunchFW12Cmd)))
+                if (device.AllowedMessages.ContainsKey(nameof(FleshlightLaunchFW12Cmd)))
                 {
                     message = new FleshlightLaunchFW12Cmd(device.Index, information.SpeedTransformed, information.PositionToTransformed);
                 }
-                else if (device.AllowedMessages.Contains(nameof(KiirooCmd)))
+                else if (device.AllowedMessages.ContainsKey(nameof(KiirooCmd)))
                 {
                     message = new KiirooCmd(device.Index, LaunchToKiiroo(information.PositionToOriginal, 0, 4));
                 }
-                else if (device.AllowedMessages.Contains(nameof(SingleMotorVibrateCmd)))
+                /*else if (device.AllowedMessages.ContainsKey(nameof(VibrateCmd)))
+                {
+                    message = new VibrateCmd(device.Index, new List<VibrateCmd.VibrateSubcommand>{new VibrateCmd.VibrateSubcommand(0, LaunchToVibrator(information.PositionFromOriginal))});
+                }*/
+                else if (device.AllowedMessages.ContainsKey(nameof(SingleMotorVibrateCmd)))
                 {
                     message = new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.PositionFromOriginal));
                 }
-                else if (device.AllowedMessages.Contains(nameof(VorzeA10CycloneCmd)))
+                else if (device.AllowedMessages.ContainsKey(nameof(VorzeA10CycloneCmd)))
                 {
                     message = new VorzeA10CycloneCmd(device.Index, LaunchToVorze(information.SpeedOriginal), information.PositionToOriginal > information.PositionFromOriginal);
                 }
-                else if (device.AllowedMessages.Contains(nameof(LovenseCmd)))
+                else if (device.AllowedMessages.ContainsKey(nameof(LovenseCmd)))
                 {
                     //message = new LovenseCmd(device.Index, LaunchToLovense(position, speed));
                 }
@@ -207,9 +197,9 @@ namespace ScriptPlayer.Shared
         {
             if (_client == null) return;
 
-            if (!device.AllowedMessages.Contains(nameof(StopDeviceCmd))) return;
+            if (!device.AllowedMessages.ContainsKey(nameof(StopDeviceCmd))) return;
 
-            ButtplugMessage response = await _client.SendDeviceMessage(device, new StopDeviceCmd(device.Index, _client.nextMsgId));
+            ButtplugMessage response = await _client.SendDeviceMessage(device, new StopDeviceCmd(device.Index));
             await CheckResponse(response);
         }
 

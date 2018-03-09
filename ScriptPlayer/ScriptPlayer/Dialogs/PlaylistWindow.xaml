@@ -48,7 +48,7 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <UniformGrid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom" Grid.Row="1" Columns="6">
+        <UniformGrid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom" Grid.Row="1" Columns="7">
             <Button ToolTip="Move Down" Command="{Binding Playlist.MoveSelectedEntryDownCommand}"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_down}"/>
@@ -66,6 +66,10 @@
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_random}"/>
             </CheckBox>
             <CheckBox ToolTip="Repeat" IsChecked="{Binding Playlist.Repeat}" 
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_refresh}"/>
+            </CheckBox>
+            <CheckBox ToolTip="Repeat Single File" IsChecked="{Binding Playlist.RepeatSingleFile}" 
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_repeat}"/>
             </CheckBox>

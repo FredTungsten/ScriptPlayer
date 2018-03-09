@@ -8,6 +8,8 @@
         xmlns:converters1="clr-namespace:ScriptPlayer.Converters"
         xmlns:scriptPlayer="clr-namespace:ScriptPlayer"
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
+        xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
+        xmlns:fa="clr-namespace:FontAwesome.Net;assembly=FontAwesome.Net"
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
@@ -29,7 +31,7 @@
         <converters1:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
         <converters:BooleanInverter x:Key="Inverter"/>
         <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
-        
+
         <!-- Used in code -->
         <!-- ReSharper disable Xaml.RedundantResource -->
         <DataTemplate x:Key="SkipButton">
@@ -79,7 +81,7 @@
                 </shared:VideoPlayer.Style>
             </shared:VideoPlayer>
             <scriptPlayer:FlashOverlay HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="FlashOverlay"/>
-            
+
             <!-- Fade tests -->
             <!--
             <Grid>
@@ -96,7 +98,7 @@
                 </DockPanel>
             </Grid>
             -->
-            
+
             <!-- BLIND MODE -->
             <Grid IsHitTestVisible="False">
                 <Grid.Style>
@@ -277,7 +279,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        
+
                         <Image Width="512" Height="512" Source="Images/ScriptPlayerIcon.png"/>
 
                         <TextBlock Foreground="White" Grid.Row="1" Text="{Binding Path=Version.VersionText}" FontSize="40" FontWeight="DemiBold" TextAlignment="Center" HorizontalAlignment="Stretch">
@@ -318,7 +320,7 @@
                     </Grid>
                 </Viewbox>
             </Grid>
-            
+
             <!-- SCRIPT POSITIONS -->
             <Grid IsHitTestVisible="False" Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="60" >
                 <Grid.Background>
@@ -344,8 +346,8 @@
                     <DataTemplate DataType="{x:Type shared:Notification}">
                         <Border Margin="0,0,0,8" Padding="8,0,8,4" SnapsToDevicePixels="True" Background="DimGray" BorderThickness="1" BorderBrush="LightGray" 
                                 HorizontalAlignment="Left" VerticalAlignment="Top">
-                            
-                                <Border.Resources>
+
+                            <Border.Resources>
                                 <Style TargetType="{x:Type ContentControl}">
                                     <Setter Property="TextElement.FontSize" Value="20"/>
                                     <Setter Property="TextElement.Foreground" Value="White"/>
@@ -359,82 +361,129 @@
             </shared:NotificationList>
         </Grid>
 
-        <Menu Name="MnuMain" Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="0">
-            <MenuItem Header="File">
-                <MenuItem Header="Open Video" Command="{Binding OpenVideoCommand}"/>
-                <MenuItem Header="Open Script" Command="{Binding OpenScriptCommand}"/>
-                <Separator/>
-                <MenuItem Header="Add to Playlist" Command="{Binding AddScriptsToPlaylistCommand}"/>
-                <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
-            </MenuItem>
-            <MenuItem Header="Devices">
-                <MenuItem Header="Show Devices" Click="mnuShowDevices_Click"/>
-                <Separator/>
-                <MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" IsEnabled="{Binding CanDirectConnectLaunch}" ToolTipService.ShowOnDisabled="True">
-                    <MenuItem.Header>
-                        <TextBlock Text="Connect Launch directly">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Style.Triggers>
-                                        <Trigger Property="IsEnabled" Value="False">
-                                            <Setter Property="Foreground" Value="DarkGray"></Setter>
-                                            <Setter Property="TextDecorations" Value="{x:Static TextDecorations.Strikethrough}"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </MenuItem.Header>
-                    <MenuItem.Style>
-                        <Style TargetType="MenuItem">
-                            <Style.Triggers>
-                                <Trigger Property="IsEnabled" Value="False">
-                                    <Setter Property="ToolTip" Value="This feature requires Win10 15063 or higher"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </MenuItem.Style>
+        <Grid Name="MnuMain" Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="0" Background="#FFF0F0F0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Menu Grid.Row="0">
+                <MenuItem Header="File">
+                    <MenuItem Header="Open Video" Command="{Binding OpenVideoCommand}"/>
+                    <MenuItem Header="Open Script" Command="{Binding OpenScriptCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="Add to Playlist" Command="{Binding AddScriptsToPlaylistCommand}"/>
+                    <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
                 </MenuItem>
-                <MenuItem>
-                    <MenuItem.Header>
-                        <TextBlock>
+                <MenuItem Header="Devices">
+                    <MenuItem Header="Show Devices" Click="mnuShowDevices_Click"/>
+                    <Separator/>
+                    <MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" IsEnabled="{Binding CanDirectConnectLaunch}" ToolTipService.ShowOnDisabled="True">
+                        <MenuItem.Header>
+                            <TextBlock Text="Connect Launch directly">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Foreground" Value="DarkGray"></Setter>
+                                                <Setter Property="TextDecorations" Value="{x:Static TextDecorations.Strikethrough}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </MenuItem.Header>
+                        <MenuItem.Style>
+                            <Style TargetType="MenuItem">
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="ToolTip" Value="This feature requires Win10 15063 or higher"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </MenuItem.Style>
+                    </MenuItem>
+                    <MenuItem>
+                        <MenuItem.Header>
+                            <TextBlock>
                             <Run Text="Buttplug "/>
                             <Run Text="{Binding ButtplugApiVersion}"/>
-                        </TextBlock>
-                    </MenuItem.Header>
-                    <MenuItem Header="Connect" Command="{Binding ConnectButtplugCommand}"/>
-                    <MenuItem Header="Disconnect" Command="{Binding DisconnectButtplugCommand}"/>
-                    <MenuItem Header="Scan for Devices" Command="{Binding StartScanningButtplugCommand}"/>
+                            </TextBlock>
+                        </MenuItem.Header>
+                        <MenuItem Header="Connect" Command="{Binding ConnectButtplugCommand}"/>
+                        <MenuItem Header="Disconnect" Command="{Binding DisconnectButtplugCommand}"/>
+                        <MenuItem Header="Scan for Devices" Command="{Binding StartScanningButtplugCommand}"/>
+                    </MenuItem>
                 </MenuItem>
-            </MenuItem>
-            <MenuItem Header="Video Player">
-                <MenuItem Header="Local" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Local}}"/>
-                <MenuItem Header="None (Script Only)" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Blind}}"/>
-                <Separator/>
-                <MenuItem Header="MPC-HC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.MpcHc}}"/>
-                <MenuItem Header="Samsung VR" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.SamsungVr}}"/>
-                <MenuItem Header="VLC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Vlc}}"/>
-                <MenuItem Header="Whirligig" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Whirligig}}"/>
-                <MenuItem Header="Zoom Player" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.ZoomPlayer}}"/>
-            </MenuItem>
-            <MenuItem Header="Playback">
-                <MenuItem Header="Loop">
-                    <MenuItem Header="Set A" Command="{Binding SetLoopACommand}"/>
-                    <MenuItem Header="Set B" Command="{Binding SetLoopBCommand}"/>
-                    <MenuItem Header="Clear" Command="{Binding ClearLoopCommand}"/>
+                <MenuItem Header="Video Player">
+                    <MenuItem Header="Local" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Local}}"/>
+                    <MenuItem Header="None (Script Only)" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Blind}}"/>
+                    <Separator/>
+                    <MenuItem Header="MPC-HC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.MpcHc}}"/>
+                    <MenuItem Header="Samsung VR" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.SamsungVr}}"/>
+                    <MenuItem Header="VLC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Vlc}}"/>
+                    <MenuItem Header="Whirligig" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Whirligig}}"/>
+                    <MenuItem Header="Zoom Player" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.ZoomPlayer}}"/>
                 </MenuItem>
-            </MenuItem>
-            <MenuItem Header="View">
-                <MenuItem Header="Toggle Fullscreen" Command="{Binding ToggleFullScreenCommand}"/>
-                <MenuItem Header="Stay On Top" IsCheckable="True" IsChecked="{Binding Path=Settings.StayOnTop, Mode=TwoWay}"/>
-            </MenuItem>
-            <MenuItem Header="Settings" Click="mnuSettings_Click">
-            </MenuItem>
-            <MenuItem Header="Help">
-                <MenuItem Header="Documentation (Online)" Click="mnuDocs_Click"/>
-                <MenuItem Header="About / Check for new Version" Click="mnuVersion_Click"/>
-            </MenuItem>
-        </Menu>
+                <MenuItem Header="Playback">
+                    <MenuItem Header="Loop">
+                        <MenuItem Header="Set A" Command="{Binding SetLoopACommand}"/>
+                        <MenuItem Header="Set B" Command="{Binding SetLoopBCommand}"/>
+                        <MenuItem Header="Clear" Command="{Binding ClearLoopCommand}"/>
+                    </MenuItem>
+                </MenuItem>
+                <MenuItem Header="View">
+                    <MenuItem Header="Toggle Fullscreen" Command="{Binding ToggleFullScreenCommand}"/>
+                    <MenuItem Header="Stay On Top" IsCheckable="True" IsChecked="{Binding Path=Settings.StayOnTop, Mode=TwoWay}"/>
+                </MenuItem>
+                <MenuItem Header="Settings" Click="mnuSettings_Click">
+                </MenuItem>
+                <MenuItem Header="Help">
+                    <MenuItem Header="Documentation (Online)" Click="mnuDocs_Click"/>
+                    <MenuItem Header="About / Check for new Version" Click="mnuVersion_Click"/>
+                </MenuItem>
+            </Menu>
+            <ToolBar Grid.Row="1" Background="#FFF0F0F0">
+                <Button Command="{Binding OpenScriptCommand}">
+                    <Grid Width="16" Height="16">
+                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_folder_open}"/>
+                    </Grid>
+                </Button>
+                <Button Command="{Binding AddScriptsToPlaylistCommand}">
+                    <Grid Width="16" Height="16">
+                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_plus}"/>
+                    </Grid>
+                </Button>
+                <Button Click="mnuShowPlaylist_Click">
+                    <Grid Width="16" Height="16">
+                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_list}"/>
+                    </Grid>
+                </Button>
+                <CheckBox ToolTip="Shuffle" IsChecked="{Binding Playlist.Shuffle}"
+                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Grid Width="16" Height="16">
+                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_random}"/>
+                    </Grid>
+                </CheckBox>
+                <CheckBox ToolTip="Repeat" IsChecked="{Binding Playlist.Repeat}" 
+                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Grid Width="16" Height="16">
+                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_refresh}"/>
+                    </Grid>
+                </CheckBox>
+                <CheckBox ToolTip="Repeat Single File" IsChecked="{Binding Playlist.RepeatSingleFile}" 
+                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Grid Width="16" Height="16">
+                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_repeat}"/>
+                    </Grid>
+                </CheckBox>
+                <CheckBox ToolTip="Random Chapters" IsChecked="{Binding Playlist.RandomChapters}" 
+                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Grid Width="16" Height="16">
+                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_bookmark}"/>
+                    </Grid>
+                </CheckBox>
+            </ToolBar>
+        </Grid>
 
         <DockPanel Background="White" LastChildFill="True" Name="PlayerControls" 
                    Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
@@ -636,66 +685,3 @@
         </Grid>
     </Grid>
 </Window>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

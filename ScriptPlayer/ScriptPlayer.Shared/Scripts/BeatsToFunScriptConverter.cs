@@ -10,6 +10,7 @@ namespace ScriptPlayer.Shared.Scripts
         /// One beat up, next beat down
         /// </summary>
         UpOrDown,
+        UpDownFast,
         DownFast,
         DownCenter,
         UpFast,
@@ -23,8 +24,10 @@ namespace ScriptPlayer.Shared.Scripts
             var beats = timestamps.ToList();
             var actions = new List<FunScriptAction>();
 
-            TimeSpan previous = TimeSpan.MinValue;
-            TimeSpan centerLimit = TimeSpan.MaxValue;
+            TimeSpan previousTimeStamp = TimeSpan.FromDays(-1);
+            TimeSpan previousDuration = TimeSpan.FromDays(1);
+            
+            TimeSpan centerLimit;
 
             bool up = true;
 
@@ -34,6 +37,11 @@ namespace ScriptPlayer.Shared.Scripts
             switch (mode)
             {
                 case ConversionMode.UpOrDown:
+                    centerLimit = TimeSpan.Zero;
+                    positionDown = 5;
+                    positionUp = 95;
+                    break;
+                case ConversionMode.UpDownFast:
                     centerLimit = TimeSpan.Zero;
                     positionDown = 5;
                     positionUp = 95;
@@ -62,52 +70,76 @@ namespace ScriptPlayer.Shared.Scripts
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }
 
-            foreach (TimeSpan timestamp in beats)
+            for (int index = 0; index < beats.Count; index++)
             {
+                TimeSpan timestamp = beats[index];
+                up ^= true;
+
                 switch (mode)
                 {
-                    case ConversionMode.UpOrDown:
+                    case ConversionMode.UpDownFast:
+                    {
+                        if (index > 0)
                         {
-                            up ^= true;
+                            TimeSpan duration = timestamp - previousTimeStamp;
 
-                            actions.Add(new FunScriptAction
+                            if (duration > previousDuration)
                             {
-                                Position = up ? positionUp : positionDown,
-                                TimeStamp = timestamp
-                            });
-                            break;
+                                actions.Add(new FunScriptAction
+                                {
+                                    Position = up ? positionUp : positionDown,
+                                    TimeStamp = timestamp - (duration - previousDuration)
+                                });
+                            }
                         }
+
+                        actions.Add(new FunScriptAction
+                        {
+                            Position = up ? positionUp : positionDown,
+                            TimeStamp = timestamp
+                        });
+                        break;
+                    }
+                    case ConversionMode.UpOrDown:
+                    {
+                        actions.Add(new FunScriptAction
+                        {
+                            Position = up ? positionUp : positionDown,
+                            TimeStamp = timestamp
+                        });
+                        break;
+                    }
                     case ConversionMode.UpCenter:
                     case ConversionMode.DownCenter:
                     case ConversionMode.UpFast:
                     case ConversionMode.DownFast:
+                    {
+                        if (previousTimeStamp != TimeSpan.MinValue)
                         {
-                            if (previous != TimeSpan.MinValue)
+                            if (timestamp - previousTimeStamp >= centerLimit.Multiply(2))
                             {
-                                if (timestamp - previous >= centerLimit.Multiply(2))
+                                actions.Add(new FunScriptAction
                                 {
-                                    actions.Add(new FunScriptAction
-                                    {
-                                        Position = positionDown,
-                                        TimeStamp = previous + centerLimit
-                                    });
+                                    Position = positionDown,
+                                    TimeStamp = previousTimeStamp + centerLimit
+                                });
 
-                                    actions.Add(new FunScriptAction
-                                    {
-                                        Position = positionDown,
-                                        TimeStamp = timestamp - centerLimit
-                                    });
-                                }
-                                else
+                                actions.Add(new FunScriptAction
                                 {
-                                    actions.Add(new FunScriptAction
-                                    {
-                                        Position = positionDown,
-                                        TimeStamp = (previous + timestamp).Divide(2)
-                                    });
-                                }
+                                    Position = positionDown,
+                                    TimeStamp = timestamp - centerLimit
+                                });
+                            }
+                            else
+                            {
+                                actions.Add(new FunScriptAction
+                                {
+                                    Position = positionDown,
+                                    TimeStamp = (previousTimeStamp + timestamp).Divide(2)
+                                });
                             }
                         }
+                    }
 
                         actions.Add(new FunScriptAction
                         {
@@ -118,7 +150,9 @@ namespace ScriptPlayer.Shared.Scripts
                         break;
                 }
 
-                previous = timestamp;
+                previousDuration = timestamp - previousTimeStamp;
+
+                previousTimeStamp = timestamp;
             }
 
             return actions;

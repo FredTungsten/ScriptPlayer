@@ -78,6 +78,7 @@ namespace ScriptPlayer.ViewModels
         private int _samsungVrUdpPort;
         private string _zoomPlayerEndpoint;
         private bool _stayOnTop;
+        private bool _repeatSingleFile;
 
         public SettingsViewModel()
         {
@@ -218,6 +219,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _repeatPlaylist) return;
                 _repeatPlaylist = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool RepeatSingleFile
+        {
+            get => _repeatSingleFile;
+            set
+            {
+                if (value == _repeatSingleFile) return;
+                _repeatSingleFile = value;
                 OnPropertyChanged();
             }
         }

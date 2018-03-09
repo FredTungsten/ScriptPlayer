@@ -17,6 +17,8 @@ namespace ScriptPlayer.Shared.Converters
             {
                 case ConversionMode.UpOrDown:
                     return "Up / Down";
+                case ConversionMode.UpDownFast:
+                    return "Up / Down (Fast)";
                 case ConversionMode.DownFast:
                     return "Down (Fast)";
                 case ConversionMode.DownCenter:
