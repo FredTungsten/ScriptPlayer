@@ -21,7 +21,7 @@ namespace ScriptPlayer.Shared.Scripts
     {
         public static List<FunScriptAction> Convert(IEnumerable<TimeSpan> timestamps, ConversionMode mode)
         {
-            var beats = timestamps.ToList();
+            var beats = timestamps.OrderBy(a => a).ToList();
             var actions = new List<FunScriptAction>();
 
             TimeSpan previousTimeStamp = TimeSpan.FromDays(-1);

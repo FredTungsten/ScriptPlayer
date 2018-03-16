@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ScriptPlayer.Shared.Scripts
 {
@@ -7,6 +8,8 @@ namespace ScriptPlayer.Shared.Scripts
     {
         public static List<RawScriptAction> Convert(List<KiirooScriptAction> actions)
         {
+            actions = actions.OrderBy(a => a.TimeStamp).ToList();
+
             List<RawScriptAction> result = new List<RawScriptAction>();
 
             double previousSpeed = 0.5;

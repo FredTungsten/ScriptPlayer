@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ScriptPlayer.Shared.Scripts
 {
@@ -7,6 +8,7 @@ namespace ScriptPlayer.Shared.Scripts
     {
         public static List<FunScriptAction> Convert(List<RawScriptAction> actions)
         {
+            actions = actions.OrderBy(a => a.TimeStamp).ToList();
             List<FunScriptAction> result = new List<FunScriptAction>();
 
             byte previousPosition = 0;

@@ -7,6 +7,8 @@ namespace ScriptPlayer.Shared.Scripts
     {
         public static List<FunScriptAction> Convert(List<VorzeScriptAction> actions)
         {
+            actions = actions.OrderBy(a => a.TimeStamp).ToList();
+
             List<VorzeScriptAction> filteredActions = new List<VorzeScriptAction>();
 
             foreach (VorzeScriptAction action in actions)
