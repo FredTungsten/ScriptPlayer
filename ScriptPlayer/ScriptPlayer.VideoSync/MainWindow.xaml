@@ -275,7 +275,7 @@
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
-                    <shared:SeekBar Grid.Row="0" Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Margin="95,0,0,0"/>
+                    <shared:SeekBar Name="SeekBar" Grid.Row="0" Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Margin="121,0,0,0"/>
 
                     <shared:TimeLineHeader Height="52" Grid.Row="1" VerticalAlignment="Stretch" Marker="{Binding ElementName=videoPlayer, Path=TimeSource.Progress, Mode=OneWay}">
                         <shared:TimeLineHeader.ContextMenu>
@@ -287,6 +287,7 @@
                             </ContextMenu>
                         </shared:TimeLineHeader.ContextMenu>
                     </shared:TimeLineHeader>
+                    <Button Grid.Row="0" Content="R" HorizontalAlignment="Left" Margin="105,0,0,0" VerticalAlignment="Top" Width="16" Click="Button_Click"/>
                 </Grid>
             </HeaderedContentControl>
         </Grid>

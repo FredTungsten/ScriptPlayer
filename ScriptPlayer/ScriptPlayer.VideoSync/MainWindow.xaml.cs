@@ -1773,5 +1773,11 @@ namespace ScriptPlayer.VideoSync
         {
             SetAllBeats(Positions.Select(p => p.TimeStamp));
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Brush heatmap = HeatMapGenerator.Generate2(Beats.ToList(), TimeSpan.Zero, videoPlayer.Duration);
+            SeekBar.Background = heatmap;
+        }
     }
 }
