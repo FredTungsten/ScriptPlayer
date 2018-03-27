@@ -2256,6 +2256,10 @@ namespace ScriptPlayer.ViewModels
 
         private void SetDevices(IntermediateCommandInformation intermediateInfo, bool requirePlaying = true)
         {
+            //TODO Handle this better!
+            // (Hush is too slow)
+            return;
+
             if (!TimeSource.IsPlaying && requirePlaying) return;
 
             foreach (Device device in _devices)
