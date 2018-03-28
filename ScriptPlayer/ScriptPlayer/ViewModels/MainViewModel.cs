@@ -58,6 +58,17 @@ namespace ScriptPlayer.ViewModels
         private byte _maxScriptPosition;
         private byte _minScriptPosition;
 
+        public double CurrentPosition
+        {
+            get => _currentPosition;
+            set
+            {
+                if (value.Equals(_currentPosition)) return;
+                _currentPosition = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string LoadedScript
         {
             get => _loadedScript;
@@ -128,6 +139,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
         private bool _loading;
+        private double _currentPosition;
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
         {
@@ -1143,6 +1155,7 @@ namespace ScriptPlayer.ViewModels
 
         private void UpdateCommandDelay()
         {
+            _scriptHandler.MinIntermediateCommandDuration = Settings.CommandDelay;
             foreach (Device device in _devices)
                 device.MinDelayBetweenCommands = Settings.CommandDelay;
         }
@@ -1964,17 +1977,19 @@ namespace ScriptPlayer.ViewModels
                 HandleIntermediateFunScriptAction(eventArgs.Cast<FunScriptAction>());
         }
 
-        private void HandleIntermediateFunScriptAction(IntermediateScriptActionEventArgs<FunScriptAction> eventArgs)
+        private void HandleIntermediateFunScriptAction(IntermediateScriptActionEventArgs<FunScriptAction> e)
         {
-            TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.PreviousAction.TimeStamp;
-            byte currentPositionTransformed = TransformPosition(eventArgs.PreviousAction.Position, eventArgs.PreviousAction.TimeStamp);
-            byte nextPositionTransformed = TransformPosition(eventArgs.NextAction.Position, eventArgs.NextAction.TimeStamp);
+            TimeSpan duration = e.NextAction.TimeStamp - e.PreviousAction.TimeStamp;
+            byte currentPositionTransformed = TransformPosition(e.PreviousAction.Position, e.PreviousAction.TimeStamp);
+            byte nextPositionTransformed = TransformPosition(e.NextAction.Position, e.NextAction.TimeStamp);
+
+            CurrentPosition = (1 - e.Progress) * (currentPositionTransformed / 99.0) + (e.Progress) * (nextPositionTransformed / 99.0);
 
             if (currentPositionTransformed == nextPositionTransformed) return;
 
             byte speedOriginal =
                 SpeedPredictor.PredictSpeed(
-                    (byte)Math.Abs(eventArgs.PreviousAction.Position - eventArgs.NextAction.Position), duration);
+                    (byte)Math.Abs(e.PreviousAction.Position - e.NextAction.Position), duration);
             byte speedTransformed =
                 SpeedPredictor.PredictSpeed((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed), duration);
             speedTransformed = ClampSpeed(speedTransformed * Settings.SpeedMultiplier);
@@ -1988,14 +2003,14 @@ namespace ScriptPlayer.ViewModels
                 SpeedOriginal = speedOriginal,
                 PositionFromTransformed = currentPositionTransformed,
                 PositionToTransformed = nextPositionTransformed,
-                PositionFromOriginal = eventArgs.PreviousAction.Position,
-                PositionToOriginal = eventArgs.NextAction.Position
+                PositionFromOriginal = e.PreviousAction.Position,
+                PositionToOriginal = e.NextAction.Position
             };
 
             IntermediateCommandInformation intermediateInfo = new IntermediateCommandInformation
             {
                 DeviceInformation = info,
-                Progress = eventArgs.Progress
+                Progress = e.Progress
             };
 
             SetDevices(intermediateInfo);
@@ -2021,7 +2036,7 @@ namespace ScriptPlayer.ViewModels
             TimeSpan timeToNextOriginalEvent = TimeSpan.Zero;
 
             OnBeat();
-
+            
             if (eventArgs.NextAction == null)
             {
                 // Script Ended
@@ -2038,6 +2053,8 @@ namespace ScriptPlayer.ViewModels
                     TransformPosition(eventArgs.CurrentAction.Position, eventArgs.CurrentAction.TimeStamp);
                 byte nextPositionTransformed =
                     TransformPosition(eventArgs.NextAction.Position, eventArgs.NextAction.TimeStamp);
+
+                CurrentPosition = currentPositionTransformed / 99.0;
 
                 // Execute next movement
 
@@ -2258,7 +2275,6 @@ namespace ScriptPlayer.ViewModels
         {
             //TODO Handle this better!
             // (Hush is too slow)
-            return;
 
             if (!TimeSource.IsPlaying && requirePlaying) return;
 

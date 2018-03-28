@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace ScriptPlayer.Shared.Scripts
@@ -9,6 +10,7 @@ namespace ScriptPlayer.Shared.Scripts
         public event EventHandler<PositionCollection> PositionsChanged;
         private int _lastIndex;
         private TimeSpan _lastTimestamp;
+        private int _lastIntermediateIndex;
 
         private List<ScriptAction> _originalScript;
         private List<FunScriptAction> _originalActions;
@@ -27,6 +29,8 @@ namespace ScriptPlayer.Shared.Scripts
         private TimeSpan _minGapDuration;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> IntermediateScriptActionRaised;
+
+        public TimeSpan MinIntermediateCommandDuration { get; set; } = TimeSpan.FromMilliseconds(50);
 
         public TimeSpan Delay { get; set; }
 
@@ -363,6 +367,7 @@ namespace ScriptPlayer.Shared.Scripts
         private void ResetCache()
         {
             _lastIndex = -1;
+            _lastIntermediateIndex = int.MaxValue;
             _lastTimestamp = new TimeSpan(0);
         }
 
@@ -387,6 +392,8 @@ namespace ScriptPlayer.Shared.Scripts
             if (passedIndex >= 0)
             {
                 _lastIndex = passedIndex;
+                _lastIntermediateIndex = 0;
+
                 _lastTimestamp = GetFilledTimestamp(passedIndex);
 
                 ScriptActionEventArgs args = new ScriptActionEventArgs(_filledActions[passedIndex]);
@@ -404,11 +411,31 @@ namespace ScriptPlayer.Shared.Scripts
                 TimeSpan previous = GetFilledTimestamp(_lastIndex);
                 TimeSpan next = GetFilledTimestamp(_lastIndex + 1);
 
-                double progress = (newTimeSpan - previous).Divide(next - previous);
+                if (newTimeSpan <= previous) return;
+                if (newTimeSpan >= next) return;
 
-                if (progress >= 0.0 && progress <= 1.0)
+                TimeSpan duration = next - previous;
+
+                if(duration < MinIntermediateCommandDuration.Multiply(2))
+                    return;
+
+                int intermediateCommands = (int)Math.Floor(duration.Divide(MinIntermediateCommandDuration));
+                TimeSpan intermediateDuration = duration.Divide(intermediateCommands + 1);
+
+                int passedIntermediateCommand = (int) Math.Floor((newTimeSpan - previous).Divide(intermediateDuration));
+
+                if (_lastIntermediateIndex < passedIntermediateCommand)
                 {
-                    IntermediateScriptActionEventArgs args = new IntermediateScriptActionEventArgs(_filledActions[_lastIndex], _filledActions[_lastIndex + 1], progress);
+                    _lastIntermediateIndex = passedIntermediateCommand;
+                    double progress = passedIntermediateCommand / (double) (intermediateCommands + 1);
+
+                    IntermediateScriptActionEventArgs args =
+                        new IntermediateScriptActionEventArgs(_filledActions[_lastIndex],
+                            _filledActions[_lastIndex + 1],
+                            progress) {TimeStamp = newTimeSpan};
+
+                    Debug.WriteLine($"{DateTime.Now:HH:mm:ss.fff}: Intermediate {passedIntermediateCommand}/{intermediateCommands+1}, {progress:P0}");
+
                     OnIntermediateScriptActionRaised(args);
                 }
             }

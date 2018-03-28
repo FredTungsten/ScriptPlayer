@@ -7,6 +7,10 @@ namespace ScriptPlayer.Shared.Scripts
         public double Progress;
         public ScriptAction RawPreviousAction;
         public ScriptAction RawNextAction;
+        public TimeSpan TimeStamp;
+
+        public TimeSpan SincePrevious => TimeStamp - RawPreviousAction.TimeStamp;
+        public TimeSpan ToNext => RawNextAction.TimeStamp - TimeStamp;
 
         public IntermediateScriptActionEventArgs(ScriptAction previous, ScriptAction next, double progress)
         {
