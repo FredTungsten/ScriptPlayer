@@ -1283,6 +1283,11 @@ namespace ScriptPlayer.ViewModels
 
         private static string FindFile(string filename, string[] extensions, string[] additionalPaths)
         {
+            //With removed second extension
+            string stripped = TrimExtension(filename, extensions);
+            if (File.Exists(stripped))
+                return stripped;
+
             //Same directory, appended Extension
             foreach (string extension in extensions)
             {
@@ -1301,6 +1306,20 @@ namespace ScriptPlayer.ViewModels
 
             if (additionalPaths == null)
                 return null;
+
+            //Addtional Directories, stripped second extension
+            string fileNameWithoutSecondExtension = TrimExtension(Path.GetFileName(filename), extensions);
+            if (!String.IsNullOrWhiteSpace(fileNameWithoutSecondExtension))
+            {
+                foreach (string path in additionalPaths)
+                {
+                    if (!Directory.Exists(path)) continue;
+
+                    string newPath = Path.Combine(path, fileNameWithoutSecondExtension);
+                    if (File.Exists(newPath))
+                        return newPath;
+                }
+            }
 
             //Additional Directories, appended extension
             string fileNameWithExtension = Path.GetFileName(filename);
@@ -1341,6 +1360,25 @@ namespace ScriptPlayer.ViewModels
             }
 
             return null;
+        }
+
+        private static string TrimExtension(string filename, string[] extensions)
+        {
+            string newfilename = GetTrimmed(Path.GetFileName(filename), extensions);
+            if (String.IsNullOrWhiteSpace(newfilename)) return null;
+
+            return Path.Combine(Path.GetDirectoryName(filename), newfilename);
+        }
+
+        private static string GetTrimmed(string filename, string[] extensions)
+        {
+            if (filename.Count(c => c == '.') < 2)
+                return null;
+
+            int lastDot = filename.LastIndexOf(".", StringComparison.InvariantCulture);
+            string trimmedFileName = filename.Substring(0, lastDot);
+            string firstExtension = Path.GetExtension(trimmedFileName).TrimStart('.');
+            return extensions.Any(e => string.Equals(e, firstExtension, StringComparison.OrdinalIgnoreCase)) ? trimmedFileName : null;
         }
 
         private static string AppendExtension(string filename, string extension)
