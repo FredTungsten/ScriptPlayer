@@ -284,7 +284,7 @@
                             <DockPanel Margin="4" ToolTip="Static multiplier that is applied after the automatic speed detection.">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Speed Multiplier"/>
                                 <TextBlock Style="{StaticResource SettingValue}" Text="{Binding Settings.SpeedMultiplier, StringFormat={}x{0:f1}}"/>
-                                <Slider Margin="0,4" Minimum="0.5" Maximum="2.0" Value="{Binding Settings.SpeedMultiplier}"  IsSnapToTickEnabled="True" TickFrequency="0.1"/>
+                                <Slider Margin="0,4" Minimum="0.1" Maximum="5.0" Value="{Binding Settings.SpeedMultiplier}"  IsSnapToTickEnabled="True" TickFrequency="0.1"/>
                             </DockPanel>
                         </StackPanel>
                     </Grid>
