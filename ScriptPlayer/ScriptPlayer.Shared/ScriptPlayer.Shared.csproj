@@ -183,6 +183,7 @@
     <Compile Include="Converters\TimeSpanToSecondsConverter.cs" />
     <Compile Include="Controls\GifPlayer.cs" />
     <Compile Include="Devices\ButtplugDevice.cs" />
+    <Compile Include="Devices\CommandConverter.cs" />
     <Compile Include="Devices\DeviceCommandInformation.cs" />
     <Compile Include="Devices\DeviceController.cs" />
     <Compile Include="Dialogs\BeatPatternEditor.xaml.cs">

@@ -434,7 +434,7 @@ namespace ScriptPlayer.Shared.Scripts
                             _filledActions[_lastIndex + 1],
                             progress) {TimeStamp = newTimeSpan};
 
-                    //Debug.WriteLine($"{DateTime.Now:HH:mm:ss.fff}: Intermediate {passedIntermediateCommand}/{intermediateCommands+1}, {progress:P0}");
+                    //Debug.WriteLine($"{DateTime.Now:HH:mm:ss.fff}: Intermediate {passedIntermediateCommand}/{intermediateCommands+1}, {progress :P0}");
 
                     OnIntermediateScriptActionRaised(args);
                 }

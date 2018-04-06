@@ -13,6 +13,14 @@ namespace ScriptPlayer.Shared
         public byte SpeedOriginal;
 
         public TimeSpan Duration;
+        public double SpeedMultiplier { get; set; } = 1;
+        public double SpeedMin { get; set; } = 0;
+        public double SpeedMax { get; set; } = 1;
+
+        public double TransformSpeed(double speed)
+        {
+            return Math.Min(SpeedMax, Math.Max(SpeedMin, speed * SpeedMultiplier));
+        }
     }
 
     public class IntermediateCommandInformation

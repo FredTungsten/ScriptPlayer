@@ -105,11 +105,11 @@ namespace ScriptPlayer.Shared
 
             if (device.AllowedMessages.ContainsKey(nameof(SingleMotorVibrateCmd)))
             {
-                double speedFrom = LaunchToVibrator(information.DeviceInformation.PositionFromOriginal);
-                double speedTo = LaunchToVibrator(information.DeviceInformation.PositionToOriginal);
+                double speedFrom = CommandConverter.LaunchToVibrator(information.DeviceInformation.PositionFromOriginal);
+                double speedTo = CommandConverter.LaunchToVibrator(information.DeviceInformation.PositionToOriginal);
 
-                double speed = Math.Min(1,
-                    Math.Max(0, speedFrom * (1 - information.Progress) + speedTo * information.Progress));
+                double speed = speedFrom * (1 - information.Progress) + speedTo * information.Progress * information.DeviceInformation.SpeedMultiplier;
+                speed = information.DeviceInformation.TransformSpeed(speed);
 
                 try
                 {
@@ -143,7 +143,7 @@ namespace ScriptPlayer.Shared
                 }
                 else if (device.AllowedMessages.ContainsKey(nameof(KiirooCmd)))
                 {
-                    message = new KiirooCmd(device.Index, LaunchToKiiroo(information.PositionToOriginal, 0, 4));
+                    message = new KiirooCmd(device.Index, CommandConverter.LaunchToKiiroo(information.PositionToOriginal, 0, 4));
                 }
                 /*else if (device.AllowedMessages.ContainsKey(nameof(VibrateCmd)))
                 {
@@ -151,11 +151,11 @@ namespace ScriptPlayer.Shared
                 }*/
                 else if (device.AllowedMessages.ContainsKey(nameof(SingleMotorVibrateCmd)))
                 {
-                    message = new SingleMotorVibrateCmd(device.Index, LaunchToVibrator(information.PositionFromOriginal));
+                    message = new SingleMotorVibrateCmd(device.Index, information.TransformSpeed(CommandConverter.LaunchToVibrator(information.PositionFromOriginal)));
                 }
                 else if (device.AllowedMessages.ContainsKey(nameof(VorzeA10CycloneCmd)))
                 {
-                    message = new VorzeA10CycloneCmd(device.Index, LaunchToVorze(information.SpeedOriginal), information.PositionToOriginal > information.PositionFromOriginal);
+                    message = new VorzeA10CycloneCmd(device.Index, CommandConverter.LaunchToVorzeSpeed(information), information.PositionToTransformed > information.PositionFromTransformed);
                 }
                 else if (device.AllowedMessages.ContainsKey(nameof(LovenseCmd)))
                 {
@@ -203,29 +203,7 @@ namespace ScriptPlayer.Shared
             await CheckResponse(response);
         }
 
-        private uint LaunchToVorze(byte speed)
-        {
-            return speed;
-        }
-
-        private double LaunchToVibrator(byte position)
-        {
-            const double max = 1.0;
-            const double min = 0.1;
-
-            double speedRelative = 1.0 - ((position + 1) / 100.0);
-            double result = min + (max - min) * speedRelative;
-            return Math.Min(max, Math.Max(min, result));
-        }
-
-        private uint LaunchToKiiroo(byte position, uint min, uint max)
-        {
-            double pos = position / 0.99;
-
-            uint result = Math.Min(max, Math.Max(min, (uint)Math.Round(pos * (max - min) + min)));
-
-            return result;
-        }
+        
 
         public async Task Disconnect()
         {

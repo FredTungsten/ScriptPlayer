@@ -19,6 +19,7 @@ using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Helpers;
 using ScriptPlayer.Shared.Scripts;
 using Application = System.Windows.Application;
+using CommandConverter = ScriptPlayer.Shared.CommandConverter;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -1462,7 +1463,10 @@ namespace ScriptPlayer.ViewModels
                             PositionFromOriginal = transistion.From,
                             PositionToOriginal = transistion.To,
                             PositionFromTransformed = TransformPosition(transistion.From, 0, 99, DateTime.Now.TimeOfDay.TotalSeconds),
-                            PositionToTransformed = TransformPosition(transistion.To, 0, 99, DateTime.Now.TimeOfDay.TotalSeconds)
+                            PositionToTransformed = TransformPosition(transistion.To, 0, 99, DateTime.Now.TimeOfDay.TotalSeconds),
+                            SpeedMultiplier = Settings.SpeedMultiplier,
+                            SpeedMin = Settings.MinSpeed / 99.0,
+                            SpeedMax = Settings.MaxSpeed / 99.0,
                         };
 
                         info.SpeedOriginal = SpeedPredictor.PredictSpeed2(info.PositionFromOriginal, info.PositionToOriginal,
@@ -2042,7 +2046,10 @@ namespace ScriptPlayer.ViewModels
                 PositionFromTransformed = currentPositionTransformed,
                 PositionToTransformed = nextPositionTransformed,
                 PositionFromOriginal = e.PreviousAction.Position,
-                PositionToOriginal = e.NextAction.Position
+                PositionToOriginal = e.NextAction.Position,
+                SpeedMultiplier = Settings.SpeedMultiplier,
+                SpeedMin = Settings.MinSpeed / 99.0,
+                SpeedMax = Settings.MaxSpeed / 99.0
             };
 
             IntermediateCommandInformation intermediateInfo = new IntermediateCommandInformation
@@ -2117,7 +2124,10 @@ namespace ScriptPlayer.ViewModels
                         PositionFromTransformed = currentPositionTransformed,
                         PositionToTransformed = nextPositionTransformed,
                         PositionFromOriginal = eventArgs.CurrentAction.Position,
-                        PositionToOriginal = eventArgs.NextAction.Position
+                        PositionToOriginal = eventArgs.NextAction.Position,
+                        SpeedMultiplier = Settings.SpeedMultiplier,
+                        SpeedMin = Settings.MinSpeed / 99.0,
+                        SpeedMax = Settings.MaxSpeed / 99.0,
                     };
 
                     SetDevices(info);
@@ -2304,6 +2314,8 @@ namespace ScriptPlayer.ViewModels
         private void SetDevices(DeviceCommandInformation information, bool requirePlaying = true)
         {
             if (!TimeSource.IsPlaying && requirePlaying) return;
+
+            //Debug.WriteLine(CommandConverter.LaunchToVorzeSpeed(information));
 
             foreach (Device device in _devices)
                 device.Enqueue(information);
