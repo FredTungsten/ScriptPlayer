@@ -171,8 +171,6 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-
-
         public bool CanDirectConnectLaunch
         {
             get => _canDirectConnectLaunch;
@@ -278,6 +276,19 @@ namespace ScriptPlayer.ViewModels
         private void SaveSettings()
         {
             Settings.Save(GetSettingsFilePath());
+
+            PlayerStateModel playerState = new PlayerStateModel();
+            if (Settings.RememberVolume)
+                playerState.Volume = Volume;
+            if (Settings.RememberPlaybackMode)
+                playerState.PlaybackMode = PlaybackMode;
+
+            playerState.Save(GetPlayerStateFilePath());
+        }
+
+        private static string GetPlayerStateFilePath()
+        {
+            return GetAppDataFile("PlayerState.xml");
         }
 
         private static string GetSettingsFilePath()
@@ -565,7 +576,7 @@ namespace ScriptPlayer.ViewModels
         {
             TimeSource?.Pause();
 
-            if (ReferenceEquals(TimeSource, _videoPlayer.TimeSource))
+            if (ReferenceEquals(TimeSource, _videoPlayer?.TimeSource))
                 return;
 
             if (TimeSource is IDisposable disposable)
@@ -605,6 +616,22 @@ namespace ScriptPlayer.ViewModels
             CheckForArguments();
             if (Settings.CheckForNewVersionOnStartup)
                 Version.CheckIfYouHaventAlready();
+
+            LoadPlayerState();
+        }
+
+        private void LoadPlayerState()
+        {
+            PlayerStateModel playerState = PlayerStateModel.FromFile(GetPlayerStateFilePath());
+
+            if (playerState != null)
+            {
+                if (playerState.Volume != null)
+                    Volume = (double)playerState.Volume;
+
+                if (playerState.PlaybackMode != null)
+                    PlaybackMode = (PlaybackMode)playerState.PlaybackMode;
+            }
         }
 
         private void HookUpMediaKeys()

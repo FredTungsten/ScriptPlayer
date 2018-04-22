@@ -381,6 +381,16 @@
                             <CheckBox Margin="4" Content="Repeat" IsChecked="{Binding Settings.RepeatPlaylist}"/>
                         </StackPanel>
                     </Grid>
+                    <Grid controls:PageSelector.ContentIdentifier="Remember">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_question}"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <CheckBox Margin="4" Content="Playlist" IsChecked="{Binding Settings.RememberPlaylist}"/>
+                            <CheckBox Margin="4" Content="Volume" IsChecked="{Binding Settings.RememberVolume}"/>
+                            <CheckBox Margin="4" Content="Playback Mode" IsChecked="{Binding Settings.RememberPlaybackMode}"/>
+                        </StackPanel>
+                    </Grid>
                 </controls:PageSelector.Elements>
             </controls:PageSelector>
             <TextBlock FontSize="16" FontWeight="SemiBold" Grid.Column="2" HorizontalAlignment="Left" Margin="0,10,0,0" TextWrapping="Wrap" Text="{Binding SettingsTitle}" VerticalAlignment="Top" Width="414"/>

@@ -79,6 +79,8 @@ namespace ScriptPlayer.ViewModels
         private string _zoomPlayerEndpoint;
         private bool _stayOnTop;
         private bool _repeatSingleFile;
+        private bool _rememberVolume;
+        private bool _rememberPlaybackMode;
 
         public SettingsViewModel()
         {
@@ -241,6 +243,28 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _rememberPlaylist) return;
                 _rememberPlaylist = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool RememberVolume
+        {
+            get => _rememberVolume;
+            set
+            {
+                if (value == _rememberVolume) return;
+                _rememberVolume = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool RememberPlaybackMode
+        {
+            get => _rememberPlaybackMode;
+            set
+            {
+                if (value == _rememberPlaybackMode) return;
+                _rememberPlaybackMode = value;
                 OnPropertyChanged();
             }
         }
