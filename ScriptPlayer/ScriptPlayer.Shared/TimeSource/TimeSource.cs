@@ -1,11 +1,14 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows;
+using JetBrains.Annotations;
 
 namespace ScriptPlayer.Shared
 {
-    public abstract class TimeSource : DependencyObject
+    public abstract class TimeSource : DependencyObject, INotifyPropertyChanged
     {
         public event EventHandler<TimeSpan> ProgressChanged;
         public event EventHandler<TimeSpan> DurationChanged;
@@ -65,6 +68,8 @@ namespace ScriptPlayer.Shared
             protected set => SetValue(IsPlayingPropertyKey, value);
         }
 
+        public abstract double PlaybackRate { get; set; }
+
         public abstract bool CanPlayPause { get; }
         public abstract bool CanSeek { get; }
         public abstract bool CanOpenMedia { get; }
@@ -88,6 +93,14 @@ namespace ScriptPlayer.Shared
         protected virtual void OnIsPlayingChanged(bool e)
         {
             IsPlayingChanged?.Invoke(this, e);
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

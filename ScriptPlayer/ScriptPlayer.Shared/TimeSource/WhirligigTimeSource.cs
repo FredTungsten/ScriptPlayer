@@ -17,7 +17,7 @@ namespace ScriptPlayer.Shared
 
         public bool IsConnected
         {
-            get => (bool) GetValue(IsConnectedProperty);
+            get => (bool)GetValue(IsConnectedProperty);
             set => SetValue(IsConnectedProperty, value);
         }
 
@@ -161,6 +161,12 @@ namespace ScriptPlayer.Shared
             {
                 _timeSource.Dispatcher.Invoke(() => InterpretLine(line));
             }
+        }
+
+        public override double PlaybackRate
+        {
+            get => _timeSource.PlaybackRate;
+            set => _timeSource.PlaybackRate = value;
         }
 
         public override bool CanPlayPause => false;

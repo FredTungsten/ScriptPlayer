@@ -11,6 +11,18 @@ namespace ScriptPlayer.Shared
         private TimeSpan _lastProgress;
         private DateTime _lastCheckpoint;
         private TimeSpan _maxOffset;
+        private double _playbackRate = 1.0;
+
+        public override double PlaybackRate
+        {
+            get => _playbackRate;
+            set
+            {
+                if (value.Equals(_playbackRate)) return;
+                _playbackRate = value;
+                OnPropertyChanged();
+            }
+        }
 
         public override bool CanPlayPause => true;
         public override bool CanSeek => true;
@@ -36,7 +48,7 @@ namespace ScriptPlayer.Shared
             //Calculate Expected Position and Compare:
 
             DateTime now = DateTime.Now;
-            TimeSpan elapsed = now - _lastCheckpoint;
+            TimeSpan elapsed = (now - _lastCheckpoint).Multiply(PlaybackRate);
             TimeSpan expected = _lastProgress + elapsed;
 
             TimeSpan diff = expected - position;
@@ -85,7 +97,7 @@ namespace ScriptPlayer.Shared
                 lock (_clocklock)
                 {
                     DateTime now = DateTime.Now;
-                    TimeSpan elapsed = now - _lastCheckpoint;
+                    TimeSpan elapsed = (now - _lastCheckpoint).Multiply(PlaybackRate);
                     _lastProgress += elapsed;
                     _lastCheckpoint = now;
                     Progress = _lastProgress;

@@ -16,6 +16,8 @@ namespace ScriptPlayer.Shared
         public double SpeedMultiplier { get; set; } = 1;
         public double SpeedMin { get; set; } = 0;
         public double SpeedMax { get; set; } = 1;
+        public double PlaybackRate { get; set; } = 1;
+        public TimeSpan DurationStretched { get; set; }
 
         public double TransformSpeed(double speed)
         {

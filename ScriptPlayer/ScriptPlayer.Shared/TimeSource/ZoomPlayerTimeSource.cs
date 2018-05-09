@@ -19,7 +19,7 @@ namespace ScriptPlayer.Shared
 
         public bool IsConnected
         {
-            get => (bool) GetValue(IsConnectedProperty);
+            get => (bool)GetValue(IsConnectedProperty);
             set => SetValue(IsConnectedProperty, value);
         }
 
@@ -146,7 +146,7 @@ namespace ScriptPlayer.Shared
                 }
                 catch
                 {
-                    
+
                 }
             }
         }
@@ -163,18 +163,18 @@ namespace ScriptPlayer.Shared
                 switch (commandCode)
                 {
                     case ZoomPlayerMessageCodes.StateChanged:
-                        ZoomPlayerPlaybackStates state = (ZoomPlayerPlaybackStates) int.Parse(parameter);
-                        if(state == ZoomPlayerPlaybackStates.Playing)
+                        ZoomPlayerPlaybackStates state = (ZoomPlayerPlaybackStates)int.Parse(parameter);
+                        if (state == ZoomPlayerPlaybackStates.Playing)
                             _timeSource.Play();
                         else
                             _timeSource.Pause();
 
                         break;
                     case ZoomPlayerMessageCodes.PositionUpdate:
-                        string[] parts = parameter.Split(new [] {'/'}, StringSplitOptions.RemoveEmptyEntries)
+                        string[] parts = parameter.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
                             .Select(s => s.Trim()).ToArray();
 
-                        string[] timeFormats = {"hh\\:mm\\:ss", "mm\\:ss"};
+                        string[] timeFormats = { "hh\\:mm\\:ss", "mm\\:ss" };
 
                         TimeSpan position = TimeSpan.ParseExact(parts[0], timeFormats, CultureInfo.InvariantCulture);
                         TimeSpan duration = TimeSpan.ParseExact(parts[1], timeFormats, CultureInfo.InvariantCulture);
@@ -183,7 +183,7 @@ namespace ScriptPlayer.Shared
                         _timeSource.SetPosition(position);
                         break;
                     case ZoomPlayerMessageCodes.CurrentlyLoadedFile:
-                        if(!String.IsNullOrWhiteSpace(parameter))
+                        if (!String.IsNullOrWhiteSpace(parameter))
                             OnFileOpened(parameter);
                         break;
                 }
@@ -194,6 +194,11 @@ namespace ScriptPlayer.Shared
             }
         }
 
+        public override double PlaybackRate
+        {
+            get => _timeSource.PlaybackRate;
+            set => _timeSource.PlaybackRate = value;
+        }
         public override bool CanPlayPause => true;
         public override bool CanSeek => true;
         public override bool CanOpenMedia => false;
@@ -217,7 +222,7 @@ namespace ScriptPlayer.Shared
         {
             try
             {
-                string message = $"{((int) command):0000} {parameter}\r\n";
+                string message = $"{((int)command):0000} {parameter}\r\n";
                 byte[] data = Encoding.ASCII.GetBytes(message);
 
                 _client?.GetStream().Write(data, 0, data.Length);

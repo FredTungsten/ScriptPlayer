@@ -230,6 +230,12 @@ namespace ScriptPlayer.Shared
             FileOpened?.Invoke(this, e);
         }
 
+        public override double PlaybackRate
+        {
+            get => _timeSource.PlaybackRate;
+            set => _timeSource.PlaybackRate = value;
+        }
+
         public void Dispose()
         {
             _running = false;

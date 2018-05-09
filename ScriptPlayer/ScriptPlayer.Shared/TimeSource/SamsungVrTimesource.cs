@@ -209,6 +209,12 @@ namespace ScriptPlayer.Shared
         public override bool CanSeek => true;
         public override bool CanOpenMedia => false;
 
+        public override double PlaybackRate
+        {
+            get => _timeSource.PlaybackRate;
+            set => _timeSource.PlaybackRate = value;
+        }
+
         public override void Play()
         {
             SendUdpDatagram("play");

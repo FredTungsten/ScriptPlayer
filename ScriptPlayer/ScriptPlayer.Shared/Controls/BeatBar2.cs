@@ -28,6 +28,15 @@ namespace ScriptPlayer.Shared
             set => SetValue(FlashAfterBeatProperty, value);
         }
 
+        public static readonly DependencyProperty SoundAfterBeatProperty = DependencyProperty.Register(
+            "SoundAfterBeat", typeof(bool), typeof(BeatBar2), new PropertyMetadata(default(bool)));
+
+        public bool SoundAfterBeat
+        {
+            get { return (bool) GetValue(SoundAfterBeatProperty); }
+            set { SetValue(SoundAfterBeatProperty, value); }
+        }
+
         public static readonly DependencyProperty HighlightBeatsProperty = DependencyProperty.Register(
             "HighlightBeats", typeof(bool), typeof(BeatBar2), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
 
@@ -214,6 +223,9 @@ namespace ScriptPlayer.Shared
             return absolutePosition;
         }
 
+        private bool _wasActive = false;
+        private MetronomeTick _tick = new MetronomeTick();
+
         protected override void OnRender(DrawingContext drawingContext)
         {
             #region Background and Selection
@@ -223,7 +235,15 @@ namespace ScriptPlayer.Shared
 
             List<TimeSpan> absoluteBeatPositions = Beats?.GetBeats(timeFrom, timeTo).ToList() ?? new List<TimeSpan>();
 
-            bool isActive = FlashAfterBeat && absoluteBeatPositions.Any(b => Progress >= b  && Progress <= b.Add(FlashDuration));
+            bool isActive = absoluteBeatPositions.Any(b => Progress >= b  && Progress <= b.Add(FlashDuration));
+            if (SoundAfterBeat)
+            {
+                if (isActive && !_wasActive)
+                    _tick.Tick();
+            }
+            _wasActive = isActive;
+
+            isActive &= FlashAfterBeat;
 
             Rect fullRect = new Rect(new Point(), new Size(ActualWidth, ActualHeight));
             drawingContext.PushClip(new RectangleGeometry(fullRect));

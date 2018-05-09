@@ -323,7 +323,7 @@
 
             <!-- SCRIPT POSITIONS -->
             <ProgressBar Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" Minimum="0" Maximum="1" Value="{Binding CurrentPosition}" Orientation="Vertical" HorizontalAlignment="Left" Margin="10,10,0,10" Width="32"/>
-            
+
             <Grid IsHitTestVisible="False" Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="60" >
                 <Grid.Background>
                     <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
@@ -362,6 +362,8 @@
                 </shared:NotificationList.Resources>
             </shared:NotificationList>
         </Grid>
+        
+        <!-- MAIN MENU -->
 
         <Grid Name="MnuMain" Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="0" Background="#FFF0F0F0">
             <Grid.RowDefinitions>
@@ -623,6 +625,12 @@
                             <TextBlock Margin="0" Text="Speed Multiplier" TextAlignment="Center"/>
                             <Slider Margin="0,4" Minimum="0.1" Maximum="5.0" Value="{Binding Settings.SpeedMultiplier}"  IsSnapToTickEnabled="True" TickFrequency="0.1"/>
                             <TextBlock Margin="0" Text="{Binding Settings.SpeedMultiplier, StringFormat={}x{0:f1}}" TextAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="4" ToolTip="Playback Rate">
+                            <TextBlock Margin="0" Text="Playback Rate" TextAlignment="Center"/>
+                            <Slider Margin="0,4" Minimum="0.1" Maximum="2.0" Value="{Binding TimeSource.PlaybackRate}" IsSnapToTickEnabled="True" TickFrequency="0.1"/>
+                            <TextBlock Margin="0" Text="{Binding TimeSource.PlaybackRate, StringFormat={}x{0:f1}}" TextAlignment="Center"/>
                         </StackPanel>
 
                         <Separator/>

@@ -29,6 +29,7 @@ namespace ScriptPlayer.Shared.Scripts
         private TimeSpan _minGapDuration;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> IntermediateScriptActionRaised;
+        public event EventHandler<IntermediateScriptActionEventArgs> InstantUpdateRaised;
 
         public TimeSpan MinIntermediateCommandDuration { get; set; } = TimeSpan.FromMilliseconds(50);
 
@@ -438,6 +439,16 @@ namespace ScriptPlayer.Shared.Scripts
 
                     OnIntermediateScriptActionRaised(args);
                 }
+                else
+                {
+                    double progress = (newTimeSpan - previous).Divide(next - previous);
+
+                    IntermediateScriptActionEventArgs args =
+                        new IntermediateScriptActionEventArgs(_filledActions[_lastIndex],
+                            _filledActions[_lastIndex + 1], progress);
+
+                    OnInstantUpdateRaised(args);
+                }
             }
         }
 
@@ -472,6 +483,11 @@ namespace ScriptPlayer.Shared.Scripts
         protected virtual void OnPositionsChanged(PositionCollection e)
         {
             PositionsChanged?.Invoke(this, e);
+        }
+
+        protected virtual void OnInstantUpdateRaised(IntermediateScriptActionEventArgs e)
+        {
+            InstantUpdateRaised?.Invoke(this, e);
         }
     }
 }

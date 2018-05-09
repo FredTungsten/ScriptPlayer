@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
@@ -60,8 +61,14 @@ namespace ScriptPlayer
             ViewModel.RequestHideSkipButton += ViewModelOnRequestHideSkipButton;
             ViewModel.RequestHideNotification += ViewModelOnRequestHideNotification;
             ViewModel.Beat += ViewModelOnBeat;
+            ViewModel.IntermediateBeat += ViewModelOnIntermediateBeat;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
+        }
+
+        private void ViewModelOnIntermediateBeat(object sender, double d)
+        {
+            
         }
 
 
@@ -249,10 +256,12 @@ namespace ScriptPlayer
 
                 SaveCurrentWindowRect();
 
-                Width = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
-                Height = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
-                Left = 0;
-                Top = 0;
+                var screenBounds = System.Windows.Forms.Screen.FromHandle(new WindowInteropHelper(this).Handle).Bounds;
+
+                Width = screenBounds.Width;
+                Height = screenBounds.Height;
+                Left = screenBounds.Left;
+                Top = screenBounds.Top;
                 WindowState = WindowState.Normal;
 
                 HideOnHover.SetIsActive(MnuMain, true);

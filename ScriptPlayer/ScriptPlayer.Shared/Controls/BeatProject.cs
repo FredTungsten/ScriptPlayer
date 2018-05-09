@@ -24,7 +24,7 @@ namespace ScriptPlayer.Shared
             Segments = new List<BeatSegment>();
             AnalysisParameters = new AnalysisParameters
             {
-                MaxPositiveSamples = 10,
+                MaxPositiveSamples = int.MaxValue,
                 Method = TimeStampDeterminationMethod.Center
             };
         }

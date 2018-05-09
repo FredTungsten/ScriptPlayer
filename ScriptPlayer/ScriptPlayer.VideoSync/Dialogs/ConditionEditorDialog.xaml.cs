@@ -115,7 +115,7 @@ namespace ScriptPlayer.VideoSync
         {
             AnalysisParameters result = new AnalysisParameters
             {
-                MaxPositiveSamples = 10
+                MaxPositiveSamples = int.MaxValue
             };
 
             if(rbFirst.IsChecked == true)

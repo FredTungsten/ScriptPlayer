@@ -7,14 +7,22 @@
 
         public FrameCapture(long frame, System.Drawing.Color[] samples)
         {
+            ulong r = 0, g = 0, b = 0, c = 0;
+
+
             FrameIndex = frame;
-            Capture = new byte[samples.Length * 3];
+            Capture = new byte[3];
             for (int i = 0; i < samples.Length; i++)
             {
-                Capture[3 * i + 0] = samples[i].R;
-                Capture[3 * i + 1] = samples[i].G;
-                Capture[3 * i + 2] = samples[i].B;
+                r += samples[i].R;
+                g += samples[i].G;
+                b += samples[i].B;
+                c++;
             }
+
+            Capture[0] = (byte)(r / c);
+            Capture[1] = (byte)(g / c);
+            Capture[2] = (byte)(b / c);
         }
     }
 }

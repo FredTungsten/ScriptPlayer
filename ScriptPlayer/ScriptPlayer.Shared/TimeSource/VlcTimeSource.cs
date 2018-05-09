@@ -254,6 +254,12 @@ namespace ScriptPlayer.Shared
             _clientLoop?.Abort();
         }
 
+        public override double PlaybackRate
+        {
+            get => _timeSource.PlaybackRate;
+            set => _timeSource.PlaybackRate = value;
+        }
+
         public override bool CanPlayPause => true;
         public override bool CanSeek => true;
         public override bool CanOpenMedia => false;

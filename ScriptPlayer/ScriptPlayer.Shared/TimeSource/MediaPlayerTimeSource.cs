@@ -20,8 +20,11 @@ namespace ScriptPlayer.Shared
 
         public void SetPlayer(MediaPlayer player)
         {
+            double playbackrate = 1.0;
+
             if (_player != null)
             {
+                playbackrate = _player.SpeedRatio;
                 _player.MediaOpened -= PlayerOnMediaOpened;
                 _player.MediaEnded -= PlayerOnMediaEnded;
             }
@@ -32,6 +35,7 @@ namespace ScriptPlayer.Shared
             {
                 _player.MediaOpened += PlayerOnMediaOpened;
                 _player.MediaEnded += PlayerOnMediaEnded;
+                _player.SpeedRatio = playbackrate;
 
                 if(_player.NaturalDuration.HasTimeSpan)
                     OnOpened();
@@ -105,6 +109,19 @@ namespace ScriptPlayer.Shared
             _clock.Tick -= ClockOnTick;
             _player.Stop();
             _player.Close();
+        }
+
+        public override double PlaybackRate
+        {
+            get => _player.SpeedRatio;
+            set
+            {
+                if (_player.SpeedRatio != value)
+                {
+                    _player.SpeedRatio = value;
+                    OnPropertyChanged();
+                }
+            }
         }
 
         public override bool CanPlayPause => true;

@@ -39,6 +39,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler RequestShowSkipNextButton;
         public event EventHandler<string> RequestHideNotification;
         public event EventHandler Beat;
+        public event EventHandler<double> IntermediateBeat;
 
         private readonly string[] _supportedScriptExtensions;
 
@@ -1487,6 +1488,8 @@ namespace ScriptPlayer.ViewModels
                         DeviceCommandInformation info = new DeviceCommandInformation
                         {
                             Duration = transistion.Duration,
+                            DurationStretched = transistion.Duration.Divide(TimeSource.PlaybackRate),
+                            PlaybackRate = TimeSource.PlaybackRate,
                             PositionFromOriginal = transistion.From,
                             PositionToOriginal = transistion.To,
                             PositionFromTransformed = TransformPosition(transistion.From, 0, 99, DateTime.Now.TimeOfDay.TotalSeconds),
@@ -1694,6 +1697,8 @@ namespace ScriptPlayer.ViewModels
                 new DeviceCommandInformation
                 {
                     Duration = delay,
+                    DurationStretched = delay,
+                    PlaybackRate = 1,
                     SpeedTransformed = 20,
                     SpeedOriginal = 20,
                     PositionFromOriginal = 0,
@@ -1709,6 +1714,8 @@ namespace ScriptPlayer.ViewModels
                 DeviceCommandInformation info = new DeviceCommandInformation
                 {
                     Duration = delay,
+                    DurationStretched = delay,
+                    PlaybackRate = 1,
                     PositionFromOriginal = positions[i - 1],
                     PositionToOriginal = positions[i],
                     PositionFromTransformed = TransformPosition(positions[i - 1], 0, 99, DateTime.Now.TimeOfDay.TotalSeconds),
@@ -2029,7 +2036,13 @@ namespace ScriptPlayer.ViewModels
             _scriptHandler.ScriptActionRaised += ScriptHandlerOnScriptActionRaised;
             _scriptHandler.IntermediateScriptActionRaised += ScriptHandlerOnIntermediateScriptActionRaised;
             _scriptHandler.PositionsChanged += ScriptHandlerOnPositionsChanged;
+            _scriptHandler.InstantUpdateRaised += ScriptHandlerOnInstantUpdateRaised;
             _scriptHandler.Delay = TimeSpan.FromMilliseconds(0);
+        }
+
+        private void ScriptHandlerOnInstantUpdateRaised(object sender, IntermediateScriptActionEventArgs e)
+        {
+            OnIntermediateBeat(e.Progress);
         }
 
         private void ScriptHandlerOnPositionsChanged(object sender, PositionCollection positionCollection)
@@ -2049,6 +2062,7 @@ namespace ScriptPlayer.ViewModels
         private void HandleIntermediateFunScriptAction(IntermediateScriptActionEventArgs<FunScriptAction> e)
         {
             TimeSpan duration = e.NextAction.TimeStamp - e.PreviousAction.TimeStamp;
+            TimeSpan durationStretched = duration.Divide(TimeSource.PlaybackRate);
             byte currentPositionTransformed = TransformPosition(e.PreviousAction.Position, e.PreviousAction.TimeStamp);
             byte nextPositionTransformed = TransformPosition(e.NextAction.Position, e.NextAction.TimeStamp);
 
@@ -2058,9 +2072,9 @@ namespace ScriptPlayer.ViewModels
 
             byte speedOriginal =
                 SpeedPredictor.PredictSpeed(
-                    (byte)Math.Abs(e.PreviousAction.Position - e.NextAction.Position), duration);
+                    (byte)Math.Abs(e.PreviousAction.Position - e.NextAction.Position), durationStretched);
             byte speedTransformed =
-                SpeedPredictor.PredictSpeed((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed), duration);
+                SpeedPredictor.PredictSpeed((byte)Math.Abs(currentPositionTransformed - nextPositionTransformed), durationStretched);
             speedTransformed = ClampSpeed(speedTransformed * Settings.SpeedMultiplier);
 
             //Debug.WriteLine($"{nextPositionTransformed} @ {speedTransformed}");
@@ -2068,6 +2082,8 @@ namespace ScriptPlayer.ViewModels
             DeviceCommandInformation info = new DeviceCommandInformation
             {
                 Duration = duration,
+                DurationStretched = durationStretched,
+                PlaybackRate = TimeSource.PlaybackRate,
                 SpeedTransformed = speedTransformed,
                 SpeedOriginal = speedOriginal,
                 PositionFromTransformed = currentPositionTransformed,
@@ -2121,6 +2137,8 @@ namespace ScriptPlayer.ViewModels
                 // Determine next movement
 
                 TimeSpan duration = eventArgs.NextAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
+                TimeSpan durationStretched = duration.Divide(TimeSource.PlaybackRate);
+
                 byte currentPositionTransformed =
                     TransformPosition(eventArgs.CurrentAction.Position, eventArgs.CurrentAction.TimeStamp);
                 byte nextPositionTransformed =
@@ -2136,16 +2154,18 @@ namespace ScriptPlayer.ViewModels
                     byte speedOriginal =
                         SpeedPredictor.PredictSpeed(
                             (byte)Math.Abs(eventArgs.CurrentAction.Position - eventArgs.NextAction.Position),
-                            duration);
+                            durationStretched);
                     byte speedTransformed =
                         SpeedPredictor.PredictSpeed(
                             (byte)Math.Abs(currentPositionTransformed - nextPositionTransformed),
-                            duration);
+                            durationStretched);
                     speedTransformed = ClampSpeed(speedTransformed * Settings.SpeedMultiplier);
 
                     DeviceCommandInformation info = new DeviceCommandInformation
                     {
                         Duration = duration,
+                        DurationStretched = durationStretched,
+                        PlaybackRate = TimeSource.PlaybackRate,
                         SpeedTransformed = speedTransformed,
                         SpeedOriginal = speedOriginal,
                         PositionFromTransformed = currentPositionTransformed,
@@ -2940,6 +2960,11 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnBeat()
         {
             Beat?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual void OnIntermediateBeat(double e)
+        {
+            IntermediateBeat?.Invoke(this, e);
         }
     }
 

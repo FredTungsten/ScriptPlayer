@@ -164,6 +164,19 @@
                                 </Grid>
                             </HeaderedContentControl>
                         </TabItem>
+                        <TabItem Header="Misc">
+                            <Grid>
+                                <HeaderedContentControl Header="Sound Settings">
+                                    <StackPanel Orientation="Vertical" Margin="2">
+                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="Video Volume:"/>
+                                        <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="0" Maximum="100" Value="{Binding ElementName=videoPlayer, Mode=TwoWay, Path=Volume}" 
+                                                SmallChange="1" LargeChange="1"/>
+                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=videoPlayer, Path=Volume, StringFormat={}{0:f0}%}"/>
+
+                                    </StackPanel>
+                                </HeaderedContentControl>
+                            </Grid>
+                        </TabItem>
                         <TabItem Header="Beatbar">
                             <Grid>
                                 <HeaderedContentControl Header="Beatbar Settings">
@@ -172,14 +185,15 @@
                                         <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="2" Maximum="15" Value="{Binding BeatBarDuration, Mode=TwoWay, Converter={StaticResource TimeSpanConverter}}" 
                                                 SmallChange="0.005" LargeChange="0.005"/>
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=TotalDisplayedDuration.TotalSeconds, StringFormat={}{0:f2}s}"/>
-                                        
+
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="Beatbar Midpoint:"/>
                                         <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="0.05" Maximum="0.95" Value="{Binding BeatBarCenter, Mode=TwoWay}" SmallChange="0.001" LargeChange="0.001"/>
                                         <TextBlock  Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=Midpoint, StringFormat={}{0:p2}}"/>
-                                        
+
                                         <CheckBox Margin="2" VerticalAlignment="Center" Name="cckRTL" Checked="CckRTL_OnChecked" Unchecked="CckRTL_OnUnchecked">Right to Left</CheckBox>
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=HighlightBeats}">Highlight Beats</CheckBox>
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=FlashAfterBeat}">Flash after Beats</CheckBox>
+                                        <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=SoundAfterBeat}">Sound after Beat</CheckBox>
 
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="Highlight Interval:"/>
                                         <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="2" Maximum="16" 
