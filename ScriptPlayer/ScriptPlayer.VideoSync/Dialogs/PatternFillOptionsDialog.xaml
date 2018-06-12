@@ -7,7 +7,7 @@
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         xmlns:controls="clr-namespace:ScriptPlayer.VideoSync.Controls"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Pattern Fill Options" Height="374.979" Width="330.22">
+        Title="Pattern Fill Options" Height="374.979" Width="401.553">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
@@ -16,7 +16,7 @@
         <ItemsControl Margin="10,10,10,35" ItemsSource="{Binding Beats}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Orientation="Vertical"/>
+                    <WrapPanel Orientation="Vertical" Margin="0,0,-13,0"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
@@ -30,7 +30,7 @@
         <Button Content="+" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="21" Click="Button_Click"/>
         <Button Content="-" HorizontalAlignment="Left" Margin="36,0,0,10" Width="21" Height="20" VerticalAlignment="Bottom" Click="Button_Click_1"/>
         <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Recently used:" VerticalAlignment="Top" RenderTransformOrigin="0.641,0.578" Width="195"/>
-        <ListBox Grid.Column="1" Margin="10,31,10,35" ItemsSource="{Binding RecentlyUsedPatterns}" SelectionChanged="ListBox_SelectionChanged">
+        <ListBox x:Name="lstPatterns" Grid.Column="1" Margin="10,31,10,35" ItemsSource="{Binding RecentlyUsedPatterns}" SelectionChanged="ListBox_SelectionChanged">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="{x:Type ListBoxItem}">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -40,9 +40,13 @@
             </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <controls:BeatVisualizer Foreground="Magenta" Pattern="{Binding}" HorizontalAlignment="Stretch" Height="30"/>
+                    <DockPanel LastChildFill="True">
+                        <Button Click="btnRemove_Click" Content="X" Width="30" Height="30" VerticalAlignment="Center" DockPanel.Dock="Right"/>
+                        <controls:BeatVisualizer DockPanel.Dock="Left" Foreground="Magenta" Pattern="{Binding}" HorizontalAlignment="Stretch" Height="30" VerticalAlignment="Center"/>
+                    </DockPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+        
     </Grid>
 </Window>

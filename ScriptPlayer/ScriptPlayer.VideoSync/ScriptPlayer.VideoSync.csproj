@@ -169,6 +169,9 @@
     <Compile Include="Dialogs\MocktestDialog.xaml.cs">
       <DependentUpon>MocktestDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\NormalizationDialog.xaml.cs">
+      <DependentUpon>NormalizationDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\PatternFillOptionsDialog.xaml.cs">
       <DependentUpon>PatternFillOptionsDialog.xaml</DependentUpon>
     </Compile>
@@ -214,6 +217,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\MocktestDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\NormalizationDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

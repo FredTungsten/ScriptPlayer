@@ -499,7 +499,9 @@
                     <Setter Property="Height" Value="30"/>
                     <Setter Property="DockPanel.Dock" Value="Left"></Setter>
                 </Style>
-                <Style TargetType="Button" BasedOn="{StaticResource FlatButton}"/>
+                <Style TargetType="Button" BasedOn="{StaticResource FlatButton}">
+                    <Setter Property="Focusable" Value="False"></Setter>
+                </Style>
                 <Style TargetType="Separator" BasedOn="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}">
                     <Setter Property="Margin" Value="4"/>
                 </Style>
@@ -518,6 +520,9 @@
             </Button>
             <Button Command="{Binding SkipToNextEventCommand}" ToolTip="Skip close to next event" Content="8"/>
 
+            <Button Command="{Binding ToggleFullScreenCommand}" ToolTip="Toggle Fullscreen" DockPanel.Dock="Right">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrows}"></controls:AwesomeTextBlock>
+            </Button>
             <TextBlock MouseLeftButtonDown="TimeDisplay_OnMouseLeftButtonDown" TextAlignment="Right" DockPanel.Dock="Right" VerticalAlignment="Center" Width="95" Margin="0,0,8,0">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">

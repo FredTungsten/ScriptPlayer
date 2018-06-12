@@ -70,7 +70,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="General" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Gaps" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -333,13 +333,13 @@
                                 <TextBlock VerticalAlignment="Center" Text="Spacing before/after gap [ms] " Width="170" DockPanel.Dock="Left"/>
                                 <TextBlock Width="40" TextAlignment="Right" DockPanel.Dock="Right" Text="{Binding Settings.FillGapGap, Converter={StaticResource MillisecondsConverter}}"/>
                                 <Slider Value="{Binding Settings.FillGapGap, Converter={StaticResource MillisecondsConverter}}" VerticalAlignment="Center" DockPanel.Dock="Left"
-                                        Minimum="0" Maximum="4000" TickFrequency="50" IsSnapToTickEnabled="True"/>
+                                        Minimum="0" Maximum="20000" TickFrequency="50" IsSnapToTickEnabled="True"/>
                             </DockPanel>
                             <DockPanel Margin="12,4,4,4" IsEnabled="{Binding Settings.FillGaps}">
                                 <TextBlock VerticalAlignment="Center" Text="Filler Intervall [ms] " Width="170" DockPanel.Dock="Left"/>
                                 <TextBlock Width="40" TextAlignment="Right" DockPanel.Dock="Right" Text="{Binding Settings.FillGapIntervall, Converter={StaticResource MillisecondsConverter}}"/>
                                 <Slider Value="{Binding Settings.FillGapIntervall, Converter={StaticResource MillisecondsConverter}}" VerticalAlignment="Center" DockPanel.Dock="Left"
-                                        Minimum="200" Maximum="2000" TickFrequency="20" IsSnapToTickEnabled="True"/>
+                                        Minimum="100" Maximum="10000" TickFrequency="20" IsSnapToTickEnabled="True"/>
                             </DockPanel>
                         </StackPanel>
                     </Grid>

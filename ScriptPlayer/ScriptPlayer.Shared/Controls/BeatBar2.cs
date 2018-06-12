@@ -37,6 +37,20 @@ namespace ScriptPlayer.Shared
             set { SetValue(SoundAfterBeatProperty, value); }
         }
 
+        public static readonly DependencyProperty BeatVolumeProperty = DependencyProperty.Register(
+            "BeatVolume", typeof(double), typeof(BeatBar2), new PropertyMetadata(100.0, new PropertyChangedCallback(OnBeatVolumeChanged)));
+
+        private static void OnBeatVolumeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((BeatBar2) d)._tick.Volume = (double) e.NewValue;
+        }
+
+        public double BeatVolume
+        {
+            get { return (double) GetValue(BeatVolumeProperty); }
+            set { SetValue(BeatVolumeProperty, value); }
+        }
+
         public static readonly DependencyProperty HighlightBeatsProperty = DependencyProperty.Register(
             "HighlightBeats", typeof(bool), typeof(BeatBar2), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
 

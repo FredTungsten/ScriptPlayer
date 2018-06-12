@@ -68,7 +68,7 @@ namespace ScriptPlayer
 
         private void ViewModelOnIntermediateBeat(object sender, double d)
         {
-            
+
         }
 
 
@@ -155,7 +155,7 @@ namespace ScriptPlayer
 
         private void ViewModelOnRequestVlcConnectionSettings(object sender, RequestEventArgs<VlcConnectionSettings> args)
         {
-            VlcConnectionSettingsDialog dialog = new VlcConnectionSettingsDialog(args.Value.IpAndPort, args.Value.Password){Owner = this};
+            VlcConnectionSettingsDialog dialog = new VlcConnectionSettingsDialog(args.Value.IpAndPort, args.Value.Password) { Owner = this };
             if (dialog.ShowDialog() != true) return;
 
             args.Handled = true;
@@ -317,7 +317,7 @@ namespace ScriptPlayer
                 else
                 {
                     await HandleSingleClick(e);
-                    if(secondClick)
+                    if (secondClick)
                         HandleDoubleClick(e);
                 }
             }
@@ -407,6 +407,16 @@ namespace ScriptPlayer
                 case Key.Down:
                     {
                         ViewModel.VolumeDown();
+                        break;
+                    }
+                case Key.PageUp:
+                    {
+                        ViewModel.Playlist.PlayPreviousEntry(ViewModel.LoadedFiles);
+                        break;
+                    }
+                case Key.PageDown:
+                    {
+                        ViewModel.Playlist.PlayNextEntry(ViewModel.LoadedFiles);
                         break;
                     }
                 case Key.NumPad0:
@@ -519,7 +529,7 @@ namespace ScriptPlayer
 
         private void mnuSettings_Click(object sender, RoutedEventArgs e)
         {
-            SettingsDialog settings = new SettingsDialog(ViewModel.Settings) {Owner = this};
+            SettingsDialog settings = new SettingsDialog(ViewModel.Settings) { Owner = this };
             if (settings.ShowDialog() != true) return;
 
             ViewModel.ApplySettings(settings.Settings);
@@ -527,7 +537,7 @@ namespace ScriptPlayer
 
         private void mnuVersion_Click(object sender, RoutedEventArgs e)
         {
-            VersionDialog dialog = new VersionDialog(ViewModel.Version){Owner = this};
+            VersionDialog dialog = new VersionDialog(ViewModel.Version) { Owner = this };
             dialog.ShowDialog();
         }
 

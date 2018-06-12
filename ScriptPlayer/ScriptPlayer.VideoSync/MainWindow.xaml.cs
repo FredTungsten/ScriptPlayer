@@ -311,6 +311,7 @@ namespace ScriptPlayer.VideoSync
         private void videoPlayer_Loaded(object sender, RoutedEventArgs e)
         {
             InitializeSampler();
+            videoPlayer.Volume = 20;
         }
 
         private void VideoPlayer_OnMediaOpened(object sender, EventArgs e)
@@ -562,7 +563,6 @@ namespace ScriptPlayer.VideoSync
             videoPlayer.SetPosition(videoPlayer.GetPosition() + timespan);
         }
 
-
         private void btnBeatBarDurationBack_Click(object sender, RoutedEventArgs e)
         {
             ShiftTime(-BeatBarDuration);
@@ -786,11 +786,14 @@ namespace ScriptPlayer.VideoSync
 
         private void SaveProjectAs()
         {
-            if (String.IsNullOrWhiteSpace(_videoFile))
+            if (string.IsNullOrWhiteSpace(_videoFile))
                 return;
 
-            SaveFileDialog dialog = new SaveFileDialog { Filter = "Beat Projects|*.bproj" };
-            dialog.FileName = Path.ChangeExtension(_videoFile, ".bproj");
+            SaveFileDialog dialog = new SaveFileDialog
+            {
+                Filter = "Beat Projects|*.bproj",
+                FileName = Path.ChangeExtension(_videoFile, ".bproj")
+            };
 
             if (dialog.ShowDialog(this) != true)
                 return;
@@ -869,14 +872,22 @@ namespace ScriptPlayer.VideoSync
 
             int selectedBeats = GetSelectedBeats().Count;
 
-            double additionalBeats = GetDouble(0, $"{selectedBeats} beats selected");
-            if (double.IsNaN(additionalBeats)) return;
+            int additionalBeats = GetAdditionalBeats(selectedBeats);
+            if (additionalBeats == int.MinValue) return;
 
             bool caps = Keyboard.IsKeyToggled(Key.CapsLock);
-            Normalize((int)additionalBeats, !caps);
+            Normalize(additionalBeats, !caps);
 
             if (wasPlaying)
                 videoPlayer.TimeSource.Play();
+        }
+
+        private int GetAdditionalBeats(int selectedBeats)
+        {
+            NormalizationDialog dialog = new NormalizationDialog(selectedBeats){Owner = this};
+            if (dialog.ShowDialog() != true) return int.MinValue;
+
+            return dialog.AdditionalBeats;
         }
 
         private void Normalize(int additionalBeats, bool trimToBeats = true)
@@ -980,10 +991,10 @@ namespace ScriptPlayer.VideoSync
             if (dialog.ShowDialog() != true) return;
 
             _previousPattern = dialog.Result;
-            NormalizePattern(_previousPattern);
+            NormalizePattern(_previousPattern, 0);
         }
 
-        private void NormalizePattern(bool[] pattern)
+        private void NormalizePattern(bool[] pattern, int additionalBeats)
         {
             List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
 
@@ -992,7 +1003,10 @@ namespace ScriptPlayer.VideoSync
 
             List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
 
-            int numberOfBeats = beatsToEvenOut.Count;
+            if (beatsToEvenOut.Count < 2)
+                return;
+
+            int numberOfBeats = beatsToEvenOut.Count + additionalBeats;
             if (numberOfBeats < 2)
                 return;
 
@@ -1015,7 +1029,7 @@ namespace ScriptPlayer.VideoSync
 
             int openSetLength = 0;
 
-            for (int i = 0; i < numberOfBeats; i++)
+            for (int i = 0; i < pattern.Length - 1; i++)
             {
                 if (beatsInOpenSet == 0)
                     break;
@@ -1307,12 +1321,18 @@ namespace ScriptPlayer.VideoSync
                     }
                 case Key.Add:
                     {
-                        Normalize(1, !caps);
+                        if(control)
+                            NormalizePattern(_previousPattern ?? new bool[]{true,true},1);
+                        else
+                            Normalize(1, !caps);
                         break;
                     }
                 case Key.Subtract:
                     {
-                        Normalize(-1, !caps);
+                        if (control)
+                            NormalizePattern(_previousPattern ?? new bool[] { true, true }, -1);
+                        else
+                            Normalize(-1, !caps);
                         break;
                     }
                 case Key.F3:
@@ -1344,7 +1364,10 @@ namespace ScriptPlayer.VideoSync
                     {
                         if (IsNumpadEnterKey(e))
                         {
-                            Normalize(0, !caps);
+                            if (control)
+                                NormalizePattern(_previousPattern ?? new bool[] { true, true }, 0);
+                            else
+                                Normalize(0, !caps);
                         }
                         else
                         {

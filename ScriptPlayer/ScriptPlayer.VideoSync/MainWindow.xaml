@@ -8,6 +8,7 @@
         xmlns:converters1="clr-namespace:ScriptPlayer.VideoSync.Converters"
         xmlns:m="clr-namespace:ScriptPlayer.VideoSync.Extensions"
         xmlns:controls="clr-namespace:ScriptPlayer.VideoSync.Controls"
+        xmlns:videoSync="clr-namespace:ScriptPlayer.VideoSync"
 
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="ScriptPlayer Video Sync" Height="767" Width="1127" Icon="ScriptPlayerEditorIcon.ico" PreviewKeyDown="Window_PreviewKeyDown">
@@ -164,21 +165,12 @@
                                 </Grid>
                             </HeaderedContentControl>
                         </TabItem>
-                        <TabItem Header="Misc">
-                            <Grid>
-                                <HeaderedContentControl Header="Sound Settings">
-                                    <StackPanel Orientation="Vertical" Margin="2">
-                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="Video Volume:"/>
-                                        <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="0" Maximum="100" Value="{Binding ElementName=videoPlayer, Mode=TwoWay, Path=Volume}" 
-                                                SmallChange="1" LargeChange="1"/>
-                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=videoPlayer, Path=Volume, StringFormat={}{0:f0}%}"/>
-
-                                    </StackPanel>
-                                </HeaderedContentControl>
-                            </Grid>
-                        </TabItem>
                         <TabItem Header="Beatbar">
                             <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
                                 <HeaderedContentControl Header="Beatbar Settings">
                                     <StackPanel Orientation="Vertical" Margin="2">
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="Beatbar Duration:"/>
@@ -204,6 +196,19 @@
                                         <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="0" Maximum="{Binding ElementName=BeatBar, Path=HighlightInterval}" 
                                                 Value="{Binding ElementName=BeatBar, Path=HighlightOffset}" SmallChange="1" LargeChange="1"/>
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=HighlightOffset}"/>
+                                    </StackPanel>
+                                </HeaderedContentControl>
+                                <HeaderedContentControl Grid.Row="1" Header="Sound Settings">
+                                    <StackPanel Orientation="Vertical" Margin="2">
+                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="Video Volume:"/>
+                                        <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="0" Maximum="100" Value="{Binding ElementName=videoPlayer, Mode=TwoWay, Path=Volume}" 
+                                                SmallChange="1" LargeChange="1"/>
+                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=videoPlayer, Path=Volume, StringFormat={}{0:f0}%}"/>
+                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="Beat Volume:"/>
+                                        <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="0" Maximum="100" Value="{Binding ElementName=BeatBar, Mode=TwoWay, Path=BeatVolume}" 
+                                                SmallChange="1" LargeChange="1"/>
+                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=BeatVolume, StringFormat={}{0:f0}%}"/>
+
                                     </StackPanel>
                                 </HeaderedContentControl>
                             </Grid>

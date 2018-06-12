@@ -170,6 +170,18 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
             SetPattern(selection);
         }
+
+        private void Remove(bool[] selection)
+        {
+            RecentlyUsedPatterns.Remove(selection);
+            RecentlyUsedPatterns = new List<bool[]>(RecentlyUsedPatterns);
+        }
+
+        private void btnRemove_Click(object sender, RoutedEventArgs e)
+        {
+            bool[] pattern = ((Button) sender).DataContext as bool[];
+            Remove(pattern);
+        }
     }
 
     public class IndexedBoolean : INotifyPropertyChanged
