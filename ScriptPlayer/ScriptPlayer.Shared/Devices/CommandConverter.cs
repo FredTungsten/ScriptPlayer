@@ -16,10 +16,12 @@ namespace ScriptPlayer.Shared
             return (uint)speed;
         }
 
+        // Reverted to 0.0 by request of github user "sextoydb":
+        // https://github.com/FredTungsten/ScriptPlayer/issues/64
         public static double LaunchToVibrator(byte position)
         {
             const double max = 1.0;
-            const double min = 0.1;
+            const double min = 0.0;
 
             double speedRelative = 1.0 - ((position + 1) / 100.0);
             double result = min + (max - min) * speedRelative;
