@@ -131,7 +131,7 @@
     <Compile Include="Dialogs\VlcConnectionSettingsDialog.xaml.cs">
       <DependentUpon>VlcConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PatternSource.cs" />
+    <Compile Include="CommandSource.cs" />
     <Compile Include="ViewModels\ButtplugUrlRequestEventArgs.cs" />
     <Compile Include="ViewModels\DeviceViewModel.cs" />
     <Compile Include="ViewModels\MessageBoxEventArgs.cs" />

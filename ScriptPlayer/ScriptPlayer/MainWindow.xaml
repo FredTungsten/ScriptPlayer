@@ -671,13 +671,15 @@
                             </StackPanel.Resources>
                             <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Source" FontSize="20"/>
 
-                            <RadioButton IsChecked="{Binding Path=PatternSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:PatternSource.Video}}" Content="Video" />
-                            <RadioButton IsChecked="{Binding Path=PatternSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:PatternSource.None}}" Content="None" />
-                            <RadioButton IsChecked="{Binding Path=PatternSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:PatternSource.Slow}}" Content="Slow"/>
-                            <RadioButton IsChecked="{Binding Path=PatternSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:PatternSource.Medium}}" Content="Medium"/>
-                            <RadioButton IsChecked="{Binding Path=PatternSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:PatternSource.Fast}}" Content="Fast"/>
-                            <RadioButton IsChecked="{Binding Path=PatternSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:PatternSource.Random}}" Content="Random" />
-                            <RadioButton IsChecked="{Binding Path=PatternSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:PatternSource.ZigZag}}" Content="Zig-Zag" />
+                            <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.Video}}" Content="Video" />
+                            <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.None}}" Content="None" />
+                            <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.Random}}" Content="Random" />
+                            <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.Pattern}}" Content="Pattern" />
+
+                            <ComboBox ItemsSource="{Binding Patterns}" SelectedItem="{Binding SelectedPattern}" DisplayMemberPath="Name" Margin="4" />
+                            <TextBlock Margin="0" Text="Pattern Speed" TextAlignment="Center"/>
+                            <Slider LargeChange="10" Margin="0,4" Minimum="100" Maximum="1000"  Value="{Binding Path=Settings.PatternSpeed, Converter={StaticResource MillisecondsConverter}}"  SmallChange="10"  IsSnapToTickEnabled="True" TickFrequency="10"/>
+                            <TextBlock Margin="0" Text="{Binding Path=Settings.PatternSpeed, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}" TextAlignment="Center"/>
                         </StackPanel>
 
                         <Separator/>

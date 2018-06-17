@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using ScriptPlayer.Shared.Scripts;
 
 namespace ScriptPlayer.Shared
@@ -56,6 +54,47 @@ namespace ScriptPlayer.Shared
                 };
 
                 Thread.Sleep(duration);
+            }
+        }
+    }
+
+    public class EasyGridPatternGenerator : PatternGenerator
+    {
+        private readonly RepeatablePattern _pattern;
+
+        public EasyGridPatternGenerator(RepeatablePattern pattern, TimeSpan duration)
+        {
+            _pattern = pattern;
+
+            Duration = duration;
+        }
+
+        public TimeSpan Duration { get; set; }
+
+        public override IEnumerator<PositionTransistion> Get()
+        {
+            int index = 0;
+
+            if (_pattern.Count == 0)
+                yield break;
+
+            while (!_stopped)
+            {
+                int currentIndex = index;
+                int nextIndex = (index + 1) % _pattern.Count;
+
+                TimeSpan duration = Duration.Multiply(_pattern[currentIndex].Duration);
+
+                yield return new PositionTransistion
+                {
+                    Duration = duration,
+                    From = _pattern[currentIndex].Position,
+                    To = _pattern[nextIndex].Position
+                };
+
+                Thread.Sleep(duration);
+
+                index = nextIndex;
             }
         }
     }

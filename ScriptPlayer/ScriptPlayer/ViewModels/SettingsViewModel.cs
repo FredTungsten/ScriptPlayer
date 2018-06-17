@@ -81,6 +81,7 @@ namespace ScriptPlayer.ViewModels
         private bool _repeatSingleFile;
         private bool _rememberVolume;
         private bool _rememberPlaybackMode;
+        private TimeSpan _patternSpeed = TimeSpan.FromMilliseconds(300);
 
         public SettingsViewModel()
         {
@@ -637,6 +638,25 @@ namespace ScriptPlayer.ViewModels
                 _commandDelay = value;
                 OnPropertyChanged();
             }
+        }
+
+        [XmlIgnore]
+        public TimeSpan PatternSpeed
+        {
+            get { return _patternSpeed; }
+            set
+            {
+                if (value.Equals(_patternSpeed)) return;
+                _patternSpeed = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [XmlElement("PatternSpeed")]
+        public long PatternSpeedWrapper
+        {
+            get => PatternSpeed.Ticks;
+            set => PatternSpeed = TimeSpan.FromTicks(value);
         }
 
         public ConversionMode ConversionMode

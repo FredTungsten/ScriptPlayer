@@ -19,7 +19,6 @@ using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Helpers;
 using ScriptPlayer.Shared.Scripts;
 using Application = System.Windows.Application;
-using CommandConverter = ScriptPlayer.Shared.CommandConverter;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -65,6 +64,29 @@ namespace ScriptPlayer.ViewModels
         private byte _maxScriptPosition;
         private byte _minScriptPosition;
 
+        public ObservableCollection<RepeatablePattern> Patterns
+        {
+            get { return _patterns; }
+            set
+            {
+                if (Equals(value, _patterns)) return;
+                _patterns = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public RepeatablePattern SelectedPattern
+        {
+            get => _selectedPattern;
+            set
+            {
+                if (Equals(value, _selectedPattern)) return;
+                _selectedPattern = value;
+                UpdatePattern(CommandSource);
+                OnPropertyChanged();
+            }
+        }
+
         public double CurrentPosition
         {
             get => _currentPosition;
@@ -101,7 +123,7 @@ namespace ScriptPlayer.ViewModels
         }
 
         private PatternGenerator _pattern;
-        private PatternSource _patternSource = PatternSource.Video;
+        private CommandSource _commandSource = CommandSource.Video;
         private PlaylistViewModel _playlist;
         private Thread _repeaterThread;
 
@@ -147,6 +169,8 @@ namespace ScriptPlayer.ViewModels
         }
         private bool _loading;
         private double _currentPosition;
+        private RepeatablePattern _selectedPattern;
+        private ObservableCollection<RepeatablePattern> _patterns;
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
         {
@@ -191,6 +215,7 @@ namespace ScriptPlayer.ViewModels
         public MainViewModel()
         {
             _supportedMediaExtensions = _supportedVideoExtensions.Concat(_supportedAudioExtensions).ToArray();
+            GeneratePatterns();
 
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             Version = new VersionViewModel();
@@ -210,6 +235,19 @@ namespace ScriptPlayer.ViewModels
             InitializeScriptHandler();
 
             LoadSettings();
+        }
+
+        private void GeneratePatterns()
+        {
+            Patterns = new ObservableCollection<RepeatablePattern>
+            {
+                new RepeatablePattern(0, 99) {Name = "Up / Down"},
+                new RepeatablePattern(0, -1, 66, 33, -1, 99, -1, 33, 66) {Name = "Zig Zag"},
+                new RepeatablePattern(99, -1, -1, -1, 0) {Name = "Heartbeat"},
+                new RepeatablePattern(99, 0, 99, 0, -1, 99, -1, 0, -1, 99, -1, 0, -1) {Name = "Fast / Slow"}
+            };
+
+            SelectedPattern = Patterns.First();
         }
 
         public string ScriptPlayerVersion
@@ -859,14 +897,14 @@ namespace ScriptPlayer.ViewModels
 
         public VersionViewModel Version { get; }
 
-        public PatternSource PatternSource
+        public CommandSource CommandSource
         {
-            get => _patternSource;
+            get => _commandSource;
             set
             {
-                if (value == _patternSource) return;
-                _patternSource = value;
-                UpdatePattern(_patternSource);
+                if (value == _commandSource) return;
+                _commandSource = value;
+                UpdatePattern(_commandSource);
                 OnPropertyChanged();
             }
         }
@@ -1036,6 +1074,7 @@ namespace ScriptPlayer.ViewModels
             UpdatePlaylistRepeatSingleFile();
             UpdateFillGaps();
             UpdateHeatMap();
+            UpdatePatternSpeed();
         }
 
         private void UpdatePlaylistRepeatSingleFile()
@@ -1114,7 +1153,18 @@ namespace ScriptPlayer.ViewModels
                         UpdateFillGaps();
                         break;
                     }
+                case nameof(SettingsViewModel.PatternSpeed):
+                    {
+                        UpdatePatternSpeed();
+                        break;
+                    }
             }
+        }
+
+        private void UpdatePatternSpeed()
+        {
+            if (_pattern is EasyGridPatternGenerator gen)
+                gen.Duration = Settings.PatternSpeed;
         }
 
         private void UpdateFillGaps()
@@ -1196,20 +1246,10 @@ namespace ScriptPlayer.ViewModels
                 device.MinDelayBetweenCommands = Settings.CommandDelay;
         }
 
-        private void StartRegularPattern(byte positionFrom, byte positionTo, TimeSpan intervall)
-        {
-            RepeatingPatternGenerator pattern = new RepeatingPatternGenerator();
-
-            pattern.Add(positionFrom, intervall);
-            pattern.Add(positionTo, intervall);
-
-            StartPattern(pattern);
-        }
-
         public void OpenVideo()
         {
             string videoFilters =
-                $"All Media Files|{string.Join(";", _supportedMediaExtensions.Select(v => $"*.{v}"))}|" + 
+                $"All Media Files|{string.Join(";", _supportedMediaExtensions.Select(v => $"*.{v}"))}|" +
                 $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}|" +
                 $"Audio Audio|{string.Join(";", _supportedAudioExtensions.Select(v => $"*.{v}"))}|" +
                 "All Files|*.*";
@@ -1320,7 +1360,7 @@ namespace ScriptPlayer.ViewModels
             LoadVideo(videoFile, false);
         }
 
-        
+
 
         private bool IsMatchingScriptLoaded(string videoFileName)
         {
@@ -1425,40 +1465,24 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void UpdatePattern(PatternSource patternSource)
+        private void UpdatePattern(CommandSource commandSource)
         {
-            switch (patternSource)
+            switch (commandSource)
             {
-                case PatternSource.Video:
+                case CommandSource.Video:
                     StopPattern();
                     break;
-                case PatternSource.None:
+                case CommandSource.None:
                     StopPattern();
                     break;
-                case PatternSource.Slow:
-                    StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(600));
+                case CommandSource.Pattern:
+                    StartPattern(new EasyGridPatternGenerator(SelectedPattern, Settings.PatternSpeed));
                     break;
-                case PatternSource.Medium:
-                    StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(250));
-                    break;
-                case PatternSource.Fast:
-                    StartRegularPattern(0, 99, TimeSpan.FromMilliseconds(100));
-                    break;
-                case PatternSource.ZigZag:
-                    var zigzag = new RepeatingPatternGenerator();
-                    zigzag.Add(99, TimeSpan.FromMilliseconds(200));
-                    zigzag.Add(50, TimeSpan.FromMilliseconds(200));
-                    zigzag.Add(99, TimeSpan.FromMilliseconds(200));
-                    zigzag.Add(0, TimeSpan.FromMilliseconds(200));
-                    zigzag.Add(50, TimeSpan.FromMilliseconds(200));
-                    zigzag.Add(0, TimeSpan.FromMilliseconds(200));
-                    StartPattern(zigzag);
-                    break;
-                case PatternSource.Random:
+                case CommandSource.Random:
                     StartPattern(new RandomPatternGenerator());
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(patternSource), patternSource, null);
+                    throw new ArgumentOutOfRangeException(nameof(commandSource), commandSource, null);
             }
         }
 
@@ -1955,7 +1979,7 @@ namespace ScriptPlayer.ViewModels
 
         private void ScriptHandlerOnIntermediateScriptActionRaised(object sender, IntermediateScriptActionEventArgs eventArgs)
         {
-            if (PatternSource != PatternSource.Video)
+            if (CommandSource != CommandSource.Video)
                 return;
 
             if (eventArgs.RawPreviousAction is FunScriptAction)
@@ -2009,7 +2033,7 @@ namespace ScriptPlayer.ViewModels
 
         private void ScriptHandlerOnScriptActionRaised(object sender, ScriptActionEventArgs eventArgs)
         {
-            if (PatternSource != PatternSource.Video)
+            if (CommandSource != CommandSource.Video)
                 return;
 
             if (_loading)
@@ -2027,7 +2051,7 @@ namespace ScriptPlayer.ViewModels
             TimeSpan timeToNextOriginalEvent = TimeSpan.Zero;
 
             OnBeat();
-            
+
             if (eventArgs.NextAction == null)
             {
                 // Script Ended
@@ -2046,8 +2070,6 @@ namespace ScriptPlayer.ViewModels
                     TransformPosition(eventArgs.CurrentAction.Position, eventArgs.CurrentAction.TimeStamp);
                 byte nextPositionTransformed =
                     TransformPosition(eventArgs.NextAction.Position, eventArgs.NextAction.TimeStamp);
-
-                CurrentPosition = currentPositionTransformed / 99.0;
 
                 // Execute next movement
 
@@ -2265,7 +2287,7 @@ namespace ScriptPlayer.ViewModels
         {
             if (!TimeSource.IsPlaying && requirePlaying) return;
 
-            //Debug.WriteLine(CommandConverter.LaunchToVorzeSpeed(information));
+            CurrentPosition = information.PositionFromTransformed / 99.0;
 
             foreach (Device device in _devices)
                 device.Enqueue(information);
