@@ -201,6 +201,7 @@
     <Compile Include="Colors\FrameCaptureCollection.cs" />
     <Compile Include="Colors\HeatMapGenerator.cs" />
     <Compile Include="Helpers\ExceptionHelper.cs" />
+    <Compile Include="Helpers\FileFinder.cs" />
     <Compile Include="Helpers\HideOnHover.cs" />
     <Compile Include="Devices\Device.cs" />
     <Compile Include="Helpers\OsInformation.cs" />

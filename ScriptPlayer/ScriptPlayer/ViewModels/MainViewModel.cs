@@ -46,6 +46,11 @@ namespace ScriptPlayer.ViewModels
         private readonly string[] _supportedVideoExtensions =
             {"mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf", "webm"};
 
+        private readonly string[] _supportedAudioExtensions =
+            {"mp3", "wav", "wma"};
+
+        private readonly string[] _supportedMediaExtensions;
+
         private string _buttplugApiVersion = "Unknown";
 
         private List<ConversionMode> _conversionModes;
@@ -185,6 +190,8 @@ namespace ScriptPlayer.ViewModels
 
         public MainViewModel()
         {
+            _supportedMediaExtensions = _supportedVideoExtensions.Concat(_supportedAudioExtensions).ToArray();
+
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             Version = new VersionViewModel();
 
@@ -1202,7 +1209,10 @@ namespace ScriptPlayer.ViewModels
         public void OpenVideo()
         {
             string videoFilters =
-                $"Videos|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}|All Files|*.*";
+                $"All Media Files|{string.Join(";", _supportedMediaExtensions.Select(v => $"*.{v}"))}|" + 
+                $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}|" +
+                $"Audio Audio|{string.Join(";", _supportedAudioExtensions.Select(v => $"*.{v}"))}|" +
+                "All Files|*.*";
 
             string selectedFile = OnRequestFile(videoFilters, ref _lastVideoFilterIndex);
             if (selectedFile == null)
@@ -1267,7 +1277,7 @@ namespace ScriptPlayer.ViewModels
                 return;
             }
 
-            string scriptFile = FindFile(videoFileName, GetScriptExtensions(), GetAdditionalPaths());
+            string scriptFile = FileFinder.FindFile(videoFileName, GetScriptExtensions(), GetAdditionalPaths());
             if (string.IsNullOrWhiteSpace(scriptFile))
             {
                 if (Settings.NotifyFileLoaded)
@@ -1295,129 +1305,22 @@ namespace ScriptPlayer.ViewModels
             if (IsMatchingVideoLoaded(scriptFileName))
             {
                 if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
-                    OnRequestOverlay("Matching video alreadly loaded", TimeSpan.FromSeconds(6));
+                    OnRequestOverlay("Matching media file alreadly loaded", TimeSpan.FromSeconds(6));
                 return;
             }
 
-            string videoFile = FindFile(scriptFileName, _supportedVideoExtensions, GetAdditionalPaths());
+            string videoFile = FileFinder.FindFile(scriptFileName, _supportedMediaExtensions, GetAdditionalPaths());
             if (string.IsNullOrWhiteSpace(videoFile))
             {
                 if (Settings.NotifyFileLoaded)
-                    OnRequestOverlay($"No video for '{Path.GetFileName(scriptFileName)}' found!", TimeSpan.FromSeconds(6));
+                    OnRequestOverlay($"No media file for '{Path.GetFileName(scriptFileName)}' found!", TimeSpan.FromSeconds(6));
                 return;
             }
 
             LoadVideo(videoFile, false);
         }
 
-        private static string FindFile(string filename, string[] extensions, string[] additionalPaths)
-        {
-            //With removed second extension
-            string stripped = TrimExtension(filename, extensions);
-            if (File.Exists(stripped))
-                return stripped;
-
-            //Same directory, appended Extension
-            foreach (string extension in extensions)
-            {
-                string path = AppendExtension(filename, extension);
-                if (File.Exists(path))
-                    return path;
-            }
-
-            //Same directory, exchanged extension
-            foreach (string extension in extensions)
-            {
-                string path = Path.ChangeExtension(filename, extension);
-                if (File.Exists(path))
-                    return path;
-            }
-
-            if (additionalPaths == null)
-                return null;
-
-            //Addtional Directories, stripped second extension
-            string fileNameWithoutSecondExtension = TrimExtension(Path.GetFileName(filename), extensions);
-            if (!String.IsNullOrWhiteSpace(fileNameWithoutSecondExtension))
-            {
-                foreach (string path in additionalPaths)
-                {
-                    if (!Directory.Exists(path)) continue;
-
-                    string newPath = Path.Combine(path, fileNameWithoutSecondExtension);
-                    if (File.Exists(newPath))
-                        return newPath;
-                }
-            }
-
-            //Additional Directories, appended extension
-            string fileNameWithExtension = Path.GetFileName(filename);
-            if (string.IsNullOrWhiteSpace(fileNameWithExtension))
-                return null;
-
-            foreach (string path in additionalPaths)
-            {
-                if (!Directory.Exists(path)) continue;
-
-                string basePath = Path.Combine(path, fileNameWithExtension);
-
-                foreach (string extension in extensions)
-                {
-                    string expectedPath = AppendExtension(basePath, extension);
-                    if (File.Exists(expectedPath))
-                        return expectedPath;
-                }
-            }
-
-            //Additional Directories, exchanged extension
-            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filename);
-            if (string.IsNullOrWhiteSpace(fileNameWithoutExtension))
-                return null;
-
-            foreach (string path in additionalPaths)
-            {
-                if (!Directory.Exists(path)) continue;
-
-                string basePath = Path.Combine(path, fileNameWithoutExtension);
-
-                foreach (string extension in extensions)
-                {
-                    string expectedPath = AppendExtension(basePath, extension);
-                    if (File.Exists(expectedPath))
-                        return expectedPath;
-                }
-            }
-
-            return null;
-        }
-
-        private static string TrimExtension(string filename, string[] extensions)
-        {
-            string newfilename = GetTrimmed(Path.GetFileName(filename), extensions);
-            if (String.IsNullOrWhiteSpace(newfilename)) return null;
-
-            return Path.Combine(Path.GetDirectoryName(filename), newfilename);
-        }
-
-        private static string GetTrimmed(string filename, string[] extensions)
-        {
-            if (filename.Count(c => c == '.') < 2)
-                return null;
-
-            int lastDot = filename.LastIndexOf(".", StringComparison.InvariantCulture);
-            string trimmedFileName = filename.Substring(0, lastDot);
-            string firstExtension = Path.GetExtension(trimmedFileName).TrimStart('.');
-            return extensions.Any(e => string.Equals(e, firstExtension, StringComparison.OrdinalIgnoreCase)) ? trimmedFileName : null;
-        }
-
-        private static string AppendExtension(string filename, string extension)
-        {
-            string result = filename;
-            if (!extension.StartsWith("."))
-                result += ".";
-            result += extension;
-            return result;
-        }
+        
 
         private bool IsMatchingScriptLoaded(string videoFileName)
         {
@@ -1860,7 +1763,7 @@ namespace ScriptPlayer.ViewModels
 
             if (extension == "m3u")
                 LoadPlaylist(fileToLoad);
-            else if (_supportedVideoExtensions.Contains(extension))
+            else if (_supportedMediaExtensions.Contains(extension))
                 LoadVideo(fileToLoad, true);
             else if (_supportedScriptExtensions.Contains(extension))
                 LoadScript(fileToLoad, true);
@@ -2588,10 +2491,14 @@ namespace ScriptPlayer.ViewModels
         {
             ScriptFileFormatCollection formats = ScriptLoaderManager.GetFormats();
 
-            string videoFilters = $"Videos|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}";
+            string mediaFilters =
+                $"All Media Files|{string.Join(";", _supportedMediaExtensions.Select(v => $"*.{v}"))}|" +
+                $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}|" +
+                $"Audio Audio|{string.Join(";", _supportedAudioExtensions.Select(v => $"*.{v}"))}";
+
             string scriptFilters = formats.BuildFilter(true);
 
-            string filters = videoFilters + "|" + scriptFilters;
+            string filters = mediaFilters + "|" + scriptFilters;
 
             string[] files = OnRequestFiles(filters, ref _lastScriptFilterIndex);
             if (files == null)
