@@ -28,7 +28,7 @@ namespace ScriptPlayer.Shared.Scripts
 
         public PatternPosition this[int index]
         {
-            get => _positions[index];
+            get => _positions[index % _positions.Count];
         }
 
         public RepeatablePattern(params int[] positions)
@@ -41,7 +41,7 @@ namespace ScriptPlayer.Shared.Scripts
                         _positions.Last().Duration++;
                 }
                 else
-                    _positions.Add(new PatternPosition((byte) position));
+                    _positions.Add(new PatternPosition((byte)position));
             }
         }
     }

@@ -61,7 +61,11 @@ namespace ScriptPlayer.Shared
             else
             {
                 int rightBounds = FindFirstLaterThan(0, maxIndex, timestampTo);
-                return _positions.Take(rightBounds + 1);
+
+                if(rightBounds > 0)
+                    return _positions.Take(rightBounds + 1);
+
+                return _positions.ToList();
             }
         }
 

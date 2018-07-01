@@ -215,8 +215,7 @@ namespace ScriptPlayer.ViewModels
         public MainViewModel()
         {
             _supportedMediaExtensions = _supportedVideoExtensions.Concat(_supportedAudioExtensions).ToArray();
-            GeneratePatterns();
-
+            
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             Version = new VersionViewModel();
 
@@ -233,6 +232,7 @@ namespace ScriptPlayer.ViewModels
             }
 
             InitializeScriptHandler();
+            GeneratePatterns();
 
             LoadSettings();
         }
@@ -243,8 +243,13 @@ namespace ScriptPlayer.ViewModels
             {
                 new RepeatablePattern(0, 99) {Name = "Up / Down"},
                 new RepeatablePattern(0, -1, 66, 33, -1, 99, -1, 33, 66) {Name = "Zig Zag"},
-                new RepeatablePattern(99, -1, -1, -1, 0) {Name = "Heartbeat"},
-                new RepeatablePattern(99, 0, 99, 0, -1, 99, -1, 0, -1, 99, -1, 0, -1) {Name = "Fast / Slow"}
+                new RepeatablePattern(99, 0, -1, -1, 0) {Name = "Slow Pulse"},
+                new RepeatablePattern(99, 99, 0) {Name = "Fast Pulse"},
+                new RepeatablePattern(50,99,0,50,50){Name = "Heartbeat"},
+                new RepeatablePattern(99, 0, 99, 0, -1, 99, -1, 0, -1, 99, -1, 0, -1) {Name = "Fast / Slow"},
+                new RepeatablePattern(0,20,10,30,20,40,30,50,40,60,50,70,60,80,70,90,80,99,-1,-1,-1){Name = "Stairs"},
+                new RepeatablePattern(0,10,0,20,0,30,0,40,0,50,0,60,0,70,0,80,0,90,0,99){Name="Saw"},
+                new RepeatablePattern(50,60,40,70,30,80,20,90,10,99,0,99,10,90,20,80,30,70,40,60){Name ="Wave"}
             };
 
             SelectedPattern = Patterns.First();
@@ -271,6 +276,8 @@ namespace ScriptPlayer.ViewModels
                 Playlist = new PlaylistViewModel();
                 Playlist.PlayEntry += PlaylistOnPlayEntry;
                 Playlist.PropertyChanged += PlaylistOnPropertyChanged;
+                Playlist.RequestMediaFileName += Playlist_RequestMediaFileName;
+                Playlist.RequestScriptFileName += Playlist_RequestScriptFileName;
             }
 
             if (Settings.RememberPlaylist)
@@ -279,6 +286,18 @@ namespace ScriptPlayer.ViewModels
             Playlist.Repeat = Settings.RepeatPlaylist;
             Playlist.RandomChapters = Settings.RandomChapters;
             Playlist.Shuffle = Settings.ShufflePlaylist;
+        }
+
+        private void Playlist_RequestScriptFileName(object sender, RequestEventArgs<string> e)
+        {
+            e.Handled = true;
+            e.Value = GetScriptFile(e.Value);
+        }
+
+        private void Playlist_RequestMediaFileName(object sender, RequestEventArgs<string> e)
+        {
+            e.Handled = true;
+            e.Value = GetMediaFile(e.Value);
         }
 
         private void PlaylistOnPropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
@@ -315,8 +334,28 @@ namespace ScriptPlayer.ViewModels
                 filename = GetDefaultPlaylistFile();
 
             M3uPlaylist playlist = new M3uPlaylist();
-            playlist.Entries.AddRange(Playlist.Entries.Select(e => e.Fullname));
+            playlist.Entries.AddRange(Playlist.Entries.Select(ToM3uEntry));
             playlist.Save(filename);
+        }
+
+        private static M3uPlaylist.M3uEntry ToM3uEntry(PlaylistEntry entry)
+        {
+            return new M3uPlaylist.M3uEntry
+            {
+                FilePath = entry.Fullname,
+                DisplayName = entry.Shortname,
+                DurationInSeconds = (int?)entry.Duration?.TotalSeconds ?? 0
+            };
+        }
+
+        private static PlaylistEntry ToPlaylistEntry(M3uPlaylist.M3uEntry entry)
+        {
+            return new PlaylistEntry
+            {
+                Fullname = entry.FilePath,
+                Shortname = entry.DisplayName,
+                Duration = TimeSpan.FromSeconds(entry.DurationInSeconds)
+            };
         }
 
         private void SaveSettings()
@@ -1190,6 +1229,8 @@ namespace ScriptPlayer.ViewModels
 
         public void Dispose()
         {
+            Playlist.Dispose();
+
             _videoPlayer?.TimeSource.Pause();
             _videoPlayer?.Dispose();
 
@@ -1360,6 +1401,39 @@ namespace ScriptPlayer.ViewModels
             LoadVideo(videoFile, false);
         }
 
+        public string GetMediaFile(string filename)
+        {
+            string extension = Path.GetExtension(filename);
+            if (string.IsNullOrWhiteSpace(extension))
+                return null;
+
+            extension = extension.TrimStart('.').ToLower();
+
+            if (_supportedMediaExtensions.Contains(extension))
+                return filename;
+
+            if (!_supportedScriptExtensions.Contains(extension))
+                return null;
+
+            return FileFinder.FindFile(filename, _supportedMediaExtensions, GetAdditionalPaths());
+        }
+
+        public string GetScriptFile(string filename)
+        {
+            string extension = Path.GetExtension(filename);
+            if (string.IsNullOrWhiteSpace(extension))
+                return null;
+
+            extension = extension.TrimStart('.').ToLower();
+
+            if (_supportedScriptExtensions.Contains(extension))
+                return filename;
+
+            if (!_supportedMediaExtensions.Contains(extension))
+                return null;
+
+            return FileFinder.FindFile(filename, _supportedScriptExtensions, GetAdditionalPaths());
+        }
 
 
         private bool IsMatchingScriptLoaded(string videoFileName)
@@ -1467,6 +1541,8 @@ namespace ScriptPlayer.ViewModels
 
         private void UpdatePattern(CommandSource commandSource)
         {
+            _scriptHandler.FillGapPattern = SelectedPattern;
+
             switch (commandSource)
             {
                 case CommandSource.Video:
@@ -1804,8 +1880,7 @@ namespace ScriptPlayer.ViewModels
 
             if (playlist == null) return;
 
-            foreach (string entry in playlist.Entries)
-                Playlist.AddEntry(new PlaylistEntry(entry));
+            Playlist.AddEntries(playlist.Entries.Select(ToPlaylistEntry));
         }
 
         private void LoadVideo(string videoFileName, bool checkForScript)

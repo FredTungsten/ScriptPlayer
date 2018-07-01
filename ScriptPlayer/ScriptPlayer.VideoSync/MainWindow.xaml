@@ -267,6 +267,9 @@
                             </Style>
                         </StackPanel.Resources>
                         <TextBlock Margin="12,0,4,0" VerticalAlignment="Center">Playback Speed:</TextBlock>
+                        <RadioButton Content="1/60" IsChecked="{Binding Mode=TwoWay, Path=SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 0.01667}}"/>
+                        <RadioButton Content="1/30" IsChecked="{Binding Mode=TwoWay, Path=SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 0.0333}}"/>
+                        <RadioButton Content="1/8" IsChecked="{Binding Mode=TwoWay, Path=SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 0.125}}"/>
                         <RadioButton Content="1/4" IsChecked="{Binding Mode=TwoWay, Path=SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 0.25}}"/>
                         <RadioButton Content="1/3" IsChecked="{Binding Mode=TwoWay, Path= SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 0.3333}}"/>
                         <RadioButton Content="1/2" IsChecked="{Binding Mode=TwoWay, Path= SpeedRatioModifier, Converter={StaticResource ParameterToBooleanConverter}, ConverterParameter={m:Double 0.5}}"/>

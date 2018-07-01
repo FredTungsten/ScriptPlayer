@@ -1,21 +1,30 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
+using System.Xml;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Helpers;
 
 namespace ScriptPlayer.ViewModels
 {
-    public class PlaylistViewModel : INotifyPropertyChanged
+    public class PlaylistViewModel : INotifyPropertyChanged, IDisposable
     {
         private ObservableCollection<PlaylistEntry> _entries;
         private bool _shuffle;
         private PlaylistEntry _selectedEntry;
         private bool _repeat;
+
+        public event EventHandler<RequestEventArgs<string>> RequestMediaFileName;
+        public event EventHandler<RequestEventArgs<string>> RequestScriptFileName;
 
         public ObservableCollection<PlaylistEntry> Entries
         {
@@ -36,6 +45,7 @@ namespace ScriptPlayer.ViewModels
             {
                 oldValue.CollectionChanged -= EntriesChanged;
             }
+
             if (newValue != null)
             {
                 newValue.CollectionChanged += EntriesChanged;
@@ -112,6 +122,9 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand MoveSelectedEntryDownCommand { get; set; }
         public RelayCommand RemoveSelectedEntryCommand { get; set; }
         public RelayCommand ClearPlaylistCommand { get; set; }
+        public RelayCommand<bool> SortByDurationCommand { get; set; }
+        public RelayCommand<bool> SortByNameCommand { get; set; }
+        public RelayCommand SortShuffleCommand { get; set; }
         public int EntryCount => Entries.Count;
 
         public PlaylistViewModel()
@@ -124,6 +137,70 @@ namespace ScriptPlayer.ViewModels
             ClearPlaylistCommand = new RelayCommand(ExecuteClearPlaylist, CanClearPlaylist);
             PlayNextEntryCommand = new RelayCommand<string[]>(ExecutePlayNextEntry, CanPlayNextEntry);
             PlayPreviousEntryCommand = new RelayCommand<string[]>(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
+            SortByDurationCommand = new RelayCommand<bool>(ExecuteSortByDuration, CanSort);
+            SortByNameCommand = new RelayCommand<bool>(ExecuteSortByName, CanSort);
+            SortShuffleCommand = new RelayCommand(ExecuteSortShuffle, CanSort);
+
+            _dispatcher = Dispatcher.CurrentDispatcher;
+            _mediaInfoThread = new Thread(MediaInfoLoop);
+            _mediaInfoThread.Start();
+        }
+
+        private bool CanSort()
+        {
+            return Entries.Count > 1;
+        }
+
+        private void ExecuteSortShuffle()
+        {
+            List<PlaylistEntry> entries = Entries.ToList();
+            List<PlaylistEntry> newOrder = new List<PlaylistEntry>();
+
+            Random r = new Random();
+            while (entries.Count > 0)
+            {
+                int next = r.Next(0, entries.Count);
+                newOrder.Add(entries[next]);
+                entries.RemoveAt(next);
+            }
+
+            Entries = new ObservableCollection<PlaylistEntry>(newOrder);
+        }
+
+        private void ExecuteSortByDuration(bool ascending)
+        {
+            SetEntries(Entries.OrderBy(e => e.Duration), ascending);
+        }
+
+        private void ExecuteSortByName(bool ascending)
+        {
+            SetEntries(Entries.OrderBy(e => e.Shortname), ascending);
+        }
+
+        private void SetEntries(IOrderedEnumerable<PlaylistEntry> entries, bool sortAscending)
+        {
+            Entries = new ObservableCollection<PlaylistEntry>(sortAscending ? entries : entries.Reverse());
+        }
+
+        private bool CanSort(bool arg)
+        {
+            return CanSort();
+        }
+
+        private void MediaInfoLoop()
+        {
+            while (!_disposed)
+            {
+                PlaylistEntry entry = _playlistEntriesWithoutDuration.Deqeue();
+                if (entry == null)
+                    return;
+
+                string mediaFile = OnRequestMediaFileName(entry.Fullname);
+                entry.Duration = MediaHelper.GetDuration(mediaFile);
+
+                //TODO Generate Preview
+                //Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, TimeSource.Duration);
+            }
         }
 
         private bool CanClearPlaylist()
@@ -290,15 +367,41 @@ namespace ScriptPlayer.ViewModels
 
         public void AddEntry(PlaylistEntry entry)
         {
+            EnsureDuration(entry);
             Entries.Add(entry);
             CommandManager.InvalidateRequerySuggested();
         }
 
+        private readonly BlockingQueue<PlaylistEntry> _playlistEntriesWithoutDuration = new BlockingQueue<PlaylistEntry>();
 
-        public void AddEntries(string[] entries)
+        private void EnsureDuration(PlaylistEntry entry)
         {
-            foreach(string entry in entries)
-                Entries.Add(new PlaylistEntry(entry));
+            if (entry.Duration == null || entry.Duration == TimeSpan.Zero)
+            {
+                _playlistEntriesWithoutDuration.Enqueue(entry);
+            }
+        }
+
+
+        public void AddEntries(string[] filenames)
+        {
+            foreach (string filename in filenames)
+            {
+                var entry = new PlaylistEntry(filename);
+                EnsureDuration(entry);
+                Entries.Add(entry);
+            }
+
+            CommandManager.InvalidateRequerySuggested();
+        }
+
+        public void AddEntries(IEnumerable<PlaylistEntry> entries)
+        {
+            foreach (PlaylistEntry entry in entries)
+            {
+                EnsureDuration(entry);
+                Entries.Add(entry);
+            }
 
             CommandManager.InvalidateRequerySuggested();
         }
@@ -381,6 +484,9 @@ namespace ScriptPlayer.ViewModels
         readonly Random _rng = new Random();
         private bool _randomChapters;
         private bool _repeatSingleFile;
+        private Dispatcher _dispatcher;
+        private Thread _mediaInfoThread;
+        private bool _disposed;
 
         private PlaylistEntry AnythingButThis(params string[] currentEntryFiles)
         {
@@ -413,6 +519,39 @@ namespace ScriptPlayer.ViewModels
         public void RequestPlayEntry(PlaylistEntry entry)
         {
             OnPlayEntry(entry);
+        }
+
+        protected virtual string OnRequestMediaFileName(string fileName)
+        {
+            RequestEventArgs<string> eventArgs = new RequestEventArgs<string>(fileName);
+            RequestMediaFileName?.Invoke(this, eventArgs);
+
+            return !eventArgs.Handled ? null : eventArgs.Value;
+        }
+
+        protected virtual string OnRequestScriptFileName(string fileName)
+        {
+            RequestEventArgs<string> eventArgs = new RequestEventArgs<string>(fileName);
+            RequestScriptFileName?.Invoke(this, eventArgs);
+
+            return !eventArgs.Handled ? null : eventArgs.Value;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+            _playlistEntriesWithoutDuration.Close();
+
+            try
+            {
+
+                if (!_mediaInfoThread.Join(TimeSpan.FromSeconds(1)))
+                    _mediaInfoThread.Abort();
+            }
+            catch { }
         }
     }
 }

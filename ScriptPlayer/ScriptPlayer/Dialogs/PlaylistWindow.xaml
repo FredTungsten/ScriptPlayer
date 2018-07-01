@@ -6,10 +6,13 @@
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
         xmlns:fa="clr-namespace:FontAwesome.Net;assembly=FontAwesome.Net"
         xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
+        xmlns:converters="clr-namespace:ScriptPlayer.Converters"
+        xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
         Title="Playlist" Height="300" Width="300" WindowStyle="ToolWindow">
     <Window.Resources>
+        <converters:DurationConverter x:Key="DurationConverter"/>
         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
             <Setter Property="Focusable" Value="False"/>
             <Style.Triggers>
@@ -34,17 +37,30 @@
                 <MenuItem Header="Save Playlist" Command="{Binding SavePlaylistCommand}"/>
                 <MenuItem Header="Clear Playlist" Command="{Binding Playlist.ClearPlaylistCommand}"/>
             </MenuItem>
+            <MenuItem Header="Sort">
+                <MenuItem Header="Duration (ascending)"  Command="{Binding Playlist.SortByDurationCommand}" CommandParameter="{shared:Boolean true}"/>
+                <MenuItem Header="Duration (descending)"  Command="{Binding Playlist.SortByDurationCommand}" CommandParameter="{shared:Boolean false}"/>
+                <Separator/>
+                <MenuItem Header="Name (ascending)"  Command="{Binding Playlist.SortByNameCommand}" CommandParameter="{shared:Boolean true}"/>
+                <MenuItem Header="Name (descending)"  Command="{Binding Playlist.SortByNameCommand}" CommandParameter="{shared:Boolean false}"/>
+                <Separator/>
+                <MenuItem Header="Shuffle" Command="{Binding Playlist.SortShuffleCommand}"/>
+            </MenuItem>
         </Menu>
         <ListBox Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,42" ItemsSource="{Binding Path=Playlist.Entries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" AllowDrop="True" Drop="ListBox_Drop">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
                     <Setter Property="ToolTip" Value="{Binding Fullname}"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
                 </Style>
             </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="viewModels:PlaylistEntry">
-                    <TextBlock Text="{Binding Shortname}" TextTrimming="CharacterEllipsis"/>
+                    <DockPanel HorizontalAlignment="Stretch">
+                        <TextBlock Text="{Binding Path=Duration, Converter={StaticResource DurationConverter}}" DockPanel.Dock="Right" Margin="8,0,2,0"/>
+                        <TextBlock Text="{Binding Shortname}" DockPanel.Dock="Left" TextTrimming="CharacterEllipsis" Margin="2,0,0,0"/>
+                    </DockPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

@@ -297,7 +297,7 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuLoad_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog {Filter = "Text-File|*.txt"};
+            OpenFileDialog dialog = new OpenFileDialog { Filter = "Text-File|*.txt" };
 
             if (dialog.ShowDialog(this) != true) return;
             LoadBeatsFile(dialog.FileName);
@@ -453,7 +453,7 @@ namespace ScriptPlayer.VideoSync
 
             List<TimeSpan> newBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
             newBeats.AddRange(beats.Where(t => t >= tBegin && t <= tEnd).ToList());
-           
+
             SetAllBeats(newBeats);
         }
 
@@ -502,7 +502,7 @@ namespace ScriptPlayer.VideoSync
 
         private void btnAddBookmark_Click(object sender, RoutedEventArgs e)
         {
-            List<TimeSpan> newBookMarks = new List<TimeSpan>(Bookmarks) {videoPlayer.GetPosition()};
+            List<TimeSpan> newBookMarks = new List<TimeSpan>(Bookmarks) { videoPlayer.GetPosition() };
             newBookMarks.Sort();
 
             Bookmarks = newBookMarks;
@@ -884,7 +884,7 @@ namespace ScriptPlayer.VideoSync
 
         private int GetAdditionalBeats(int selectedBeats)
         {
-            NormalizationDialog dialog = new NormalizationDialog(selectedBeats){Owner = this};
+            NormalizationDialog dialog = new NormalizationDialog(selectedBeats) { Owner = this };
             if (dialog.ShowDialog() != true) return int.MinValue;
 
             return dialog.AdditionalBeats;
@@ -922,7 +922,7 @@ namespace ScriptPlayer.VideoSync
 
         private void PatternFill()
         {
-            PatternFillOptionsDialog dialog = new PatternFillOptionsDialog(_previousPattern){ Owner = this};
+            PatternFillOptionsDialog dialog = new PatternFillOptionsDialog(_previousPattern) { Owner = this };
             if (dialog.ShowDialog() != true) return;
 
             _previousPattern = dialog.Result;
@@ -961,7 +961,7 @@ namespace ScriptPlayer.VideoSync
 
             TimeSpan firstSpan = beatsToEvenOut[1] - first;
 
-            int count = beatsToEvenOut.Count-1;
+            int count = beatsToEvenOut.Count - 1;
             int n = count - 1;
 
             TimeSpan totalSpan = last - first;
@@ -973,9 +973,9 @@ namespace ScriptPlayer.VideoSync
             TimeSpan addedSpan = totalSpanByAddition.Divide(totalAdditions);
 
             otherBeats.Add(first);
-            
+
             TimeSpan previous = first;
-           
+
             for (int i = 0; i < count; i++)
             {
                 previous += firstSpan + addedSpan.Multiply(i);
@@ -1014,7 +1014,7 @@ namespace ScriptPlayer.VideoSync
             TimeSpan last = beatsToEvenOut.Max();
 
             int beatsInSet = 0;
-            for(int i = 0; i < pattern.Length-1; i++)
+            for (int i = 0; i < pattern.Length - 1; i++)
                 if (pattern[i])
                     beatsInSet++;
 
@@ -1046,8 +1046,8 @@ namespace ScriptPlayer.VideoSync
 
             for (int i = 0; i < measureCount; i++)
             {
-                if(pattern[i % (pattern.Length-1)])
-                otherBeats.Add(first + beatDuration.Multiply(i));
+                if (pattern[i % (pattern.Length - 1)])
+                    otherBeats.Add(first + beatDuration.Multiply(i));
             }
 
             Fadeout.SetText(beatDuration.TotalMilliseconds.ToString("f0") + "ms", TimeSpan.FromSeconds(4));
@@ -1070,13 +1070,13 @@ namespace ScriptPlayer.VideoSync
             TimeSpan first = beatsToEvenOut.Min();
             TimeSpan last = beatsToEvenOut.Max();
 
-            var iterations = FindBestIterations(firstLength, lastLength, last-first);
+            var iterations = FindBestIterations(firstLength, lastLength, last - first);
 
             for (int i = 0; i <= iterations.Item3; i++)
             {
                 // ReSharper disable once PossibleLossOfFraction
                 // Can't happen - because math :)
-                otherBeats.Add(first + iterations.Item1.Multiply(i) + iterations.Item2.Multiply(i*(i-1)/2));
+                otherBeats.Add(first + iterations.Item1.Multiply(i) + iterations.Item2.Multiply(i * (i - 1) / 2));
             }
 
             Fadeout.SetText("n = " + iterations.Item3, TimeSpan.FromSeconds(4));
@@ -1084,7 +1084,7 @@ namespace ScriptPlayer.VideoSync
             SetAllBeats(otherBeats);
         }
 
-        private Tuple<TimeSpan,TimeSpan,int> FindBestIterations(TimeSpan firstLength, TimeSpan lastLength, TimeSpan duration)
+        private Tuple<TimeSpan, TimeSpan, int> FindBestIterations(TimeSpan firstLength, TimeSpan lastLength, TimeSpan duration)
         {
             bool invert = firstLength > lastLength;
 
@@ -1173,7 +1173,7 @@ namespace ScriptPlayer.VideoSync
                 {
                     for (int j = 1; j < pattern.Length - 1; j++)
                     {
-                        if(pattern[j])
+                        if (pattern[j])
                             otherBeats.Add(tStart + intervall.Multiply(i) + smallIntervall.Multiply(j));
                     }
                 }
@@ -1237,6 +1237,8 @@ namespace ScriptPlayer.VideoSync
             bool control = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
             bool shift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
             bool caps = Keyboard.IsKeyToggled(Key.CapsLock);
+            var pattern = _previousPattern ?? new bool[] { true, true };
+            int patternBeats = Math.Max(pattern.Count(b => b) - 1, 1);
 
             bool handled = true;
             switch (e.Key)
@@ -1290,30 +1292,30 @@ namespace ScriptPlayer.VideoSync
                         break;
                     }
                 case Key.O:
-                {
-                    NormalizePattern();
-                    break;
-                }
+                    {
+                        NormalizePattern();
+                        break;
+                    }
                 case Key.P:
-                {
-                    PatternFill();
-                    break;
-                }
+                    {
+                        PatternFill();
+                        break;
+                    }
                 case Key.F:
-                {
-                    Fade();
-                    break;
-                }
+                    {
+                        Fade();
+                        break;
+                    }
                 case Key.E:
-                {
-                    EqualizeBeatLengths();
-                    break;
-                }
+                    {
+                        EqualizeBeatLengths();
+                        break;
+                    }
                 case Key.T:
-                {
-                    FadeNormalize();
-                    break;
-                }
+                    {
+                        FadeNormalize();
+                        break;
+                    }
                 case Key.Delete:
                     {
                         DeleteBeatsWithinMarkers();
@@ -1321,8 +1323,13 @@ namespace ScriptPlayer.VideoSync
                     }
                 case Key.Add:
                     {
-                        if(control)
-                            NormalizePattern(_previousPattern ?? new bool[]{true,true},1);
+                        if (control)
+                        {
+                            if (shift)
+                                NormalizePattern(pattern, patternBeats);
+                            else
+                                NormalizePattern(pattern, 1);
+                        }
                         else
                             Normalize(1, !caps);
                         break;
@@ -1330,7 +1337,12 @@ namespace ScriptPlayer.VideoSync
                 case Key.Subtract:
                     {
                         if (control)
-                            NormalizePattern(_previousPattern ?? new bool[] { true, true }, -1);
+                        {
+                            if (shift)
+                                NormalizePattern(pattern, -patternBeats);
+                            else
+                                NormalizePattern(pattern, -1);
+                        }
                         else
                             Normalize(-1, !caps);
                         break;
@@ -1341,25 +1353,25 @@ namespace ScriptPlayer.VideoSync
                         break;
                     }
                 case Key.F5:
-                {
-                    JumpToFirst();
-                    break;
-                }
+                    {
+                        JumpToFirst();
+                        break;
+                    }
                 case Key.F6:
                     {
                         SnapToClosestBeat();
                         break;
                     }
                 case Key.F7:
-                {
-                    JumpToShortest();
-                    break;
-                }
+                    {
+                        JumpToShortest();
+                        break;
+                    }
                 case Key.F8:
-                {
-                    JumpToLast();
-                    break;
-                }
+                    {
+                        JumpToLast();
+                        break;
+                    }
                 case Key.Enter:
                     {
                         if (IsNumpadEnterKey(e))
@@ -1422,7 +1434,7 @@ namespace ScriptPlayer.VideoSync
                 else
                 {
                     TimeSpan beatBefore = beatsToEvenOut[i] - beatsToEvenOut[i - 1];
-                    TimeSpan beatAfter = beatsToEvenOut[i+1] - beatsToEvenOut[i];
+                    TimeSpan beatAfter = beatsToEvenOut[i + 1] - beatsToEvenOut[i];
                     TimeSpan average = (beatBefore + beatAfter).Divide(2);
 
                     TimeSpan newLength = beatBefore.Multiply(1.0 - factor) + average.Multiply(factor);

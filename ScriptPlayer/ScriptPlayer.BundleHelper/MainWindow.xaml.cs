@@ -61,7 +61,7 @@ namespace ScriptPlayer.BundleHelper
                 results.Add(new ResultSet
                 {
                     MediaBaseName = Path.GetFileNameWithoutExtension(script),
-                    Duration = GetDuration(video)
+                    Duration = MediaHelper.GetDuration(video)
                 });
             }
 
@@ -74,12 +74,6 @@ namespace ScriptPlayer.BundleHelper
             }
 
             txtOutput.Text = builder.ToString();
-        }
-
-        private TimeSpan? GetDuration(string video)
-        {
-            var wrapper = new MediaInfoWrapper(video);
-            return TimeSpan.FromMilliseconds(wrapper.Duration);
         }
     }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace ScriptPlayer.Shared.Scripts
@@ -27,6 +26,7 @@ namespace ScriptPlayer.Shared.Scripts
         private TimeSpan _fillGapGap;
         private TimeSpan _fillGapIntervall;
         private TimeSpan _minGapDuration;
+        private RepeatablePattern _fillGapPattern;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> IntermediateScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> InstantUpdateRaised;
@@ -115,6 +115,16 @@ namespace ScriptPlayer.Shared.Scripts
             set
             {
                 _duration = value; 
+                ProcessScript();
+            }
+        }
+
+        public RepeatablePattern FillGapPattern
+        {
+            get => _fillGapPattern;
+            set
+            {
+                _fillGapPattern = value; 
                 ProcessScript();
             }
         }
@@ -228,7 +238,7 @@ namespace ScriptPlayer.Shared.Scripts
                         bool nextIsLow =  action.Position < 50;
                         if (action.TimeStamp > MinGapDuration)
                         {
-                            additionalActions.AddRange(GenerateGapFiller(TimeSpan.Zero,
+                            additionalActions.AddRange(GenerateGapFiller(FillGapPattern, TimeSpan.Zero,
                                 action.TimeStamp.Subtract(gapgap), null, nextIsLow));
                         }
                     }
@@ -241,7 +251,7 @@ namespace ScriptPlayer.Shared.Scripts
 
                         if (Duration - action.TimeStamp > MinGapDuration)
                         {
-                            additionalActions.AddRange(GenerateGapFiller(action.TimeStamp.Add(gapgap), Duration,
+                            additionalActions.AddRange(GenerateGapFiller(FillGapPattern, action.TimeStamp.Add(gapgap), Duration,
                                 previousIsLow, null));
                         }
                     }
@@ -257,7 +267,7 @@ namespace ScriptPlayer.Shared.Scripts
                     TimeSpan duration = action.TimeStamp - previous.TimeStamp;
                     if (duration > MinGapDuration)
                     {
-                        additionalActions.AddRange(GenerateGapFiller(previous.TimeStamp.Add(gapgap),
+                        additionalActions.AddRange(GenerateGapFiller(FillGapPattern, previous.TimeStamp.Add(gapgap),
                             action.TimeStamp.Subtract(gapgap), previousIsLow, nextIsLow));
                     }
                 }
@@ -269,8 +279,11 @@ namespace ScriptPlayer.Shared.Scripts
             _filledActions.Sort((a,b) => a.TimeStamp.CompareTo(b.TimeStamp));
         }
 
-        private IEnumerable<FunScriptAction> GenerateGapFiller(TimeSpan start, TimeSpan end, bool? startHigh = false, bool? endHigh = false)
+        private IEnumerable<FunScriptAction> GenerateGapFiller(RepeatablePattern pattern, TimeSpan start, TimeSpan end, bool? startHigh = false, bool? endHigh = false)
         {
+            if(pattern == null)
+                pattern = new RepeatablePattern(0,99);
+
             List<FunScriptAction> additionalActions = new List<FunScriptAction>();
             TimeSpan gapduration = end - start;
 
@@ -305,17 +318,35 @@ namespace ScriptPlayer.Shared.Scripts
             shouldBeEven = !shouldBeEven;
 
             int fillers = Round(approximateFillers, shouldBeEven);
-            
-            for (int i = 0; i <= fillers; i++)
+
+            //for (int i = 0; i <= fillers; i++)
+            //{
+            //    additionalActions.Add(new FunScriptAction
+            //    {
+            //        Position = (byte)(up ? 99 : 0),
+            //        TimeStamp = start + gapduration.Multiply(i).Divide(fillers),
+            //        OriginalAction = false
+            //    });
+
+            //    up ^= true;
+            //}
+
+            // TODO Reuse logic from above for new patterns
+
+            int patternIndex = 0;
+            int duration = 1;
+
+            for (int i = 0; i <= fillers; i+= duration)
             {
                 additionalActions.Add(new FunScriptAction
                 {
-                    Position = (byte)(up ? 99 : 0),
+                    Position = pattern[patternIndex].Position,
                     TimeStamp = start + gapduration.Multiply(i).Divide(fillers),
                     OriginalAction = false
                 });
 
-                up ^= true;
+                duration = Math.Min(1, pattern[patternIndex].Duration);
+                patternIndex++;
             }
 
             return additionalActions;

@@ -89,6 +89,44 @@ namespace ScriptPlayer.Shared
 
             _mousePos = e.GetPosition(this);
 
+            // Control = Remove
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                TimedPosition closest = GetClosestPosition(_mousePos);
+                if (closest != null)
+                    Positions.Remove(closest);
+
+                InvalidateVisual();
+            }
+            // Shift = Add
+            else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+            {
+                TimedPosition newPos = GetPositionFromPoint(_mousePos);
+                Positions.Add(newPos);
+
+                _position = newPos;
+                _down = true;
+
+                CaptureMouse();
+
+                InvalidateVisual();
+            }
+            // Neither = Move
+            else
+            {
+                TimedPosition closest = GetClosestPosition(_mousePos);
+                if (closest == null)
+                    return;
+
+                _position = closest;
+                _down = true;
+
+                CaptureMouse();
+            }
+        }
+
+        private TimedPosition GetClosestPosition(Point mousePos)
+        {
             TimeSpan timeFrom = Progress - TotalDisplayedDuration.Multiply(Midpoint);
             TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
 
@@ -99,7 +137,7 @@ namespace ScriptPlayer.Shared
 
             foreach (TimedPosition position in absoluteBeatPositions)
             {
-                double distance = GetPointFromPosition(position).DistanceTo(_mousePos);
+                double distance = GetPointFromPosition(position).DistanceTo(mousePos);
                 if (distance < minDist)
                 {
                     closest = position;
@@ -107,14 +145,12 @@ namespace ScriptPlayer.Shared
                 }
             }
 
-            if (closest == null) return;
+            if (closest == null)
+                return null;
 
-            if (minDist > 20) return;
+            if (minDist > 20) return null;
 
-            _position = closest;
-            _down = true;
-            
-            CaptureMouse();
+            return closest;
         }
 
         protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
@@ -126,17 +162,25 @@ namespace ScriptPlayer.Shared
 
             _down = false;
             _mousePos = e.GetPosition(this);
-            UpdateSelectedPosition();
+            UpdateSelectedPosition(true);
             InvalidateVisual();
 
             ReleaseMouseCapture();
         }
 
-        private void UpdateSelectedPosition()
+        private void UpdateSelectedPosition(bool final)
         {
-            TimedPosition pos = GetPositionFromPoint(_mousePos);
-            _position.TimeStamp = pos.TimeStamp;
-            _position.Position = pos.Position;
+            if (final)
+            {
+                Positions.Remove(_position);
+                Positions.Add(GetPositionFromPoint(_mousePos));
+            }
+            else
+            {
+                TimedPosition pos = GetPositionFromPoint(_mousePos);
+                _position.TimeStamp = pos.TimeStamp;
+                _position.Position = pos.Position;
+            }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -147,7 +191,7 @@ namespace ScriptPlayer.Shared
                 return;
 
             _mousePos = e.GetPosition(this);
-            UpdateSelectedPosition();
+            UpdateSelectedPosition(false);
             InvalidateVisual();
         }
 
@@ -199,7 +243,7 @@ namespace ScriptPlayer.Shared
         {
             if (_down)
             {
-                UpdateSelectedPosition();
+                UpdateSelectedPosition(false);
             }
 
             Pen redPen = new Pen(Brushes.Red, 1);

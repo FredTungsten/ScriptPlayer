@@ -90,6 +90,7 @@
     </ApplicationDefinition>
     <Compile Include="Converters\BooleanAndConverter.cs" />
     <Compile Include="Converters\CollectionNullOrEmptyToVisibilityConverter.cs" />
+    <Compile Include="Converters\DurationConverter.cs" />
     <Compile Include="Dialogs\ZoomPlayerConnectionSettingsDialog.xaml.cs">
       <DependentUpon>ZoomPlayerConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>

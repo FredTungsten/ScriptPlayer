@@ -12,6 +12,8 @@
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -45,6 +47,9 @@
     </Reference>
     <Reference Include="JetBrains.Annotations, Version=11.1.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\packages\JetBrains.Annotations.11.1.0\lib\net20\JetBrains.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="MediaInfo.Wrapper, Version=17.12.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MediaInfo.Wrapper.17.12.0\lib\net40\MediaInfo.Wrapper.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -204,6 +209,7 @@
     <Compile Include="Helpers\FileFinder.cs" />
     <Compile Include="Helpers\HideOnHover.cs" />
     <Compile Include="Devices\Device.cs" />
+    <Compile Include="Helpers\MediaHelper.cs" />
     <Compile Include="Helpers\OsInformation.cs" />
     <Compile Include="Indexer\Indexer.cs" />
     <Compile Include="Devices\Launch.cs" />
@@ -213,6 +219,7 @@
     <Compile Include="Helpers\MouseHider.cs" />
     <Compile Include="Controls\NotificationList.cs" />
     <Compile Include="M3uPlaylist.cs" />
+    <Compile Include="MarkupExtensions\BooleanExtension.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Controls\SeekBar.cs" />
@@ -343,6 +350,13 @@
     <Resource Include="Images\Devices\Nora.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\MediaInfo.Native.17.12\build\MediaInfo.Native.targets" Condition="Exists('..\packages\MediaInfo.Native.17.12\build\MediaInfo.Native.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\MediaInfo.Native.17.12\build\MediaInfo.Native.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MediaInfo.Native.17.12\build\MediaInfo.Native.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

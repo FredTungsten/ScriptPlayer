@@ -1,14 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace ScriptPlayer.Shared
 {
     public class M3uPlaylist
     {
+        private static readonly Regex ExtInfMarker = new Regex(@"^\#EXTINF\:(?<Duration>\-?\d+)\,(?<Name>.*)$", RegexOptions.Compiled);
+
+        public class M3uEntry
+        {
+            public string FilePath { get; set; }
+            public string DisplayName { get; set; }
+            public int DurationInSeconds { get; set; }
+        }
 
         /// <summary>
         /// #EXTM3U
@@ -19,7 +25,7 @@ namespace ScriptPlayer.Shared
         /// C:\Documents and Settings\I\My Music\Greatest Hits\Example.ogg
         /// </summary>
 
-        public List<string> Entries = new List<string>();
+        public List<M3uEntry> Entries = new List<M3uEntry>();
 
         public void Save(string filename)
         {
@@ -31,11 +37,12 @@ namespace ScriptPlayer.Shared
             using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
             {
                 writer.WriteLine("#EXTM3U");
+                writer.WriteLine();
 
-                foreach (string entry in Entries)
+                foreach (M3uEntry entry in Entries)
                 {
-                    writer.WriteLine("#EXTINF:0," + Path.GetFileNameWithoutExtension(entry));
-                    writer.WriteLine(entry);
+                    writer.WriteLine($"#EXTINF:{entry.DurationInSeconds},{entry.DisplayName}");
+                    writer.WriteLine(entry.FilePath);
                     writer.WriteLine();
                 }
             }
@@ -50,24 +57,47 @@ namespace ScriptPlayer.Shared
         public void Load(Stream stream)
         {
             Entries.Clear();
-            bool previouswasMarker = false;
+
+            string previousDisplayName = null;
+            int previousDuration = 0;
+
             using (StreamReader reader = new StreamReader(stream))
             {
                 while (!reader.EndOfStream)
                 {
-                    var line = reader.ReadLine();
+                    string line = reader.ReadLine()?.Trim();
                     if (string.IsNullOrWhiteSpace(line))
                         continue;
 
-                    if (previouswasMarker)
+                    if (line.StartsWith("#"))
                     {
-                        previouswasMarker = false;
-                        Entries.Add(line.Trim());
+                        if (ExtInfMarker.IsMatch(line))
+                        {
+                            Match match = ExtInfMarker.Match(line);
+                            previousDisplayName = match.Groups["Name"].Value;
+
+                            int duration;
+                            if (int.TryParse(match.Groups["Duration"].Value, out duration))
+                                previousDuration = duration;
+
+
+                        }
+                        continue;
                     }
-                    else if (line.StartsWith("#EXTINF:"))
+
+                    string filePath = line.Trim();
+
+                    M3uEntry entry = new M3uEntry
                     {
-                        previouswasMarker = true;
-                    }
+                        DisplayName = previousDisplayName ?? Path.GetFileNameWithoutExtension(filePath),
+                        DurationInSeconds = previousDuration,
+                        FilePath = filePath
+                    };
+
+                    previousDisplayName = null;
+                    previousDuration = 0;
+
+                    Entries.Add(entry);
                 }
             }
         }

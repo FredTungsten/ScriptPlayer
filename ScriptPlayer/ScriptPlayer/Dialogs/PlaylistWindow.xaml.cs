@@ -16,8 +16,8 @@ namespace ScriptPlayer.Dialogs
 
         public MainViewModel ViewModel
         {
-            get { return (MainViewModel) GetValue(ViewModelProperty); }
-            set { SetValue(ViewModelProperty, value); }
+            get => (MainViewModel) GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
         }
 
         public PlaylistWindow(MainViewModel viewmodel)
@@ -38,7 +38,8 @@ namespace ScriptPlayer.Dialogs
 
         private void ListBox_Drop(object sender, DragEventArgs e)
         {
-            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop))
+                return;
 
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             ViewModel.Playlist.AddEntries(files);
