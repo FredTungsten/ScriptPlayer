@@ -4,15 +4,43 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScriptPlayer.BundleHelper"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="455.826">
+        mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="MainWindow" Height="488.136" Width="510.169">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="232*"/>
+            <RowDefinition Height="5"/>
+            <RowDefinition Height="158*"/>
+        </Grid.RowDefinitions>
         <TextBox x:Name="txtBundleDir" Height="23" Margin="117,18,10,0" TextWrapping="Wrap" Text="D:\Videos\CH\~Bundles\~Bundle 8" VerticalAlignment="Top"/>
-        <TextBlock HorizontalAlignment="Left" Margin="10,19,0,0" TextWrapping="Wrap" Text="Bundle Directory" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,19,0,0" TextWrapping="Wrap" Text="Bundle Directory" VerticalAlignment="Top" Height="16" Width="88"/>
         <TextBox x:Name="txtVideoDir" Height="23" Margin="117,46,10,0" TextWrapping="Wrap" Text="D:\Videos\CH\7. Done" VerticalAlignment="Top"/>
-        <TextBlock HorizontalAlignment="Left" Margin="10,47,0,0" TextWrapping="Wrap" Text="Video Directory" VerticalAlignment="Top"/>
-        <TextBox x:Name="txtOutput" Margin="10,74,10,44" TextWrapping="Wrap" AcceptsReturn="True"/>
-        <Button Content="Generate" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="btnGenerate_Click"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,47,0,0" TextWrapping="Wrap" Text="Video Directory" VerticalAlignment="Top" Height="16" Width="82"/>
+        <TextBox x:Name="txtOutput" Margin="10,10,10,35" TextWrapping="Wrap" AcceptsReturn="True" Grid.Row="2"/>
+        <Button Content="Generate BBCode" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="113" Click="btnGenerate_Click" Grid.Row="2" Height="20"/>
+        <DataGrid Margin="10,74,10,10" ItemsSource="{Binding Data}" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Width="Auto" Binding="{Binding MediaBaseName}"/>
+                <DataGridTextColumn Header="Duration" Width="Auto" Binding="{Binding GetDuration}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Url" Binding="{Binding Url}" Width="*"/>
+                <DataGridTemplateColumn Header="Search" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Width="16" Height="16" Click="btnSerach_OnClick">PH</Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <!--<DataGridTemplateColumn Header="Open" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Width="16" Height="16" Click="btnOpen_OnClick">PH</Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>-->
+            </DataGrid.Columns>
+        </DataGrid>
+        <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="1"/>
+        <Button Content="Load Directory" HorizontalAlignment="Right" Margin="0,0,128,10" VerticalAlignment="Bottom" Width="113" Click="btnLoad_Click" Grid.Row="2" Height="20"/>
 
     </Grid>
 </Window>

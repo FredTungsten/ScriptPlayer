@@ -174,7 +174,7 @@
                                 <HeaderedContentControl Header="Beatbar Settings">
                                     <StackPanel Orientation="Vertical" Margin="2">
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="Beatbar Duration:"/>
-                                        <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="2" Maximum="15" Value="{Binding BeatBarDuration, Mode=TwoWay, Converter={StaticResource TimeSpanConverter}}" 
+                                        <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="0.5" Maximum="15" Value="{Binding BeatBarDuration, Mode=TwoWay, Converter={StaticResource TimeSpanConverter}}" 
                                                 SmallChange="0.005" LargeChange="0.005"/>
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=TotalDisplayedDuration.TotalSeconds, StringFormat={}{0:f2}s}"/>
 
