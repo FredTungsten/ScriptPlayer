@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shell;
+using Accord.Audio;
+using Accord.Audio.Formats;
+using Accord.DirectSound;
 using Accord.Video.FFMPEG;
 using ScriptPlayer.Shared;
 
@@ -74,11 +78,12 @@ namespace ScriptPlayer.VideoSync
 
         private void ProcessVideo(string fileName)
         {
-
             VideoFileReader reader = new VideoFileReader();
             reader.Open(fileName);
+            
             System.Drawing.Color[] samples = new System.Drawing.Color[_captureRect.Width * _captureRect.Height];
 
+            
             FrameCaptureCollection frameSamples = new FrameCaptureCollection();
 
             bool indeterminate = reader.FrameCount <= 0;
@@ -90,6 +95,8 @@ namespace ScriptPlayer.VideoSync
                 frameSamples.DurationDenominator = reader.FrameRate.Numerator;
             }
 
+            //List<byte> allAudio = new List<byte>();
+            
             frameSamples.VideoFile = _videoFile;
             frameSamples.CaptureRect = _captureRect;
 
@@ -99,9 +106,13 @@ namespace ScriptPlayer.VideoSync
 
             do
             {
+                //List<byte> audio = new List<byte>();
                 var current = reader.ReadVideoFrame();
                 if (current == null) break;
                 frame++;
+
+                //allAudio.AddRange(allAudio);
+
 
                 for (int i = 0; i < samples.Length; i++)
                     samples[i] = current.GetPixel(_captureRect.X + i % _captureRect.Width,
@@ -164,6 +175,16 @@ namespace ScriptPlayer.VideoSync
 
                 current.Dispose();
             } while (_running);
+
+            //byte[] a = allAudio.ToArray();
+
+            //Signal s = new Signal(a, 1, a.Length, reader.SampleRate, SampleFormat.Format8BitUnsigned);
+
+            //for (int index = 0; index < frameSamples.Count; index++)
+            //{
+            //    var frameSample = frameSamples[index];
+            //    frameSample.AudioLevel = s.GetSample(0, (int) frameSample.FrameIndex);
+            //}
 
             long framesSampled = frame;
             long expectedFrames = frameSamples.TotalFramesInVideo;

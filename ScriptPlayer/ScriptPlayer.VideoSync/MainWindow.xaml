@@ -9,6 +9,7 @@
         xmlns:m="clr-namespace:ScriptPlayer.VideoSync.Extensions"
         xmlns:controls="clr-namespace:ScriptPlayer.VideoSync.Controls"
         xmlns:videoSync="clr-namespace:ScriptPlayer.VideoSync"
+        xmlns:scripts="clr-namespace:ScriptPlayer.Shared.Scripts;assembly=ScriptPlayer.Shared"
 
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="ScriptPlayer Video Sync" Height="767" Width="1127" Icon="ScriptPlayerEditorIcon.ico" PreviewKeyDown="Window_PreviewKeyDown">
@@ -41,7 +42,13 @@
                 <MenuItem Header="Re-analyse Selection" Click="mnuAnalyseSelection_Click"/>
                 <MenuItem Header="Clear" Click="mnuClear_Click"/>
                 <Separator/>
-                <MenuItem Header="Convert Beats to Positions" Click="mnuBeatsToPositions_Click"/>
+                <MenuItem Header="Convert Beats to Positions">
+                    <MenuItem Header="Up/Down" Tag="{x:Static scripts:ConversionMode.UpOrDown}" Click="mnuBeatsToPositions_Click"/>
+                    <MenuItem Header="Down (Center)" Tag="{x:Static scripts:ConversionMode.DownCenter}" Click="mnuBeatsToPositions_Click"/>
+                    <MenuItem Header="Down (Fast)" Tag="{x:Static scripts:ConversionMode.DownFast}" Click="mnuBeatsToPositions_Click"/>
+                    <MenuItem Header="Up (Center)" Tag="{x:Static scripts:ConversionMode.UpCenter}" Click="mnuBeatsToPositions_Click"/>
+                    <MenuItem Header="Up (Fast)" Tag="{x:Static scripts:ConversionMode.UpFast}" Click="mnuBeatsToPositions_Click"/>
+                </MenuItem>
                 <MenuItem Header="Convert Positions to Beats" Click="mnuPositionsToBeats_Click"/>
                 <Separator/>
                 <MenuItem Header="Load">

@@ -4,9 +4,12 @@
     {
         public long FrameIndex;
         public byte[] Capture;
+        public float AudioLevel;
 
         public FrameCapture(long frame, System.Drawing.Color[] samples)
         {
+            AudioLevel = 0;
+
             ulong r = 0, g = 0, b = 0, c = 0;
 
 

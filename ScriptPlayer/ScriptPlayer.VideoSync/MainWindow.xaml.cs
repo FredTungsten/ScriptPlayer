@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Accord.Audio;
+using Accord.Video.FFMPEG;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using ScriptPlayer.Shared;
@@ -1750,7 +1753,12 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuBeatsToPositions_Click(object sender, RoutedEventArgs e)
         {
-            var funscript = BeatsToFunScriptConverter.Convert(Beats, ConversionMode.UpOrDown);
+            ConvertBeats((ConversionMode)((MenuItem)sender).Tag);
+        }
+
+        private void ConvertBeats(ConversionMode conversionMode)
+        {
+            var funscript = BeatsToFunScriptConverter.Convert(Beats, conversionMode);
 
             Positions = new PositionCollection(funscript.Select(f => new TimedPosition
             {
