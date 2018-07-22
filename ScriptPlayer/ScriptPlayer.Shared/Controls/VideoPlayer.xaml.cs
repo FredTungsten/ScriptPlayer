@@ -64,6 +64,26 @@ namespace ScriptPlayer.Shared
         public static readonly DependencyProperty OpenedFileProperty = DependencyProperty.Register(
             "OpenedFile", typeof(string), typeof(VideoPlayer), new PropertyMetadata(default(string)));
 
+        public static readonly DependencyProperty RotateProperty = DependencyProperty.Register(
+            "Rotate", typeof(bool), typeof(VideoPlayer), new PropertyMetadata(default(bool), OnRotatePropertyChanged));
+
+        private static void OnRotatePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((VideoPlayer)d).RotateChanged();
+        }
+
+        private void RotateChanged()
+        {
+            Border.LayoutTransform = Rotate ? new RotateTransform(90) : null;
+            BackgroundBorder.LayoutTransform = Rotate ? new RotateTransform(90) : null;
+        }
+
+        public bool Rotate
+        {
+            get => (bool)GetValue(RotateProperty);
+            set => SetValue(RotateProperty, value);
+        }
+
         private readonly MouseHider _mouseHider;
         private bool _down;
         private Point _offset;
@@ -90,67 +110,67 @@ namespace ScriptPlayer.Shared
 
         public double SpeedRatio
         {
-            get => (double) GetValue(SpeedRatioProperty);
+            get => (double)GetValue(SpeedRatioProperty);
             set => SetValue(SpeedRatioProperty, value);
         }
 
         public double Volume
         {
-            get => (double) GetValue(VolumeProperty);
+            get => (double)GetValue(VolumeProperty);
             set => SetValue(VolumeProperty, value);
         }
 
         public double MainVolume
         {
-            get => (double) GetValue(MainVolumeProperty);
+            get => (double)GetValue(MainVolumeProperty);
             set => SetValue(MainVolumeProperty, value);
         }
 
         public double StandByVolume
         {
-            get => (double) GetValue(StandByVolumeProperty);
+            get => (double)GetValue(StandByVolumeProperty);
             set => SetValue(StandByVolumeProperty, value);
         }
 
         public bool HideMouse
         {
-            get => (bool) GetValue(HideMouseProperty);
+            get => (bool)GetValue(HideMouseProperty);
             set => SetValue(HideMouseProperty, value);
         }
 
         public Rect SampleRect
         {
-            get => (Rect) GetValue(SampleRectProperty);
+            get => (Rect)GetValue(SampleRectProperty);
             set => SetValue(SampleRectProperty, value);
         }
 
         public double DisplayedWidth
         {
-            get => (double) GetValue(DisplayedWidthProperty);
+            get => (double)GetValue(DisplayedWidthProperty);
             set => SetValue(DisplayedWidthProperty, value);
         }
 
         public double DisplayedHeight
         {
-            get => (double) GetValue(DisplayedHeightProperty);
+            get => (double)GetValue(DisplayedHeightProperty);
             set => SetValue(DisplayedHeightProperty, value);
         }
 
         public Resolution Resolution
         {
-            get => (Resolution) GetValue(ResolutionProperty);
+            get => (Resolution)GetValue(ResolutionProperty);
             set => SetValue(ResolutionProperty, value);
         }
 
         public Brush StandByBrush
         {
-            get => (Brush) GetValue(StandByBrushProperty);
+            get => (Brush)GetValue(StandByBrushProperty);
             set => SetValue(StandByBrushProperty, value);
         }
 
         public TimeSpan Duration
         {
-            get => (TimeSpan) GetValue(DurationProperty);
+            get => (TimeSpan)GetValue(DurationProperty);
             set => SetValue(DurationProperty, value);
         }
 
@@ -158,19 +178,19 @@ namespace ScriptPlayer.Shared
 
         public TimeSource TimeSource
         {
-            get => (TimeSource) GetValue(TimeSourceProperty);
+            get => (TimeSource)GetValue(TimeSourceProperty);
             set => SetValue(TimeSourceProperty, value);
         }
 
         public string OpenedFile
         {
-            get => (string) GetValue(OpenedFileProperty);
+            get => (string)GetValue(OpenedFileProperty);
             set => SetValue(OpenedFileProperty, value);
         }
 
         public Brush VideoBrush
         {
-            get => (Brush) GetValue(VideoBrushProperty);
+            get => (Brush)GetValue(VideoBrushProperty);
             set => SetValue(VideoBrushProperty, value);
         }
 
@@ -196,7 +216,7 @@ namespace ScriptPlayer.Shared
 
         private static void OnSpeedPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VideoPlayer) d).OnSpeedChanged();
+            ((VideoPlayer)d).OnSpeedChanged();
         }
 
         private void OnSpeedChanged()
@@ -206,7 +226,7 @@ namespace ScriptPlayer.Shared
 
         private static void OnVolumePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VideoPlayer) d).OnVolumeChanged();
+            ((VideoPlayer)d).OnVolumeChanged();
         }
 
         private void OnVolumeChanged()
@@ -217,7 +237,7 @@ namespace ScriptPlayer.Shared
 
         private static void OnMainVolumePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VideoPlayer) d).OnMainVolumeChanged();
+            ((VideoPlayer)d).OnMainVolumeChanged();
         }
 
         private void OnMainVolumeChanged()
@@ -227,7 +247,7 @@ namespace ScriptPlayer.Shared
 
         private static void OnStandByVolumePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VideoPlayer) d).OnStandByVolumeChanged();
+            ((VideoPlayer)d).OnStandByVolumeChanged();
         }
 
         private void OnStandByVolumeChanged()
@@ -237,7 +257,7 @@ namespace ScriptPlayer.Shared
 
         private static void OnHideMousePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VideoPlayer) d).UpdateMouseHider();
+            ((VideoPlayer)d).UpdateMouseHider();
         }
 
         private void UpdateMouseHider()
@@ -248,7 +268,7 @@ namespace ScriptPlayer.Shared
 
         private static void OnSampleRectPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VideoPlayer) d).RefreshRect();
+            ((VideoPlayer)d).RefreshRect();
         }
 
         public event EventHandler MediaEnded;
@@ -326,7 +346,7 @@ namespace ScriptPlayer.Shared
             }
             finally
             {
-                if(myPriority == _seekPriority)
+                if (myPriority == _seekPriority)
                     IsSeeking = false;
 
                 _seekSemaphore.Release(1);
@@ -415,7 +435,7 @@ namespace ScriptPlayer.Shared
 
             player.Open(new Uri(filename, UriKind.Absolute));
 
-            await Task.Run(() => loadEvent.WaitOne());
+            await Task.Run(() => { loadEvent.WaitOne(TimeSpan.FromSeconds(5)); });
 
             player.MediaOpened -= Success;
             player.MediaFailed -= Failure;
@@ -433,7 +453,7 @@ namespace ScriptPlayer.Shared
 
         public void SetPrimaryPlayer(MediaPlayer player)
         {
-            ((MediaPlayerTimeSource) TimeSource).SetPlayer(player);
+            ((MediaPlayerTimeSource)TimeSource).SetPlayer(player);
         }
 
         private void InitializePlayer()
@@ -545,7 +565,7 @@ namespace ScriptPlayer.Shared
             {*/
 
 
-            if(player.NaturalDuration.HasTimeSpan)
+            if (player.NaturalDuration.HasTimeSpan)
                 Duration = player.NaturalDuration.TimeSpan;
 
             if (player.HasVideo)
@@ -570,7 +590,7 @@ namespace ScriptPlayer.Shared
         {
             if (e.ClickCount != 1) return;
 
-            ((IInputElement) sender).CaptureMouse();
+            ((IInputElement)sender).CaptureMouse();
             _down = true;
 
             ClampPosition(e.GetPosition((IInputElement)sender), out int x, out int y);
@@ -579,13 +599,13 @@ namespace ScriptPlayer.Shared
 
         private void ClampPosition(Point point, out int x, out int y)
         {
-            x = (int) Math.Max(0, Math.Min(Resolution.Horizontal, Math.Round(point.X)));
-            y = (int) Math.Max(0, Math.Min(Resolution.Vertical, Math.Round(point.Y)));
+            x = (int)Math.Max(0, Math.Min(Resolution.Horizontal, Math.Round(point.X)));
+            y = (int)Math.Max(0, Math.Min(Resolution.Vertical, Math.Round(point.Y)));
         }
 
         private void Border_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            ((IInputElement) sender).ReleaseMouseCapture();
+            ((IInputElement)sender).ReleaseMouseCapture();
             if (!_down)
                 return;
 
@@ -677,7 +697,7 @@ namespace ScriptPlayer.Shared
                 FillBehavior = FillBehavior.HoldEnd,
                 From = 1,
                 To = 0,
-                EasingFunction = new CubicEase {EasingMode = EasingMode.EaseInOut}
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
             };
 
             DoubleAnimation volumeFadeInAnimation = new DoubleAnimation
@@ -686,7 +706,7 @@ namespace ScriptPlayer.Shared
                 FillBehavior = FillBehavior.HoldEnd,
                 From = 0,
                 To = 1,
-                EasingFunction = new CubicEase {EasingMode = EasingMode.EaseInOut}
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
             };
 
             DoubleAnimation opacityFadeOutAnimation = new DoubleAnimation
@@ -694,7 +714,7 @@ namespace ScriptPlayer.Shared
                 Duration = duration,
                 FillBehavior = FillBehavior.HoldEnd,
                 To = 0,
-                EasingFunction = new CubicEase {EasingMode = EasingMode.EaseInOut}
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
             };
 
             storyboardFadeOut.Children.Add(volumeFadeOutAnimation);

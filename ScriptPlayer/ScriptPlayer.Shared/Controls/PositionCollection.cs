@@ -62,7 +62,7 @@ namespace ScriptPlayer.Shared
             {
                 int rightBounds = FindFirstLaterThan(0, maxIndex, timestampTo);
 
-                if(rightBounds > 0)
+                if(rightBounds > -1)
                     return _positions.Take(rightBounds + 1);
 
                 return _positions.ToList();
