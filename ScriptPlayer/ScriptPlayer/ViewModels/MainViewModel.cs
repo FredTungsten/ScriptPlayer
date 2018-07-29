@@ -1373,7 +1373,16 @@ namespace ScriptPlayer.ViewModels
 
         private string[] GetScriptExtensions()
         {
-            return ScriptLoaderManager.GetSupportedExtensions();
+            return SortExtensionsByPreference(ScriptLoaderManager.GetSupportedExtensions());
+        }
+
+        private string[] SortExtensionsByPreference(string[] extensions)
+        {
+            string[] preference = { "txt", "funscript" };
+
+            return extensions
+                .OrderBy(ext => preference.Contains(ext) ? Array.IndexOf(preference, ext) : int.MaxValue)
+                .ThenBy(ext => ext).ToArray();
         }
 
         private string[] GetAdditionalPaths()
