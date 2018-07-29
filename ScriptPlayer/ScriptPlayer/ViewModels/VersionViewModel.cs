@@ -199,8 +199,9 @@ namespace ScriptPlayer.ViewModels
                     CanDownload = true;
                 }
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                Debug.WriteLine("Error in CheckForNewVersion: " + exception.Message);
                 LatestVersion = "?";
                 VersionText = "Unable to determine version";
             }
