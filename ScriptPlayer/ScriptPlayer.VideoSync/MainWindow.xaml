@@ -193,7 +193,6 @@
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=HighlightBeats}">Highlight Beats</CheckBox>
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=FlashAfterBeat}">Flash after Beats</CheckBox>
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=SoundAfterBeat}">Sound after Beat</CheckBox>
-                                        <CheckBox IsChecked="{Binding ElementName=videoPlayer, Path=Rotate}">Rotate Video</CheckBox>
 
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="Highlight Interval:"/>
                                         <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="2" Maximum="16" 
