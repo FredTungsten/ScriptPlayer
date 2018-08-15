@@ -29,7 +29,7 @@ namespace ScriptPlayer.Shared
                 if (i > 0)
                     gradients.Add(new GradientStop(colors[i], (i - fade) / (colors.Length - 1)));
 
-                gradients.Add(new GradientStop(colors[i], (double) i / (colors.Length - 1)));
+                gradients.Add(new GradientStop(colors[i], (double)i / (colors.Length - 1)));
 
                 if (i < colors.Length - 1)
                     gradients.Add(new GradientStop(colors[i], (i + fade) / (colors.Length - 1)));
@@ -44,8 +44,8 @@ namespace ScriptPlayer.Shared
 
             for (int i = 0; i < colors.Length; i++)
             {
-                gradients.Add(new GradientStop(colors[i], i / (double) colors.Length));
-                gradients.Add(new GradientStop(colors[i], (i + 1) / (double) colors.Length));
+                gradients.Add(new GradientStop(colors[i], i / (double)colors.Length));
+                gradients.Add(new GradientStop(colors[i], (i + 1) / (double)colors.Length));
             }
 
             return gradients;
@@ -70,10 +70,10 @@ namespace ScriptPlayer.Shared
 
         private static Color MixColors(Color color1, Color color2, double ratio)
         {
-            float a = (float) (color2.ScA * ratio + color1.ScA * (1.0 - ratio));
-            float r = (float) (color2.ScR * ratio + color1.ScR * (1.0 - ratio));
-            float g = (float) (color2.ScG * ratio + color1.ScG * (1.0 - ratio));
-            float b = (float) (color2.ScB * ratio + color1.ScB * (1.0 - ratio));
+            float a = (float)(color2.ScA * ratio + color1.ScA * (1.0 - ratio));
+            float r = (float)(color2.ScR * ratio + color1.ScR * (1.0 - ratio));
+            float g = (float)(color2.ScG * ratio + color1.ScG * (1.0 - ratio));
+            float b = (float)(color2.ScB * ratio + color1.ScB * (1.0 - ratio));
             return Color.FromScRgb(a, r, g, b);
         }
 
@@ -96,16 +96,16 @@ namespace ScriptPlayer.Shared
                 if (beat < timeFrom || beat > timeTo) continue;
 
                 double position = (beat - timeFrom).Divide(segmentLength);
-                int index = (int) position;
+                int index = (int)position;
                 if (index >= beatsPerSegment.Length)
                     index = beatsPerSegment.Length - 1;
                 beatsPerSegment[index] = beatsPerSegment[index] + 1;
             }
 
-            int max = (int) (segmentLength.TotalSeconds * 5);
+            int max = (int)(segmentLength.TotalSeconds * 5);
 
             var colors = beatsPerSegment
-                .Select(v => GetColorAtPosition(HeatMap2, v / (double) max)).ToArray();
+                .Select(v => GetColorAtPosition(HeatMap2, v / (double)max)).ToArray();
 
             GradientStopCollection gradients = smooth
                 ? GradientsSmoothFromColors(fade, colors)
@@ -117,10 +117,10 @@ namespace ScriptPlayer.Shared
             return brush;
         }
 
-        public static Brush Generate2(List<TimeSpan> beats, TimeSpan timeFrom, TimeSpan timeTo)
+        public static Brush Generate2(List<TimeSpan> beats, TimeSpan timeFrom, TimeSpan timeTo, double multiplier = 1.0)
         {
             List<List<TimeSpan>> segments = new List<List<TimeSpan>>();
-            
+
             TimeSpan previous = timeFrom;
             TimeSpan isGap = TimeSpan.FromSeconds(10);
             TimeSpan fastest = TimeSpan.FromMilliseconds(200);
@@ -135,7 +135,7 @@ namespace ScriptPlayer.Shared
                     segments.Add(new List<TimeSpan>());
                 }
 
-                if(segments.Count == 0)
+                if (segments.Count == 0)
                     segments.Add(new List<TimeSpan>());
 
                 segments.Last().Add(beat);
@@ -166,47 +166,81 @@ namespace ScriptPlayer.Shared
                     stops.Add(new GradientStop(Colors.Black, endSegment.Divide(duration)));
                 }
                 else
-                { 
-                TimeSpan span = segment.Last() - segment.First();
-                int segmentCount = (int) Math.Max(1, Math.Min((segment.Count -1) / 12.0, span.Divide(duration.Divide(200))));
-
-                stops.Add(new GradientStop(Colors.Black, (segment.First() - timeFrom).Divide(duration)));
-
-                for (int i = 0; i < segmentCount; i++)
                 {
-                    int startIndex = Math.Min(segment.Count - 1,(int)((i * (segment.Count-1)) / (double)segmentCount));
-                    int endIndex = Math.Min(segment.Count - 1, (int)(((i+1) * (segment.Count-1)) / (double)segmentCount));
-                    int beatCount = endIndex - startIndex - 1;
+                    TimeSpan span = segment.Last() - segment.First();
+                    int segmentCount = (int)Math.Max(1, Math.Min((segment.Count - 1) / 12.0, span.Divide(duration.Divide(200))));
 
-                    TimeSpan firstBeat = segment[startIndex];
-                    TimeSpan lastBeat = segment[endIndex];
+                    stops.Add(new GradientStop(Colors.Black, (segment.First() - timeFrom).Divide(duration)));
 
-                    TimeSpan averageLength = (lastBeat - firstBeat).Divide(beatCount);
-                    double value = fastest.Divide(averageLength);
+                    for (int i = 0; i < segmentCount; i++)
+                    {
+                        int startIndex = Math.Min(segment.Count - 1, (int)((i * (segment.Count - 1)) / (double)segmentCount));
+                        int endIndex = Math.Min(segment.Count - 1, (int)(((i + 1) * (segment.Count - 1)) / (double)segmentCount));
+                        int beatCount = endIndex - startIndex - 1;
 
-                    value = Math.Min(1, Math.Max(0, value));
-                    Color color = GetColorAtPosition(HeatMap, value);
+                        TimeSpan firstBeat = segment[startIndex];
+                        TimeSpan lastBeat = segment[endIndex];
 
-                    double positionStart = firstBeat.Divide(duration);
-                    double positionEnd = lastBeat.Divide(duration);
+                        TimeSpan averageLength = (lastBeat - firstBeat).Divide(beatCount);
+                        double value = fastest.Divide(averageLength) * multiplier;
 
-                    if(i == 0)
-                        stops.Add(new GradientStop(color, positionStart));
+                        value = Math.Min(1, Math.Max(0, value));
+                        Color color = GetColorAtPosition(HeatMap, value);
 
-                    stops.Add(new GradientStop(color, (positionEnd + positionStart)/2.0));
+                        double positionStart = firstBeat.Divide(duration);
+                        double positionEnd = lastBeat.Divide(duration);
 
-                    if(i == segmentCount - 1)
-                        stops.Add(new GradientStop(color, positionEnd));
+                        if (i == 0)
+                            stops.Add(new GradientStop(color, positionStart));
+
+                        stops.Add(new GradientStop(color, (positionEnd + positionStart) / 2.0));
+
+                        if (i == segmentCount - 1)
+                            stops.Add(new GradientStop(color, positionEnd));
+                    }
+                    stops.Add(new GradientStop(Colors.Black, (segment.Last() - timeFrom).Divide(duration)));
                 }
-                stops.Add(new GradientStop(Colors.Black, (segment.Last() - timeFrom).Divide(duration)));}
             }
 
             stops.Add(new GradientStop(Colors.Black, 1.0));
 
-            LinearGradientBrush brush = new LinearGradientBrush(stops, new Point(0, 0), new Point(1, 0));
+            LinearGradientBrush brush = new LinearGradientBrush(FillGradients(stops), new Point(0, 0), new Point(1, 0));
             brush.MappingMode = BrushMappingMode.RelativeToBoundingBox;
 
             return brush;
+        }
+
+        public static GradientStopCollection FillGradients(GradientStopCollection stops)
+        {
+            GradientStopCollection result = new GradientStopCollection();
+            result.Add(stops[0]);
+
+            for (int i = 1; i < stops.Count; i++)
+            {
+                GradientStop stop = stops[i];
+                GradientStop previous = stops[i - 1];
+
+                double progress = 0.5;
+                double offset = previous.Offset + (stop.Offset - previous.Offset) * progress;
+                Color color = HslConversion.Blend(previous.Color, stop.Color, progress);
+
+                result.Add(new GradientStop(color, offset));
+
+                //if (Math.Abs(previous.Offset - stop.Offset) > float.Epsilon)
+                //{
+                //    for (int j = 1; j < 10; j++)
+                //    {
+                //        double progress = j / 10.0;
+                //        double offset = previous.Offset + (stop.Offset - previous.Offset) * progress;
+                //        Color color = HslConversion.Blend(previous.Color, stop.Color, progress);
+
+                //        result.Add(new GradientStop(color, offset));
+                //    }
+                //}
+
+                result.Add(stop);
+            }
+            return result;
         }
     }
 }

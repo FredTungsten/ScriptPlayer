@@ -829,13 +829,20 @@ namespace ScriptPlayer.ViewModels
             {
                 oldValue.ProgressChanged -= TimeSourceOnProgressChanged;
                 oldValue.DurationChanged -= TimeSourceOnDurationChanged;
+                oldValue.PlaybackRateChanged -= TimeSourceOnPlaybackRateChanged;
             }
 
             if (newValue != null)
             {
                 newValue.ProgressChanged += TimeSourceOnProgressChanged;
                 newValue.DurationChanged += TimeSourceOnDurationChanged;
+                newValue.PlaybackRateChanged += TimeSourceOnPlaybackRateChanged;
             }
+        }
+
+        private void TimeSourceOnPlaybackRateChanged(object sender, double d)
+        {
+            UpdateHeatMap();
         }
 
         private void TimeSourceOnProgressChanged(object sender, TimeSpan e)
@@ -1979,7 +1986,7 @@ namespace ScriptPlayer.ViewModels
             IEnumerable<ScriptAction> actions = Settings.ShowFilledGapsInHeatMap ? _scriptHandler.GetScript() : _scriptHandler.GetUnfilledScript();
 
             List<TimeSpan> timeStamps = FilterDuplicates(actions.ToList()).Select(s => s.TimeStamp).ToList();
-            Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, TimeSource.Duration);
+            Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, TimeSource.Duration, TimeSource.PlaybackRate);
             HeatMap = heatmap;
         }
 

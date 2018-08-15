@@ -12,6 +12,7 @@ namespace ScriptPlayer.Shared
     {
         public event EventHandler<TimeSpan> ProgressChanged;
         public event EventHandler<TimeSpan> DurationChanged;
+        public event EventHandler<double> PlaybackRateChanged; 
         public event EventHandler<bool> IsPlayingChanged; 
 
         private static readonly DependencyPropertyKey ProgressPropertyKey = DependencyProperty.RegisterReadOnly(
@@ -101,6 +102,11 @@ namespace ScriptPlayer.Shared
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected virtual void OnPlaybackRateChanged(double rate)
+        {
+            PlaybackRateChanged?.Invoke(this, rate);
         }
     }
 }

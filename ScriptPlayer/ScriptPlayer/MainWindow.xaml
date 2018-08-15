@@ -554,9 +554,11 @@
             <Button Command="{Binding Playlist.PlayPreviousEntryCommand}" CommandParameter="{Binding LoadedFiles}" ToolTip="Play previous video in playlist" Content="9" DockPanel.Dock="Right"/>
             <shared:SeekBar SnapsToDevicePixels="True" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Progress="{Binding Path=TimeSource.Progress}" Duration="{Binding Path=TimeSource.Duration}" Seek="SeekBar_OnSeek">
                 <shared:SeekBar.OverlayOpacity>
-                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                        <GradientStop Color="#20000000" Offset="0"/>
-                        <GradientStop Offset="1" Color="#cc000000"/>
+                    <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                        <GradientStop Offset="0" Color="#20000000"/>
+                        <GradientStop Offset="0.98" Color="#cc000000"/>
+                        <GradientStop Offset="0.98" Color="#50000000"/>
+                        <GradientStop Offset="1" Color="#50000000"/>
                     </LinearGradientBrush>
                 </shared:SeekBar.OverlayOpacity>
                 <shared:SeekBar.Style>

@@ -21,6 +21,7 @@ namespace ScriptPlayer.Shared
                 if (value.Equals(_playbackRate)) return;
                 _playbackRate = value;
                 OnPropertyChanged();
+                OnPlaybackRateChanged(_playbackRate);
             }
         }
 

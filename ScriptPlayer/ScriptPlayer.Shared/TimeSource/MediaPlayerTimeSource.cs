@@ -116,11 +116,10 @@ namespace ScriptPlayer.Shared
             get => _player.SpeedRatio;
             set
             {
-                if (_player.SpeedRatio != value)
-                {
-                    _player.SpeedRatio = value;
-                    OnPropertyChanged();
-                }
+                if (_player.SpeedRatio == value) return;
+                _player.SpeedRatio = value;
+                OnPropertyChanged();
+                OnPlaybackRateChanged(_player.SpeedRatio);
             }
         }
 

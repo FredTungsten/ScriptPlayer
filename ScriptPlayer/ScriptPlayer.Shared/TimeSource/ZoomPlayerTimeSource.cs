@@ -40,9 +40,15 @@ namespace ScriptPlayer.Shared
             _timeSource.DurationChanged += TimeSourceOnDurationChanged;
             _timeSource.IsPlayingChanged += TimeSourceOnIsPlayingChanged;
             _timeSource.ProgressChanged += TimeSourceOnProgressChanged;
+            _timeSource.PlaybackRateChanged += TimeSourceOnPlaybackRateChanged;
 
             _clientLoop = new Thread(ClientLoop);
             _clientLoop.Start();
+        }
+
+        private void TimeSourceOnPlaybackRateChanged(object sender, double d)
+        {
+            OnPlaybackRateChanged(d);
         }
 
         public void UpdateConnectionSettings(ZoomPlayerConnectionSettings connectionSettings)
