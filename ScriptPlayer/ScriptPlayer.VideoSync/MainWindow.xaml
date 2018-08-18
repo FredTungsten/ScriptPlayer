@@ -151,7 +151,7 @@
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
                                         <Rectangle Grid.Row="0" HorizontalAlignment="Stretch" Height="30" Stroke="Black" StrokeThickness="2" Fill="{Binding Sampler.PixelPreview}"/>
-                                        <shared:ColorSampleBar Grid.Row="1" VerticalAlignment="Stretch" x:Name="colorSampleBar" Samples="30" Sampler="{Binding Sampler}" TimeSource="{Binding ElementName=videoPlayer, Path=TimeSource}" />
+                                        <shared:ColorSampleBar Grid.Row="1" VerticalAlignment="Stretch" x:Name="colorSampleBar" Samples="60" Sampler="{Binding Sampler}" TimeSource="{Binding ElementName=videoPlayer, Path=TimeSource}" />
                                     </Grid>
                                 </HeaderedContentControl>
                             </DockPanel>
