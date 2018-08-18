@@ -29,6 +29,7 @@
         <converters:ConversionModeToNameConverter x:Key="ConversionConverter"/>
         <converters1:DistinctValueToBooleanConverter x:Key="BooleanConverter"/>
         <converters1:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
+        <converters:BooleanToColumnSpanConverter x:Key="ColumnSpanConverter" OnFalse="1" OnTrue="2" />
         <converters:BooleanInverter x:Key="Inverter"/>
         <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
 
@@ -59,7 +60,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Name="GridVideo"  Grid.Row="1"  Grid.ColumnSpan="2" Background="Black" MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" AllowDrop="True" Drop="GridVideo_Drop">
+        <Grid Name="GridVideo" Grid.Row="1" Grid.ColumnSpan="{Binding ElementName=GridSettings, Path=(shared:HideOnHover.IsActive), Mode=OneWay, Converter={StaticResource ColumnSpanConverter}}"
+              Background="Black" MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" AllowDrop="True" Drop="GridVideo_Drop">
             <!-- VIDEO PLAYER -->
             <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true" x:Name="VideoPlayer">
                 <shared:VideoPlayer.Style>
@@ -573,6 +575,7 @@
                 </shared:SeekBar.Style>
             </shared:SeekBar>
         </DockPanel>
+
         <Grid Name="GridSettings" shared:HideOnHover.IsActive="True" Width="180" Background="White" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1" VerticalAlignment="Stretch">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <Grid>
