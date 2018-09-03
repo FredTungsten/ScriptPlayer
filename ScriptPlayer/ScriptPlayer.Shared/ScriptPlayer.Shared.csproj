@@ -142,6 +142,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Beats\MetronomeTick.cs" />
+    <Compile Include="Classes\VideoThumbnailCollection.cs" />
     <Compile Include="Colors\AnalysisParameters.cs" />
     <Compile Include="Beats\BeatCollection.cs" />
     <Compile Include="Classes\BlockingQueue.cs" />

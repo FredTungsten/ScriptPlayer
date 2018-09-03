@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
@@ -38,6 +39,8 @@ namespace ScriptPlayer.VideoSync
             get { return (FrameCaptureCollection) GetValue(ResultProperty); }
             set { SetValue(ResultProperty, value); }
         }
+
+        
 
         private Thread _t;
         private bool _running;
@@ -104,6 +107,10 @@ namespace ScriptPlayer.VideoSync
 
             DateTime start = DateTime.Now;
 
+            int preview = 0;
+
+            Dictionary<long, BitmapSource> thumbnails = new Dictionary<long, BitmapSource>();
+
             do
             {
                 //List<byte> audio = new List<byte>();
@@ -122,6 +129,9 @@ namespace ScriptPlayer.VideoSync
 
                 if (frame % 25 == 0)
                 {
+                    preview++;
+                    
+
                     var hBitmap = current.GetHbitmap();
 
                     var capture = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
@@ -131,6 +141,12 @@ namespace ScriptPlayer.VideoSync
                         BitmapSizeOptions.FromWidthAndHeight(current.Width, current.Height));
 
                     capture.Freeze();
+
+                    if (preview % 10 == 0)
+                    {
+                        BitmapSource thumbnail = Resize(capture, 200, 130);
+                        thumbnails.Add(frame, thumbnail);
+                    }
 
                     DeleteObject(hBitmap);
 
@@ -203,10 +219,32 @@ namespace ScriptPlayer.VideoSync
                 if (_isClosing)
                     return;
 
+                Thumbnails = thumbnails;
                 Result = frameSamples;
                 DialogResult = true;
             }));
         }
+
+        private BitmapSource Resize(BitmapSource image, int maxWidth, int maxHeight)
+        {
+            double scale = Math.Min(maxWidth / image.Width, maxHeight / image.Height);
+
+            int width = (int) (image.Width * scale);
+            int height = (int) (image.Height * scale);
+
+            RenderTargetBitmap bitmap = new RenderTargetBitmap(width, height, 96,96, PixelFormats.Pbgra32);
+            var drawingVisual = new DrawingVisual();
+            using (var drawingContext = drawingVisual.RenderOpen())
+            {
+                drawingContext.DrawImage(image, new Rect(0, 0, width, height));
+            }
+            bitmap.Render(drawingVisual);
+            bitmap.Freeze();
+
+            return bitmap;
+        }
+
+        public Dictionary<long, BitmapSource> Thumbnails { get; set; }
 
         private void FrameSamplerDialog_OnLoaded(object sender, RoutedEventArgs e)
         {

@@ -35,6 +35,9 @@
                 <MenuItem Header="Run" Click="mnuFrameSampler_Click"/>
                 <MenuItem Header="Save Samples" Click="mnuSaveSamples_Click"/>
                 <MenuItem Header="Load Samples" Click="mnuLoadSamples_Click"/>
+                <Separator/>
+                <MenuItem Header="Save Thumbnails" Click="MnuSaveThumbnails_Click"/>
+                <MenuItem Header="Load Thumbnails" Click="MnuLoadThumbnails_Click"/>
             </MenuItem>
             <MenuItem Header="Beats">
                 <MenuItem Header="Set Condition" Click="mnuSetCondition_Click"/>

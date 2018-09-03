@@ -16,6 +16,7 @@ using System.Windows.Threading;
 using FMUtils.KeyboardHook;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Helpers;
 using ScriptPlayer.Shared.Scripts;
 using Application = System.Windows.Application;
@@ -66,11 +67,22 @@ namespace ScriptPlayer.ViewModels
 
         public ObservableCollection<RepeatablePattern> Patterns
         {
-            get { return _patterns; }
+            get => _patterns;
             set
             {
                 if (Equals(value, _patterns)) return;
                 _patterns = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public VideoThumbnailCollection Thumbnails
+        {
+            get => _thumbnails;
+            set
+            {
+                if (Equals(value, _thumbnails)) return;
+                _thumbnails = value;
                 OnPropertyChanged();
             }
         }
@@ -171,6 +183,9 @@ namespace ScriptPlayer.ViewModels
         private double _currentPosition;
         private RepeatablePattern _selectedPattern;
         private ObservableCollection<RepeatablePattern> _patterns;
+        private VideoThumbnailCollection _thumbnails;
+        private CommandSource _previousCommandSource;
+        private List<ScriptplayerCommand> _commands;
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
         {
@@ -671,7 +686,9 @@ namespace ScriptPlayer.ViewModels
         private void OnVideoFileOpened(object sender, string videoFileName)
         {
             TryFindMatchingScript(videoFileName);
+            TryFindMatchingThumbnails(videoFileName);
         }
+
 
         private void RefreshManualDuration()
         {
@@ -793,8 +810,7 @@ namespace ScriptPlayer.ViewModels
                     }
                     break;
                 case Keys.MediaStop:
-                    Pause();
-                    TimeSource.SetPosition(TimeSpan.Zero);
+                    ToggleCommandSource();
                     break;
             }
         }
@@ -1038,40 +1054,40 @@ namespace ScriptPlayer.ViewModels
 
         public string[] LoadedFiles => new[] { LoadedVideo, LoadedScript };
 
-        public RelayCommand ExecuteSelectedTestPatternCommand { get; set; }
+        public ScriptplayerCommand ExecuteSelectedTestPatternCommand { get; set; }
 
-        public RelayCommand VolumeDownCommand { get; set; }
+        public ScriptplayerCommand VolumeDownCommand { get; set; }
 
-        public RelayCommand VolumeUpCommand { get; set; }
+        public ScriptplayerCommand VolumeUpCommand { get; set; }
 
-        public RelayCommand TogglePlaybackCommand { get; set; }
+        public ScriptplayerCommand TogglePlaybackCommand { get; set; }
 
-        public RelayCommand SkipToNextEventCommand { get; set; }
+        public ScriptplayerCommand SkipToNextEventCommand { get; set; }
 
-        public RelayCommand StartScanningButtplugCommand { get; set; }
+        public ScriptplayerCommand StartScanningButtplugCommand { get; set; }
 
-        public RelayCommand SetLoopACommand { get; set; }
-        public RelayCommand SetLoopBCommand { get; set; }
+        public ScriptplayerCommand SetLoopACommand { get; set; }
+        public ScriptplayerCommand SetLoopBCommand { get; set; }
 
-        public RelayCommand ClearLoopCommand { get; set; }
+        public ScriptplayerCommand ClearLoopCommand { get; set; }
 
-        public RelayCommand ConnectButtplugCommand { get; set; }
+        public ScriptplayerCommand ConnectButtplugCommand { get; set; }
 
-        public RelayCommand DisconnectButtplugCommand { get; set; }
+        public ScriptplayerCommand DisconnectButtplugCommand { get; set; }
 
-        public RelayCommand ToggleFullScreenCommand { get; set; }
+        public ScriptplayerCommand ToggleFullScreenCommand { get; set; }
 
-        public RelayCommand ConnectLaunchDirectlyCommand { get; set; }
+        public ScriptplayerCommand ConnectLaunchDirectlyCommand { get; set; }
 
-        public RelayCommand AddScriptsToPlaylistCommand { get; set; }
+        public ScriptplayerCommand AddScriptsToPlaylistCommand { get; set; }
 
-        public RelayCommand LoadPlaylistCommand { get; set; }
+        public ScriptplayerCommand LoadPlaylistCommand { get; set; }
 
-        public RelayCommand SavePlaylistCommand { get; set; }
+        public ScriptplayerCommand SavePlaylistCommand { get; set; }
 
-        public RelayCommand OpenVideoCommand { get; set; }
+        public ScriptplayerCommand OpenVideoCommand { get; set; }
 
-        public RelayCommand OpenScriptCommand { get; set; }
+        public ScriptplayerCommand OpenScriptCommand { get; set; }
 
         public PlaylistViewModel Playlist
         {
@@ -1287,6 +1303,19 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public void ToggleCommandSource()
+        {
+            if (CommandSource != CommandSource.None)
+            {
+                _previousCommandSource = CommandSource;
+                CommandSource = CommandSource.None;
+            }
+            else
+            {
+                CommandSource = _previousCommandSource;
+            }
+        }
+
         private void UpdateCommandDelay()
         {
             _scriptHandler.MinIntermediateCommandDuration = Settings.CommandDelay;
@@ -1353,6 +1382,34 @@ namespace ScriptPlayer.ViewModels
                 TimeSource.Pause();
                 if (Settings.NotifyPlayPause)
                     OnRequestOverlay("Pause", TimeSpan.FromSeconds(2), "Playback");
+            }
+        }
+
+
+        private void TryFindMatchingThumbnails(string videoFileName)
+        {
+            Thumbnails = null;
+            string thumbnailFile = FileFinder.FindFile(videoFileName, new string[] {"thumbs"}, GetAdditionalPaths());
+
+            if (string.IsNullOrWhiteSpace(thumbnailFile))
+                return;
+
+            LoadThumbnails(thumbnailFile);
+        }
+
+        private void LoadThumbnails(string thumbnailFile)
+        {
+            try
+            {
+                VideoThumbnailCollection thumbnails = new VideoThumbnailCollection();
+                using (FileStream stream = new FileStream(thumbnailFile, FileMode.Open, FileAccess.Read))
+                    thumbnails.Load(stream);
+
+                Thumbnails = thumbnails;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Exception in LoadThumbnails (" + thumbnailFile + "): " + ex.Message);
             }
         }
 
@@ -1580,25 +1637,102 @@ namespace ScriptPlayer.ViewModels
 
         private void InitializeCommands()
         {
-            OpenScriptCommand = new RelayCommand(OpenScript);
-            OpenVideoCommand = new RelayCommand(OpenVideo);
-            AddScriptsToPlaylistCommand = new RelayCommand(AddToPlaylist);
-            ConnectLaunchDirectlyCommand = new RelayCommand(ConnectLaunchDirectly);
-            ConnectButtplugCommand = new RelayCommand(ConnectButtplug);
-            DisconnectButtplugCommand = new RelayCommand(DisconnectButtplug);
-            StartScanningButtplugCommand = new RelayCommand(StartScanningButtplug);
-            SkipToNextEventCommand = new RelayCommand(SkipToNextEvent, CanSkipToNextEvent);
-            TogglePlaybackCommand = new RelayCommand(TogglePlayback, CanTogglePlayback);
-            VolumeUpCommand = new RelayCommand(VolumeUp);
-            VolumeDownCommand = new RelayCommand(VolumeDown);
-            ExecuteSelectedTestPatternCommand = new RelayCommand(ExecuteSelectedTestPattern, CanExecuteSelectedTestPattern);
-            ToggleFullScreenCommand = new RelayCommand(ExecuteToggleFullScreen);
-            LoadPlaylistCommand = new RelayCommand(ExecuteLoadPlaylist);
-            SavePlaylistCommand = new RelayCommand(ExecuteSavePlaylist);
+            OpenScriptCommand = new ScriptplayerCommand(OpenScript)
+            {
+                CommandId = "OpenScriptFile",
+                DisplayText = "Open Script"
+            };
 
-            SetLoopACommand = new RelayCommand(ExecuteSetLoopA);
-            SetLoopBCommand = new RelayCommand(ExecuteSetLoopB);
-            ClearLoopCommand = new RelayCommand(ExecuteClearLoop);
+            OpenVideoCommand = new ScriptplayerCommand(OpenVideo)
+            {
+                CommandId = "OpenVideoFile",
+                DisplayText = "Open Video"
+            };
+
+            AddScriptsToPlaylistCommand = new ScriptplayerCommand(AddToPlaylist)
+            {
+                CommandId = "AddFileToPlaylist",
+                DisplayText = "Add File To Playlist"
+            };
+
+            ConnectLaunchDirectlyCommand = new ScriptplayerCommand(ConnectLaunchDirectly)
+            {
+                CommandId = "ConnectLaunchDirectly",
+                DisplayText = "Connect Launch Directly"
+            };
+
+            ConnectButtplugCommand = new ScriptplayerCommand(ConnectButtplug)
+            {
+                CommandId = "ConnectButtplug",
+                DisplayText = "Connect Buttplug"
+            };
+
+            DisconnectButtplugCommand = new ScriptplayerCommand(DisconnectButtplug)
+            {
+                CommandId = "DisconnectButtplug",
+                DisplayText = "Disconnect Buttplug"
+            };
+
+            StartScanningButtplugCommand = new ScriptplayerCommand(StartScanningButtplug)
+            {
+                CommandId = "StartScanningButtplug",
+                DisplayText = "Start Scanning Buttplug"
+            };
+
+            SkipToNextEventCommand = new ScriptplayerCommand(SkipToNextEvent, CanSkipToNextEvent)
+            {
+                CommandId = "SkipToNextEvent",
+                DisplayText = "Skip To Next Event"
+            };
+
+            TogglePlaybackCommand = new ScriptplayerCommand(TogglePlayback, CanTogglePlayback)
+            {
+                CommandId = "TogglePlayback",
+                DisplayText = "Toggle Play / Pause",
+                DefaultShortCut = "Space"
+            };
+
+            VolumeUpCommand = new ScriptplayerCommand(VolumeUp)
+            {
+                CommandId = "VolumeUp",
+                DisplayText = "Volume Up",
+                DefaultShortCut = "Up"
+            };
+
+            VolumeDownCommand = new ScriptplayerCommand(VolumeDown)
+            {
+                CommandId = "VolumeDown",
+                DisplayText = "Volume Down",
+                DefaultShortCut = "Down"
+            };
+
+            ExecuteSelectedTestPatternCommand = new ScriptplayerCommand(ExecuteSelectedTestPattern, CanExecuteSelectedTestPattern);
+            ToggleFullScreenCommand = new ScriptplayerCommand(ExecuteToggleFullScreen)
+            {
+                CommandId = "ToggleFullscreen",
+                DisplayText = "Toggle Fullscreen",
+                DefaultShortCut = Key.Enter.ToString() //Or Return?
+            };
+
+            LoadPlaylistCommand = new ScriptplayerCommand(ExecuteLoadPlaylist);
+            SavePlaylistCommand = new ScriptplayerCommand(ExecuteSavePlaylist);
+
+            SetLoopACommand = new ScriptplayerCommand(ExecuteSetLoopA);
+            SetLoopBCommand = new ScriptplayerCommand(ExecuteSetLoopB);
+            ClearLoopCommand = new ScriptplayerCommand(ExecuteClearLoop);
+
+            GlobalCommandManager.RegisterCommand(OpenScriptCommand);
+            GlobalCommandManager.RegisterCommand(OpenVideoCommand);
+            GlobalCommandManager.RegisterCommand(AddScriptsToPlaylistCommand);
+            GlobalCommandManager.RegisterCommand(ConnectLaunchDirectlyCommand);
+            GlobalCommandManager.RegisterCommand(ConnectButtplugCommand);
+            GlobalCommandManager.RegisterCommand(DisconnectButtplugCommand);
+            GlobalCommandManager.RegisterCommand(StartScanningButtplugCommand);
+            GlobalCommandManager.RegisterCommand(SkipToNextEventCommand);
+            GlobalCommandManager.RegisterCommand(TogglePlaybackCommand);
+            GlobalCommandManager.RegisterCommand(VolumeUpCommand);
+            GlobalCommandManager.RegisterCommand(VolumeDownCommand);
+            GlobalCommandManager.RegisterCommand(ToggleFullScreenCommand);
         }
 
         private void ExecuteClearLoop()
@@ -1907,6 +2041,8 @@ namespace ScriptPlayer.ViewModels
 
                 if (checkForScript)
                     TryFindMatchingScript(videoFileName);
+
+                TryFindMatchingThumbnails(videoFileName);
 
                 LoadedVideo = videoFileName;
 

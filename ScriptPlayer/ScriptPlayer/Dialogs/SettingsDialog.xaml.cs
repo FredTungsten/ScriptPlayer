@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using JetBrains.Annotations;
 using Microsoft.Win32;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Controls;
@@ -19,6 +21,15 @@ namespace ScriptPlayer.Dialogs
     /// </summary>
     public partial class SettingsDialog : Window
     {
+        public static readonly DependencyProperty InputMappingsProperty = DependencyProperty.Register(
+            "InputMappings", typeof(List<InputMappingViewModel>), typeof(SettingsDialog), new PropertyMetadata(default(List<InputMappingViewModel>)));
+
+        public List<InputMappingViewModel> InputMappings
+        {
+            get { return (List<InputMappingViewModel>) GetValue(InputMappingsProperty); }
+            set { SetValue(InputMappingsProperty, value); }
+        }
+
         public static readonly DependencyProperty PagesProperty = DependencyProperty.Register(
             "Pages", typeof(SettingsPageViewModelCollection), typeof(SettingsDialog), new PropertyMetadata(default(SettingsPageViewModelCollection)));
 
@@ -89,11 +100,34 @@ namespace ScriptPlayer.Dialogs
         public SettingsDialog(SettingsViewModel initialSettings)
         {
             Settings = initialSettings.Duplicate();
+            CreateInputMappings();
 
             InitializeComponent();
 
             Pages = BuildPages(PageSelector);
             SelectedPage = FindPage(_lastSelected) ?? Pages.FirstOrDefault();
+        }
+
+        private void CreateInputMappings()
+        {
+            List<InputMappingViewModel> mappings = new List<InputMappingViewModel>();
+
+            foreach (ScriptplayerCommand scriptplayerCommand in GlobalCommandManager.Commands.Values)
+            {
+                InputMappingViewModel mapping = new InputMappingViewModel();
+                mapping.CommandId = scriptplayerCommand.CommandId;
+                mapping.DisplayText = scriptplayerCommand.DisplayText;
+
+                var shortcut = GlobalCommandManager.CommandMappings.FirstOrDefault(c => c.CommandId == scriptplayerCommand.CommandId);
+                if (shortcut != null)
+                    mapping.Shortcut = shortcut.KeyboardShortcut;
+                else
+                    mapping.Shortcut = "";
+
+                mappings.Add(mapping);
+            }
+
+            InputMappings = mappings;
         }
 
         private SettingsPageViewModel FindPage(string pageId)
@@ -286,6 +320,33 @@ namespace ScriptPlayer.Dialogs
                     "Confirm Reset", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
 
             Settings = new SettingsViewModel();
+        }
+    }
+
+    public class InputMappingViewModel : INotifyPropertyChanged
+    {
+        private string _shortcut;
+        public string DisplayText { get; set; }
+
+        public string CommandId { get; set; }
+
+        public string Shortcut
+        {
+            get { return _shortcut; }
+            set
+            {
+                if (value == _shortcut) return;
+                _shortcut = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 

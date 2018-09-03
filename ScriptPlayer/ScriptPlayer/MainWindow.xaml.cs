@@ -64,6 +64,8 @@ namespace ScriptPlayer
             ViewModel.IntermediateBeat += ViewModelOnIntermediateBeat;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
+
+            GlobalCommandManager.BuildDefaultShortcuts();
         }
 
         private void ViewModelOnIntermediateBeat(object sender, double d)
@@ -372,6 +374,21 @@ namespace ScriptPlayer
         private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
             bool handled = true;
+
+            Key[] modifiers = new[] {Key.LeftAlt, Key.LeftCtrl, Key.LeftShift, Key.RightAlt, Key.RightCtrl, Key.RightShift};
+
+            if (modifiers.Contains(e.Key))
+                return;
+
+            ModifierKeys activeMods = GlobalCommandManager.GetActiveModifierKeys();
+
+            handled = GlobalCommandManager.ProcessInput(e.Key, activeMods);
+            if (handled)
+            {
+                e.Handled = true;
+                return;
+            }
+
             switch (e.Key)
             {
                 case Key.Enter:
@@ -466,6 +483,11 @@ namespace ScriptPlayer
                 case Key.NumPad9:
                     {
                         VideoPlayer.ChangeZoom(0.02);
+                        break;
+                    }
+                case Key.S:
+                    {
+                        ViewModel.ToggleCommandSource();
                         break;
                     }
                 default:

@@ -12,11 +12,13 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Accord.Audio;
 using Accord.Video.FFMPEG;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Scripts;
 using ScriptPlayer.VideoSync.Dialogs;
 using Brush = System.Windows.Media.Brush;
@@ -351,7 +353,7 @@ namespace ScriptPlayer.VideoSync
             var dialog = new FrameSamplerDialog(_videoFile, _captureRect, videoPlayer.Duration);
             if (dialog.ShowDialog() != true) return;
 
-            SetSamples(dialog.Result);
+            SetSamples(dialog.Result, dialog.Thumbnails);
         }
 
         private void mnuSaveSamples_Click(object sender, RoutedEventArgs e)
@@ -379,7 +381,7 @@ namespace ScriptPlayer.VideoSync
 
             if (dialog.ShowDialog(this) != true) return;
 
-            SetSamples(FrameCaptureCollection.FromFile(dialog.FileName));
+            SetSamples(FrameCaptureCollection.FromFile(dialog.FileName), null);
 
             if (_videoFile != _frameSamples.VideoFile)
             {
@@ -391,11 +393,20 @@ namespace ScriptPlayer.VideoSync
             }
         }
 
-        private void SetSamples(FrameCaptureCollection frames)
+        private void SetSamples(FrameCaptureCollection frames, Dictionary<long, BitmapSource> thumbnails)
         {
             _frameSamples = frames;
             SetCaptureRect(_frameSamples.CaptureRect);
             colorSampleBar.Frames = _frameSamples;
+
+            VideoThumbnailCollection collection = new VideoThumbnailCollection();
+            if (thumbnails != null)
+            {
+                foreach(var kvp in thumbnails)
+                    collection.Add(frames.FrameIndexToTimeSpan(kvp.Key), kvp.Value);
+            }
+
+            SeekBar.Thumbnails = collection;
         }
 
         private void OpenVideo(string videoFile, bool play, bool resetFileNames)
@@ -1821,6 +1832,35 @@ namespace ScriptPlayer.VideoSync
         {
             Brush heatmap = HeatMapGenerator.Generate2(Beats.ToList(), TimeSpan.Zero, videoPlayer.Duration);
             SeekBar.Background = heatmap;
+        }
+
+        private void MnuSaveThumbnails_Click(object sender, RoutedEventArgs e)
+        {
+            VideoThumbnailCollection thumbs = SeekBar.Thumbnails;
+            if (thumbs == null) return;
+
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.Filter = "Video Thumbnails|*.thumbs";
+
+            if (dialog.ShowDialog(this) != true) return;
+
+            using (FileStream stream = new FileStream(dialog.FileName, FileMode.Create, FileAccess.Write))
+                thumbs.Save(stream);
+        }
+
+        private void MnuLoadThumbnails_Click(object sender, RoutedEventArgs e)
+        {
+            VideoThumbnailCollection thumbs = new VideoThumbnailCollection();
+            
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.Filter = "Video Thumbnails|*.thumbs";
+
+            if (dialog.ShowDialog(this) != true) return;
+
+            using (FileStream stream = new FileStream(dialog.FileName, FileMode.Open, FileAccess.Read))
+                thumbs.Load(stream);
+
+            SeekBar.Thumbnails = thumbs;
         }
     }
 }

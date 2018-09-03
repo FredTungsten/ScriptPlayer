@@ -70,7 +70,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Gaps" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Input Mappings" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -79,7 +79,17 @@
                     </ControlTemplate>
                 </controls:PageSelector.Template>
                 <controls:PageSelector.Elements>
-                    
+                    <Grid controls:PageSelector.ContentIdentifier="Input Mappings">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_keyboard_o}"/>
+                        </controls:PageSelector.Header>
+                        <DataGrid ItemsSource="{Binding InputMappings}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Command" Width="*" Binding="{Binding DisplayText}"/>
+                                <DataGridTextColumn Header="Shortcut" Width="*" Binding="{Binding Shortcut}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Scripts">
                         <controls:PageSelector.Header>
                             <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_file_text}"/>

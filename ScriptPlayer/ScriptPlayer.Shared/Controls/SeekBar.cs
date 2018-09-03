@@ -5,6 +5,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Converters;
 
 namespace ScriptPlayer.Shared
@@ -32,15 +33,27 @@ namespace ScriptPlayer.Shared
         public static readonly DependencyProperty HoverPositionProperty = DependencyProperty.Register(
             "HoverPosition", typeof(TimeSpan), typeof(SeekBar), new PropertyMetadata(default(TimeSpan)));
 
+        public static readonly DependencyProperty ThumbnailsProperty = DependencyProperty.Register(
+            "Thumbnails", typeof(VideoThumbnailCollection), typeof(SeekBar), 
+            new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public VideoThumbnailCollection Thumbnails
+        {
+            get => (VideoThumbnailCollection) GetValue(ThumbnailsProperty);
+            set => SetValue(ThumbnailsProperty, value);
+        }
+
         public TimeSpan HoverPosition
         {
-            get { return (TimeSpan) GetValue(HoverPositionProperty); }
-            set { SetValue(HoverPositionProperty, value); }
+            get => (TimeSpan) GetValue(HoverPositionProperty);
+            set => SetValue(HoverPositionProperty, value);
         }
 
         private bool _down;
         private Popup _popup;
         private TextBlock _txt;
+        private StackPanel _stack;
+        private Image _img;
 
         static SeekBar()
         {
@@ -86,18 +99,33 @@ namespace ScriptPlayer.Shared
 
         private void InitializePopup()
         {
+            _stack = new StackPanel
+            {
+                Orientation = Orientation.Vertical
+            };
+
+            _img = new Image
+            {
+                Stretch = Stretch.Uniform,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
             _txt = new TextBlock
             {
-                Padding = new Thickness(3)
+                Padding = new Thickness(3),
+                HorizontalAlignment = HorizontalAlignment.Center
             };
 
             BindText(_txt);
+
+            _stack.Children.Add(_img);
+            _stack.Children.Add(_txt);
 
             Border border = new Border
             {
                 Background = Brushes.White,
                 BorderBrush = Brushes.Black,
-                Child = _txt
+                Child = _stack
             };
 
             _popup = new Popup
@@ -213,6 +241,16 @@ namespace ScriptPlayer.Shared
             TimeSpan absolutePosition = Duration.Multiply(relativePosition);
 
             HoverPosition = absolutePosition;
+
+            if (Thumbnails != null)
+            {
+                _img.Source = Thumbnails.Get(absolutePosition)?.Thumbnail;
+                _img.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                _img.Visibility = Visibility.Collapsed;
+            }
 
             _popup.IsOpen = true;
             _popup.HorizontalOffset = relativePosition * ActualWidth -
