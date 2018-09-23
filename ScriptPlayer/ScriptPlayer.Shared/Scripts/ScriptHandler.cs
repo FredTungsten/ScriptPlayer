@@ -195,7 +195,12 @@ namespace ScriptPlayer.Shared.Scripts
         {
             if (_originalScript.FirstOrDefault() is BeatScriptAction)
             { 
-                _originalActions = BeatsToFunScriptConverter.Convert(_originalScript.Select(s => s.TimeStamp), _conversionMode)
+                _originalActions = BeatsToFunScriptConverter.Convert(_originalScript.Select(s => s.TimeStamp), new ConversionSettings
+                    {
+                        Min = 5,
+                        Max = 95,
+                        Mode =_conversionMode 
+                    })
                     .OrderBy(a => a.TimeStamp)
                     .ToList();
             }

@@ -157,5 +157,14 @@ namespace ScriptPlayer.Shared
         {
             return new PositionCollection(_positions);
         }
+
+        public PositionCollection Shift(TimeSpan timeSpan)
+        {
+            return new PositionCollection(_positions.Select(b => new TimedPosition
+            {
+                Position = b.Position,
+                TimeStamp = b.TimeStamp.Add(timeSpan)
+            }));
+        }
     }
 }

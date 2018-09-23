@@ -505,7 +505,9 @@ namespace ScriptPlayer.VideoSync
             double shift = GetDouble(0);
             if (double.IsNaN(shift)) return;
 
-            Beats = Beats.Shift(TimeSpan.FromSeconds(shift));
+            var timeSpan = TimeSpan.FromSeconds(shift);
+            Beats = Beats.Shift(timeSpan);
+            Positions = Positions.Shift(timeSpan);
         }
 
         private void mnuReset_Click(object sender, RoutedEventArgs e)
@@ -1464,6 +1466,7 @@ namespace ScriptPlayer.VideoSync
 
         TimeSpan _previouslyShortest = TimeSpan.MaxValue;
         private bool[] _previousPattern;
+        private ConversionSettings _previousConversionSettings;
 
         private void FindShortestBeatLongerThanPrevious()
         {
@@ -1705,15 +1708,17 @@ namespace ScriptPlayer.VideoSync
 
             TimeSpan shift = TimeSpan.FromMilliseconds((int)shiftBy);
 
-            List<TimeSpan> beatsToEvenOut = Beats.GetBeats(tBegin, tEnd).Select(b => b + shift).ToList();
-
+            List<TimeSpan> beatsToShift = Beats.GetBeats(tBegin, tEnd).Select(b => b + shift).ToList();
             List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
 
-            SetAllBeats(otherBeats.Concat(beatsToEvenOut));
+            List<TimedPosition> positionsToShift = Positions.Where(t => t.TimeStamp >= tBegin && t.TimeStamp <= tEnd).Select(b => new TimedPosition{ Position = b.Position, TimeStamp = b.TimeStamp + shift}).ToList();
+            List<TimedPosition> otherPositions = Positions.Where(t => t.TimeStamp < tBegin || t.TimeStamp > tEnd).ToList();
+
+            SetAllBeats(otherBeats.Concat(beatsToShift));
+            Positions = new PositionCollection(otherPositions.Concat(positionsToShift));
 
             _marker1 += shift;
             _marker2 += shift;
-
 
             BeatBar.Marker1 = _marker1;
             BeatBar.Marker2 = _marker2;
@@ -1764,12 +1769,53 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuBeatsToPositions_Click(object sender, RoutedEventArgs e)
         {
-            ConvertBeats((ConversionMode)((MenuItem)sender).Tag);
+            BeatConversionSettingsDialog dialog = new BeatConversionSettingsDialog(_previousConversionSettings);
+            dialog.Owner = this;
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            _previousConversionSettings = dialog.Result;
+
+            ConvertBeats(_previousConversionSettings);
         }
 
-        private void ConvertBeats(ConversionMode conversionMode)
+        private void mnuSelectedBeatsToPositions_Click(object sender, RoutedEventArgs e)
         {
-            var funscript = BeatsToFunScriptConverter.Convert(Beats, conversionMode);
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            BeatConversionSettingsDialog dialog = new BeatConversionSettingsDialog(_previousConversionSettings);
+            dialog.Owner = this;
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            _previousConversionSettings = dialog.Result;
+
+            List<TimeSpan> beatsToConvert = Beats.GetBeats(tBegin,tEnd).ToList();
+
+            if (beatsToConvert.Count == 0)
+                return;
+
+            List<TimedPosition> otherPositions = Positions.Where(t => t.TimeStamp < tBegin || t.TimeStamp > tEnd).ToList();
+
+            int startIndex = Beats.IndexOf(beatsToConvert.First());
+
+            var convertedPositions = BeatsToFunScriptConverter.Convert(beatsToConvert, _previousConversionSettings, startIndex);
+
+            Positions = new PositionCollection(otherPositions.Concat(convertedPositions.Select(f => new TimedPosition
+            {
+                Position = f.Position,
+                TimeStamp = f.TimeStamp
+            })));
+        }
+
+        private void ConvertBeats(ConversionSettings settings)
+        {
+            var funscript = BeatsToFunScriptConverter.Convert(Beats, settings);
 
             Positions = new PositionCollection(funscript.Select(f => new TimedPosition
             {
@@ -1825,6 +1871,10 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuPositionsToBeats_Click(object sender, RoutedEventArgs e)
         {
+            if (MessageBox.Show(this, "Are you sure you want to re-convert ALL positions to beats?",
+                    "Confirmation required", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                return;
+
             SetAllBeats(Positions.Select(p => p.TimeStamp));
         }
 

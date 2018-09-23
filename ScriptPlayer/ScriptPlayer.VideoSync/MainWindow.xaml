@@ -45,14 +45,9 @@
                 <MenuItem Header="Re-analyse Selection" Click="mnuAnalyseSelection_Click"/>
                 <MenuItem Header="Clear" Click="mnuClear_Click"/>
                 <Separator/>
-                <MenuItem Header="Convert Beats to Positions">
-                    <MenuItem Header="Up/Down" Tag="{x:Static scripts:ConversionMode.UpOrDown}" Click="mnuBeatsToPositions_Click"/>
-                    <MenuItem Header="Down (Center)" Tag="{x:Static scripts:ConversionMode.DownCenter}" Click="mnuBeatsToPositions_Click"/>
-                    <MenuItem Header="Down (Fast)" Tag="{x:Static scripts:ConversionMode.DownFast}" Click="mnuBeatsToPositions_Click"/>
-                    <MenuItem Header="Up (Center)" Tag="{x:Static scripts:ConversionMode.UpCenter}" Click="mnuBeatsToPositions_Click"/>
-                    <MenuItem Header="Up (Fast)" Tag="{x:Static scripts:ConversionMode.UpFast}" Click="mnuBeatsToPositions_Click"/>
-                </MenuItem>
-                <MenuItem Header="Convert Positions to Beats" Click="mnuPositionsToBeats_Click"/>
+                <MenuItem Header="Convert All Beats to Positions" Click="mnuBeatsToPositions_Click"/>
+                <MenuItem Header="Convert Selected Beats to Positions" Click="mnuSelectedBeatsToPositions_Click"/>
+                <MenuItem Header="Convert All Positions to Beats" Click="mnuPositionsToBeats_Click"/>
                 <Separator/>
                 <MenuItem Header="Load">
                     <MenuItem Header="beats.txt" Click="mnuLoad_Click"/>
@@ -196,6 +191,12 @@
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=HighlightBeats}">Highlight Beats</CheckBox>
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=FlashAfterBeat}">Flash after Beats</CheckBox>
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=SoundAfterBeat}">Sound after Beat</CheckBox>
+
+                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="Sound Delay"/>
+                                        <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="-250" Maximum="250" 
+                                                Value="{Binding ElementName=BeatBar, Path=SoundDelay}" SmallChange="1" LargeChange="1"/>
+                                        <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=SoundDelay, StringFormat={}{0:f0}ms}"/>
+
                                         <CheckBox IsChecked="{Binding ElementName=videoPlayer, Path=Rotate}">Rotate Video</CheckBox>
 
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="Highlight Interval:"/>

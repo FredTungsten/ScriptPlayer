@@ -17,9 +17,16 @@ namespace ScriptPlayer.Shared.Scripts
         UpCenter
     }
 
+    public class ConversionSettings
+    {
+        public ConversionMode Mode { get; set; }
+        public byte Min { get; set; }
+        public byte Max { get; set; }
+    }
+
     public static class BeatsToFunScriptConverter
     {
-        public static List<FunScriptAction> Convert(IEnumerable<TimeSpan> timestamps, ConversionMode mode)
+        public static List<FunScriptAction> Convert(IEnumerable<TimeSpan> timestamps, ConversionSettings settings, int startIndex = 0)
         {
             var beats = timestamps.OrderBy(a => a).ToList();
             var actions = new List<FunScriptAction>();
@@ -29,45 +36,45 @@ namespace ScriptPlayer.Shared.Scripts
             
             TimeSpan centerLimit;
 
-            bool up = true;
+            bool up = startIndex % 2 == 0;
 
             byte positionDown;
             byte positionUp;
 
-            switch (mode)
+            switch (settings.Mode)
             {
                 case ConversionMode.UpOrDown:
                     centerLimit = TimeSpan.Zero;
-                    positionDown = 5;
-                    positionUp = 95;
+                    positionDown = settings.Min;
+                    positionUp = settings.Max;
                     break;
                 case ConversionMode.UpDownFast:
                     centerLimit = TimeSpan.Zero;
-                    positionDown = 5;
-                    positionUp = 95;
+                    positionDown = settings.Min;
+                    positionUp = settings.Max;
                     break;
                 case ConversionMode.DownFast:
                     centerLimit = TimeSpan.FromMilliseconds(180);
-                    positionDown = 95;
-                    positionUp = 5;
+                    positionDown = settings.Max;
+                    positionUp = settings.Min;
                     break;
                 case ConversionMode.DownCenter:
                     centerLimit = TimeSpan.FromMilliseconds(2000);
-                    positionDown = 95;
-                    positionUp = 5;
+                    positionDown = settings.Max;
+                    positionUp = settings.Min;
                     break;
                 case ConversionMode.UpFast:
                     centerLimit = TimeSpan.FromMilliseconds(180);
-                    positionDown = 5;
-                    positionUp = 95;
+                    positionDown = settings.Min;
+                    positionUp = settings.Max;
                     break;
                 case ConversionMode.UpCenter:
                     centerLimit = TimeSpan.FromMilliseconds(2000);
-                    positionDown = 5;
-                    positionUp = 95;
+                    positionDown = settings.Min;
+                    positionUp = settings.Max;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+                    throw new ArgumentOutOfRangeException(nameof(settings.Mode), settings.Mode, null);
             }
 
             for (int index = 0; index < beats.Count; index++)
@@ -75,7 +82,7 @@ namespace ScriptPlayer.Shared.Scripts
                 TimeSpan timestamp = beats[index];
                 up ^= true;
 
-                switch (mode)
+                switch (settings.Mode)
                 {
                     case ConversionMode.UpDownFast:
                     {

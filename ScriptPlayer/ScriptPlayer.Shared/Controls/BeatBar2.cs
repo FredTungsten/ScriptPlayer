@@ -37,6 +37,15 @@ namespace ScriptPlayer.Shared
             set { SetValue(SoundAfterBeatProperty, value); }
         }
 
+        public static readonly DependencyProperty SoundDelayProperty = DependencyProperty.Register(
+            "SoundDelay", typeof(double), typeof(BeatBar2), new PropertyMetadata(default(double)));
+
+        public double SoundDelay
+        {
+            get { return (double) GetValue(SoundDelayProperty); }
+            set { SetValue(SoundDelayProperty, value); }
+        }
+
         public static readonly DependencyProperty BeatVolumeProperty = DependencyProperty.Register(
             "BeatVolume", typeof(double), typeof(BeatBar2), new PropertyMetadata(100.0, new PropertyChangedCallback(OnBeatVolumeChanged)));
 
@@ -249,7 +258,8 @@ namespace ScriptPlayer.Shared
 
             List<TimeSpan> absoluteBeatPositions = Beats?.GetBeats(timeFrom, timeTo).ToList() ?? new List<TimeSpan>();
 
-            bool isActive = absoluteBeatPositions.Any(b => Progress >= b  && Progress <= b.Add(FlashDuration));
+            TimeSpan delayedProgress = Progress.Subtract(TimeSpan.FromMilliseconds(SoundDelay));
+            bool isActive = absoluteBeatPositions.Any(b => delayedProgress >= b  && delayedProgress <= b.Add(FlashDuration));
             if (SoundAfterBeat)
             {
                 if (isActive && !_wasActive)

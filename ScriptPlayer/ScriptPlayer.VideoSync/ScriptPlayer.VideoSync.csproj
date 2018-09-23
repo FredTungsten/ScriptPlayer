@@ -151,6 +151,9 @@
     <Compile Include="Controls\DirectInputControl.cs" />
     <Compile Include="Controls\SampleRectZoom.cs" />
     <Compile Include="Converters\ParameterToBooleanConverter.cs" />
+    <Compile Include="Dialogs\BeatConversionSettingsDialog.xaml.cs">
+      <DependentUpon>BeatConversionSettingsDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\ColorPicker.xaml.cs">
       <DependentUpon>ColorPicker.xaml</DependentUpon>
     </Compile>
@@ -181,6 +184,10 @@
     <Compile Include="Extensions\DoubleMarkup.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Page Include="AudioTests.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\BeatConversionSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

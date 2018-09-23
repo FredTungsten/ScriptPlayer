@@ -253,6 +253,13 @@ namespace ScriptPlayer.Shared
 
             drawingContext.DrawRectangle(Background, null, fullRect);
 
+            drawingContext.PushOpacity(0.3);
+            for (int i = 0; i <= 4; i++)
+            {
+                drawingContext.DrawLine(redPen, new Point(0, i * ActualHeight / 4.0), new Point(ActualWidth, i * ActualHeight / 4.0));
+            }
+            drawingContext.Pop();
+
             double midPointX = ActualWidth * Midpoint;
 
             drawingContext.DrawLine(redPen, new Point(midPointX, 0), new Point(midPointX, ActualHeight));
