@@ -377,7 +377,8 @@
                     <MenuItem Header="Open Video" Command="{Binding OpenVideoCommand}"/>
                     <MenuItem Header="Open Script" Command="{Binding OpenScriptCommand}"/>
                     <Separator/>
-                    <MenuItem Header="Add to Playlist" Command="{Binding AddScriptsToPlaylistCommand}"/>
+                    <MenuItem Header="Add file to Playlist" Command="{Binding AddScriptsToPlaylistCommand}"/>
+                    <MenuItem Header="Add folder to Playlist" Command="{Binding AddFolderToPlaylistCommand}"/>
                     <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
                 </MenuItem>
                 <MenuItem Header="Devices">

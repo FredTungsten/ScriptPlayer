@@ -16,6 +16,8 @@ namespace ScriptPlayer.VideoSync.Dialogs
     /// </summary>
     public partial class PatternFillOptionsDialog : Window
     {
+        public event EventHandler<PatternEventArgs> PatternChanged; 
+
         public static readonly DependencyProperty RecentlyUsedPatternsProperty = DependencyProperty.Register(
             "RecentlyUsedPatterns", typeof(List<bool[]>), typeof(PatternFillOptionsDialog), new PropertyMetadata(default(List<bool[]>)));
 
@@ -96,15 +98,22 @@ namespace ScriptPlayer.VideoSync.Dialogs
         private void SetBeatCount(int ticksInPattern)
         {
             while (Beats.Count > ticksInPattern)
+            {
+                Beats[Beats.Count - 1].PropertyChanged -= BeatChanged;
                 Beats.RemoveAt(Beats.Count - 1);
+            }
 
             while (Beats.Count < ticksInPattern)
-                Beats.Add(new IndexedBoolean
+            {
+                var beat = new IndexedBoolean
                 {
                     CanEdit = true,
                     Caption = ((Beats.Count % (ticksInPattern + 1)) + 1).ToString(),
                     Value = true
-                });
+                };
+                beat.PropertyChanged += BeatChanged;
+                Beats.Add(beat);
+            }
 
             for (int i = 0; i < Beats.Count; i++)
             {
@@ -118,6 +127,13 @@ namespace ScriptPlayer.VideoSync.Dialogs
                     Beats[i].CanEdit = true;
                 }
             }
+
+            OnPatternChanged(GetResult());
+        }
+
+        private void BeatChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPatternChanged(GetResult());
         }
 
         private void btnOk_Click(object sender, RoutedEventArgs e)
@@ -128,9 +144,14 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         private void ReturnResult()
         {
-            Result = Beats.Select(b => b.Value).ToArray();
+            Result = GetResult();
             SavePatternToMRU(Result);
             DialogResult = true;
+        }
+
+        private bool[] GetResult()
+        {
+            return Beats.Select(b => b.Value).ToArray();
         }
 
         private void SavePatternToMRU(bool[] result)
@@ -182,6 +203,21 @@ namespace ScriptPlayer.VideoSync.Dialogs
             bool[] pattern = ((Button) sender).DataContext as bool[];
             Remove(pattern);
         }
+
+        protected virtual void OnPatternChanged(bool[] pattern)
+        {
+            PatternChanged?.Invoke(this, new PatternEventArgs(){Pattern = pattern});
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            OnPatternChanged(GetResult());
+        }
+    }
+
+    public class PatternEventArgs : EventArgs
+    {
+        public bool[] Pattern { get; set; }
     }
 
     public class IndexedBoolean : INotifyPropertyChanged

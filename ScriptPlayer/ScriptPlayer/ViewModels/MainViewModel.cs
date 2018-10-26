@@ -186,6 +186,7 @@ namespace ScriptPlayer.ViewModels
         private VideoThumbnailCollection _thumbnails;
         private CommandSource _previousCommandSource;
         private List<ScriptplayerCommand> _commands;
+        private string _lastFolder;
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
         {
@@ -1081,6 +1082,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand AddScriptsToPlaylistCommand { get; set; }
 
+        public ScriptplayerCommand AddFolderToPlaylistCommand { get; set; }
+
         public ScriptplayerCommand LoadPlaylistCommand { get; set; }
 
         public ScriptplayerCommand SavePlaylistCommand { get; set; }
@@ -1279,6 +1282,7 @@ namespace ScriptPlayer.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
 
         public event RequestOverlayEventHandler RequestOverlay;
+        public event EventHandler<RequestEventArgs<string>> RequestFolder;
         public event EventHandler<RequestFileEventArgs> RequestFile;
         public event EventHandler<MessageBoxEventArgs> RequestMessageBox;
         public event EventHandler<ButtplugUrlRequestEventArgs> RequestButtplugUrl;
@@ -1649,10 +1653,16 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Open Video"
             };
 
-            AddScriptsToPlaylistCommand = new ScriptplayerCommand(AddToPlaylist)
+            AddScriptsToPlaylistCommand = new ScriptplayerCommand(AddFileToPlaylist)
             {
                 CommandId = "AddFileToPlaylist",
                 DisplayText = "Add File To Playlist"
+            };
+
+            AddFolderToPlaylistCommand = new ScriptplayerCommand(AddFolderToPlaylist)
+            {
+                CommandId="AddFolderToPlaylist",
+                DisplayText = "Add Folder To Playlist"
             };
 
             ConnectLaunchDirectlyCommand = new ScriptplayerCommand(ConnectLaunchDirectly)
@@ -2557,6 +2567,18 @@ namespace ScriptPlayer.ViewModels
             return e.SelectedFile;
         }
 
+        protected virtual string OnRequestFolder(string initialPath)
+        {
+            RequestEventArgs<string> e = new RequestEventArgs<string>(initialPath);
+
+            RequestFolder?.Invoke(this, e);
+
+            if (e.Handled)
+                return e.Value;
+
+            return null;
+        }
+
         protected virtual string[] OnRequestFiles(string filter, ref int filterIndex)
         {
             RequestFileEventArgs e = new RequestFileEventArgs
@@ -2736,7 +2758,23 @@ namespace ScriptPlayer.ViewModels
             return e.Handled ? e.Result : MessageBoxResult.None;
         }
 
-        public void AddToPlaylist()
+        public void AddFolderToPlaylist()
+        {
+            string folder =OnRequestFolder(_lastFolder);
+            if (string.IsNullOrWhiteSpace(folder))
+                return;
+            _lastFolder = folder;
+
+            string[] files = Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories);
+
+            foreach (string file in files)
+            {
+                if(_supportedMediaExtensions.Contains(Path.GetExtension(file).TrimStart('.').ToLower()))
+                    Playlist.AddEntry(new PlaylistEntry(file));
+            }
+        }
+
+        public void AddFileToPlaylist()
         {
             ScriptFileFormatCollection formats = ScriptLoaderManager.GetFormats();
 

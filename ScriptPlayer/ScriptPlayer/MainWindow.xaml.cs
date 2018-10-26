@@ -56,6 +56,7 @@ namespace ScriptPlayer
             ViewModel.RequestSamsungVrConnectionSettings += ViewModelOnRequestSamsungVrConnectionSettings;
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
+            ViewModel.RequestFolder += ViewModelOnRequestFolder;
             ViewModel.RequestShowSkipButton += ViewModelOnRequestShowSkipButton;
             ViewModel.RequestShowSkipNextButton += ViewModelOnRequestShowSkipNextButton;
             ViewModel.RequestHideSkipButton += ViewModelOnRequestHideSkipButton;
@@ -66,6 +67,20 @@ namespace ScriptPlayer
             ViewModel.Load();
 
             GlobalCommandManager.BuildDefaultShortcuts();
+        }
+
+        private void ViewModelOnRequestFolder(object sender, RequestEventArgs<string> e)
+        {
+            FolderBrowserDialogEx x = new FolderBrowserDialogEx();
+
+            if (!string.IsNullOrWhiteSpace(e.Value))
+                x.SelectedPath = e.Value;
+
+            if (x.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                return;
+
+            e.Handled = true;
+            e.Value = x.SelectedPath;
         }
 
         private void ViewModelOnIntermediateBeat(object sender, double d)

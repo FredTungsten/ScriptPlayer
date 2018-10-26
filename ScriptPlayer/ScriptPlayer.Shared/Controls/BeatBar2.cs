@@ -78,6 +78,15 @@ namespace ScriptPlayer.Shared
             set => SetValue(HighlightIntervalProperty, value);
         }
 
+        public static readonly DependencyProperty PreviewHighlightIntervalProperty = DependencyProperty.Register(
+            "PreviewHighlightInterval", typeof(int), typeof(BeatBar2), new FrameworkPropertyMetadata(4, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public int PreviewHighlightInterval
+        {
+            get { return (int) GetValue(PreviewHighlightIntervalProperty); }
+            set { SetValue(PreviewHighlightIntervalProperty, value); }
+        }
+
         public static readonly DependencyProperty HighlightOffsetProperty = DependencyProperty.Register(
             "HighlightOffset", typeof(int), typeof(BeatBar2), new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.AffectsRender));
 
@@ -130,7 +139,7 @@ namespace ScriptPlayer.Shared
         }
 
         public static readonly DependencyProperty LineWidthProperty = DependencyProperty.Register(
-            "LineWidth", typeof(double), typeof(BeatBar2), new PropertyMetadata(4.0d, OnVisualPropertyChanged));
+            "LineWidth", typeof(double), typeof(BeatBar2), new PropertyMetadata(5.0d, OnVisualPropertyChanged));
 
         public double LineWidth
         {
@@ -145,6 +154,15 @@ namespace ScriptPlayer.Shared
         {
             get => (BeatCollection)GetValue(BeatsProperty);
             set => SetValue(BeatsProperty, value);
+        }
+
+        public static readonly DependencyProperty PreviewBeatsProperty = DependencyProperty.Register(
+            "PreviewBeats", typeof(BeatCollection), typeof(BeatBar2), new PropertyMetadata(default(BeatCollection), OnVisualPropertyChanged));
+
+        public BeatCollection PreviewBeats
+        {
+            get { return (BeatCollection) GetValue(PreviewBeatsProperty); }
+            set { SetValue(PreviewBeatsProperty, value); }
         }
 
         public static readonly DependencyProperty TotalDisplayedDurationProperty = DependencyProperty.Register(
@@ -246,8 +264,8 @@ namespace ScriptPlayer.Shared
             return absolutePosition;
         }
 
-        private bool _wasActive = false;
-        private MetronomeTick _tick = new MetronomeTick();
+        private bool _wasActive;
+        private readonly MetronomeTick _tick = new MetronomeTick();
 
         protected override void OnRender(DrawingContext drawingContext)
         {
@@ -257,9 +275,12 @@ namespace ScriptPlayer.Shared
             TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
 
             List<TimeSpan> absoluteBeatPositions = Beats?.GetBeats(timeFrom, timeTo).ToList() ?? new List<TimeSpan>();
+            List<TimeSpan> absolutePreviewPositions =
+                PreviewBeats?.GetBeats(timeFrom, timeTo).ToList() ?? new List<TimeSpan>();
 
             TimeSpan delayedProgress = Progress.Subtract(TimeSpan.FromMilliseconds(SoundDelay));
             bool isActive = absoluteBeatPositions.Any(b => delayedProgress >= b  && delayedProgress <= b.Add(FlashDuration));
+
             if (SoundAfterBeat)
             {
                 if (isActive && !_wasActive)
@@ -283,7 +304,7 @@ namespace ScriptPlayer.Shared
                     double xFrom = XFromTime(earlier);
                     double xTo = XFromTime(later);
 
-                    SolidColorBrush brush = new SolidColorBrush(Colors.Cyan) { Opacity = 0.4 };
+                    SolidColorBrush brush = new SolidColorBrush(Colors.Cyan) { Opacity = 0.3 };
 
                     drawingContext.DrawRectangle(brush, null, new Rect(new Point(xFrom, 0), new Point(xTo, ActualHeight)));
                 }
@@ -338,6 +359,23 @@ namespace ScriptPlayer.Shared
                 }
             }
 
+            if (absolutePreviewPositions.Count > 0)
+            {
+                int index = 0;
+
+                foreach (TimeSpan timePos in absolutePreviewPositions)
+                {
+                    double pos = (timePos - timeFrom).Divide(timeTo - timeFrom);
+                    int loopIndex = index % PreviewHighlightInterval;
+
+                    Color outerColor = (loopIndex == 0) ? Colors.Red : Colors.LawnGreen;
+                    Color innerColor = Colors.Yellow;
+
+                    DrawLine(drawingContext, outerColor, innerColor, new Point(pos * ActualWidth, ActualHeight / 2.0), new Point(pos * ActualWidth, ActualHeight + 5), LineWidth);
+                    index++;
+                }
+            }
+
             #endregion
 
             drawingContext.Pop();
@@ -364,10 +402,13 @@ namespace ScriptPlayer.Shared
             return true;
         }
 
-        private void DrawLine(DrawingContext drawingContext, Color outer, Color inner, Point pFrom, Point pTo, double lineWidth = 4)
+        private void DrawLine(DrawingContext drawingContext, Color outer, Color inner, Point pFrom, Point pTo, double lineWidth = 3)
         {
-            drawingContext.DrawLine(new Pen(new SolidColorBrush(outer) { Opacity = 0.5 }, lineWidth) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
-            drawingContext.DrawLine(new Pen(new SolidColorBrush(inner) { Opacity = 1.0 }, 2) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
+            pFrom.X = Math.Round(pFrom.X);
+            pTo.X = Math.Round(pTo.X);
+
+            drawingContext.DrawLine(new Pen(new SolidColorBrush(outer) { Opacity = 0.8 }, lineWidth) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
+            drawingContext.DrawLine(new Pen(new SolidColorBrush(inner) { Opacity = 1.0 }, 1) { LineJoin = PenLineJoin.Round }, pFrom, pTo);
         }
 
         protected virtual void OnTimeMouseDown(TimeSpan e)

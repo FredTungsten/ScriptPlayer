@@ -98,7 +98,7 @@
                         <RowDefinition Height="50"/>
                     </Grid.RowDefinitions>
 
-                    <Rectangle Grid.Row="0" Grid.RowSpan="3" Fill="#ff202020"></Rectangle>
+                    <Rectangle Grid.Row="0" Grid.RowSpan="3" Fill="#FF131313"></Rectangle>
                     <shared:VideoPlayer Grid.Row="0" Grid.RowSpan="3" x:Name="videoPlayer" MediaOpened="VideoPlayer_OnMediaOpened" Loaded="videoPlayer_Loaded" VideoMouseDown="videoPlayer_VideoMouseDown" VideoMouseUp="VideoPlayer_OnVideoMouseUp" Margin="0,0,0,40"/>
                     <shared:OverlayText Grid.Row="0" IsHitTestVisible="False" Margin="0,0,0,32" Name="Fadeout"/>
 
@@ -109,7 +109,7 @@
                         Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
                         x:Name="BeatBar" Background="Transparent" Beats="{Binding Beats}" 
                         Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" 
-                        LineColor="#FF00B9FF" LineWidth="8"  HighlightColor="Red"
+                        LineColor="#FF00B9FF" LineWidth="3"  HighlightColor="Red"
                         TotalDisplayedDuration="{Binding BeatBarDuration}" Midpoint="{Binding BeatBarCenter}"/>
 
                     <shared:PositionBar Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
@@ -193,8 +193,10 @@
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=SoundAfterBeat}">Sound after Beat</CheckBox>
 
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="Sound Delay"/>
-                                        <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="-250" Maximum="250" 
+                                        <DockPanel><Button Width="20" Height="20" DockPanel.Dock="Right" ToolTip="Apply to Selection" Click="BtnApplySoundShiftToSelection_Click">A</Button>
+                                            <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="-250" Maximum="250" 
                                                 Value="{Binding ElementName=BeatBar, Path=SoundDelay}" SmallChange="1" LargeChange="1"/>
+                                        </DockPanel>
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="{Binding ElementName=BeatBar, Path=SoundDelay, StringFormat={}{0:f0}ms}"/>
 
                                         <CheckBox IsChecked="{Binding ElementName=videoPlayer, Path=Rotate}">Rotate Video</CheckBox>

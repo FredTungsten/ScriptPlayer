@@ -939,10 +939,67 @@ namespace ScriptPlayer.VideoSync
         private void PatternFill()
         {
             PatternFillOptionsDialog dialog = new PatternFillOptionsDialog(_previousPattern) { Owner = this };
-            if (dialog.ShowDialog() != true) return;
+            dialog.PatternChanged += PreviewFill;
+            try
+            {
+                if (dialog.ShowDialog() != true)
+                    return;
 
-            _previousPattern = dialog.Result;
-            PatternFill(_previousPattern);
+                _previousPattern = dialog.Result;
+                PatternFill(_previousPattern);
+            }
+            finally
+            {
+                ClearPreview();
+                dialog.PatternChanged -= PreviewFill;
+            }
+        }
+
+        private void ClearPreview()
+        {
+            BeatBar.PreviewBeats = null;
+        }
+
+        private void PreviewFill(object sender, PatternEventArgs e)
+        {
+            var pattern = e.Pattern;
+
+            List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
+
+            if (beatsToEvenOut.Count < 2)
+                return;
+
+            TimeSpan first = beatsToEvenOut.Min();
+            TimeSpan last = beatsToEvenOut.Max();
+
+            int numberOfBeats = beatsToEvenOut.Count;
+            if (numberOfBeats < 2)
+                numberOfBeats = 2;
+
+            TimeSpan tStart = first;
+            TimeSpan intervall = (last - first).Divide(numberOfBeats - 1);
+            TimeSpan smallIntervall = intervall.Divide(pattern.Length - 1);
+
+            BeatCollection result = new BeatCollection();
+
+            for (int i = 0; i < numberOfBeats; i++)
+            {
+                if (i + 1 < numberOfBeats)
+                {
+                    for (int j = 0; j < pattern.Length - 1; j++)
+                    {
+                        if (pattern[j])
+                            result.Add(tStart + intervall.Multiply(i) + smallIntervall.Multiply(j));
+                    }
+                }
+                else
+                {
+                    result.Add(last);
+                }
+            }
+
+            BeatBar.PreviewBeats = result;
+            BeatBar.PreviewHighlightInterval = pattern.Count(p => p) -1;
         }
 
         private void Fade()
@@ -1004,10 +1061,78 @@ namespace ScriptPlayer.VideoSync
         private void NormalizePattern()
         {
             PatternFillOptionsDialog dialog = new PatternFillOptionsDialog(_previousPattern) { Owner = this };
-            if (dialog.ShowDialog() != true) return;
+            dialog.PatternChanged += PreviewNormalize;
 
-            _previousPattern = dialog.Result;
-            NormalizePattern(_previousPattern, 0);
+            try
+            {
+                if (dialog.ShowDialog() != true) return;
+
+                _previousPattern = dialog.Result;
+                NormalizePattern(_previousPattern, 0);
+            }
+            finally
+            {
+                dialog.PatternChanged -= PreviewNormalize;
+                ClearPreview();
+            }
+        }
+
+        private void PreviewNormalize(object sender, PatternEventArgs e)
+        {
+            bool[] pattern = e.Pattern;
+            List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
+
+            List<TimeSpan> otherBeats = new List<TimeSpan>();
+
+            if (beatsToEvenOut.Count < 2)
+                return;
+
+            int numberOfBeats = beatsToEvenOut.Count;
+            if (numberOfBeats < 2)
+                return;
+
+            TimeSpan first = beatsToEvenOut.Min();
+            TimeSpan last = beatsToEvenOut.Max();
+
+            int beatsInSet = 0;
+            for (int i = 0; i < pattern.Length - 1; i++)
+                if (pattern[i])
+                    beatsInSet++;
+
+            int fullSets = numberOfBeats / beatsInSet;
+            int beatsInOpenSet = numberOfBeats % beatsInSet;
+
+            if (beatsInOpenSet == 0)
+            {
+                beatsInOpenSet = beatsInSet;
+                fullSets--;
+            }
+
+            int openSetLength = 0;
+
+            for (int i = 0; i < pattern.Length - 1; i++)
+            {
+                if (beatsInOpenSet == 0)
+                    break;
+
+                openSetLength++;
+
+                if (pattern[i])
+                    beatsInOpenSet--;
+            }
+
+            int measureCount = openSetLength + (pattern.Length - 1) * fullSets;
+
+            TimeSpan beatDuration = (last - first).Divide(measureCount - 1);
+
+            for (int i = 0; i < measureCount; i++)
+            {
+                if (pattern[i % (pattern.Length - 1)])
+                    otherBeats.Add(first + beatDuration.Multiply(i));
+            }
+
+            BeatBar.PreviewBeats = new BeatCollection(otherBeats);
+            BeatBar.PreviewHighlightInterval = pattern.Count(p => p);
         }
 
         private void NormalizePattern(bool[] pattern, int additionalBeats)
@@ -1699,19 +1824,24 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuShiftSelected_Click(object sender, RoutedEventArgs e)
         {
-            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
-            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
-
             double shiftBy = GetDouble(0.0);
             if (Double.IsNaN(shiftBy))
                 return;
 
             TimeSpan shift = TimeSpan.FromMilliseconds((int)shiftBy);
 
+            ShiftSelection(shift);
+        }
+
+        private void ShiftSelection(TimeSpan shift)
+        {
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
             List<TimeSpan> beatsToShift = Beats.GetBeats(tBegin, tEnd).Select(b => b + shift).ToList();
             List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
 
-            List<TimedPosition> positionsToShift = Positions.Where(t => t.TimeStamp >= tBegin && t.TimeStamp <= tEnd).Select(b => new TimedPosition{ Position = b.Position, TimeStamp = b.TimeStamp + shift}).ToList();
+            List<TimedPosition> positionsToShift = Positions.Where(t => t.TimeStamp >= tBegin && t.TimeStamp <= tEnd).Select(b => new TimedPosition { Position = b.Position, TimeStamp = b.TimeStamp + shift }).ToList();
             List<TimedPosition> otherPositions = Positions.Where(t => t.TimeStamp < tBegin || t.TimeStamp > tEnd).ToList();
 
             SetAllBeats(otherBeats.Concat(beatsToShift));
@@ -1911,6 +2041,12 @@ namespace ScriptPlayer.VideoSync
                 thumbs.Load(stream);
 
             SeekBar.Thumbnails = thumbs;
+        }
+
+        private void BtnApplySoundShiftToSelection_Click(object sender, RoutedEventArgs e)
+        {
+            ShiftSelection(TimeSpan.FromMilliseconds(BeatBar.SoundDelay));
+            BeatBar.SoundDelay = 0;
         }
     }
 }
