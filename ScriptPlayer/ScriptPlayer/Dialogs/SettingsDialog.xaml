@@ -83,12 +83,32 @@
                         <controls:PageSelector.Header>
                             <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_keyboard_o}"/>
                         </controls:PageSelector.Header>
-                        <DataGrid ItemsSource="{Binding InputMappings}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False">
+                        <DataGrid ItemsSource="{Binding InputMappings}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" Margin="0,0,0,25">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <EventSetter Event="MouseDoubleClick" Handler="CommandMappingRow_DoubleClick"/>
+                                </Style>
+                            </DataGrid.RowStyle>
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Command" Width="*" Binding="{Binding DisplayText}"/>
-                                <DataGridTextColumn Header="Shortcut" Width="*" Binding="{Binding Shortcut}"/>
+                                <DataGridTemplateColumn Header="Shortcut" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type dialogs:InputMappingViewModel}">
+                                            <DockPanel LastChildFill="True">
+                                                <Button Click="BtnRemoveShortCut_Click" DockPanel.Dock="Right" Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                                                    <controls:AwesomeTextBlock Text=""></controls:AwesomeTextBlock>
+                                                </Button>
+                                                <Button Click="BtnEditShortCut_Click" DockPanel.Dock="Right" Focusable="False" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                                                    <controls:AwesomeTextBlock Text=""></controls:AwesomeTextBlock>
+                                                </Button>
+                                                <TextBlock Text="{Binding Shortcut}" DockPanel.Dock="Left"/>
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
+                        <Button Click="BtnResetInputMappings_Click" Content="Reset" HorizontalAlignment="Right" Width="75" Height="20" VerticalAlignment="Bottom"/>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Scripts">
                         <controls:PageSelector.Header>
@@ -237,7 +257,7 @@
 
                             <DockPanel Margin="4" ToolTip="Inverts the input position before calculating the output position.">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Invert Positions"/>
-   
+
                                 <CheckBox IsChecked="{Binding Settings.InvertPosition}"/>
                             </DockPanel>
 
@@ -407,7 +427,7 @@
         </Grid>
 
         <Grid Grid.Column="0" Grid.Row="1" Background="LightGray">
-            <Button Content="Reset" Click="BtnReset_OnClick" HorizontalAlignment="Left" Margin="10,10,0,10" VerticalAlignment="Bottom" Width="75"/> 
+            <Button Content="Reset" Click="BtnReset_OnClick" HorizontalAlignment="Left" Margin="10,10,0,10" VerticalAlignment="Bottom" Width="75"/>
             <Button Content="Ok" Click="BtnOk_OnClick" IsDefault="True" HorizontalAlignment="Right" Margin="0,10,90,10" VerticalAlignment="Bottom" Width="75"/>
             <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,10,10,10" VerticalAlignment="Bottom" Width="75"/>
         </Grid>

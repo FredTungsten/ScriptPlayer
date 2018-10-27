@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -302,6 +303,9 @@ namespace ScriptPlayer.ViewModels
             Playlist.Repeat = Settings.RepeatPlaylist;
             Playlist.RandomChapters = Settings.RandomChapters;
             Playlist.Shuffle = Settings.ShufflePlaylist;
+
+            if(!GlobalCommandManager.LoadMappings(GetCommandMappingsFilePath()))
+                GlobalCommandManager.BuildDefaultShortcuts();
         }
 
         private void Playlist_RequestScriptFileName(object sender, RequestEventArgs<string> e)
@@ -385,6 +389,8 @@ namespace ScriptPlayer.ViewModels
                 playerState.PlaybackMode = PlaybackMode;
 
             playerState.Save(GetPlayerStateFilePath());
+
+            GlobalCommandManager.SaveMappings(GetCommandMappingsFilePath());
         }
 
         private static string GetPlayerStateFilePath()
@@ -395,6 +401,11 @@ namespace ScriptPlayer.ViewModels
         private static string GetSettingsFilePath()
         {
             return GetAppDataFile("Settings.xml");
+        }
+
+        private static string GetCommandMappingsFilePath()
+        {
+            return GetAppDataFile("CommandMappings.xml");
         }
 
         private static string GetDefaultPlaylistFile()
@@ -1743,6 +1754,78 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterCommand(VolumeUpCommand);
             GlobalCommandManager.RegisterCommand(VolumeDownCommand);
             GlobalCommandManager.RegisterCommand(ToggleFullScreenCommand);
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(ToggleCommandSourceVideoPattern)
+            {
+                CommandId = "ToggleCommandSourceVideoPattern",
+                DisplayText = "Toggle Command Source"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreasePlaybackSpeed)
+            {
+                CommandId = "IncreasePlaybackRate",
+                DisplayText = "Increase Playback Rate"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreasePlaybackSpeed)
+            {
+                CommandId = "DecreasePlaybackRate",
+                DisplayText = "Decrease Playback Rate"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseScriptDelay)
+            {
+                CommandId = "IncreaseScriptDelay",
+                DisplayText = "Increase Script Delay"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreaseScriptDelay)
+            {
+                CommandId = "DecreaseScriptDelay",
+                DisplayText = "Decrease Script Delay"
+            });
+        }
+
+        private void DecreaseScriptDelay()
+        {
+            if (Settings.ScriptDelay > TimeSpan.FromMilliseconds(-500))
+                Settings.ScriptDelay -= TimeSpan.FromMilliseconds(25);
+
+            OnRequestOverlay("Script Delay: " + Settings.ScriptDelay.TotalMilliseconds.ToString("F0") + " ms", TimeSpan.FromSeconds(2), "ScriptDelay");
+        }
+
+        private void IncreaseScriptDelay()
+        {
+            if (Settings.ScriptDelay < TimeSpan.FromMilliseconds(500))
+                Settings.ScriptDelay += TimeSpan.FromMilliseconds(25);
+
+            OnRequestOverlay("Script Delay: " + Settings.ScriptDelay.TotalMilliseconds.ToString("F0") + " ms", TimeSpan.FromSeconds(2), "ScriptDelay");
+        }
+
+        private void DecreasePlaybackSpeed()
+        {
+            double currentValue = Math.Round(TimeSource.PlaybackRate, 1);
+            if (currentValue > 0.1)
+                TimeSource.PlaybackRate = currentValue - 0.1;
+
+            OnRequestOverlay("Playback Rate: " + TimeSource.PlaybackRate.ToString("F1", CultureInfo.InvariantCulture), TimeSpan.FromSeconds(2), "PlaybackRate");
+        }
+
+        private void IncreasePlaybackSpeed()
+        {
+            double currentValue = Math.Round(TimeSource.PlaybackRate, 1);
+            if (currentValue < 2.0)
+                TimeSource.PlaybackRate = currentValue + 0.1;
+
+            OnRequestOverlay("Playback Rate: x" + TimeSource.PlaybackRate.ToString("F1"), TimeSpan.FromSeconds(2), "PlaybackRate");
+        }
+
+        private void ToggleCommandSourceVideoPattern()
+        {
+            if(CommandSource == CommandSource.Video)
+                CommandSource = CommandSource.Pattern;
+            else
+                CommandSource = CommandSource.Video;
         }
 
         private void ExecuteClearLoop()

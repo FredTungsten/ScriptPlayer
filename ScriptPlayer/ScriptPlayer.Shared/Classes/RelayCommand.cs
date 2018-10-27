@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Input;
+using System.Xml.Serialization;
 
 namespace ScriptPlayer.Shared
 {
@@ -83,7 +86,10 @@ namespace ScriptPlayer.Shared
 
     public class InputMapping
     {
+        [XmlAttribute("Command")]
         public string CommandId { get; set; }
+
+        [XmlAttribute("Shortcut")]
         public string KeyboardShortcut { get; set; }
     }
 
@@ -104,19 +110,66 @@ namespace ScriptPlayer.Shared
             Commands.Add(command.CommandId, command);
         }
 
+        public static bool LoadMappings(string path)
+        {
+            try
+            {
+                if (!File.Exists(path))
+                    return false;
+
+                using (FileStream stream = new FileStream(path, FileMode.Open))
+                    LoadMappings(stream);
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                return false;
+            }
+        }
+
+        private static void LoadMappings(FileStream stream)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(List<InputMapping>));
+
+            CommandMappings = serializer.Deserialize(stream) as List<InputMapping>;
+        }
+
+        public static void SaveMappings(string path)
+        {
+            using (FileStream stream = new FileStream(path, FileMode.Create))
+                SaveMappings(stream);
+        }
+
+        private static void SaveMappings(FileStream stream)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(List<InputMapping>));
+            serializer.Serialize(stream, CommandMappings);
+        }
+
         public static void BuildDefaultShortcuts()
         {
+            CommandMappings = GetDefaultCommandMappings();
+        }
+
+        public static List<InputMapping> GetDefaultCommandMappings()
+        {
+            List<InputMapping> mappings = new List<InputMapping>();
+
             foreach (ScriptplayerCommand command in Commands.Values)
             {
                 if (string.IsNullOrWhiteSpace(command.DefaultShortCut))
                     continue;
 
-                CommandMappings.Add(new InputMapping
+                mappings.Add(new InputMapping
                 {
                     CommandId = command.CommandId,
                     KeyboardShortcut = command.DefaultShortCut
                 });
             }
+
+            return mappings;
         }
 
         public static bool ProcessInput(Key key, ModifierKeys modifiers)
@@ -146,7 +199,7 @@ namespace ScriptPlayer.Shared
                 shortcut += " + Ctrl";
 
             if (modifiers.HasFlag(ModifierKeys.Shift))
-                shortcut += " + Shíft";
+                shortcut += " + Shift";
 
             if (modifiers.HasFlag(ModifierKeys.Alt))
                 shortcut += " + Alt";

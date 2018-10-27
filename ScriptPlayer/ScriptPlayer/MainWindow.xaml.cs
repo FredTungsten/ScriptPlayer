@@ -65,8 +65,6 @@ namespace ScriptPlayer
             ViewModel.IntermediateBeat += ViewModelOnIntermediateBeat;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
-
-            GlobalCommandManager.BuildDefaultShortcuts();
         }
 
         private void ViewModelOnRequestFolder(object sender, RequestEventArgs<string> e)

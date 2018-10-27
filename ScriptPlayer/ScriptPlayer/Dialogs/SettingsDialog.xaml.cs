@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using JetBrains.Annotations;
 using Microsoft.Win32;
 using ScriptPlayer.Shared;
@@ -100,7 +101,7 @@ namespace ScriptPlayer.Dialogs
         public SettingsDialog(SettingsViewModel initialSettings)
         {
             Settings = initialSettings.Duplicate();
-            CreateInputMappings();
+            CreateInputMappings(GlobalCommandManager.CommandMappings);
 
             InitializeComponent();
 
@@ -108,7 +109,7 @@ namespace ScriptPlayer.Dialogs
             SelectedPage = FindPage(_lastSelected) ?? Pages.FirstOrDefault();
         }
 
-        private void CreateInputMappings()
+        private void CreateInputMappings(List<InputMapping> inputMappings)
         {
             List<InputMappingViewModel> mappings = new List<InputMappingViewModel>();
 
@@ -118,7 +119,7 @@ namespace ScriptPlayer.Dialogs
                 mapping.CommandId = scriptplayerCommand.CommandId;
                 mapping.DisplayText = scriptplayerCommand.DisplayText;
 
-                var shortcut = GlobalCommandManager.CommandMappings.FirstOrDefault(c => c.CommandId == scriptplayerCommand.CommandId);
+                var shortcut = inputMappings.FirstOrDefault(c => c.CommandId == scriptplayerCommand.CommandId);
                 if (shortcut != null)
                     mapping.Shortcut = shortcut.KeyboardShortcut;
                 else
@@ -128,6 +129,19 @@ namespace ScriptPlayer.Dialogs
             }
 
             InputMappings = mappings;
+        }
+
+        private void ApplyInputMappings()
+        {
+            GlobalCommandManager.CommandMappings.Clear();
+            foreach (InputMappingViewModel mapping in InputMappings)
+            {
+                GlobalCommandManager.CommandMappings.Add(new InputMapping
+                {
+                    CommandId = mapping.CommandId,
+                    KeyboardShortcut = mapping.Shortcut
+                });
+            }
         }
 
         private SettingsPageViewModel FindPage(string pageId)
@@ -224,6 +238,7 @@ namespace ScriptPlayer.Dialogs
         private void BtnOk_OnClick(object sender, RoutedEventArgs e)
         {
             ((Button) sender).Focus();
+            ApplyInputMappings();
             DialogResult = true;
         }
 
@@ -320,6 +335,54 @@ namespace ScriptPlayer.Dialogs
                     "Confirm Reset", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
 
             Settings = new SettingsViewModel();
+        }
+
+        private void BtnEditShortCut_Click(object sender, RoutedEventArgs e)
+        {
+            InputMappingViewModel inputMapping = ((FrameworkElement) sender).DataContext as InputMappingViewModel;
+
+            ShortcutInputDialog dialog = new ShortcutInputDialog()
+            {
+                Owner = this,
+                Shortcut = inputMapping.Shortcut
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            inputMapping.Shortcut = dialog.Shortcut;
+        }
+
+        private void BtnRemoveShortCut_Click(object sender, RoutedEventArgs e)
+        {
+            InputMappingViewModel inputMapping = ((FrameworkElement)sender).DataContext as InputMappingViewModel;
+
+            inputMapping.Shortcut = "";
+        }
+
+        private void BtnResetInputMappings_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(this, "Are you sure you want to reset all input mappings to default?", "Confirm Reset",
+                    MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                return;
+
+            CreateInputMappings(GlobalCommandManager.GetDefaultCommandMappings());
+        }
+
+        private void CommandMappingRow_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            InputMappingViewModel inputMapping = ((FrameworkElement)sender).DataContext as InputMappingViewModel;
+
+            ShortcutInputDialog dialog = new ShortcutInputDialog()
+            {
+                Owner = this,
+                Shortcut = inputMapping.Shortcut
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            inputMapping.Shortcut = dialog.Shortcut;
         }
     }
 
