@@ -10,6 +10,7 @@ namespace ScriptPlayer.Shared
     {
         public static GradientStopCollection HeatMap;
         public static GradientStopCollection HeatMap2;
+        public static GradientStopCollection HeatMap3;
 
         static HeatMapGenerator()
         {
@@ -17,6 +18,13 @@ namespace ScriptPlayer.Shared
             HeatMap2 = GradientsSmoothFromColors(0.5, Colors.Black, Colors.Cyan, Colors.Lime, Colors.Yellow,
                 Colors.Red);
             HeatMap2.Insert(1, new GradientStop(Colors.DodgerBlue, 0.01));
+
+            HeatMap3 = new GradientStopCollection();
+            HeatMap3.Add(new GradientStop(Colors.Lime, 0));
+            HeatMap3.Add(new GradientStop(Colors.Lime, 0.8));
+            HeatMap3.Add(new GradientStop(Colors.Yellow, 0.9));
+            HeatMap3.Add(new GradientStop(Colors.Yellow, 0.98));
+            HeatMap3.Add(new GradientStop(Colors.Red, 1.0));
         }
 
         public static GradientStopCollection GradientsSmoothFromColors(double fade, params Color[] colors)
@@ -68,7 +76,7 @@ namespace ScriptPlayer.Shared
             return heatMap[heatMap.Count - 1].Color;
         }
 
-        private static Color MixColors(Color color1, Color color2, double ratio)
+        public static Color MixColors(Color color1, Color color2, double ratio)
         {
             float a = (float)(color2.ScA * ratio + color1.ScA * (1.0 - ratio));
             float r = (float)(color2.ScR * ratio + color1.ScR * (1.0 - ratio));

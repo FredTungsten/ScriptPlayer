@@ -2908,6 +2908,13 @@ namespace ScriptPlayer.ViewModels
             UpdateHeatMap();*/
         }
 
+
+        public void ReloadScript()
+        {
+            if (!String.IsNullOrEmpty(_loadedScript))
+                LoadScript(_loadedScript, false, false);
+        }
+
         private bool LoadScript(string scriptFileName, bool checkForVideo, bool isFallbackScript = false)
         {
             ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(scriptFileName);

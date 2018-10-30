@@ -602,5 +602,10 @@ namespace ScriptPlayer
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             ViewModel.FilesDropped(files);
         }
+
+        private void btnReloadScript_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ReloadScript();
+        }
     }
 }

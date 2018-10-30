@@ -326,16 +326,17 @@
             <!-- SCRIPT POSITIONS -->
             <ProgressBar Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" Minimum="0" Maximum="1" Value="{Binding CurrentPosition}" Orientation="Vertical" HorizontalAlignment="Left" Margin="10,10,0,10" Width="32"/>
 
-            <Grid IsHitTestVisible="False" Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="60" >
-                <Grid.Background>
+            <Grid Background="#E0000000" IsHitTestVisible="False" Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="65">
+                <!--<Grid.Background>
                     <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                         <GradientStop Color="#00000000" Offset="0"/>
-                        <GradientStop Color="#7F000000" Offset="1"/>
-                        <GradientStop Color="#7F000000" Offset="0.331"/>
+                        <GradientStop Color="#C0000000" Offset="0.331"/>
+                        <GradientStop Color="#C0000000" Offset="1"/>
+                        
                     </LinearGradientBrush>
-                </Grid.Background>
+                </Grid.Background>-->
                 <shared:TimeLineHeader ClipToBounds="True" Background="Transparent" ViewPort="{Binding PositionsViewport, Mode=TwoWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Marker="{Binding Path=TimeSource.Progress, Mode=OneWay}"></shared:TimeLineHeader>
-                <shared:PositionBar ClipToBounds="True" TotalDisplayedDuration="{Binding PositionsViewport, Mode=OneWay}" IsReadOnly="True" Positions="{Binding Positions}" Progress="{Binding Path=TimeSource.Progress}"/>
+                <shared:PositionBar ClipToBounds="True" TotalDisplayedDuration="{Binding PositionsViewport, Mode=OneWay}" MinCommandDelay="{Binding Settings.CommandDelay}" IsReadOnly="True" Positions="{Binding Positions}" Progress="{Binding Path=TimeSource.Progress}"/>
             </Grid>
 
             <!-- NOTIFICATIONS -->
@@ -691,6 +692,7 @@
                         <Separator/>
 
                         <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Debug" FontSize="20"/>
+                        <Button Click="btnReloadScript_Click">Reload Script</Button>
                         <CheckBox Margin="4" IsChecked="{Binding Settings.ShowHeatMap}">Show Heat Map</CheckBox>
                         <CheckBox Margin="4" IsChecked="{Binding Settings.ShowScriptPositions}">Show Script Positions</CheckBox>
                         <TextBlock Margin="4" Text="Test Patterns"/>

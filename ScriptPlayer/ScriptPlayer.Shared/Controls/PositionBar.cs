@@ -10,13 +10,22 @@ namespace ScriptPlayer.Shared
 {
     public class PositionBar : Control
     {
+        public static readonly DependencyProperty MinCommandDelayProperty = DependencyProperty.Register(
+            "MinCommandDelay", typeof(TimeSpan), typeof(PositionBar), new PropertyMetadata(TimeSpan.FromMilliseconds(150), OnVisualPropertyChanged));
+
+        public TimeSpan MinCommandDelay
+        {
+            get => (TimeSpan) GetValue(MinCommandDelayProperty);
+            set => SetValue(MinCommandDelayProperty, value);
+        }
+
         public static readonly DependencyProperty LineColorProperty = DependencyProperty.Register(
             "LineColor", typeof(Color), typeof(PositionBar), new PropertyMetadata(Colors.Lime, OnVisualPropertyChanged));
 
         public Color LineColor
         {
-            get { return (Color)GetValue(LineColorProperty); }
-            set { SetValue(LineColorProperty, value); }
+            get => (Color)GetValue(LineColorProperty);
+            set => SetValue(LineColorProperty, value);
         }
 
         public static readonly DependencyProperty LineWidthProperty = DependencyProperty.Register(
@@ -24,8 +33,8 @@ namespace ScriptPlayer.Shared
 
         public double LineWidth
         {
-            get { return (double)GetValue(LineWidthProperty); }
-            set { SetValue(LineWidthProperty, value); }
+            get => (double)GetValue(LineWidthProperty);
+            set => SetValue(LineWidthProperty, value);
         }
 
         public static readonly DependencyProperty PositionsProperty = DependencyProperty.Register(
@@ -33,8 +42,8 @@ namespace ScriptPlayer.Shared
 
         public PositionCollection Positions
         {
-            get { return (PositionCollection)GetValue(PositionsProperty); }
-            set { SetValue(PositionsProperty, value); }
+            get => (PositionCollection)GetValue(PositionsProperty);
+            set => SetValue(PositionsProperty, value);
         }
 
         public static readonly DependencyProperty TotalDisplayedDurationProperty = DependencyProperty.Register(
@@ -42,8 +51,8 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan TotalDisplayedDuration
         {
-            get { return (TimeSpan)GetValue(TotalDisplayedDurationProperty); }
-            set { SetValue(TotalDisplayedDurationProperty, value); }
+            get => (TimeSpan)GetValue(TotalDisplayedDurationProperty);
+            set => SetValue(TotalDisplayedDurationProperty, value);
         }
 
         public static readonly DependencyProperty MidpointProperty = DependencyProperty.Register(
@@ -51,8 +60,8 @@ namespace ScriptPlayer.Shared
 
         public double Midpoint
         {
-            get { return (double)GetValue(MidpointProperty); }
-            set { SetValue(MidpointProperty, value); }
+            get => (double)GetValue(MidpointProperty);
+            set => SetValue(MidpointProperty, value);
         }
 
         public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
@@ -69,8 +78,8 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan Progress
         {
-            get { return (TimeSpan)GetValue(ProgressProperty); }
-            set { SetValue(ProgressProperty, value); }
+            get => (TimeSpan)GetValue(ProgressProperty);
+            set => SetValue(ProgressProperty, value);
         }
 
         public static readonly DependencyProperty IsReadOnlyProperty = DependencyProperty.Register(
@@ -78,8 +87,8 @@ namespace ScriptPlayer.Shared
 
         public bool IsReadOnly
         {
-            get { return (bool) GetValue(IsReadOnlyProperty); }
-            set { SetValue(IsReadOnlyProperty, value); }
+            get => (bool) GetValue(IsReadOnlyProperty);
+            set => SetValue(IsReadOnlyProperty, value);
         }
 
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -276,6 +285,7 @@ namespace ScriptPlayer.Shared
 
                 if (beatPoints.Count > 0)
                 {
+                    /*
                     PathFigure figure = new PathFigure {StartPoint = beatPoints[0]};
 
                     for (int i = 1; i < beatPoints.Count; i++)
@@ -284,10 +294,34 @@ namespace ScriptPlayer.Shared
                     }
 
                     drawingContext.DrawGeometry(null, redPen, new PathGeometry(new[] {figure}));
+                    */
+
+                    for (int i = 1; i < beatPoints.Count; i++)
+                    {
+                        TimeSpan duration = absoluteBeatPositions[i].TimeStamp - absoluteBeatPositions[i - 1].TimeStamp;
+
+                        double speed = SpeedPredictor.PredictSpeed2(absoluteBeatPositions[i - 1].Position, absoluteBeatPositions[i].Position, duration) / 99.0;
+
+                        Color color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap, speed);
+                        drawingContext.DrawLine(new Pen(new SolidColorBrush(color), 1), beatPoints[i-1], beatPoints[i] );
+                    }
+                    
 
                     for (int i = 0; i < beatPoints.Count; i++)
                     {
-                        drawingContext.DrawEllipse(Brushes.DarkRed, redPen, beatPoints[i], CircleRadius, CircleRadius);
+                        Color color;
+
+                        if (i == 0)
+                            color = Colors.Lime;
+                        else
+                        {
+                            TimeSpan duration = absoluteBeatPositions[i].TimeStamp - absoluteBeatPositions[i - 1].TimeStamp;
+                            double durationFactor = MinCommandDelay.Divide(duration);
+                            color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap3, durationFactor);
+                        }
+                        Color fillColor = HeatMapGenerator.MixColors(color, Colors.Black, 0.5);
+
+                        drawingContext.DrawEllipse(new SolidColorBrush(fillColor), new Pen(new SolidColorBrush(color), 1), beatPoints[i], CircleRadius, CircleRadius);   
                     }
                 }
             }
