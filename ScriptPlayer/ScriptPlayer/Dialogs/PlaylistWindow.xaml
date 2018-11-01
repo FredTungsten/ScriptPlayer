@@ -33,6 +33,10 @@
         <Menu Grid.Row="0" Background="White">
             <MenuItem Header="File">
                 <MenuItem Header="Add Files" Command="{Binding AddScriptsToPlaylistCommand}"/>
+                <MenuItem Header="Add Folder" Command="{Binding AddFolderToPlaylistCommand}"/>
+                <Separator/>
+                <MenuItem Header="Remove Missing Files" Command="{Binding RemoveMissingFilesFromPlaylistCommand}"/>
+                <Separator/>
                 <MenuItem Header="Load Playlist" Command="{Binding LoadPlaylistCommand}"/>
                 <MenuItem Header="Save Playlist" Command="{Binding SavePlaylistCommand}"/>
                 <MenuItem Header="Clear Playlist" Command="{Binding Playlist.ClearPlaylistCommand}"/>

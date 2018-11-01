@@ -1095,6 +1095,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand AddFolderToPlaylistCommand { get; set; }
 
+        public ScriptplayerCommand RemoveMissingFilesFromPlaylistCommand { get; set; }
+
         public ScriptplayerCommand LoadPlaylistCommand { get; set; }
 
         public ScriptplayerCommand SavePlaylistCommand { get; set; }
@@ -1737,6 +1739,7 @@ namespace ScriptPlayer.ViewModels
 
             LoadPlaylistCommand = new ScriptplayerCommand(ExecuteLoadPlaylist);
             SavePlaylistCommand = new ScriptplayerCommand(ExecuteSavePlaylist);
+            RemoveMissingFilesFromPlaylistCommand = new ScriptplayerCommand(ExecuteRemoveMissingFilesFromPlaylist);
 
             SetLoopACommand = new ScriptplayerCommand(ExecuteSetLoopA);
             SetLoopBCommand = new ScriptplayerCommand(ExecuteSetLoopB);
@@ -1784,6 +1787,13 @@ namespace ScriptPlayer.ViewModels
                 CommandId = "DecreaseScriptDelay",
                 DisplayText = "Decrease Script Delay"
             });
+        }
+
+        private void ExecuteRemoveMissingFilesFromPlaylist()
+        {
+            var toRemove = Playlist.Entries.Where(entry => !File.Exists(entry.Fullname)).ToList();
+            foreach (var entry in toRemove)
+                Playlist.Entries.Remove(entry);
         }
 
         private void DecreaseScriptDelay()

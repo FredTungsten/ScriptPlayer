@@ -475,6 +475,8 @@ namespace ScriptPlayer.VideoSync
         {
             _originalBeats = new BeatCollection(beats);
             Beats = _originalBeats.Duplicate();
+
+            RefreshHeatMap();
         }
 
         private double GetDouble(double defaultValue, string title = null)
@@ -862,6 +864,8 @@ namespace ScriptPlayer.VideoSync
             Positions = new PositionCollection(project.Positions);
 
             _projectFile = dialog.FileName;
+
+            RefreshHeatMap();
         }
 
         private string ChangePath(string path, string filename)
@@ -1447,6 +1451,14 @@ namespace ScriptPlayer.VideoSync
                         Fade();
                         break;
                     }
+                case Key.C:
+                {
+                    if (shift)
+                        EnforceCommonBeatDuration();
+                    else
+                        FindCommonBeatDuration();
+                    break;
+                }
                 case Key.E:
                     {
                         EqualizeBeatLengths();
@@ -1550,6 +1562,172 @@ namespace ScriptPlayer.VideoSync
 
             if (handled)
                 e.Handled = true;
+        }
+
+        private void EnforceCommonBeatDuration()
+        {
+            List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
+
+            if (beatsToEvenOut.Count < 2)
+                return;
+
+            TimeSpan first = beatsToEvenOut.First();
+            TimeSpan last = beatsToEvenOut.Last();
+            TimeSpan duration = last - first;
+
+            TimeSpan shortest = TimeSpan.MaxValue;
+
+            for (int i = 1; i < beatsToEvenOut.Count; i++)
+            {
+                TimeSpan dur = beatsToEvenOut[i] - beatsToEvenOut[i - 1];
+                if (dur < shortest)
+                    shortest = dur;
+            }
+
+            List<TimeSpan> relativeTimeSpans = beatsToEvenOut.Select(b => b - first).ToList();
+
+            int minBeats = beatsToEvenOut.Count - 1;
+            int maxBeats = (int)Math.Ceiling(duration.Divide(shortest)) * 4;
+            double minTotalDeviation = double.MaxValue;
+
+            int bestBeats = -1;
+            double singleMaxDeviation = double.MaxValue;
+
+            for (int x = minBeats; x <= maxBeats; x++)
+            {
+                double totalDeviation = 0;
+                double beatDuration = duration.TotalMilliseconds / x;
+                double maxDeviation = 0;
+
+                foreach (TimeSpan span in relativeTimeSpans)
+                {
+                    double deviation = Remainer(span.TotalMilliseconds, beatDuration);
+                    if (deviation > beatDuration / 2.0)
+                        deviation = beatDuration - deviation;
+
+                    if (deviation > maxDeviation)
+                        maxDeviation = deviation;
+
+                    totalDeviation += deviation;
+
+                    if (totalDeviation > minTotalDeviation)
+                        break;
+                }
+
+                if (totalDeviation < minTotalDeviation)
+                {
+                    singleMaxDeviation = maxDeviation;
+                    minTotalDeviation = totalDeviation;
+                    bestBeats = x;
+                }
+            }
+
+            TimeSpan bestDuration = duration.Divide(bestBeats);
+
+            List<TimeSpan> newBeats = new List<TimeSpan>();
+
+            double newBeatDuration = duration.TotalMilliseconds / bestBeats;
+            double newMaxDeviation = 0;
+            double newTotalDeviation = 0;
+
+            foreach (TimeSpan span in relativeTimeSpans)
+            {
+                int multiplier = (int) Math.Floor(span.TotalMilliseconds / newBeatDuration);
+                double deviation = Remainer(span.TotalMilliseconds, newBeatDuration);
+                if (deviation > newBeatDuration / 2.0)
+                {
+                    deviation = newBeatDuration - deviation;
+                    multiplier++;
+                }
+
+                newTotalDeviation += deviation;
+
+                if (deviation > newMaxDeviation)
+                    newMaxDeviation = deviation;
+
+                TimeSpan newSpan = TimeSpan.FromTicks((long)(duration.Ticks * multiplier / (double)bestBeats));
+                newBeats.Add(newSpan);
+            }
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+            otherBeats.AddRange(newBeats.Select(b => b + first));
+            SetAllBeats(otherBeats);
+
+            Fadeout.SetText($"Common Beat Duration {bestDuration.TotalMilliseconds:f2}ms, Deviation max: {newMaxDeviation:f2}ms, total: {newTotalDeviation}ms", TimeSpan.FromSeconds(8));
+        }
+
+        private double Remainer(double number, double divisor)
+        {
+            double result = number - Math.Floor(number / divisor) * divisor;
+            if (result < 0)
+                return Math.Abs(result);
+            return result;
+        }
+
+        private void FindCommonBeatDuration()
+        {
+            List<TimeSpan> beatsToEvenOut = GetSelectedBeats();
+
+            if (beatsToEvenOut.Count < 2)
+                return;
+
+            TimeSpan first = beatsToEvenOut.First();
+            TimeSpan last = beatsToEvenOut.Last();
+            TimeSpan duration = last - first;
+
+            TimeSpan shortest = TimeSpan.MaxValue;
+
+            for (int i = 1; i < beatsToEvenOut.Count; i++)
+            {
+                TimeSpan dur = beatsToEvenOut[i] - beatsToEvenOut[i - 1];
+                if (dur < shortest)
+                    shortest = dur;
+            }
+
+            List<TimeSpan> relativeTimeSpans = beatsToEvenOut.Select(b => b - first).ToList();
+
+            int minBeats = beatsToEvenOut.Count - 1;
+            int maxBeats = (int) Math.Ceiling(duration.Divide(shortest)) * 4;
+            double minTotalDeviation = double.MaxValue;
+
+            int bestBeats = -1;
+            double singleMaxDeviation = double.MaxValue;
+
+            for (int x = minBeats; x <= maxBeats; x++)
+            {
+                double totalDeviation = 0;
+                double beatDuration = duration.TotalMilliseconds / x;
+                double maxDeviation = 0;
+                
+                foreach (TimeSpan span in relativeTimeSpans)
+                {
+                    double deviation = Remainer(span.TotalMilliseconds, beatDuration);
+                    if (deviation > beatDuration / 2.0)
+                        deviation = beatDuration - deviation;
+
+                    if (deviation > maxDeviation)
+                        maxDeviation = deviation;
+
+                    totalDeviation += deviation;
+
+                    if (totalDeviation > minTotalDeviation)
+                        break;
+                }
+
+                if (totalDeviation < minTotalDeviation)
+                {
+                    singleMaxDeviation = maxDeviation;
+                    minTotalDeviation = totalDeviation;
+                    bestBeats = x;
+                }
+            }
+
+            TimeSpan bestDuration = duration.Divide(bestBeats);
+
+            Fadeout.SetText($"Best Common Beat Duration {bestDuration.TotalMilliseconds:f2}ms, Deviation max: {singleMaxDeviation:f2}ms, Total: {minTotalDeviation:f0}", TimeSpan.FromSeconds(8));
         }
 
         private void EqualizeBeatLengths()
@@ -2010,6 +2188,14 @@ namespace ScriptPlayer.VideoSync
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            RefreshHeatMap();
+        }
+
+        private void RefreshHeatMap()
+        {
+            if (videoPlayer == null)
+                return;
+
             Brush heatmap = HeatMapGenerator.Generate2(Beats.ToList(), TimeSpan.Zero, videoPlayer.Duration);
             SeekBar.Background = heatmap;
         }
