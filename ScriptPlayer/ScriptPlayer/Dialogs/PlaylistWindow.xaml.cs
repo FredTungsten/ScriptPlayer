@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -23,7 +24,16 @@ namespace ScriptPlayer.Dialogs
         public PlaylistWindow(MainViewModel viewmodel)
         {
             ViewModel = viewmodel;
+            ViewModel.Playlist.SelectedEntryMoved += PlaylistOnSelectedEntryMoved;
             InitializeComponent();
+        }
+
+        private void PlaylistOnSelectedEntryMoved(object sender, EventArgs eventArgs)
+        {
+            if (ViewModel.Playlist.SelectedEntry == null)
+                return;
+
+            lstEntries.ScrollIntoView(ViewModel.Playlist.SelectedEntry);
         }
 
         private void PlaylistEntry_DoubleClicked(object sender, MouseButtonEventArgs e)

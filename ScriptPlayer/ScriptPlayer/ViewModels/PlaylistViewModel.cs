@@ -25,6 +25,7 @@ namespace ScriptPlayer.ViewModels
 
         public event EventHandler<RequestEventArgs<string>> RequestMediaFileName;
         public event EventHandler<RequestEventArgs<string>> RequestScriptFileName;
+        public event EventHandler SelectedEntryMoved; 
 
         public ObservableCollection<PlaylistEntry> Entries
         {
@@ -120,6 +121,8 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand<string[]> PlayPreviousEntryCommand { get; set; }
         public RelayCommand MoveSelectedEntryUpCommand { get; set; }
         public RelayCommand MoveSelectedEntryDownCommand { get; set; }
+        public RelayCommand MoveSelectedEntryFirstCommand { get; set; }
+        public RelayCommand MoveSelectedEntryLastCommand { get; set; }
         public RelayCommand RemoveSelectedEntryCommand { get; set; }
         public RelayCommand ClearPlaylistCommand { get; set; }
         public RelayCommand<bool> SortByDurationCommand { get; set; }
@@ -133,6 +136,8 @@ namespace ScriptPlayer.ViewModels
 
             MoveSelectedEntryDownCommand = new RelayCommand(ExecuteMoveSelectedEntryDown, CanMoveSelectedEntryDown);
             MoveSelectedEntryUpCommand = new RelayCommand(ExecuteMoveSelectedEntryUp, CanMoveSelectedEntryUp);
+            MoveSelectedEntryLastCommand = new RelayCommand(ExecuteMoveSelectedEntryLast, CanMoveSelectedEntryDown);
+            MoveSelectedEntryFirstCommand = new RelayCommand(ExecuteMoveSelectedEntryFirst, CanMoveSelectedEntryUp);
             RemoveSelectedEntryCommand = new RelayCommand(ExecuteRemoveSelectedEntry, CanRemoveSelectedEntry);
             ClearPlaylistCommand = new RelayCommand(ExecuteClearPlaylist, CanClearPlaylist);
             PlayNextEntryCommand = new RelayCommand<string[]>(ExecutePlayNextEntry, CanPlayNextEntry);
@@ -352,6 +357,8 @@ namespace ScriptPlayer.ViewModels
 
             int currentIndex = Entries.IndexOf(SelectedEntry);
             Entries.Move(currentIndex, currentIndex - 1);
+
+            OnSelectedEntryMoved();
         }
 
         private void ExecuteMoveSelectedEntryDown()
@@ -359,7 +366,29 @@ namespace ScriptPlayer.ViewModels
             if (!CanMoveSelectedEntryDown()) return;
 
             int currentIndex = Entries.IndexOf(SelectedEntry);
-            Entries.Move(currentIndex, currentIndex+1);
+            Entries.Move(currentIndex, currentIndex + 1);
+
+            OnSelectedEntryMoved();
+        }
+
+        private void ExecuteMoveSelectedEntryFirst()
+        {
+            if (!CanMoveSelectedEntryUp()) return;
+
+            int currentIndex = Entries.IndexOf(SelectedEntry);
+            Entries.Move(currentIndex, 0);
+
+            OnSelectedEntryMoved();
+        }
+
+        private void ExecuteMoveSelectedEntryLast()
+        {
+            if (!CanMoveSelectedEntryDown()) return;
+
+            int currentIndex = Entries.IndexOf(SelectedEntry);
+            Entries.Move(currentIndex, Entries.Count - 1);
+
+            OnSelectedEntryMoved();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -552,6 +581,11 @@ namespace ScriptPlayer.ViewModels
                     _mediaInfoThread.Abort();
             }
             catch { }
+        }
+
+        protected virtual void OnSelectedEntryMoved()
+        {
+            SelectedEntryMoved?.Invoke(this, EventArgs.Empty);
         }
     }
 }

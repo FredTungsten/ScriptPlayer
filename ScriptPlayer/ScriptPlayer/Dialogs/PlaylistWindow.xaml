@@ -51,7 +51,7 @@
                 <MenuItem Header="Shuffle" Command="{Binding Playlist.SortShuffleCommand}"/>
             </MenuItem>
         </Menu>
-        <ListBox Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,42" ItemsSource="{Binding Path=Playlist.Entries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" AllowDrop="True" Drop="ListBox_Drop">
+        <ListBox x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,42" ItemsSource="{Binding Path=Playlist.Entries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" AllowDrop="True" Drop="ListBox_Drop">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
@@ -68,14 +68,22 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <UniformGrid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom" Grid.Row="1" Columns="7">
-            <Button ToolTip="Move Down" Command="{Binding Playlist.MoveSelectedEntryDownCommand}"
+        <UniformGrid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom" Grid.Row="1" Columns="9">
+            <Button ToolTip="Move First" Command="{Binding Playlist.MoveSelectedEntryFirstCommand}" 
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_down}"/>
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_circle_up}"/>
             </Button>
             <Button ToolTip="Move Up" Command="{Binding Playlist.MoveSelectedEntryUpCommand}" 
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_up}"/>
+            </Button>
+            <Button ToolTip="Move Down" Command="{Binding Playlist.MoveSelectedEntryDownCommand}"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_down}"/>
+            </Button>
+            <Button ToolTip="Move Last" Command="{Binding Playlist.MoveSelectedEntryLastCommand}"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_circle_down}"/>
             </Button>
             <Button ToolTip="Remove" Command="{Binding Playlist.RemoveSelectedEntryCommand}" 
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
