@@ -37,6 +37,15 @@ namespace ScriptPlayer.Shared
             "Thumbnails", typeof(VideoThumbnailCollection), typeof(SeekBar), 
             new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
+        public static readonly DependencyProperty HighlightRangeProperty = DependencyProperty.Register(
+            "HighlightRange", typeof(Tuple<TimeSpan,TimeSpan>), typeof(SeekBar), new FrameworkPropertyMetadata(default(Tuple<TimeSpan,TimeSpan>), FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public Tuple<TimeSpan,TimeSpan> HighlightRange
+        {
+            get { return (Tuple<TimeSpan,TimeSpan>) GetValue(HighlightRangeProperty); }
+            set { SetValue(HighlightRangeProperty, value); }
+        }
+
         public VideoThumbnailCollection Thumbnails
         {
             get => (VideoThumbnailCollection) GetValue(ThumbnailsProperty);
@@ -172,12 +181,34 @@ namespace ScriptPlayer.Shared
 
             double linePosition = Progress.Divide(Duration) * ActualWidth;
 
-            linePosition = Math.Round(linePosition - 0.5) + 0.5;
+            linePosition = RoundLinePosition(linePosition);
 
             dc.DrawLine(new Pen(Brushes.Black, 3), new Point(linePosition, 0), new Point(linePosition, ActualHeight));
             dc.DrawLine(new Pen(Brushes.White, 1), new Point(linePosition, 0), new Point(linePosition, ActualHeight));
 
+            double outOfRangeOpacity = 0.5;
+
+            if (HighlightRange != null)
+            {
+                double x1 = Math.Min(1, Math.Max(0, HighlightRange.Item1.Divide(Duration))) * ActualWidth;
+                double x2 = Math.Min(1, Math.Max(0, HighlightRange.Item2.Divide(Duration))) * ActualWidth;
+
+                Color outOfRangeOverlayColor = Color.FromArgb((byte) (255 * outOfRangeOpacity), 0, 0, 0);
+                Brush outOfRangeBrush = new SolidColorBrush(outOfRangeOverlayColor);
+
+                if (x1 > 0)
+                    dc.DrawRectangle(outOfRangeBrush, null, new Rect(0, 0, x1, ActualHeight));
+
+                if(x2 < ActualWidth)
+                    dc.DrawRectangle(outOfRangeBrush, null, new Rect(x2, 0, ActualWidth - x2, ActualHeight));
+            }
+
             dc.Pop();
+        }
+
+        private double RoundLinePosition(double linePosition)
+        {
+            return Math.Round(linePosition - 0.5) + 0.5;
         }
 
         protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)

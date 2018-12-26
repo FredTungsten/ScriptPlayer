@@ -135,6 +135,17 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public Tuple<TimeSpan, TimeSpan> SelectedRange
+        {
+            get => _selectedRange;
+            set
+            {
+                if (Equals(value, _selectedRange)) return;
+                _selectedRange = value;
+                OnPropertyChanged();
+            }
+        }
+
         private PatternGenerator _pattern;
         private CommandSource _commandSource = CommandSource.Video;
         private PlaylistViewModel _playlist;
@@ -188,6 +199,7 @@ namespace ScriptPlayer.ViewModels
         private CommandSource _previousCommandSource;
         private List<ScriptplayerCommand> _commands;
         private string _lastFolder;
+        private Tuple<TimeSpan, TimeSpan> _selectedRange;
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
         {
@@ -1105,6 +1117,7 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand OpenScriptCommand { get; set; }
 
+
         public PlaylistViewModel Playlist
         {
             get => _playlist;
@@ -1115,8 +1128,6 @@ namespace ScriptPlayer.ViewModels
                 OnPropertyChanged();
             }
         }
-
-
 
         public SettingsViewModel Settings
         {
@@ -2150,9 +2161,20 @@ namespace ScriptPlayer.ViewModels
                 LoadedVideo = videoFileName;
 
                 TimeSpan start = TimeSpan.Zero;
+                SelectedRange = null;
 
-                if (Settings.AutoSkip)
-                    start = Settings.RandomChapters ? GetRandomChapter() : GetFirstEvent();
+                if (Settings.RandomChapters)
+                {
+                    var chapter = GetRandomChapter();
+                    SelectedRange = chapter;
+                    start = chapter.Item1 - TimeSpan.FromSeconds(1);
+
+                    Debug.WriteLine($"{DateTime.Now:T}: Selected Range = {chapter.Item1:g} - {chapter.Item2:g}");
+                }
+                else if (Settings.AutoSkip)
+                {
+                    start = GetFirstEvent();
+                }
 
                 if (PlaybackMode == PlaybackMode.Local)
                 {
@@ -2439,8 +2461,14 @@ namespace ScriptPlayer.ViewModels
                 {
                     timeToNextOriginalEvent = duration;
 
-                    if (timeToNextOriginalEvent > TimeSpan.FromSeconds(10))
+                    if (SelectedRange != null && eventArgs.NextAction.TimeStamp > SelectedRange.Item2)
                     {
+                        Debug.WriteLine($"{DateTime.Now:T}: Selected Range about to end");
+                        skipState = SkipState.Gap;
+                    }
+                    else if (timeToNextOriginalEvent > TimeSpan.FromSeconds(10))
+                    {
+                        Debug.WriteLine($"{DateTime.Now:T}: Gap Detected");
                         skipState = SkipState.Gap;
                     }
                 }
@@ -2777,16 +2805,120 @@ namespace ScriptPlayer.ViewModels
         //    }
         //}
 
-        private TimeSpan GetRandomChapter()
+        private enum ChapterMode
         {
-            var chapters = GetChapters(TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(10));
+            RandomChapter,
+            FastestChapter,
+            FastestTimeSpan,
+        }
+
+        private Tuple<TimeSpan, TimeSpan> GetRandomChapter()
+        {
+            var minDuration = TimeSpan.FromSeconds(30);
+            var gapDuration = TimeSpan.FromSeconds(10);
+
+            var chapters = GetChapters(minDuration, gapDuration);
 
             if (chapters.Count == 0)
-                return TimeSpan.Zero;
+                return new Tuple<TimeSpan, TimeSpan>(TimeSpan.Zero, TimeSpan.Zero);
 
-            Random r = new Random();
-            TimeSpan skipTo = chapters[r.Next(chapters.Count)].Item1 - TimeSpan.FromSeconds(1);
-            return skipTo;
+            ChapterMode mode = ChapterMode.FastestTimeSpan;
+
+            switch (mode)
+            {
+                case ChapterMode.RandomChapter:
+                {
+                    Random r = new Random();
+                    return chapters[r.Next(chapters.Count)];
+                }
+                case ChapterMode.FastestChapter:
+                {
+                    var actions =_scriptHandler.GetUnfilledScript().ToList();
+
+                    var chapterCommands = chapters
+                        .Select(t => actions.Where(a => a.TimeStamp >= t.Item1 && a.TimeStamp <= t.Item2)).ToList();
+
+                    double mostCommandsPerSecond = 0.0;
+                    var fastestChapter = new Tuple<TimeSpan, TimeSpan>(TimeSpan.Zero, TimeSpan.Zero);
+
+                    foreach (var chapter in chapterCommands)
+                    {
+                        TimeSpan duration = chapter.Last().TimeStamp - chapter.First().TimeStamp;
+                        double commandsPerSecond = chapter.Count() / duration.TotalSeconds;
+                        if (commandsPerSecond > mostCommandsPerSecond)
+                        {
+                            mostCommandsPerSecond = commandsPerSecond;
+                            fastestChapter = new Tuple<TimeSpan, TimeSpan>(chapter.First().TimeStamp, chapter.Last().TimeStamp);
+                        }
+                    }
+
+                    return fastestChapter;
+                }
+                case ChapterMode.FastestTimeSpan:
+                {
+                    var actions = _scriptHandler.GetUnfilledScript().ToList();
+
+                    TimeSpan span = TimeSpan.FromMinutes(1);
+                    TimeSpan span2 = TimeSpan.FromTicks((long) (span.Ticks * 0.8));
+
+                    TimeSpan fastestStart = TimeSpan.Zero;
+                    TimeSpan fastestEnd = TimeSpan.Zero;
+                    double mostCommands = 0.0;
+
+                    int startIndex = 0;
+                    int endIndex = 0;
+
+                    List<TimeSpan> timeStamps = new List<TimeSpan>();
+                    timeStamps.Add(actions[0].TimeStamp);
+
+                    while (startIndex < actions.Count)
+                    {
+                        while (actions[endIndex].TimeStamp - actions[startIndex].TimeStamp < span)
+                        {
+                            if (endIndex + 1 >= actions.Count)
+                                break;
+
+                            if (actions[endIndex + 1].TimeStamp - actions[startIndex].TimeStamp > span)
+                                break;
+
+                            endIndex++;
+
+                            if(timeStamps.Count > 0)
+                            if (actions[endIndex].TimeStamp - timeStamps.Last() > gapDuration)
+                            {
+                                startIndex = endIndex;
+                                timeStamps.Clear();
+                                timeStamps.Add(actions[endIndex].TimeStamp);
+                                continue;
+                            }
+
+                            timeStamps.Add(actions[endIndex].TimeStamp);
+                        }
+
+                        if (timeStamps.Last() - timeStamps.First() >= span2)
+                        {
+                            double commands = timeStamps.Count / (timeStamps.Last() - timeStamps.First()).TotalSeconds;
+
+                            if (commands > mostCommands)
+                            {
+                                mostCommands = commands;
+                                fastestStart = timeStamps.First();
+                                fastestEnd = timeStamps.Last();
+                            }
+                        }
+
+                        if (startIndex + 1 >= actions.Count)
+                            break;
+
+                        startIndex++;
+                        timeStamps.RemoveAt(0);
+                    }
+
+                    return new Tuple<TimeSpan, TimeSpan>(fastestStart, fastestEnd);
+                }
+                default:
+                    return new Tuple<TimeSpan, TimeSpan>(TimeSpan.Zero, TimeSpan.Zero);
+            }
         }
 
         public void SkipToNextEventInternal()
