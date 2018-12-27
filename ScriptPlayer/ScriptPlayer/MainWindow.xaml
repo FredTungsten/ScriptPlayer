@@ -484,7 +484,7 @@
                         <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_repeat}"/>
                     </Grid>
                 </CheckBox>
-                <CheckBox ToolTip="Random Chapters" IsChecked="{Binding Playlist.RandomChapters}" 
+                <CheckBox ToolTip="{Binding RandomChapterToolTip}" IsChecked="{Binding Playlist.RandomChapters}" 
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                     <Grid Width="16" Height="16">
                         <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_bookmark}"/>

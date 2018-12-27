@@ -82,6 +82,8 @@ namespace ScriptPlayer.ViewModels
         private bool _rememberVolume;
         private bool _rememberPlaybackMode;
         private TimeSpan _patternSpeed = TimeSpan.FromMilliseconds(300);
+        private ChapterMode _chapterMode = ChapterMode.RandomChapter;
+        private TimeSpan _chapterTargetDuration = TimeSpan.FromSeconds(60);
 
         public SettingsViewModel()
         {
@@ -782,6 +784,25 @@ namespace ScriptPlayer.ViewModels
             set => SoftSeekLoopsDuration = TimeSpan.FromTicks(value);
         }
 
+        [XmlIgnore]
+        public TimeSpan ChapterTargetDuration
+        {
+            get => _chapterTargetDuration;
+            set
+            {
+                if (value.Equals(_chapterTargetDuration)) return;
+                _chapterTargetDuration = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [XmlElement("ChapterTargetDuration")]
+        public long ChapterTargetDurationWrapper
+        {
+            get => ChapterTargetDuration.Ticks;
+            set => ChapterTargetDuration = TimeSpan.FromTicks(value);
+        }
+
         public bool NotifyLogging
         {
             get => _notifyLogging;
@@ -848,6 +869,17 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public ChapterMode ChapterMode
+        {
+            get => _chapterMode;
+            set
+            {
+                if (value == _chapterMode) return;
+                _chapterMode = value;
+                OnPropertyChanged();
+            }
+        }
+        
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]

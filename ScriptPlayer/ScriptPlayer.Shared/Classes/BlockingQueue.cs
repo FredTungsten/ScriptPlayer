@@ -70,8 +70,9 @@ namespace ScriptPlayer.Shared
                     while (_queue.IsEmpty)
                     {
                         if (_closed) return null;
-
                         _event.WaitOne();
+
+                        if (_closed) return null;
                         _event.Reset();
                     }
                 }

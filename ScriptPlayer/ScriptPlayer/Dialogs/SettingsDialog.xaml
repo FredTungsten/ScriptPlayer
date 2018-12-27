@@ -17,6 +17,7 @@
     <Window.Resources>
         <converters:DistinctValueToBooleanConverter x:Key="BooleanConverter"/>
         <converters:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
+        <converters:TimeSpanToSecondsConverter x:Key="SecondsConverter"/>
         <converters1:BooleanInverter x:Key="Inverter"/>
         <Style TargetType="TextBlock" x:Key="SettingName">
             <Setter Property="Margin" Value="0"/>
@@ -70,7 +71,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Input Mappings" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Chapter Settings" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -79,6 +80,26 @@
                     </ControlTemplate>
                 </controls:PageSelector.Template>
                 <controls:PageSelector.Elements>
+                    <Grid controls:PageSelector.ContentIdentifier="Chapter Settings">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_bookmark}"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <TextBlock Text="Random Chapter Mode:"/>
+                            <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
+                                ConverterParameter={x:Static viewModels:ChapterMode.FastestChapter}}" Content="Fastest Chapter"/>
+                            <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
+                                ConverterParameter={x:Static viewModels:ChapterMode.RandomChapter}}" Content="Random Chapter"/>
+                            <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
+                                ConverterParameter={x:Static viewModels:ChapterMode.FastestTimeSpan}}" Content="Fastest Section"/>
+
+                            <DockPanel Margin="4" ToolTip="The approximate duration of randomly selected sections.">
+                                <TextBlock Style="{StaticResource SettingName}" Text="Target Duration"/>
+                                <TextBlock Style="{StaticResource SettingValue}" Text="{Binding Path=Settings.ChapterTargetDuration, Converter={StaticResource SecondsConverter}, StringFormat={}{0:f0}s}"/>
+                                <Slider Margin="0,4" Minimum="10" Maximum="300" Value="{Binding Path=Settings.ChapterTargetDuration, Converter={StaticResource SecondsConverter}}"  IsSnapToTickEnabled="True" TickFrequency="1"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Input Mappings">
                         <controls:PageSelector.Header>
                             <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_keyboard_o}"/>

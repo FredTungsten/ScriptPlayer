@@ -38,11 +38,11 @@ namespace ScriptPlayer.Shared
             new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty HighlightRangeProperty = DependencyProperty.Register(
-            "HighlightRange", typeof(Tuple<TimeSpan,TimeSpan>), typeof(SeekBar), new FrameworkPropertyMetadata(default(Tuple<TimeSpan,TimeSpan>), FrameworkPropertyMetadataOptions.AffectsRender));
+            "HighlightRange", typeof(Section), typeof(SeekBar), new FrameworkPropertyMetadata(default(Section), FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public Tuple<TimeSpan,TimeSpan> HighlightRange
+        public Section HighlightRange
         {
-            get { return (Tuple<TimeSpan,TimeSpan>) GetValue(HighlightRangeProperty); }
+            get { return (Section) GetValue(HighlightRangeProperty); }
             set { SetValue(HighlightRangeProperty, value); }
         }
 
@@ -188,10 +188,10 @@ namespace ScriptPlayer.Shared
 
             double outOfRangeOpacity = 0.5;
 
-            if (HighlightRange != null)
+            if (HighlightRange != null && !HighlightRange.IsEmpty)
             {
-                double x1 = Math.Min(1, Math.Max(0, HighlightRange.Item1.Divide(Duration))) * ActualWidth;
-                double x2 = Math.Min(1, Math.Max(0, HighlightRange.Item2.Divide(Duration))) * ActualWidth;
+                double x1 = Math.Min(1, Math.Max(0, HighlightRange.Start.Divide(Duration))) * ActualWidth;
+                double x2 = Math.Min(1, Math.Max(0, HighlightRange.End.Divide(Duration))) * ActualWidth;
 
                 Color outOfRangeOverlayColor = Color.FromArgb((byte) (255 * outOfRangeOpacity), 0, 0, 0);
                 Brush outOfRangeBrush = new SolidColorBrush(outOfRangeOverlayColor);

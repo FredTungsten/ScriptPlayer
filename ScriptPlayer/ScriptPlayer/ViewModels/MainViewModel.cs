@@ -14,6 +14,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Xml.Serialization;
 using FMUtils.KeyboardHook;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared;
@@ -135,7 +136,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public Tuple<TimeSpan, TimeSpan> SelectedRange
+        public Section SelectedRange
         {
             get => _selectedRange;
             set
@@ -199,7 +200,8 @@ namespace ScriptPlayer.ViewModels
         private CommandSource _previousCommandSource;
         private List<ScriptplayerCommand> _commands;
         private string _lastFolder;
-        private Tuple<TimeSpan, TimeSpan> _selectedRange;
+        private Section _selectedRange;
+        private string _randomChapterToolTip;
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
         {
@@ -318,6 +320,8 @@ namespace ScriptPlayer.ViewModels
 
             if(!GlobalCommandManager.LoadMappings(GetCommandMappingsFilePath()))
                 GlobalCommandManager.BuildDefaultShortcuts();
+
+            UpdateRandomChapterTooltip();
         }
 
         private void Playlist_RequestScriptFileName(object sender, RequestEventArgs<string> e)
@@ -2167,9 +2171,9 @@ namespace ScriptPlayer.ViewModels
                 {
                     var chapter = GetRandomChapter();
                     SelectedRange = chapter;
-                    start = chapter.Item1 - TimeSpan.FromSeconds(1);
+                    start = chapter.Start - TimeSpan.FromSeconds(1);
 
-                    Debug.WriteLine($"{DateTime.Now:T}: Selected Range = {chapter.Item1:g} - {chapter.Item2:g}");
+                    Debug.WriteLine($"{DateTime.Now:T}: Selected Range = {chapter.Start:g} - {chapter.End:g}");
                 }
                 else if (Settings.AutoSkip)
                 {
@@ -2251,9 +2255,9 @@ namespace ScriptPlayer.ViewModels
             HeatMap = heatmap;
         }
 
-        private List<Tuple<TimeSpan, TimeSpan>> GetChapters(TimeSpan minChapterDuration, TimeSpan gapDuration)
+        private List<CommandSection> GetChapters(TimeSpan minChapterDuration, TimeSpan gapDuration, bool includePositions)
         {
-            List<Tuple<TimeSpan, TimeSpan>> result = new List<Tuple<TimeSpan, TimeSpan>>();
+            List<CommandSection> result = new List<CommandSection>();
 
             if (TimeSource == null)
                 return result;
@@ -2265,35 +2269,40 @@ namespace ScriptPlayer.ViewModels
             if (timeStamps.Count < 2)
                 return result;
 
-            TimeSpan chapterBegin = TimeSpan.MinValue;
-            TimeSpan chapterEnd = TimeSpan.MinValue;
+            int chapterBegin = int.MinValue;
+            int chapterEnd = int.MinValue;
 
-            foreach (TimeSpan span in timeStamps)
+            for (int index = 0; index < timeStamps.Count; index++)
             {
-                if (chapterBegin == TimeSpan.MinValue)
+                if (chapterBegin == int.MinValue)
                 {
-                    chapterBegin = span;
-                    chapterEnd = span;
+                    chapterBegin = index;
+                    chapterEnd = index;
                 }
-                else if (span - chapterEnd < gapDuration)
+                else if (timeStamps[index] - timeStamps[chapterEnd] < gapDuration)
                 {
-                    chapterEnd = span;
+                    chapterEnd = index;
                 }
                 else
                 {
-                    result.Add(new Tuple<TimeSpan, TimeSpan>(chapterBegin, chapterEnd));
+                    result.Add(new CommandSection(GetRange(timeStamps, chapterBegin, chapterEnd), includePositions));
 
-                    chapterBegin = span;
-                    chapterEnd = span;
+                    chapterBegin = index;
+                    chapterEnd = index;
                 }
             }
 
-            if (chapterBegin != TimeSpan.MinValue && chapterEnd != TimeSpan.MinValue)
+            if (chapterBegin != int.MinValue && chapterEnd != int.MinValue)
             {
-                result.Add(new Tuple<TimeSpan, TimeSpan>(chapterBegin, chapterEnd));
+                result.Add(new CommandSection(GetRange(timeStamps, chapterBegin, chapterEnd), includePositions));
             }
 
-            return result.Where(t => t.Item2 - t.Item1 >= minChapterDuration).ToList();
+            return result.Where(t => t.Duration >= minChapterDuration).ToList();
+        }
+
+        private List<T> GetRange<T>(List<T> source, int firstIndex, int lastIndex)
+        {
+            return source.Skip(firstIndex).Take(lastIndex - firstIndex + 1).ToList();
         }
 
         private List<ScriptAction> FilterDuplicates(List<ScriptAction> timestamps)
@@ -2461,7 +2470,7 @@ namespace ScriptPlayer.ViewModels
                 {
                     timeToNextOriginalEvent = duration;
 
-                    if (SelectedRange != null && eventArgs.NextAction.TimeStamp > SelectedRange.Item2)
+                    if (SelectedRange != null && eventArgs.NextAction.TimeStamp > SelectedRange.End)
                     {
                         Debug.WriteLine($"{DateTime.Now:T}: Selected Range about to end");
                         skipState = SkipState.Gap;
@@ -2805,24 +2814,18 @@ namespace ScriptPlayer.ViewModels
         //    }
         //}
 
-        private enum ChapterMode
-        {
-            RandomChapter,
-            FastestChapter,
-            FastestTimeSpan,
-        }
-
-        private Tuple<TimeSpan, TimeSpan> GetRandomChapter()
+        private Section GetRandomChapter()
         {
             var minDuration = TimeSpan.FromSeconds(30);
             var gapDuration = TimeSpan.FromSeconds(10);
 
-            var chapters = GetChapters(minDuration, gapDuration);
+            var chapters = GetChapters(minDuration, gapDuration, true);
 
             if (chapters.Count == 0)
-                return new Tuple<TimeSpan, TimeSpan>(TimeSpan.Zero, TimeSpan.Zero);
+                return Section.Empty;
 
-            ChapterMode mode = ChapterMode.FastestTimeSpan;
+            //ChapterMode mode = ChapterMode.FastestTimeSpan;
+            ChapterMode mode = Settings.ChapterMode;
 
             switch (mode)
             {
@@ -2833,22 +2836,15 @@ namespace ScriptPlayer.ViewModels
                 }
                 case ChapterMode.FastestChapter:
                 {
-                    var actions =_scriptHandler.GetUnfilledScript().ToList();
-
-                    var chapterCommands = chapters
-                        .Select(t => actions.Where(a => a.TimeStamp >= t.Item1 && a.TimeStamp <= t.Item2)).ToList();
-
                     double mostCommandsPerSecond = 0.0;
-                    var fastestChapter = new Tuple<TimeSpan, TimeSpan>(TimeSpan.Zero, TimeSpan.Zero);
+                    var fastestChapter = Section.Empty;
 
-                    foreach (var chapter in chapterCommands)
+                    foreach (var chapter in chapters)
                     {
-                        TimeSpan duration = chapter.Last().TimeStamp - chapter.First().TimeStamp;
-                        double commandsPerSecond = chapter.Count() / duration.TotalSeconds;
-                        if (commandsPerSecond > mostCommandsPerSecond)
+                        if (chapter.CommandsPerSecond > mostCommandsPerSecond)
                         {
-                            mostCommandsPerSecond = commandsPerSecond;
-                            fastestChapter = new Tuple<TimeSpan, TimeSpan>(chapter.First().TimeStamp, chapter.Last().TimeStamp);
+                            mostCommandsPerSecond = chapter.CommandsPerSecond;
+                            fastestChapter = chapter;
                         }
                     }
 
@@ -2856,68 +2852,71 @@ namespace ScriptPlayer.ViewModels
                 }
                 case ChapterMode.FastestTimeSpan:
                 {
-                    var actions = _scriptHandler.GetUnfilledScript().ToList();
-
-                    TimeSpan span = TimeSpan.FromMinutes(1);
+                    TimeSpan span = Settings.ChapterTargetDuration;
                     TimeSpan span2 = TimeSpan.FromTicks((long) (span.Ticks * 0.8));
 
-                    TimeSpan fastestStart = TimeSpan.Zero;
-                    TimeSpan fastestEnd = TimeSpan.Zero;
-                    double mostCommands = 0.0;
+                    CommandSection fastestSection = new CommandSection(TimeSpan.Zero, TimeSpan.Zero, 1);
+                    List<CommandSection> candidates = new List<CommandSection>();
 
-                    int startIndex = 0;
-                    int endIndex = 0;
-
-                    List<TimeSpan> timeStamps = new List<TimeSpan>();
-                    timeStamps.Add(actions[0].TimeStamp);
-
-                    while (startIndex < actions.Count)
+                    foreach (var chapter in chapters)
                     {
-                        while (actions[endIndex].TimeStamp - actions[startIndex].TimeStamp < span)
+                        int startIndex = 0;
+                        int endIndex = 0;
+
+                        List<TimeSpan> timeStamps = new List<TimeSpan>();
+                        timeStamps.Add(chapter.Positions[0]);
+
+                        while (startIndex < chapter.Positions.Count)
                         {
-                            if (endIndex + 1 >= actions.Count)
-                                break;
-
-                            if (actions[endIndex + 1].TimeStamp - actions[startIndex].TimeStamp > span)
-                                break;
-
-                            endIndex++;
-
-                            if(timeStamps.Count > 0)
-                            if (actions[endIndex].TimeStamp - timeStamps.Last() > gapDuration)
+                            while (chapter.Positions[endIndex] - chapter.Positions[startIndex] < span)
                             {
-                                startIndex = endIndex;
-                                timeStamps.Clear();
-                                timeStamps.Add(actions[endIndex].TimeStamp);
-                                continue;
+                                if (endIndex + 1 >= chapter.Positions.Count)
+                                    break;
+
+                                if (chapter.Positions[endIndex + 1] - chapter.Positions[startIndex] > span)
+                                    break;
+
+                                endIndex++;
+
+                                if (timeStamps.Count > 0)
+                                    if (chapter.Positions[endIndex] - timeStamps.Last() > gapDuration)
+                                    {
+                                        startIndex = endIndex;
+                                        timeStamps.Clear();
+                                        timeStamps.Add(chapter.Positions[endIndex]);
+                                        continue;
+                                    }
+
+                                timeStamps.Add(chapter.Positions[endIndex]);
                             }
 
-                            timeStamps.Add(actions[endIndex].TimeStamp);
-                        }
+                            CommandSection currentSection = new CommandSection(timeStamps, false);
 
-                        if (timeStamps.Last() - timeStamps.First() >= span2)
-                        {
-                            double commands = timeStamps.Count / (timeStamps.Last() - timeStamps.First()).TotalSeconds;
-
-                            if (commands > mostCommands)
+                            if (currentSection.Duration >= span2)
                             {
-                                mostCommands = commands;
-                                fastestStart = timeStamps.First();
-                                fastestEnd = timeStamps.Last();
+                                if (currentSection.CommandsPerSecond > fastestSection.CommandsPerSecond)
+                                {
+                                    if (!fastestSection.IsEmpty && !fastestSection.Overlaps(currentSection, true))
+                                    {
+                                        candidates.Add(fastestSection);
+                                    }
+
+                                    fastestSection = currentSection;
+                                }
                             }
+
+                            if (startIndex + 1 >= chapter.Positions.Count)
+                                break;
+
+                            startIndex++;
+                            timeStamps.RemoveAt(0);
                         }
-
-                        if (startIndex + 1 >= actions.Count)
-                            break;
-
-                        startIndex++;
-                        timeStamps.RemoveAt(0);
                     }
 
-                    return new Tuple<TimeSpan, TimeSpan>(fastestStart, fastestEnd);
+                    return fastestSection;
                 }
                 default:
-                    return new Tuple<TimeSpan, TimeSpan>(TimeSpan.Zero, TimeSpan.Zero);
+                    return Section.Empty;
             }
         }
 
@@ -3321,6 +3320,7 @@ namespace ScriptPlayer.ViewModels
         {
             Settings = settings;
             SaveSettings();
+            UpdateRandomChapterTooltip();
 
             switch (PlaybackMode)
             {
@@ -3363,6 +3363,35 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        private void UpdateRandomChapterTooltip()
+        {
+            switch (Settings.ChapterMode)
+            {
+                case ChapterMode.RandomChapter:
+                    RandomChapterToolTip = "Random Chapter\r\nWill only play a single random chapter of the script";
+                    break;
+                case ChapterMode.FastestChapter:
+                    RandomChapterToolTip = "Fastest Chapter\r\nWill only play the fastest chapter of the script";
+                    break;
+                case ChapterMode.FastestTimeSpan:
+                    RandomChapterToolTip = $"Fastest Section\r\nWill only play the fastest {Settings.ChapterTargetDuration.TotalSeconds:f0}s of the script";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public string RandomChapterToolTip
+        {
+            get { return _randomChapterToolTip; }
+            set
+            {
+                if (value == _randomChapterToolTip) return;
+                _randomChapterToolTip = value;
+                OnPropertyChanged();
+            }
+        }
+
         protected virtual void OnRequestShowSkipButton()
         {
             RequestShowSkipButton?.Invoke(this, EventArgs.Empty);
@@ -3394,6 +3423,17 @@ namespace ScriptPlayer.ViewModels
         }
     }
 
+    public enum ChapterMode
+    {
+        [XmlEnum("RandomChapter")]
+        RandomChapter,
+
+        [XmlEnum("FastestChapter")]
+        FastestChapter,
+
+        [XmlEnum("FastestTimeSpan")]
+        FastestTimeSpan,
+    }
     public enum SkipState
     {
         Unknown,
@@ -3405,5 +3445,58 @@ namespace ScriptPlayer.ViewModels
         EndFiller,
         EndNext,
         End,
+    }    
+
+    public class CommandSection : Section
+    {
+        public int CommandCount { get; }
+        public double CommandsPerSecond { get; }
+
+        public List<TimeSpan> Positions { get; set; }
+
+        public CommandSection(List<TimedPosition> positions, bool savePositions)
+        {
+            Start = positions.First().TimeStamp;
+            End = positions.Last().TimeStamp;
+            Duration = End - Start;
+
+            CommandCount = positions.Count;
+            if (Duration <= TimeSpan.Zero)
+                CommandsPerSecond = 0.0;
+            else
+                CommandsPerSecond = (CommandCount - 1) / Duration.TotalSeconds;
+
+            if(savePositions)
+                Positions = positions.Select(p => p.TimeStamp).ToList();
+        }
+
+        public CommandSection(List<TimeSpan> positions, bool savePositions)
+        {
+            Start = positions.First();
+            End = positions.Last();
+            Duration = End - Start;
+
+            CommandCount = positions.Count;
+            if (Duration <= TimeSpan.Zero)
+                CommandsPerSecond = 0.0;
+            else
+                CommandsPerSecond = (CommandCount - 1) / Duration.TotalSeconds;
+
+            if (savePositions)
+                Positions = positions.ToList();
+        }
+
+        public CommandSection(TimeSpan start, TimeSpan end, int commandCount)
+        {
+            Start = start;
+            End = end;
+            Duration = End - Start;
+
+            CommandCount = commandCount;
+            if (Duration <= TimeSpan.Zero)
+                CommandsPerSecond = 0.0;
+            else
+                CommandsPerSecond = (CommandCount - 1) / Duration.TotalSeconds;
+        }
     }
 }
