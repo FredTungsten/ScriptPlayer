@@ -42,7 +42,7 @@
                         <Setter Property="FontSize" Value="14"/>
                     </Style>
                 </StackPanel.Resources>
-                <ContentPresenter Content="{Binding Header}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ContentPresenter Content="{Binding Header}" VerticalAlignment="Center" Margin="0,0,8,0" Width="20"/>
                 <TextBlock FontSize="14" Text="{Binding Name}" VerticalAlignment="Center"/>
             </StackPanel>
         </HierarchicalDataTemplate>
