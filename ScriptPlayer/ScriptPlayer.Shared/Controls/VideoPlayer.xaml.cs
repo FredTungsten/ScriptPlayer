@@ -333,14 +333,15 @@ namespace ScriptPlayer.Shared
 
         private async Task<bool> ProcessSeekEntry(SeekEntry seekEntry)
         {
-            ulong myPriority = ++_seekPriority;
-
+            seekEntry.Priority = ++_seekPriority;
+            
             try
             {
                 await _seekSemaphore.WaitAsync();
                 IsSeeking = true;
 
-                if (_seekPriority != myPriority)
+                if (_seekPriority != seekEntry.Priority)
+                    //Since awaiting the Semaphore, another entry was added to the queue --> Skip this one
                     return false;
 
                 if (seekEntry.FileName != OpenedFile)
@@ -356,7 +357,7 @@ namespace ScriptPlayer.Shared
             }
             finally
             {
-                if (myPriority == _seekPriority)
+                if (seekEntry.Priority == _seekPriority)
                     IsSeeking = false;
 
                 _seekSemaphore.Release(1);
@@ -380,7 +381,7 @@ namespace ScriptPlayer.Shared
                 if (position > _player.Position && diff < TimeSpan.FromSeconds(4))
                     return;
 
-                await CrossFade(position, seekEntry.Duration);
+                await CrossFade(position, seekEntry.Duration, seekEntry.Priority);
             }
         }
 
@@ -693,24 +694,20 @@ namespace ScriptPlayer.Shared
             });
         }
 
-        private async Task CrossFade(TimeSpan position, TimeSpan duration)
+        private async Task CrossFade(TimeSpan position, TimeSpan duration, ulong priority = 0)
         {
-            TimeSpan seekDelay = TimeSpan.FromSeconds(0.5);
-            TimeSpan playDelay = TimeSpan.FromSeconds(0.05);
-            TimeSpan fadeDuration = duration;
-
-            _standByPlayer.Play();
-
-            await Task.Delay(playDelay);
-
-            _standByPlayer.Position = position.Subtract(fadeDuration);
-
-            await Task.Delay(seekDelay);
+            await PlayAndSeek(_standByPlayer, position - duration.Divide(2.0));
 
             SetPrimaryPlayer(_standByPlayer);
 
-            Fade(fadeDuration);
-            await Task.Delay(fadeDuration);
+            //This would be a good spot to disable IsSeeking
+            // -----------
+            if (priority == _seekPriority)
+                IsSeeking = false;
+            // -----------
+
+            Fade(duration);
+            await Task.Delay(duration);
 
             SwapPlayers();
 
@@ -720,9 +717,36 @@ namespace ScriptPlayer.Shared
             OnStandByVolumeChanged();
 
             _standByPlayer.Pause();
-            //_player.Play();
-
             ForegroundLayer.Opacity = 1;
+        }
+
+        private async Task PlayAndSeek(MediaPlayer player, TimeSpan position)
+        {
+            TimeSpan maxSeekDelay = TimeSpan.FromSeconds(1.0);
+            TimeSpan maxPlayDelay = TimeSpan.FromSeconds(0.1);
+
+            DateTime start = DateTime.Now;
+            DateTime startPlay = DateTime.Now;
+
+            Debug.WriteLine("Starting Fallback Player ... ");
+
+            player.Play();
+            while (player.Position == TimeSpan.Zero && DateTime.Now - startPlay <= maxPlayDelay)
+                await Task.Delay(10);
+
+            Debug.WriteLine("Started Fallback Player in " + (DateTime.Now - startPlay));
+
+            Debug.WriteLine("Seeking " + position);
+            player.Position = position;
+
+            DateTime startSeek = DateTime.Now;
+            while (player.Position <= position && DateTime.Now - startSeek <= maxSeekDelay)
+            {
+                await Task.Delay(10);
+            }
+
+            Debug.WriteLine("Seeked in " + (DateTime.Now - startSeek));
+            Debug.Write("Play and Seek done in " + (DateTime.Now - start));
         }
 
         private void Fade(TimeSpan duration)
@@ -853,5 +877,6 @@ namespace ScriptPlayer.Shared
         public string FileName { get; set; }
         public TimeSpan Position { get; set; }
         public TimeSpan Duration { get; set; }
+        public ulong Priority { get; set; }
     }
 }
