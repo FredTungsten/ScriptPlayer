@@ -45,9 +45,11 @@ namespace ScriptPlayer.Shared
         public static readonly DependencyProperty DisplayedHeightProperty = DependencyProperty.Register(
             "DisplayedHeight", typeof(double), typeof(VideoPlayer), new PropertyMetadata(default(double)));
 
-        public static readonly DependencyProperty ResolutionProperty =
-            DependencyProperty.Register("Resolution", typeof(Resolution), typeof(VideoPlayer),
-                new PropertyMetadata(new Resolution(0, 0)));
+        public static readonly DependencyProperty ResolutionProperty = DependencyProperty.Register(
+            "Resolution", typeof(Resolution), typeof(VideoPlayer), new PropertyMetadata(new Resolution(0, 0)));
+
+        public static readonly DependencyProperty StandByResolutionProperty = DependencyProperty.Register(
+            "StandByResolution", typeof(Resolution), typeof(VideoPlayer), new PropertyMetadata(new Resolution(0,0)));
 
         public static readonly DependencyProperty StandByBrushProperty = DependencyProperty.Register(
             "StandByBrush", typeof(Brush), typeof(VideoPlayer), new PropertyMetadata(default(Brush)));
@@ -162,6 +164,12 @@ namespace ScriptPlayer.Shared
             set => SetValue(ResolutionProperty, value);
         }
 
+        public Resolution StandByResolution
+        {
+            get => (Resolution)GetValue(StandByResolutionProperty);
+            set => SetValue(StandByResolutionProperty, value);
+        }
+
         public Brush StandByBrush
         {
             get => (Brush)GetValue(StandByBrushProperty);
@@ -175,6 +183,8 @@ namespace ScriptPlayer.Shared
         }
 
         protected Resolution ActualResolution { get; set; }
+
+        protected Resolution ActualStandByResolution { get; set; }
 
         public TimeSource TimeSource
         {
@@ -435,7 +445,11 @@ namespace ScriptPlayer.Shared
 
             player.Open(new Uri(filename, UriKind.Absolute));
 
-            await Task.Run(() => { loadEvent.WaitOne(TimeSpan.FromSeconds(5)); });
+            await Task.Run(() =>
+            {
+                //Wait until Success or Failure event is raised but 5 seconds max.
+                loadEvent.WaitOne(TimeSpan.FromSeconds(5));
+            });
 
             player.MediaOpened -= Success;
             player.MediaFailed -= Failure;
@@ -446,6 +460,22 @@ namespace ScriptPlayer.Shared
             MediaPlayer tmp = _player;
             _player = _standByPlayer;
             _standByPlayer = tmp;
+
+            if (_player != null)
+            {
+                ActualResolution = _player.HasVideo
+                    ? new Resolution(_player.NaturalVideoWidth, _player.NaturalVideoHeight)
+                    : new Resolution(0, 0);
+            }
+
+            if (_standByPlayer != null)
+            {
+                ActualStandByResolution = _standByPlayer.HasVideo
+                    ? new Resolution(_standByPlayer.NaturalVideoWidth, _standByPlayer.NaturalVideoHeight)
+                    : new Resolution(0, 0);
+            }
+
+            UpdateResolution();
 
             UpdateVideoBrush();
             UpdateStandByBrush();
@@ -570,7 +600,11 @@ namespace ScriptPlayer.Shared
 
             if (player.HasVideo)
             {
-                ActualResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
+                if(ReferenceEquals(player, _player))
+                    ActualResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
+                else
+                    ActualStandByResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
+
                 UpdateResolution();
             }
 
@@ -584,6 +618,10 @@ namespace ScriptPlayer.Shared
             Resolution = !SideBySide
                 ? ActualResolution
                 : new Resolution(ActualResolution.Horizontal / 2, ActualResolution.Vertical);
+
+            StandByResolution = !SideBySide
+                ? ActualStandByResolution
+                : new Resolution(ActualStandByResolution.Horizontal / 2, ActualStandByResolution.Vertical);
         }
 
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -684,7 +722,7 @@ namespace ScriptPlayer.Shared
             _standByPlayer.Pause();
             //_player.Play();
 
-            Border.Opacity = 1;
+            ForegroundLayer.Opacity = 1;
         }
 
         private void Fade(TimeSpan duration)
@@ -728,7 +766,7 @@ namespace ScriptPlayer.Shared
             Storyboard.SetTarget(volumeFadeInAnimation, this);
             Storyboard.SetTargetProperty(volumeFadeInAnimation, new PropertyPath(StandByVolumeProperty));
 
-            Storyboard.SetTarget(opacityFadeOutAnimation, Border);
+            Storyboard.SetTarget(opacityFadeOutAnimation, ForegroundLayer);
             Storyboard.SetTargetProperty(opacityFadeOutAnimation, new PropertyPath(OpacityProperty));
 
             storyboardFadeOut.Begin();
@@ -738,7 +776,7 @@ namespace ScriptPlayer.Shared
         {
             BeginAnimation(MainVolumeProperty, null);
             BeginAnimation(StandByVolumeProperty, null);
-            Border.BeginAnimation(OpacityProperty, null);
+            ForegroundLayer.BeginAnimation(OpacityProperty, null);
         }
 
         protected virtual void OnMediaOpened()
