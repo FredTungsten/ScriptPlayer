@@ -9,16 +9,16 @@
         Title="Normalization Settings" Height="158.263" Width="383.369" Loaded="Window_Loaded" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
     <Grid>
         <TextBlock Margin="10,10,10,0" TextWrapping="Wrap" Text="{Binding Path=InitialBeats, StringFormat='{}{0} beats selected'}" Height="16" VerticalAlignment="Top"/>
-        <TextBox Name="txtInput" Height="23" Margin="10,0,10,35" TextWrapping="Wrap" Text="{Binding Mode=TwoWay, Path=AdditionalBeats}" VerticalAlignment="Bottom"/>
+        <TextBox Name="txtInput" Height="23" Margin="10,0,10,35" TextWrapping="Wrap" Text="{Binding Mode=TwoWay, Path=Input}" VerticalAlignment="Bottom"/>
         <UniformGrid Margin="10,31,10,63" Columns="6">
-            <Button Content="/4" Click="Button_Click_1"/>
-            <Button Content="/3" Click="Button_Click_2"/>
-            <Button Content="/2" Click="Button_Click_3"/>
-            <Button Content="*2" Click="Button_Click_4"/>
-            <Button Content="*3" Click="Button_Click_5"/>
-            <Button Content="*4" Click="Button_Click_6"/>
+            <Button Content="/4" Click="btnPresets_Click"/>
+            <Button Content="/3" Click="btnPresets_Click"/>
+            <Button Content="/2" Click="btnPresets_Click"/>
+            <Button Content="*2" Click="btnPresets_Click"/>
+            <Button Content="*3" Click="btnPresets_Click"/>
+            <Button Content="*4" Click="btnPresets_Click"/>
         </UniformGrid>
-        <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
+        <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="btnOk_Click"/>
         <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
     </Grid>
 </Window>

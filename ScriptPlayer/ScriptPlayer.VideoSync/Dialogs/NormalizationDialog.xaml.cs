@@ -9,6 +9,15 @@ namespace ScriptPlayer.VideoSync.Dialogs
     /// </summary>
     public partial class NormalizationDialog : Window
     {
+        public static readonly DependencyProperty InputProperty = DependencyProperty.Register(
+            "Input", typeof(string), typeof(NormalizationDialog), new PropertyMetadata(default(string)));
+
+        public string Input
+        {
+            get { return (string) GetValue(InputProperty); }
+            set { SetValue(InputProperty, value); }
+        }
+
         public static readonly DependencyProperty AdditionalBeatsProperty = DependencyProperty.Register(
             "AdditionalBeats", typeof(int), typeof(NormalizationDialog), new PropertyMetadata(default(int)));
 
@@ -33,10 +42,16 @@ namespace ScriptPlayer.VideoSync.Dialogs
             InitializeComponent();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnOk_Click(object sender, RoutedEventArgs e)
         {
-            ((Button) sender).Focus();
-            DialogResult = true;
+            ((Button)sender).Focus();
+            Accept();
+        }
+
+        private void Accept()
+        {
+            if (UpdateAdditionalBeats())
+                DialogResult = true;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -45,53 +60,90 @@ namespace ScriptPlayer.VideoSync.Dialogs
             txtInput.Focus();
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void btnPresets_Click(object sender, RoutedEventArgs e)
         {
-            DivideBeats(4);
+            Input = ((Button) sender).Content.ToString();
+            if (UpdateAdditionalBeats())
+                Accept();
         }
 
-        private void DivideBeats(int i)
+        private bool UpdateAdditionalBeats()
         {
-            if ((InitialBeats - 1) % i != 0)
+            if(string.IsNullOrWhiteSpace(Input))
+            {
+                MessageBox.Show("Invalid Input!", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (Input.StartsWith("/"))
+            {
+                if (Input.Length < 2)
+                {
+                    MessageBox.Show("Invalid Input!", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+
+                int divisor;
+                if (!int.TryParse(Input.Substring(1), out divisor))
+                {
+                    MessageBox.Show("Invalid Input!", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+
+                return DivideBeats(divisor);
+            }
+
+            if (Input.StartsWith("*"))
+            {
+                if (Input.Length < 2)
+                {
+                    MessageBox.Show("Invalid Input!", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+
+                int multiplier;
+                if (!int.TryParse(Input.Substring(1), out multiplier))
+                {
+                    MessageBox.Show("Invalid Input!", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+
+                MultiplyBeats(multiplier);
+                return true;
+            }
+
+            int newNumber;
+
+            bool result = int.TryParse(Input, out newNumber);
+            if (!result)
+            {
+                MessageBox.Show("Invalid Input!", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            AdditionalBeats = newNumber;
+            return true;
+        }
+
+        private bool DivideBeats(int i)
+        {
+            if (i <= 0 || (InitialBeats - 1) % i != 0)
             {
                 MessageBox.Show(this, "Can't divide beats by " + i, "Not possible", MessageBoxButton.OK,
                     MessageBoxImage.Warning);
 
-                return;
+                return false;
             }
 
             int targetCount = (InitialBeats - 1) / i + 1;
             AdditionalBeats = targetCount - InitialBeats;
-        }
 
-        private void Button_Click_2(object sender, RoutedEventArgs e)
-        {
-            DivideBeats(3);
-        }
-
-        private void Button_Click_3(object sender, RoutedEventArgs e)
-        {
-            DivideBeats(2);
-        }
-
-        private void Button_Click_4(object sender, RoutedEventArgs e)
-        {
-            MultiplyBeats(2);
+            return true;
         }
 
         private void MultiplyBeats(int i)
         {
             AdditionalBeats = (InitialBeats - 1) * (i - 1);
-        }
-
-        private void Button_Click_5(object sender, RoutedEventArgs e)
-        {
-            MultiplyBeats(3);
-        }
-
-        private void Button_Click_6(object sender, RoutedEventArgs e)
-        {
-            MultiplyBeats(4);
         }
     }
 }

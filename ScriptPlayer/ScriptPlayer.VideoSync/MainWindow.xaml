@@ -230,6 +230,22 @@
                         <TabItem Header="Direct Input">
                             <controls:DirectInputControl Beat="DirectInputControl_OnBeat"/>
                         </TabItem>
+                        <TabItem Header="Select Info">
+                            <Grid>
+                                <StackPanel>
+                                    <TextBlock Text="Start:" Margin="2"/>
+                                    <TextBlock Name="txtSelectStart" Text="0:00:00.000" Margin="12,0,2,10"/>
+                                    <TextBlock Text="Start:" Margin="2"/>
+                                    <TextBlock Name="txtSelectEnd" Text="0:00:00.000" Margin="12,0,2,10"/>
+                                    <TextBlock Text="Duration:" Margin="2"/>
+                                    <TextBlock Name="txtSelectDuration" Text="0:00:00.000" Margin="12,0,2,10"/>
+                                    <TextBlock Text="Beats:" Margin="2"/>
+                                    <TextBlock Name="txtSelectBeats" Text="0:00:00.000" Margin="12,0,2,10"/>
+                                    <TextBlock Text="Avg. Duration:" Margin="2"/>
+                                    <TextBlock Name="txtSelectAvgDuration" Text="0:00:00.000" Margin="12,0,2,10"/>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
                     </TabControl>
                 </Grid>
             </Grid>

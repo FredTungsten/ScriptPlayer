@@ -634,6 +634,23 @@ namespace ScriptPlayer.VideoSync
                     BeatBar.Marker2 = _marker2;
                     break;
             }
+
+            UpdateSelection();
+        }
+
+        private void UpdateSelection()
+        {
+            var beats = Beats.GetBeats(_marker1, _marker2).ToList();
+            if (beats.Count >= 2)
+            {
+                var duration = beats.Last() - beats.First();
+
+                txtSelectStart.Text = beats.First().ToString("g");
+                txtSelectEnd.Text = beats.Last().ToString("g");
+                txtSelectDuration.Text = duration.ToString("g");
+                txtSelectBeats.Text = beats.Count.ToString("D");
+                txtSelectAvgDuration.Text = duration.Divide(beats.Count - 1).ToString("g");
+            }
         }
 
         private void mnuJumpToFirstBeat_Click(object sender, RoutedEventArgs e)
