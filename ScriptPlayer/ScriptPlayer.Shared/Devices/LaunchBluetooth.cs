@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Management;
 using System.Threading;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.Advertisement;
@@ -52,6 +53,23 @@ namespace ScriptPlayer.Shared
                 _discover = false;
                 BleWatcher.Stop();
             }
+        }
+
+        public static bool IsLaunchPaired()
+        {
+            var scope = new ManagementScope(@"\\" + Environment.MachineName + @"\root\CIMV2");
+            var sq = new SelectQuery("SELECT Name FROM Win32_PnPEntity WHERE Name='Launch'");
+            var searcher = new ManagementObjectSearcher(scope, sq);
+            var moc = searcher.Get();
+
+            foreach (ManagementObject mo in moc)
+            {
+                object propName = mo.Properties["Name"].Value;
+                Debug.WriteLine($"{propName} is paired!");
+                return true;
+            }
+
+            return false;
         }
 
         private async void BleReceived(BluetoothLEAdvertisementWatcher w, BluetoothLEAdvertisementReceivedEventArgs btAdv)

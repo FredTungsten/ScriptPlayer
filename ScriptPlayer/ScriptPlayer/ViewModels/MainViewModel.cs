@@ -22,6 +22,7 @@ using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Helpers;
 using ScriptPlayer.Shared.Scripts;
 using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -3154,6 +3155,13 @@ namespace ScriptPlayer.ViewModels
 
         public void ConnectLaunchDirectly()
         {
+            if (LaunchBluetooth.IsLaunchPaired())
+            {
+                MessageBox.Show(
+                    "It appears that you have paired your Launch. Since the Launch is a BLE-device, you don't have to pair it to use it - in fact it will probably not work if you do. Unpair your Launch and try again.",
+                    "Launch paired", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
             LaunchBluetooth controller = _controllers.OfType<LaunchBluetooth>().Single();
             controller.Start();
         }
