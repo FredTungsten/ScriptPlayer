@@ -1777,7 +1777,13 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(ToggleCommandSourceVideoPattern)
             {
                 CommandId = "ToggleCommandSourceVideoPattern",
-                DisplayText = "Toggle Command Source"
+                DisplayText = "Toggle Source Video/Pattern"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(ToggleCommandSourceVideoNone)
+            {
+                CommandId = "ToggleCommandSourceVideoNone",
+                DisplayText = "Toggle Source Video/None"
             });
 
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreasePlaybackSpeed)
@@ -1848,8 +1854,16 @@ namespace ScriptPlayer.ViewModels
 
         private void ToggleCommandSourceVideoPattern()
         {
-            if(CommandSource == CommandSource.Video)
+            if (CommandSource == CommandSource.Video)
                 CommandSource = CommandSource.Pattern;
+            else
+                CommandSource = CommandSource.Video;
+        }
+
+        private void ToggleCommandSourceVideoNone()
+        {
+            if (CommandSource == CommandSource.Video)
+                CommandSource = CommandSource.None;
             else
                 CommandSource = CommandSource.Video;
         }
