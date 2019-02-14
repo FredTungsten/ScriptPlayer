@@ -155,7 +155,8 @@ namespace ScriptPlayer.Shared
                 }
                 else if (device.AllowedMessages.ContainsKey(nameof(VorzeA10CycloneCmd)))
                 {
-                    message = new VorzeA10CycloneCmd(device.Index, CommandConverter.LaunchToVorzeSpeed(information), information.PositionToTransformed > information.PositionFromTransformed);
+                    // position is used as speed here
+                    message = new VorzeA10CycloneCmd(device.Index, CommandConverter.SimpleVorzeSpeed(information), information.PositionFromOriginal > 50);
                 }
                 else if (device.AllowedMessages.ContainsKey(nameof(LovenseCmd)))
                 {

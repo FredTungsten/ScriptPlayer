@@ -4,7 +4,7 @@ namespace ScriptPlayer.Shared
 {
     public static class CommandConverter
     {
-        public static uint LaunchToVorzeSpeed(DeviceCommandInformation info)
+        /*public static uint LaunchToVorzeSpeed(DeviceCommandInformation info)
         {
             //Information from https://github.com/metafetish/syncydink/blob/4c8c31d6f8ffba2c9d1f3fcb69209630b209cd89/src/utils/HapticsToButtplug.ts#L186
 
@@ -12,6 +12,14 @@ namespace ScriptPlayer.Shared
             double speed = Math.Floor(25000 * Math.Pow(info.Duration.TotalMilliseconds / delta, -1.05)) / 100.0;
             // 100ms = ~0.95
             speed = info.TransformSpeed(speed) * 100.0;
+
+            return (uint)speed;
+        }*/
+
+        public static uint SimpleVorzeSpeed(DeviceCommandInformation info)
+        {
+            double speed = Math.Abs(info.PositionFromOriginal - 50) / 50.0;
+            speed = info.TransformSpeed(speed) * 99.0;
 
             return (uint)speed;
         }

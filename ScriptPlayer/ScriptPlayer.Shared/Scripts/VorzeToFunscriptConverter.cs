@@ -27,7 +27,8 @@ namespace ScriptPlayer.Shared.Scripts
 
             for (int i = 0; i < actions.Count; i++)
             {
-                int samePosition = 0;
+                // removed because vorze rotation speed changes while still rotating in the same direction are an essential feature
+                /*int samePosition = 0;
 
                 for (int j = i + 1; j < actions.Count; j++)
                 {
@@ -35,12 +36,13 @@ namespace ScriptPlayer.Shared.Scripts
                         samePosition++;
                     else
                         break;
-                }
+                }*/
 
+                // This has been modified to make Vorze CSVs round-trip better through the conversions, but other toys should still get something out of this too
                 funActions.Add(new FunScriptAction
                 {
-                    Position = (byte)(actions[i].Action == 0 ? 95 : 5),
-                    TimeStamp = actions[i + samePosition].TimeStamp
+                    Position = (byte)(50 + actions[i].Parameter * (actions[i].Action == 0 ? 0.5 : -0.5)),
+                    TimeStamp = actions[i].TimeStamp
                 });
             }
 
