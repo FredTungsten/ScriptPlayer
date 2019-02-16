@@ -1438,6 +1438,9 @@ namespace ScriptPlayer.VideoSync
                     {
                         double multiplier = e.Key == Key.Right ? 1 : -1;
 
+                        if (cckRTL.IsChecked == true)
+                            multiplier *= -1;
+
                         if (control && shift)
                             ShiftTime(TimeSpan.FromMilliseconds(multiplier * 100));
                         else if (control)
