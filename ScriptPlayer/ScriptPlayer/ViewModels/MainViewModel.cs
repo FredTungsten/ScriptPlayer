@@ -631,6 +631,17 @@ namespace ScriptPlayer.ViewModels
                             RefreshManualDuration();
                             break;
                         }
+                    case PlaybackMode.Kodi:
+                        {
+                            HideBanner();
+                            TimeSource = new KodiTimeSource(
+                                new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                    TimeSpan.FromMilliseconds(10)), new KodiConnectionSettings());
+
+                            ((KodiTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+                            RefreshManualDuration();
+                            break;
+                        }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
