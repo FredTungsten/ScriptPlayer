@@ -51,7 +51,7 @@ namespace ScriptPlayer.Shared
 
         private static async Task<string> ReadString(ClientWebSocket ws)
         {
-            ArraySegment<Byte> buffer = new ArraySegment<byte>(new Byte[8192]);
+            ArraySegment<Byte> buffer = new ArraySegment<byte>(new Byte[65536]);
 
             WebSocketReceiveResult result = null;
 
