@@ -36,6 +36,13 @@ namespace ScriptPlayer.Shared
 
         private bool _running = true;
 
+                                           // v10 = Kodi 18.1 mine returns 10                           
+        private int _api_major_version = 8; // v9 = Kodi 18
+                                            // v8 = Kodi 17
+
+        private bool _OnAdd_happened = false; // for legacy kodi api
+
+
         private static Task SendString(ClientWebSocket ws, string data, CancellationToken cancellation)
         {
             var encoded = Encoding.UTF8.GetBytes(data);
@@ -103,11 +110,13 @@ namespace ScriptPlayer.Shared
             _clientLoop.Start();
         }
 
-        private void InterpretKodiMsg(string json)
+        
+
+        private void InterpretKodiMsgNew(string json)
         {
             if (!_timeSource.CheckAccess())
             {
-                _timeSource.Dispatcher.Invoke(() => InterpretKodiMsg(json));
+                _timeSource.Dispatcher.Invoke(() => InterpretKodiMsgNew(json));
                 return;
             }
 
@@ -121,22 +130,25 @@ namespace ScriptPlayer.Shared
                 return;
             }
 
-
             double hours, minutes, seconds, milliseconds;
 
             string method = json_obj["method"]?.ToString();
             switch(method)
             {
                 case "Playlist.OnAdd":
-                    break;
+                    {
+
+                        break;
+                    }
                 case "Player.OnPlay": // use this on older kodi versions
-                    // OnPlay will occur before the video is actually playing
-                    Console.WriteLine("OnPlay");
-                    break;
-                case "Player.OnAVStart": // only available since Kodi 18 :( https://kodi.wiki/view/JSON-RPC_API/v9
+                    {
+                        Console.WriteLine("OnPlay");
+                        break;
+                    }
+                    
+                case "Player.OnAVStart": // only available since api v9 https://kodi.wiki/view/JSON-RPC_API/v9
                     // OnAVStart occurs when the first frame is drawn
                     {
-                        Console.WriteLine("AVStart");
                         Pause(); // pause because of all the synchronous http post requests and could get badly out of sync
 
                         string filename = json_obj["params"]["data"]["item"]["title"]?.ToString();
@@ -194,7 +206,7 @@ namespace ScriptPlayer.Shared
                         _timeSource.Pause();
                         break;
                     }
-                case "Player.OnResume":
+                case "Player.OnResume": // also api v9+ lower apis will instead send OnPlay :/
                     {
                         _timeSource.Play();
                         break;
@@ -203,6 +215,7 @@ namespace ScriptPlayer.Shared
                     {
                         Console.WriteLine("stop playback");
                         _timeSource.Pause();
+                        _timeSource.SetPosition(TimeSpan.Zero);
                         break;
                     }
                 case "Player.OnSeek":
@@ -239,7 +252,198 @@ namespace ScriptPlayer.Shared
             }
         }
 
-        private bool Connect() 
+        private void InterpretKodiMsgLegacy(string json)
+        {
+            if (!_timeSource.CheckAccess())
+            {
+                _timeSource.Dispatcher.Invoke(() => InterpretKodiMsgLegacy(json));
+                return;
+            }
+
+            JObject json_obj;
+            try
+            {
+                json_obj = JObject.Parse(json);
+            }
+            catch (Exception e)
+            {
+                return;
+            }
+            string method = json_obj["method"]?.ToString();
+
+            switch (method)
+            {
+
+                case "Playlist.OnAdd":
+                    {
+                        _OnAdd_happened = true;
+                        break;
+                    }
+                case "Player.OnPlay": // use this on older kodi versions
+                    {
+                        Console.WriteLine("OnPlay");
+                        if(_OnAdd_happened)
+                        {
+                            _OnAdd_happened = false;
+                            Pause(); // pause because of all the synchronous http post requests and could get badly out of sync
+
+                            //string filename = json_obj["params"]["data"]["item"]["title"]?.ToString();
+                            string filename = "";
+                            // get the filename via http json api
+                            string json_data;
+                            if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetItem\", \"params\": { \"properties\": [\"file\"], \"playerid\": 1 }, \"id\": \"VideoGetItem\"}", out json_data))
+                            {
+                                var json_data_obj = JObject.Parse(json_data);
+                                filename = json_data_obj["result"]["item"]["file"]?.ToString();
+                                OnFileOpened(filename);
+                            }
+                            else
+                            {
+                                // error
+                            }
+
+                            string json_duration;
+                            if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetProperties\", \"params\": { \"properties\": [\"totaltime\"], \"playerid\": 1 }, \"id\": \"VideoGetProp\"}", out json_duration))
+                            {
+                                double hours, minutes, seconds, milliseconds;
+                                var json_duration_obj = JObject.Parse(json_duration);
+                                var duration = json_duration_obj["result"]["totaltime"];
+
+                                if (!double.TryParse(duration["hours"]?.ToString(), out hours)) return;
+                                if (!double.TryParse(duration["minutes"]?.ToString(), out minutes)) return;
+                                if (!double.TryParse(duration["seconds"]?.ToString(), out seconds)) return;
+                                if (!double.TryParse(duration["milliseconds"]?.ToString(), out milliseconds)) return;
+
+                                TimeSpan duration_span = TimeSpan.FromHours(hours);
+                                duration_span += TimeSpan.FromMinutes(minutes);
+                                duration_span += TimeSpan.FromSeconds(seconds);
+                                duration_span += TimeSpan.FromMilliseconds(milliseconds);
+                                _timeSource.SetDuration(duration_span);
+                            }
+                            else
+                            {
+                                // this also is problem
+                            }
+
+                            Play();
+                            _timeSource.Play();
+                        }
+                        else
+                        {
+                            _timeSource.Play();
+                        }
+                        break;
+                    }
+                case "Player.OnPause":
+                    {
+                        _timeSource.Pause();
+                        break;
+                    }
+                case "Player.OnSeek":
+                    {
+                        double hours, minutes, seconds, milliseconds;
+                        JObject time = (JObject)json_obj["params"]["data"]["player"]["time"];
+                        if (time != null)
+                        {
+                            if (!double.TryParse(time["hours"]?.ToString(), out hours)) return;
+                            if (!double.TryParse(time["minutes"]?.ToString(), out minutes)) return;
+                            if (!double.TryParse(time["seconds"]?.ToString(), out seconds)) return;
+                            if (!double.TryParse(time["milliseconds"]?.ToString(), out milliseconds)) return;
+
+                            TimeSpan pos = TimeSpan.FromHours(hours);
+                            pos += TimeSpan.FromMinutes(minutes);
+                            pos += TimeSpan.FromSeconds(seconds);
+                            pos += TimeSpan.FromMilliseconds(milliseconds);
+                            Console.WriteLine("new pos:" + pos.ToString());
+                            _timeSource.SetPosition(pos);
+                        }
+                        break;
+                    }
+                case "Player.OnStop":
+                    {
+                        Console.WriteLine("stop playback");
+                        _timeSource.Pause();
+                        _timeSource.SetPosition(TimeSpan.Zero);
+                        break;
+                    }
+                case null:
+                    {
+                        return;
+                    }
+                default:
+                    {
+                        Console.WriteLine("Unhandled method: " + method);
+                        break;
+                    }
+            }
+
+        }
+
+
+        private void ClientLoop()
+        {
+            Connect();
+            {
+                while(true)
+                {
+                    // test if http post works
+                    string response;
+                    if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetActivePlayers\", \"id\": 69}", out response))
+                    {
+                        SetConnected(true);
+                        break;
+                    }
+                    else
+                    {
+                        // something failed: auth, wrong ip ports etc.
+                        SetConnected(false);
+                    }
+                    Thread.Sleep(500); // cooldown
+                }
+
+                // get api version
+                string api_version;
+                if(Request("{\"jsonrpc\": \"2.0\", \"method\": \"JSONRPC.Version\", \"id\": 1}", out api_version))
+                {
+                    var json_version_obj = JObject.Parse(api_version);
+                    this._api_major_version = (int)json_version_obj["result"]["version"]["major"];
+                    Console.WriteLine("found api version: " + _api_major_version);
+                }
+            }
+
+
+            // actual loop
+            void RunAPI_version(Action<string> handle_msg)
+            {
+                // send any json command over the websocket afterwards kodi starts sending messages about it's status back
+                SendStringSync(_websocket, "{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetActivePlayers\", \"id\": 69}", _cts.Token);
+                while (_running)
+                {
+                    var result = ReadStringSync(_websocket, _cts.Token);
+                    if (result == null)
+                    {
+                        // attempt to reconnect
+                        SetConnected(false);
+                        Connect();
+                        SetConnected(true);
+                    }
+                    Console.WriteLine("msg: " + result);
+                    handle_msg(result);
+                }
+            }
+
+            //depending on the api version run a different version
+            if(_api_major_version >= 9)
+            {
+                RunAPI_version(InterpretKodiMsgNew);
+            }
+            else
+            {
+                RunAPI_version(InterpretKodiMsgLegacy);
+            }           
+        }
+
+        private bool Connect()
         {
             var uri = new Uri("ws://" + _connectionSettings.Ip + ":" + _connectionSettings.TcpPort + "/jsonrpc");
             while (true)
@@ -254,9 +458,9 @@ namespace ScriptPlayer.Shared
                 }
                 catch (AggregateException e)
                 {
-                    if(e.InnerException.GetType() == typeof(WebSocketException))
+                    if (e.InnerException.GetType() == typeof(WebSocketException))
                     {
-                        // probably unable to connect to kodi                 
+                        // probably unable to connect to kodi
                     }
                     else
                     {
@@ -265,42 +469,11 @@ namespace ScriptPlayer.Shared
                     }
                 }
 
-                Thread.Sleep(250); // cooldown  
+                Thread.Sleep(500); // cooldown  
             }
 
         }
 
-        private void ClientLoop()
-        {
-            Connect();
-
-            {
-                while(true)
-                {
-                    string response;
-                    if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetActivePlayers\", \"id\": 69}", out response))
-                    {
-                        SetConnected(true);
-                        break;
-                    }
-                    else
-                    {
-                        SetConnected(false);
-                    }
-                    Thread.Sleep(500); // cooldown
-                }
-
-            }
-
-            // send any json command afterwards kodi starts sending messages about it's status back
-            SendStringSync(_websocket, "{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetActivePlayers\", \"id\": 69}", _cts.Token);
-            while (_running)
-            {
-                var result = ReadStringSync(_websocket, _cts.Token);
-                Console.WriteLine("msg: " + result);
-                InterpretKodiMsg(result);
-            }
-        }
 
         private void SetConnected(bool isConnected)
         {
@@ -328,6 +501,7 @@ namespace ScriptPlayer.Shared
                 var result = client.UploadString(baseUrl, "POST", json);
                 Console.WriteLine("request: " + result);
                 response = result;
+                SetConnected(true);
                 return true;
             }
             catch(WebException e)
@@ -346,6 +520,7 @@ namespace ScriptPlayer.Shared
             catch(Exception)
             {
             }
+            SetConnected(false);
             response = null;
             return false;
         }
