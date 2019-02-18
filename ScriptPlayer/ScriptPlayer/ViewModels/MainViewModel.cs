@@ -860,6 +860,8 @@ namespace ScriptPlayer.ViewModels
                             break;
                         case PlaybackMode.ZoomPlayer:
                             break;
+                        case PlaybackMode.Kodi:
+                            break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
@@ -886,6 +888,8 @@ namespace ScriptPlayer.ViewModels
                         case PlaybackMode.SamsungVr:
                             break;
                         case PlaybackMode.ZoomPlayer:
+                            break;
+                        case PlaybackMode.Kodi:
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -3435,6 +3439,18 @@ namespace ScriptPlayer.ViewModels
                             UdpPort = settings.SamsungVrUdpPort
                         });
                     break;
+                case PlaybackMode.Kodi:
+                    if (TimeSource is KodiTimeSource kodi)
+                        kodi.UpdateConnectionSettings(new KodiConnectionSettings
+                        {
+                            Ip = settings.KodiIp,
+                            HttpPort = settings.KodiHttpPort,
+                            TcpPort = settings.KodiTcpPort,
+                            User = settings.KodiUser,
+                            Password = settings.KodiPassword
+                        });
+                    break;
+
             }
         }
 

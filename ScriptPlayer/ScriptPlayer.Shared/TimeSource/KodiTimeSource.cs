@@ -605,8 +605,6 @@ namespace ScriptPlayer.Shared
         public override void Pause()
         {
             if (!IsConnected) return;
-            //throw new NotImplementedException();
-            //SendStringSync(_websocket, "{\"jsonrpc\": \"2.0\", \"method\": \"Player.PlayPause\", \"id\": 1}", _cts.Token);
             string response;
             Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.PlayPause\", \"params\": { \"playerid\": 1 }, \"id\": 1}", out response);
         }
@@ -616,8 +614,6 @@ namespace ScriptPlayer.Shared
             if (!IsConnected) return;
             string response;
             Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.PlayPause\", \"params\": { \"playerid\": 1 }, \"id\": 1}", out response);
-            //throw new NotImplementedException();
-            //SendStringSync(_websocket, "{\"jsonrpc\": \"2.0\", \"method\": \"Player.PlayPause\", \"id\": 1}", _cts.Token);
         }
 
         public override void SetPosition(TimeSpan position)
@@ -631,7 +627,11 @@ namespace ScriptPlayer.Shared
 
             string response;
             Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.Seek\", \"params\": {\"value\":" + pos.ToString(Formatting.None, null) +  ", \"playerid\": 1 }, \"id\": 1}", out response);
-            //throw new NotImplementedException();
+        }
+
+        public void UpdateConnectionSettings(KodiConnectionSettings settings)
+        {
+            _connectionSettings = settings;
         }
     }
 }
