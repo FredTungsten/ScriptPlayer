@@ -22,8 +22,6 @@ namespace ScriptPlayer.Shared
             TcpPort = DefaultTcpPort;
             User = DefaultUser;
             Password = DefaultPass;
-
-            
         }
 
         private const int DefaultHttpPort = 8080; // this port can be changed through kodi's gui

@@ -12,10 +12,10 @@ using Newtonsoft.Json;
 using System.Net;
 
 /*
- * TODO: Handle when a video is resumed
- * TODO: Handle playback speed?
- * TODO: test playing videos from different sources in kodi 
- * TODO: evaluate if InterpretKodiMsgNew has any benefit since InterpretKodiMsgLegacy seems pretty robust and should work with newer version aswell with slight modification (OnResume/OnPlay)
+ * Done: Handle when a video is resumed: tested although not always the best accuracy
+ * Done: Handle playback speed? there doesn't seem to be a point since it's not granular enough goes from 2 -> 4 -> 8 -> 16 -> 36
+ * TODO: test playing videos from different sources in kodi (FTP, UPNP, ...)
+ * Done: evaluate if InterpretKodiMsgNew has any benefit since InterpretKodiMsgLegacy seems pretty robust and should work with newer version aswell with slight modification (OnResume/OnPlay). yes.
  */
 
 /*
@@ -177,6 +177,33 @@ namespace ScriptPlayer.Shared
             }
         }
 
+        private TimeSpan GetCurrentTime()
+        {
+            string json_time;
+            if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetProperties\", \"params\": { \"properties\": [\"time\"], \"playerid\": 1 }, \"id\": \"VideoGetProp\"}", out json_time))
+            {
+                double hours, minutes, seconds, milliseconds;
+                var json_duration_obj = JObject.Parse(json_time);
+                var time = json_duration_obj["result"]["time"];
+
+                if (!double.TryParse(time["hours"]?.ToString(), out hours)) return TimeSpan.Zero;
+                if (!double.TryParse(time["minutes"]?.ToString(), out minutes)) return TimeSpan.Zero;
+                if (!double.TryParse(time["seconds"]?.ToString(), out seconds)) return TimeSpan.Zero;
+                if (!double.TryParse(time["milliseconds"]?.ToString(), out milliseconds)) return TimeSpan.Zero;
+                TimeSpan time_span = TimeSpan.FromHours(hours);
+                time_span += TimeSpan.FromMinutes(minutes);
+                time_span += TimeSpan.FromSeconds(seconds);
+                time_span += TimeSpan.FromMilliseconds(milliseconds);
+                Console.WriteLine(time_span);
+                return time_span > TimeSpan.Zero ? time_span : TimeSpan.Zero;
+            }
+            else
+            {
+                // request failed
+                return TimeSpan.Zero;
+            }
+        }
+
         private void InterpretKodiMsgNew(string json)
         {
             if (!_timeSource.CheckAccess())
@@ -209,6 +236,11 @@ namespace ScriptPlayer.Shared
 
                         TimeSpan current_duration = GetCurrentDuration();
                         _timeSource.SetDuration(current_duration);
+
+                        // for the times when the video was resumed
+                        TimeSpan current_time = GetCurrentTime(); // there doesn't seem to be a race condition in Kodi 18.1 like in Kodi 15
+                                                                  // needs to be tested on a slower device
+                        _timeSource.SetPosition(current_time);
 
                         Play();
                         _timeSource.Play();
@@ -287,7 +319,6 @@ namespace ScriptPlayer.Shared
 
             switch (method)
             {
-
                 case "Playlist.OnAdd":
                     {
                         _OnAdd_happened = true;
@@ -310,6 +341,11 @@ namespace ScriptPlayer.Shared
 
                             Play();
                             _timeSource.Play();
+
+                            Thread.Sleep(100); // on kodi 15 this is racy ughh might need to be adjusted upwards for slower devices like a raspberry pi
+                            // for the times when the video was resumed
+                            TimeSpan current_time = GetCurrentTime();
+                            _timeSource.SetPosition(current_time);
                         }
                         else
                         {
