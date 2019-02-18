@@ -11,6 +11,10 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Net;
 
+/*
+ * TODO: Handle when a video is resumed
+ */
+
 namespace ScriptPlayer.Shared
 {
     public class KodiTimeSource : TimeSource, IDisposable
@@ -36,7 +40,7 @@ namespace ScriptPlayer.Shared
 
         private bool _running = true;
 
-                                           // v10 = Kodi 18.1 mine returns 10                           
+                                            // v10 = Kodi 18.1 mine returns 10                           
         private int _api_major_version = 8; // v9 = Kodi 18
                                             // v8 = Kodi 17
 
@@ -130,48 +134,34 @@ namespace ScriptPlayer.Shared
                 return;
             }
 
-            double hours, minutes, seconds, milliseconds;
-
             string method = json_obj["method"]?.ToString();
             switch(method)
-            {
-                case "Playlist.OnAdd":
-                    {
-
-                        break;
-                    }
-                case "Player.OnPlay": // use this on older kodi versions
-                    {
-                        Console.WriteLine("OnPlay");
-                        break;
-                    }
-                    
+            {                   
                 case "Player.OnAVStart": // only available since api v9 https://kodi.wiki/view/JSON-RPC_API/v9
                     // OnAVStart occurs when the first frame is drawn
                     {
                         Pause(); // pause because of all the synchronous http post requests and could get badly out of sync
 
-                        string filename = json_obj["params"]["data"]["item"]["title"]?.ToString();
-                        if (filename != null)
+                        //string filename = json_obj["params"]["data"]["item"]["title"]?.ToString();
+                        string filename = "";
+                        
+                        // get the filename via http json api
+                        string json_data;
+                        if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetItem\", \"params\": { \"properties\": [\"file\"], \"playerid\": 1 }, \"id\": \"VideoGetItem\"}", out json_data))
                         {
+                            var json_data_obj = JObject.Parse(json_data);
+                            filename = json_data_obj["result"]["item"]["file"]?.ToString();
                             OnFileOpened(filename);
                         }
                         else
                         {
-                            // get the filename via http json api
-                            string json_data;
-                            if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetItem\", \"params\": { \"properties\": [\"file\"], \"playerid\": 1 }, \"id\": \"VideoGetItem\"}", out json_data))
-                            {
-                                var json_data_obj = JObject.Parse(json_data);
-                                filename = json_data_obj["result"]["item"]["file"]?.ToString();
-                            }
-
-                            OnFileOpened(filename);
+                            //error
                         }
 
                         string json_duration;
                         if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetProperties\", \"params\": { \"properties\": [\"totaltime\"], \"playerid\": 1 }, \"id\": \"VideoGetProp\"}", out json_duration))
                         {
+                            double hours, minutes, seconds, milliseconds;
                             var json_duration_obj = JObject.Parse(json_duration);
                             var duration = json_duration_obj["result"]["totaltime"];
 
@@ -185,17 +175,10 @@ namespace ScriptPlayer.Shared
                             duration_span += TimeSpan.FromMilliseconds(milliseconds);
                             _timeSource.SetDuration(duration_span);
                         }
-
-                        // this is not good if the video had a resume point but was started from the begining scriptplayer will skip to the resume point
-                        /*
-                        string json_resume;
-                        if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetItem\", \"params\": { \"properties\": [\"resume\"], \"playerid\": 1 }, \"id\": \"VideoGetResume\"}", out json_resume))
+                        else
                         {
-                            var json_resume_obj = JObject.Parse(json_resume);
-                            double resume_seconds = double.Parse((string)json_resume_obj["result"]["item"]["resume"]["position"]);
-                            _timeSource.SetPosition(TimeSpan.FromSeconds(resume_seconds));
+                            // this also is problem
                         }
-                        */
 
                         Play();
                         _timeSource.Play();
@@ -223,7 +206,8 @@ namespace ScriptPlayer.Shared
                         JObject time = (JObject)json_obj["params"]["data"]["player"]["time"];
                         if(time != null)
                         {
-                            if(!double.TryParse(time["hours"]?.ToString(), out hours)) return;
+                            double hours, minutes, seconds, milliseconds;
+                            if (!double.TryParse(time["hours"]?.ToString(), out hours)) return;
                             if(!double.TryParse(time["minutes"]?.ToString(), out minutes)) return;
                             if(!double.TryParse(time["seconds"]?.ToString(), out seconds)) return;
                             if(!double.TryParse(time["milliseconds"]?.ToString(), out milliseconds)) return;
