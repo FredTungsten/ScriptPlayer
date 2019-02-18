@@ -13,8 +13,19 @@ using System.Net;
 
 /*
  * TODO: Handle when a video is resumed
+ * TODO: Handle playback speed?
+ * TODO: test playing videos from different sources in kodi 
+ * TODO: evaluate if InterpretKodiMsgNew has any benefit since InterpretKodiMsgLegacy seems pretty robust and should work with newer version aswell with slight modification (OnResume/OnPlay)
  */
 
+/*
+ * Tested with:
+ * Kodi 18.1 on Linux over LAN
+ * Kodi 17.6 on Windows on localhost
+ * and Kodi 15 on Windows on localhost
+ * 
+ * Kodi playback sources tested: local disk, smb share
+ */
 namespace ScriptPlayer.Shared
 {
     public class KodiTimeSource : TimeSource, IDisposable
@@ -114,7 +125,57 @@ namespace ScriptPlayer.Shared
             _clientLoop.Start();
         }
 
-        
+        private string GetCurrentPlayingFile()
+        {
+            string json_data;
+            // this actually returns a path with the filename
+            if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetItem\", \"params\": { \"properties\": [\"file\"], \"playerid\": 1 }, \"id\": \"VideoGetItem\"}", out json_data))
+            {
+                var json_data_obj = JObject.Parse(json_data);
+                string filepath = json_data_obj["result"]["item"]["file"]?.ToString();             
+
+                // make smb path windows compatible
+                if(filepath.StartsWith("smb:"))
+                {
+                    filepath = filepath.Replace("smb:", "");
+                    filepath = filepath.Replace('/', '\\');
+                }
+                Console.WriteLine("currently playing: " + filepath);
+
+                return filepath;
+            }
+            else
+            {
+                //error
+                return "";
+            }
+        }
+
+        private TimeSpan GetCurrentDuration()
+        {
+            string json_duration;
+            if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetProperties\", \"params\": { \"properties\": [\"totaltime\"], \"playerid\": 1 }, \"id\": \"VideoGetProp\"}", out json_duration))
+            {
+                double hours, minutes, seconds, milliseconds;
+                var json_duration_obj = JObject.Parse(json_duration);
+                var duration = json_duration_obj["result"]["totaltime"];
+
+                if (!double.TryParse(duration["hours"]?.ToString(), out hours)) return TimeSpan.Zero;
+                if (!double.TryParse(duration["minutes"]?.ToString(), out minutes)) return TimeSpan.Zero;
+                if (!double.TryParse(duration["seconds"]?.ToString(), out seconds)) return TimeSpan.Zero;
+                if (!double.TryParse(duration["milliseconds"]?.ToString(), out milliseconds)) return TimeSpan.Zero;
+                TimeSpan duration_span = TimeSpan.FromHours(hours);
+                duration_span += TimeSpan.FromMinutes(minutes);
+                duration_span += TimeSpan.FromSeconds(seconds);
+                duration_span += TimeSpan.FromMilliseconds(milliseconds);
+                return duration_span;
+            }
+            else
+            {
+                // request failed
+                return TimeSpan.Zero;
+            }
+        }
 
         private void InterpretKodiMsgNew(string json)
         {
@@ -142,43 +203,12 @@ namespace ScriptPlayer.Shared
                     {
                         Pause(); // pause because of all the synchronous http post requests and could get badly out of sync
 
-                        //string filename = json_obj["params"]["data"]["item"]["title"]?.ToString();
-                        string filename = "";
-                        
-                        // get the filename via http json api
-                        string json_data;
-                        if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetItem\", \"params\": { \"properties\": [\"file\"], \"playerid\": 1 }, \"id\": \"VideoGetItem\"}", out json_data))
-                        {
-                            var json_data_obj = JObject.Parse(json_data);
-                            filename = json_data_obj["result"]["item"]["file"]?.ToString();
-                            OnFileOpened(filename);
-                        }
-                        else
-                        {
-                            //error
-                        }
+                        // always get the filepath via http json api
+                        string filepath = GetCurrentPlayingFile();
+                        OnFileOpened(filepath);
 
-                        string json_duration;
-                        if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetProperties\", \"params\": { \"properties\": [\"totaltime\"], \"playerid\": 1 }, \"id\": \"VideoGetProp\"}", out json_duration))
-                        {
-                            double hours, minutes, seconds, milliseconds;
-                            var json_duration_obj = JObject.Parse(json_duration);
-                            var duration = json_duration_obj["result"]["totaltime"];
-
-                            if (!double.TryParse(duration["hours"]?.ToString(), out hours)) return;
-                            if (!double.TryParse(duration["minutes"]?.ToString(), out minutes)) return;
-                            if (!double.TryParse(duration["seconds"]?.ToString(), out seconds)) return;
-                            if (!double.TryParse(duration["milliseconds"]?.ToString(), out milliseconds)) return;
-                            TimeSpan duration_span = TimeSpan.FromHours(hours);
-                            duration_span += TimeSpan.FromMinutes(minutes);
-                            duration_span += TimeSpan.FromSeconds(seconds);
-                            duration_span += TimeSpan.FromMilliseconds(milliseconds);
-                            _timeSource.SetDuration(duration_span);
-                        }
-                        else
-                        {
-                            // this also is problem
-                        }
+                        TimeSpan current_duration = GetCurrentDuration();
+                        _timeSource.SetDuration(current_duration);
 
                         Play();
                         _timeSource.Play();
@@ -271,43 +301,12 @@ namespace ScriptPlayer.Shared
                             _OnAdd_happened = false;
                             Pause(); // pause because of all the synchronous http post requests and could get badly out of sync
 
-                            //string filename = json_obj["params"]["data"]["item"]["title"]?.ToString();
-                            string filename = "";
-                            // get the filename via http json api
-                            string json_data;
-                            if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetItem\", \"params\": { \"properties\": [\"file\"], \"playerid\": 1 }, \"id\": \"VideoGetItem\"}", out json_data))
-                            {
-                                var json_data_obj = JObject.Parse(json_data);
-                                filename = json_data_obj["result"]["item"]["file"]?.ToString();
-                                OnFileOpened(filename);
-                            }
-                            else
-                            {
-                                // error
-                            }
+                            // always get the filepath via http json api
+                            string filepath = GetCurrentPlayingFile();
+                            OnFileOpened(filepath);
 
-                            string json_duration;
-                            if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetProperties\", \"params\": { \"properties\": [\"totaltime\"], \"playerid\": 1 }, \"id\": \"VideoGetProp\"}", out json_duration))
-                            {
-                                double hours, minutes, seconds, milliseconds;
-                                var json_duration_obj = JObject.Parse(json_duration);
-                                var duration = json_duration_obj["result"]["totaltime"];
-
-                                if (!double.TryParse(duration["hours"]?.ToString(), out hours)) return;
-                                if (!double.TryParse(duration["minutes"]?.ToString(), out minutes)) return;
-                                if (!double.TryParse(duration["seconds"]?.ToString(), out seconds)) return;
-                                if (!double.TryParse(duration["milliseconds"]?.ToString(), out milliseconds)) return;
-
-                                TimeSpan duration_span = TimeSpan.FromHours(hours);
-                                duration_span += TimeSpan.FromMinutes(minutes);
-                                duration_span += TimeSpan.FromSeconds(seconds);
-                                duration_span += TimeSpan.FromMilliseconds(milliseconds);
-                                _timeSource.SetDuration(duration_span);
-                            }
-                            else
-                            {
-                                // this also is problem
-                            }
+                            TimeSpan current_duration = GetCurrentDuration();
+                            _timeSource.SetDuration(current_duration);
 
                             Play();
                             _timeSource.Play();
