@@ -3440,8 +3440,15 @@ namespace ScriptPlayer.ViewModels
                         });
                     break;
                 case PlaybackMode.Kodi:
-                    // TODO: implement this
-                    throw new NotImplementedException();
+                    if (TimeSource is KodiTimeSource kodi)
+                        kodi.UpdateConnectionSettings(new KodiConnectionSettings
+                        {
+                            Ip = settings.KodiIp,
+                            HttpPort = settings.KodiHttpPort,
+                            TcpPort = settings.KodiTcpPort,
+                            User = settings.KodiUser,
+                            Password = settings.KodiPassword
+                        });
                     break;
 
             }

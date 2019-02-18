@@ -628,5 +628,10 @@ namespace ScriptPlayer.Shared
             string response;
             Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.Seek\", \"params\": {\"value\":" + pos.ToString(Formatting.None, null) +  ", \"playerid\": 1 }, \"id\": 1}", out response);
         }
+
+        public void UpdateConnectionSettings(KodiConnectionSettings settings)
+        {
+            _connectionSettings = settings;
+        }
     }
 }
