@@ -860,6 +860,8 @@ namespace ScriptPlayer.ViewModels
                             break;
                         case PlaybackMode.ZoomPlayer:
                             break;
+                        case PlaybackMode.Kodi:
+                            break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
@@ -886,6 +888,8 @@ namespace ScriptPlayer.ViewModels
                         case PlaybackMode.SamsungVr:
                             break;
                         case PlaybackMode.ZoomPlayer:
+                            break;
+                        case PlaybackMode.Kodi:
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -3435,6 +3439,11 @@ namespace ScriptPlayer.ViewModels
                             UdpPort = settings.SamsungVrUdpPort
                         });
                     break;
+                case PlaybackMode.Kodi:
+                    // TODO: implement this
+                    throw new NotImplementedException();
+                    break;
+
             }
         }
 
