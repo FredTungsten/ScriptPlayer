@@ -604,6 +604,7 @@ namespace ScriptPlayer.Shared
 
         public override void Pause()
         {
+            if (!IsConnected) return;
             //throw new NotImplementedException();
             //SendStringSync(_websocket, "{\"jsonrpc\": \"2.0\", \"method\": \"Player.PlayPause\", \"id\": 1}", _cts.Token);
             string response;
@@ -612,6 +613,7 @@ namespace ScriptPlayer.Shared
 
         public override void Play()
         {
+            if (!IsConnected) return;
             string response;
             Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.PlayPause\", \"params\": { \"playerid\": 1 }, \"id\": 1}", out response);
             //throw new NotImplementedException();
@@ -620,8 +622,8 @@ namespace ScriptPlayer.Shared
 
         public override void SetPosition(TimeSpan position)
         {
+            if (!IsConnected) return;
             dynamic pos = new JObject();
-            
             pos.hours = position.Hours;
             pos.minutes = position.Minutes;
             pos.seconds = position.Seconds;
