@@ -24,10 +24,10 @@ namespace ScriptPlayer.Shared
             Password = DefaultPass;
         }
 
-        private const int DefaultHttpPort = 8080; // this port can be changed through kodi's gui
-        private const int DefaultTcpPort = 9090; // this port can only be changed in kodi's advancedsettings.xml https://kodi.wiki/view/Advancedsettings.xml#jsonrpc
-        private const string DefaultUser = "kodi"; 
-        private const string DefaultPass = "";
-        private const string DefaultIp = "localhost";
+        public const int DefaultHttpPort = 8080; // this port can be changed through kodi's gui
+        public const int DefaultTcpPort = 9090; // this port can only be changed in kodi's advancedsettings.xml https://kodi.wiki/view/Advancedsettings.xml#jsonrpc
+        public const string DefaultUser = "kodi";
+        public const string DefaultPass = "";
+        public const string DefaultIp = "localhost";
     }
 }

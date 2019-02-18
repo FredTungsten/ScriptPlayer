@@ -54,6 +54,8 @@ namespace ScriptPlayer
             ViewModel.RequestWhirligigConnectionSettings += ViewModelOnRequestWhirligigConnectionSettings;
             ViewModel.RequestMpcConnectionSettings += ViewModelOnRequestMpcConnectionSettings;
             ViewModel.RequestSamsungVrConnectionSettings += ViewModelOnRequestSamsungVrConnectionSettings;
+            ViewModel.RequestKodiConnectionSettings += ViewModelOnRequestKodiConnectionSettings;
+
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.RequestFolder += ViewModelOnRequestFolder;
@@ -177,6 +179,23 @@ namespace ScriptPlayer
             args.Value = new VlcConnectionSettings
             {
                 IpAndPort = dialog.IpAndPort,
+                Password = dialog.Password
+            };
+        }
+
+        private void ViewModelOnRequestKodiConnectionSettings(object sender, RequestEventArgs<KodiConnectionSettings> args)
+        {
+            var settings = args.Value;
+            KodiConnectionSettingsDialog dialog = new KodiConnectionSettingsDialog(settings.Ip, settings.HttpPort, settings.TcpPort, settings.User, settings.Password) { Owner = this };
+            if (dialog.ShowDialog() != true) return;
+
+            args.Handled = true;
+            args.Value = new KodiConnectionSettings
+            {
+                Ip = dialog.Ip,
+                HttpPort = dialog.HttpPort,
+                TcpPort = dialog.TcpPort,
+                User = dialog.User,
                 Password = dialog.Password
             };
         }

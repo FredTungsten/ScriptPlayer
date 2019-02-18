@@ -472,7 +472,7 @@ namespace ScriptPlayer.Shared
                 var connected = _websocket.ConnectAsync(uri, _cts.Token);
                 try
                 {
-                    connected.Wait();
+                    connected.Wait(_cts.Token);
                     return true;
                 }
                 catch (AggregateException e)
@@ -484,8 +484,11 @@ namespace ScriptPlayer.Shared
                     else
                     {
                         // something else happened
-                        throw e;
                     }
+                }
+                catch(Exception)
+                {
+                    
                 }
 
                 Thread.Sleep(500); // cooldown  
@@ -583,6 +586,7 @@ namespace ScriptPlayer.Shared
 
         public void Dispose()
         {
+            SetConnected(false);
             _running = false;
             _cts.Cancel();
             _clientLoop?.Interrupt();
