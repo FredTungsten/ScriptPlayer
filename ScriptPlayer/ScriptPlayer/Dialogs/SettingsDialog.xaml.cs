@@ -225,9 +225,15 @@ namespace ScriptPlayer.Dialogs
             return result;
         }
 
+
         private void TxtPasswordVlcPassword_OnPasswordChanged(object sender, RoutedEventArgs e)
         {
             Settings.VlcPassword = ((PasswordBox) sender).Password;
+        }
+
+        private void TxtPasswordKodiPassword_OnPasswordChanged(object sender, RoutedEventArgs e)
+        {
+            Settings.KodiPassword = ((PasswordBox)sender).Password;
         }
 
         private void SettingsDialog_OnLoaded(object sender, RoutedEventArgs e)
@@ -335,6 +341,32 @@ namespace ScriptPlayer.Dialogs
                     "Confirm Reset", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
 
             Settings = new SettingsViewModel();
+        }
+
+        private void BtnKodiDefault_Click(object sender, RoutedEventArgs e)
+        {
+            string tag = (string)((Button)sender).Tag;
+            switch (tag)
+            {
+                case "IpDefault":
+                    Settings.KodiIp = KodiConnectionSettings.DefaultIp;
+                    break;
+                case "HttpPortDefault":
+                    Settings.KodiHttpPort = KodiConnectionSettings.DefaultHttpPort;
+                    break;
+                case "TcpPortDefault":
+                    Settings.KodiTcpPort = KodiConnectionSettings.DefaultTcpPort;
+                    break;
+                case "UserDefault":
+                    Settings.KodiUser = KodiConnectionSettings.DefaultUser;
+                    break;
+                case "PasswordDefault":
+                    Settings.KodiPassword = KodiConnectionSettings.DefaultPass;
+                    txtPasswordKodiPassword.Password = KodiConnectionSettings.DefaultPass;
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void BtnEditShortCut_Click(object sender, RoutedEventArgs e)

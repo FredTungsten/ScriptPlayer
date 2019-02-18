@@ -137,7 +137,7 @@
     </Reference>
     <Reference Include="Windows, Version=255.255.255.255, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.15063.0\Windows.winmd</HintPath>
+      <HintPath>C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.17763.0\Windows.winmd</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
@@ -278,6 +278,8 @@
     <Compile Include="Helpers\SystemIdlePreventer.cs" />
     <Compile Include="TimeSource\CompositionTargetClock.cs" />
     <Compile Include="TimeSource\DispatcherClock.cs" />
+    <Compile Include="TimeSource\KodiConnectionSettings.cs" />
+    <Compile Include="TimeSource\KodiTimeSource.cs" />
     <Compile Include="TimeSource\ManualTimeSource.cs" />
     <Compile Include="TimeSource\MediaPlayerTimeSource.cs" />
     <Compile Include="TimeSource\ISampleClock.cs" />
