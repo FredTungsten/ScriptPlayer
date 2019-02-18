@@ -233,6 +233,36 @@
                                     <TextBox Text="{Binding Settings.ZoomPlayerEndpoint}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                 </DockPanel>
                             </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Kodi" FontWeight="Bold" Margin="0,10,0,0"/>
+                                <StackPanel>
+                                    <DockPanel>
+                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP" VerticalAlignment="Center"/>
+                                        <Button DockPanel.Dock="Right" Tag="IpDefault" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnKodiDefault_Click"/>
+                                        <TextBox Text="{Binding Settings.KodiIp}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                    <DockPanel>
+                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="HTTP Port" VerticalAlignment="Center"/>
+                                        <Button DockPanel.Dock="Right" Tag="HttpPortDefault" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnKodiDefault_Click"/>
+                                        <TextBox Text="{Binding Settings.KodiHttpPort}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                    <DockPanel>
+                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="TCP Port" VerticalAlignment="Center"/>
+                                        <Button DockPanel.Dock="Right" Tag="TcpPortDefault" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnKodiDefault_Click"/>
+                                        <TextBox Text="{Binding Settings.KodiTcpPort}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                    <DockPanel>
+                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="User" VerticalAlignment="Center"/>
+                                        <Button DockPanel.Dock="Right" Tag="UserDefault" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnKodiDefault_Click"/>
+                                        <TextBox Text="{Binding Settings.KodiUser}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                    <DockPanel>
+                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="Password" VerticalAlignment="Center"/>
+                                        <Button DockPanel.Dock="Right" Tag="PasswordDefault" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnKodiDefault_Click"/>
+                                        <PasswordBox x:Name="txtPasswordKodiPassword" PasswordChanged="TxtPasswordKodiPassword_OnPasswordChanged" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                </StackPanel>
+                            </StackPanel>
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Buttplug">

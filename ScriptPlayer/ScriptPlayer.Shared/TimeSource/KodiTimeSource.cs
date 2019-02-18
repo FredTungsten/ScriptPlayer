@@ -438,7 +438,12 @@ namespace ScriptPlayer.Shared
                 SendStringSync(_websocket, "{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetActivePlayers\", \"id\": 69}", _cts.Token);
                 while (_running)
                 {
-                    var result = ReadStringSync(_websocket, _cts.Token);
+                    string result = null;
+                    try
+                    {
+                        result = ReadStringSync(_websocket, _cts.Token);
+                    }
+                    catch (Exception e) { }
                     if (result == null)
                     {
                         // attempt to reconnect
@@ -464,36 +469,40 @@ namespace ScriptPlayer.Shared
 
         private bool Connect()
         {
-            var uri = new Uri("ws://" + _connectionSettings.Ip + ":" + _connectionSettings.TcpPort + "/jsonrpc");
-            while (true)
+            try
             {
-                Console.WriteLine("connecting...");
-                _websocket = new ClientWebSocket();
-                var connected = _websocket.ConnectAsync(uri, _cts.Token);
-                try
+                var uri = new Uri("ws://" + _connectionSettings.Ip + ":" + _connectionSettings.TcpPort + "/jsonrpc");
+                while (true)
                 {
-                    connected.Wait(_cts.Token);
-                    return true;
-                }
-                catch (AggregateException e)
-                {
-                    if (e.InnerException.GetType() == typeof(WebSocketException))
+                    Console.WriteLine("connecting...");
+                    _websocket = new ClientWebSocket();
+                    var connected = _websocket.ConnectAsync(uri, _cts.Token);
+                    try
                     {
-                        // probably unable to connect to kodi
+                        connected.Wait(_cts.Token);
+                        return true;
                     }
-                    else
+                    catch (AggregateException e)
                     {
-                        // something else happened
+                        if (e.InnerException.GetType() == typeof(WebSocketException))
+                        {
+                            // probably unable to connect to kodi
+                        }
+                        else
+                        {
+                            // something else happened
+                        }
                     }
-                }
-                catch(Exception)
-                {
+                    catch(Exception)
+                    {
                     
+                    }
+
+                    Thread.Sleep(500); // cooldown  
                 }
-
-                Thread.Sleep(500); // cooldown  
             }
-
+            catch(Exception e) { }
+            return false;
         }
 
 
