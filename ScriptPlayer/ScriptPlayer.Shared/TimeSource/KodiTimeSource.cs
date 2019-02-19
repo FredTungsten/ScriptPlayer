@@ -17,6 +17,7 @@ using System.Text.RegularExpressions;
  * Done: Handle playback speed? there doesn't seem to be a point since it's not granular enough goes from 2 -> 4 -> 8 -> 16 -> 36
  * TODO: test playing videos from different sources in kodi (FTP, UPNP, ...)
  * Done: evaluate if InterpretKodiMsgNew has any benefit since InterpretKodiMsgLegacy seems pretty robust and should work with newer version aswell with slight modification (OnResume/OnPlay). yes.
+ * TODO: maybe it would make sense to periodically call GetCurrentTime() and resync the timesource over longer periods of time like every two minutes
  */
 
 /*
@@ -647,6 +648,7 @@ namespace ScriptPlayer.Shared
         public void UpdateConnectionSettings(KodiConnectionSettings settings)
         {
             _connectionSettings = settings;
+            //TODO: 
             // if settings are being updated while connected
             // the websocket connection will not get updated
             // could just restart the Thread here if it's running
