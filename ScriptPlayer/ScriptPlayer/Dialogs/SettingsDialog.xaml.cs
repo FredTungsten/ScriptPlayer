@@ -361,8 +361,8 @@ namespace ScriptPlayer.Dialogs
                     Settings.KodiUser = KodiConnectionSettings.DefaultUser;
                     break;
                 case "PasswordDefault":
-                    Settings.KodiPassword = KodiConnectionSettings.DefaultPass;
-                    txtPasswordKodiPassword.Password = KodiConnectionSettings.DefaultPass;
+                    Settings.KodiPassword = KodiConnectionSettings.DefaultPassword;
+                    txtPasswordKodiPassword.Password = KodiConnectionSettings.DefaultPassword;
                     break;
                 default:
                     break;
