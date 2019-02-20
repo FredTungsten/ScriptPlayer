@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 /*
  * Done: Handle when a video is resumed: tested although not always the best accuracy
  * Done: Handle playback speed? there doesn't seem to be a point since it's not granular enough goes from 2 -> 4 -> 8 -> 16 -> 36
- * TODO: test playing videos from different sources in kodi (FTP, UPNP, ...)
+ * Done: test playing videos from different sources in kodi (FTP, UPNP, ...)
  * Done: evaluate if InterpretKodiMsgNew has any benefit since InterpretKodiMsgLegacy seems pretty robust and should work with newer version aswell with slight modification (OnResume/OnPlay). yes.
  * TODO: maybe it would make sense to periodically call GetCurrentTime() and resync the timesource over longer periods of time like every two minutes
  */
@@ -27,6 +27,9 @@ using System.Text.RegularExpressions;
  * and Kodi 15 on Windows on localhost
  * 
  * Kodi playback sources tested: local disk, smb share
+ * no success with streaming from a dlna server in kodi
+ * 
+ * TODO: what happens when kodi is used as a dlna server?
  */
 namespace ScriptPlayer.Shared
 {
@@ -102,7 +105,7 @@ namespace ScriptPlayer.Shared
             {
                 task.Wait(ct);
             }
-            catch(Exception e)
+            catch(Exception)
             {
                 return null;
             }
@@ -134,7 +137,7 @@ namespace ScriptPlayer.Shared
             if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetItem\", \"params\": { \"properties\": [\"file\"], \"playerid\": 1 }, \"id\": \"VideoGetItem\"}", out json_data))
             {
                 var json_data_obj = JObject.Parse(json_data);
-                string filepath = json_data_obj["result"]["item"]["file"]?.ToString();             
+                string filepath = json_data_obj["result"]["item"]["file"]?.ToString();
 
                 // make smb path windows compatible
                 if (filepath.StartsWith("smb:"))
@@ -228,7 +231,7 @@ namespace ScriptPlayer.Shared
             {
                 json_obj = JObject.Parse(json);
             }
-            catch(Exception e)
+            catch(Exception)
             {
                 return;
             }
@@ -322,7 +325,7 @@ namespace ScriptPlayer.Shared
             {
                 json_obj = JObject.Parse(json);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return;
             }
@@ -433,7 +436,7 @@ namespace ScriptPlayer.Shared
                         }
                         Thread.Sleep(500); // cooldown
                     }
-                    catch(Exception e) { }
+                    catch(Exception) { }
 
                 }
 
@@ -460,7 +463,7 @@ namespace ScriptPlayer.Shared
                     {
                         result = ReadStringSync(_websocket, _cts.Token);
                     }
-                    catch (Exception e) { }
+                    catch (Exception) { }
                     if (result == null)
                     {
                         // attempt to reconnect
@@ -473,7 +476,7 @@ namespace ScriptPlayer.Shared
                     {
                         handle_msg(result);
                     }
-                    catch(Exception e) { }
+                    catch(Exception) { }
                     
                 }
             }
@@ -523,7 +526,7 @@ namespace ScriptPlayer.Shared
                     Thread.Sleep(500); // cooldown  
                 }
             }
-            catch(Exception e) { }
+            catch(Exception) { }
             return false;
         }
 
