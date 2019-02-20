@@ -10,12 +10,14 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Net;
+using System.Text.RegularExpressions;
 
 /*
  * Done: Handle when a video is resumed: tested although not always the best accuracy
  * Done: Handle playback speed? there doesn't seem to be a point since it's not granular enough goes from 2 -> 4 -> 8 -> 16 -> 36
  * TODO: test playing videos from different sources in kodi (FTP, UPNP, ...)
  * Done: evaluate if InterpretKodiMsgNew has any benefit since InterpretKodiMsgLegacy seems pretty robust and should work with newer version aswell with slight modification (OnResume/OnPlay). yes.
+ * TODO: maybe it would make sense to periodically call GetCurrentTime() and resync the timesource over longer periods of time like every two minutes
  */
 
 /*
@@ -47,7 +49,7 @@ namespace ScriptPlayer.Shared
         private readonly ManualTimeSource _timeSource;
 
         private ClientWebSocket _websocket;
-        private readonly CancellationTokenSource _cts;
+        private readonly CancellationTokenSource _cts; // I have no idea how this thing works
 
         private bool _running = true;
 
@@ -71,9 +73,9 @@ namespace ScriptPlayer.Shared
             task.Wait();
         }
 
-        private static async Task<string> ReadString(ClientWebSocket ws)
+        private static async Task<string> ReadString(ClientWebSocket ws, CancellationToken ct)
         {
-            ArraySegment<Byte> buffer = new ArraySegment<byte>(new Byte[65536]);
+            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[65536]);
 
             WebSocketReceiveResult result = null;
 
@@ -81,7 +83,7 @@ namespace ScriptPlayer.Shared
             {
                 do
                 {
-                    result = await ws.ReceiveAsync(buffer, CancellationToken.None);
+                    result = await ws.ReceiveAsync(buffer, ct);
                     ms.Write(buffer.Array, buffer.Offset, result.Count);
                 }
                 while (!result.EndOfMessage);
@@ -95,7 +97,7 @@ namespace ScriptPlayer.Shared
 
         private static string ReadStringSync(ClientWebSocket ws, CancellationToken ct)
         {
-            var task = ReadString(ws);
+            var task = ReadString(ws, ct);
             try
             {
                 task.Wait(ct);
@@ -135,10 +137,19 @@ namespace ScriptPlayer.Shared
                 string filepath = json_data_obj["result"]["item"]["file"]?.ToString();             
 
                 // make smb path windows compatible
-                if(filepath.StartsWith("smb:"))
+                if (filepath.StartsWith("smb:"))
                 {
                     filepath = filepath.Replace("smb:", "");
                     filepath = filepath.Replace('/', '\\');
+                    // under some circumstances kodi seems to put user and password in the filepath aswell
+                    // smb://user:pass@server/share which doesn't work with windows so we try to remove "user:password@"
+                    if (filepath.Contains('@'))
+                    {
+                        filepath = Regex.Replace(filepath, @"(?<=\\\\).*:.*@", ""); // I have no idea if this regular expression is robust enough 
+                                                                                    // to only remove "user:password@" all the time
+                                                                                    // we are also assuming filepath starts with \\
+                    }
+
                 }
                 Console.WriteLine("currently playing: " + filepath);
 
@@ -452,7 +463,12 @@ namespace ScriptPlayer.Shared
                         SetConnected(true);
                     }
                     Console.WriteLine("msg: " + result);
-                    handle_msg(result);
+                    try
+                    {
+                        handle_msg(result);
+                    }
+                    catch(Exception e) { }
+                    
                 }
             }
 
@@ -632,6 +648,10 @@ namespace ScriptPlayer.Shared
         public void UpdateConnectionSettings(KodiConnectionSettings settings)
         {
             _connectionSettings = settings;
+            //TODO: 
+            // if settings are being updated while connected
+            // the websocket connection will not get updated
+            // could just restart the Thread here if it's running
         }
     }
 }

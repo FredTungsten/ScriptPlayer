@@ -643,7 +643,7 @@ namespace ScriptPlayer.ViewModels
                                         HttpPort = KodiConnectionSettings.DefaultHttpPort,
                                         TcpPort = KodiConnectionSettings.DefaultTcpPort,
                                         Ip = KodiConnectionSettings.DefaultIp,
-                                        Password = KodiConnectionSettings.DefaultPass,
+                                        Password = KodiConnectionSettings.DefaultPassword,
                                         User = KodiConnectionSettings.DefaultUser
                                     });
 
