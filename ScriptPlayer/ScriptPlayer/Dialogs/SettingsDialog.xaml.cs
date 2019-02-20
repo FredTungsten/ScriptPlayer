@@ -239,6 +239,7 @@ namespace ScriptPlayer.Dialogs
         private void SettingsDialog_OnLoaded(object sender, RoutedEventArgs e)
         {
             txtPasswordVlcPassword.Password = Settings.VlcPassword;
+            txtPasswordKodiPassword.Password = Settings.KodiPassword;
         }
 
         private void BtnOk_OnClick(object sender, RoutedEventArgs e)

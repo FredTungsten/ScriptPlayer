@@ -45,7 +45,7 @@ namespace ScriptPlayer.Shared
 
         public event EventHandler<string> FileOpened;
 
-        private readonly Thread _clientLoop;
+        private Thread _clientLoop;
         private readonly ManualTimeSource _timeSource;
 
         private ClientWebSocket _websocket;
@@ -412,23 +412,29 @@ namespace ScriptPlayer.Shared
 
         private void ClientLoop()
         {
+            SetConnected(false);
             Connect();
             {
                 while(true)
                 {
-                    // test if http post works
-                    string response;
-                    if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetActivePlayers\", \"id\": 69}", out response))
+                    try
                     {
-                        SetConnected(true);
-                        break;
+                        // test if http post works
+                        string response;
+                        if (Request("{\"jsonrpc\": \"2.0\", \"method\": \"Player.GetActivePlayers\", \"id\": 69}", out response))
+                        {
+                            SetConnected(true);
+                            break;
+                        }
+                        else
+                        {
+                            // something failed: auth, wrong ip ports etc.
+                            SetConnected(false);
+                        }
+                        Thread.Sleep(500); // cooldown
                     }
-                    else
-                    {
-                        // something failed: auth, wrong ip ports etc.
-                        SetConnected(false);
-                    }
-                    Thread.Sleep(500); // cooldown
+                    catch(Exception e) { }
+
                 }
 
                 // get api version
@@ -648,10 +654,12 @@ namespace ScriptPlayer.Shared
         public void UpdateConnectionSettings(KodiConnectionSettings settings)
         {
             _connectionSettings = settings;
-            //TODO: 
             // if settings are being updated while connected
-            // the websocket connection will not get updated
-            // could just restart the Thread here if it's running
+            // thread will be restarted
+            _clientLoop?.Interrupt();
+            _clientLoop?.Abort();
+            _clientLoop = new Thread(ClientLoop);
+            _clientLoop.Start();
         }
     }
 }
