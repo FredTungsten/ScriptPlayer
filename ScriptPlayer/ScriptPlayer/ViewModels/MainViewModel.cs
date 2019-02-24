@@ -36,6 +36,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<MpcConnectionSettings>> RequestMpcConnectionSettings;
         public event EventHandler<RequestEventArgs<SamsungVrConnectionSettings>> RequestSamsungVrConnectionSettings;
         public event EventHandler<RequestEventArgs<ZoomPlayerConnectionSettings>> RequestZoomPlayerConnectionSettings;
+        public event EventHandler<RequestEventArgs<KodiConnectionSettings>> RequestKodiConnectionSettings;
 
         public event EventHandler RequestHideSkipButton;
         public event EventHandler RequestShowSkipButton;
@@ -631,6 +632,48 @@ namespace ScriptPlayer.ViewModels
                             RefreshManualDuration();
                             break;
                         }
+                    case PlaybackMode.Kodi:
+                        {
+                            HideBanner();
+                            if(Settings.KodiHttpPort == 0)
+                            {
+                                KodiConnectionSettings settings =
+                                    OnRequestKodiConnectionSettings(new KodiConnectionSettings
+                                    {
+                                        HttpPort = KodiConnectionSettings.DefaultHttpPort,
+                                        TcpPort = KodiConnectionSettings.DefaultTcpPort,
+                                        Ip = KodiConnectionSettings.DefaultIp,
+                                        Password = KodiConnectionSettings.DefaultPassword,
+                                        User = KodiConnectionSettings.DefaultUser
+                                    });
+
+                                if(settings == null)
+                                {
+                                    PlaybackMode = PlaybackMode.Local;
+                                    return;
+                                }
+                                Settings.KodiIp = settings.Ip;
+                                Settings.KodiHttpPort = settings.HttpPort;
+                                Settings.KodiTcpPort = settings.TcpPort;
+                                Settings.KodiUser = settings.User;
+                                Settings.KodiPassword = settings.Password;
+
+                            }
+                            TimeSource = new KodiTimeSource(
+                                new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                    TimeSpan.FromMilliseconds(10)), new KodiConnectionSettings
+                                    {
+                                        Ip = Settings.KodiIp,
+                                        HttpPort = Settings.KodiHttpPort,
+                                        TcpPort = Settings.KodiTcpPort,
+                                        User = Settings.KodiUser,
+                                        Password = Settings.KodiPassword
+                                    });
+
+                            ((KodiTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+                            RefreshManualDuration();
+                            break;
+                        }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -690,6 +733,16 @@ namespace ScriptPlayer.ViewModels
         {
             RequestEventArgs<MpcConnectionSettings> args = new RequestEventArgs<MpcConnectionSettings>(currentSettings);
             RequestMpcConnectionSettings?.Invoke(this, args);
+
+            if (!args.Handled)
+                return null;
+            return args.Value;
+        }
+
+        private KodiConnectionSettings OnRequestKodiConnectionSettings(KodiConnectionSettings currentSettings)
+        {
+            RequestEventArgs<KodiConnectionSettings> args = new RequestEventArgs<KodiConnectionSettings>(currentSettings);
+            RequestKodiConnectionSettings?.Invoke(this, args);
 
             if (!args.Handled)
                 return null;
@@ -807,6 +860,8 @@ namespace ScriptPlayer.ViewModels
                             break;
                         case PlaybackMode.ZoomPlayer:
                             break;
+                        case PlaybackMode.Kodi:
+                            break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
@@ -833,6 +888,8 @@ namespace ScriptPlayer.ViewModels
                         case PlaybackMode.SamsungVr:
                             break;
                         case PlaybackMode.ZoomPlayer:
+                            break;
+                        case PlaybackMode.Kodi:
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -3382,6 +3439,18 @@ namespace ScriptPlayer.ViewModels
                             UdpPort = settings.SamsungVrUdpPort
                         });
                     break;
+                case PlaybackMode.Kodi:
+                    if (TimeSource is KodiTimeSource kodi)
+                        kodi.UpdateConnectionSettings(new KodiConnectionSettings
+                        {
+                            Ip = settings.KodiIp,
+                            HttpPort = settings.KodiHttpPort,
+                            TcpPort = settings.KodiTcpPort,
+                            User = settings.KodiUser,
+                            Password = settings.KodiPassword
+                        });
+                    break;
+
             }
         }
 

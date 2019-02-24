@@ -262,6 +262,36 @@
                 </StackPanel>
             </Grid>
 
+            <!--Kodi-->
+            <Grid IsHitTestVisible="False">
+                <Grid.Style>
+                    <Style TargetType="{x:Type Grid}">
+                        <Setter Property="Visibility" Value="Hidden"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding PlaybackMode}" Value="{x:Static viewModels:PlaybackMode.Kodi}">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="Kodi" Foreground="White" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Foreground="White" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}">
+                                <Setter Property="Text" Value="Not Connected.&#x0d;&#x0a; Enable remote control via http (Settings - Services - Control)."/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TimeSource.IsConnected}" Value="true">
+                                        <Setter Property="Text" Value="Connected"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+            
+
             <!-- ICON AND VERSION -->
             <Grid IsHitTestVisible="False" Visibility="{Binding ShowBanner, Converter={StaticResource VisibilityConverter}}">
                 <Grid.RowDefinitions>
@@ -431,6 +461,7 @@
                     <MenuItem Header="VLC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Vlc}}"/>
                     <MenuItem Header="Whirligig" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Whirligig}}"/>
                     <MenuItem Header="Zoom Player" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.ZoomPlayer}}"/>
+                    <MenuItem Header="Kodi" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Kodi}}"/>
                 </MenuItem>
                 <MenuItem Header="Playback">
                     <MenuItem Header="Loop">

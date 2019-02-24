@@ -8,6 +8,7 @@ namespace ScriptPlayer.ViewModels
         Vlc,
         MpcHc,
         SamsungVr,
-        ZoomPlayer
+        ZoomPlayer,
+        Kodi
     }
 }
