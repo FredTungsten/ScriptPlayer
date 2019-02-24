@@ -77,6 +77,73 @@ namespace ScriptPlayer.ViewModels
         private string _mpcHcEndpoint;
         private int _samsungVrUdpPort;
         private string _zoomPlayerEndpoint;
+
+        // kodi settings
+        private string _kodiIp;
+        private int _kodiTcpPort;
+        private int _kodiHttpPort;
+        private string _kodiUser;
+        private string _kodiPassword;
+
+        public string KodiIp
+        {
+            get => _kodiIp;
+            set
+            {
+                if (value == _kodiIp) return;
+                _kodiIp = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int KodiTcpPort
+        {
+            get => _kodiTcpPort;
+            set
+            {
+                if (value == _kodiTcpPort) return;
+                _kodiTcpPort = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int KodiHttpPort
+        {
+            get => _kodiHttpPort;
+            set
+            {
+                if (value == _kodiHttpPort) return;
+                _kodiHttpPort = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string KodiUser
+        {
+            get => _kodiUser;
+            set
+            {
+                if (value == _kodiUser) return;
+                _kodiUser = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string KodiPassword
+        {
+            get => _kodiPassword;
+            set
+            {
+                if (value == _kodiPassword) return;
+                _kodiPassword = value;
+                OnPropertyChanged();
+            }
+        }
+        // end kodi settings
+
+
+
+
         private bool _stayOnTop;
         private bool _repeatSingleFile;
         private bool _rememberVolume;
@@ -93,6 +160,11 @@ namespace ScriptPlayer.ViewModels
             MpcHcEndpoint = null;
             SamsungVrUdpPort = 0;
             ZoomPlayerEndpoint = null;
+            KodiUser = null;
+            KodiPassword = null;
+            KodiIp = null;
+            KodiTcpPort = 0;
+            KodiHttpPort = 0;
         }
 
         public SettingsViewModel Duplicate()
