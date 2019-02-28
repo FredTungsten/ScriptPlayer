@@ -204,6 +204,7 @@ namespace ScriptPlayer.ViewModels
         private string _lastFolder;
         private Section _selectedRange;
         private string _randomChapterToolTip;
+        
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
         {

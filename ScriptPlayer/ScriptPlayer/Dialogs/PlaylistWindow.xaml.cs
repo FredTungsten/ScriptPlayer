@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -53,6 +54,11 @@ namespace ScriptPlayer.Dialogs
 
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             ViewModel.Playlist.AddEntries(files);
+        }
+
+        private void LstEntries_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ViewModel.Playlist.SetSelectedItems(((ListBox) sender).SelectedItems.Cast<PlaylistEntry>());
         }
     }
 }

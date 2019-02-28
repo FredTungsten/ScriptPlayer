@@ -51,7 +51,7 @@
                 <MenuItem Header="Shuffle" Command="{Binding Playlist.SortShuffleCommand}"/>
             </MenuItem>
         </Menu>
-        <ListBox x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,42" ItemsSource="{Binding Path=Playlist.Entries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" AllowDrop="True" Drop="ListBox_Drop">
+        <ListBox x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,42" ItemsSource="{Binding Path=Playlist.Entries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" SelectionChanged="LstEntries_OnSelectionChanged" AllowDrop="True" Drop="ListBox_Drop" SelectionMode="Extended">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>

@@ -310,7 +310,7 @@ namespace ScriptPlayer.ViewModels
 
         private bool CanRemoveSelectedEntry()
         {
-            return SelectedEntry != null;
+            return !SelectionIsEmpty();
         }
 
         private void ExecuteRemoveSelectedEntry()
@@ -318,8 +318,11 @@ namespace ScriptPlayer.ViewModels
             if (!CanRemoveSelectedEntry())
                 return;
 
-            int currentIndex = Entries.IndexOf(SelectedEntry);
-            Entries.Remove(SelectedEntry);
+            var itemsToRemove = _selectedItems.OrderBy(i => Entries.IndexOf(i)).ToList();
+            int currentIndex = Entries.IndexOf(_selectedItems.First());
+
+            foreach (var item in itemsToRemove)
+                Entries.Remove(item);
 
             if (currentIndex < Entries.Count)
                 SelectedEntry = Entries[currentIndex];
@@ -330,63 +333,106 @@ namespace ScriptPlayer.ViewModels
 
             CommandManager.InvalidateRequerySuggested();
         }
+        
+        private bool SelectionHasGap()
+        {
+            List<int> indices = _selectedItems.Select(i => Entries.IndexOf(i)).ToList();
+            return indices.Max() - indices.Min() + 1 != indices.Count;
+        }
+
+        private bool SelectionIsEmpty()
+        {
+            if (_selectedItems == null)
+                return true;
+
+            return _selectedItems.Count <= 0;
+        }
 
         private bool CanMoveSelectedEntryUp()
         {
-            if (SelectedEntry == null)
-                return false;
-            int currentIndex = Entries.IndexOf(SelectedEntry);
-            if (currentIndex <= 0)
-                return false;
-            return true;
+            return CanMoveSelectedEntry(true);
         }
 
         private bool CanMoveSelectedEntryDown()
         {
-            if (SelectedEntry == null)
+            return CanMoveSelectedEntry(false);
+        }
+
+        private bool CanMoveSelectedEntry(bool up)
+        {
+            if (SelectionIsEmpty())
                 return false;
-            int currentIndex = Entries.IndexOf(SelectedEntry);
-            if (currentIndex + 1 >= Entries.Count)
-                return false;
-            return true;
+
+            if (SelectionHasGap())
+                return true;
+
+            return !_selectedItems.Contains(up ? Entries.First() : Entries.Last());
         }
 
         private void ExecuteMoveSelectedEntryUp()
         {
-            if (!CanMoveSelectedEntryUp()) return;
-
-            int currentIndex = Entries.IndexOf(SelectedEntry);
-            Entries.Move(currentIndex, currentIndex - 1);
-
-            OnSelectedEntryMoved();
+            MoveSelection(true, false);
         }
 
         private void ExecuteMoveSelectedEntryDown()
         {
-            if (!CanMoveSelectedEntryDown()) return;
-
-            int currentIndex = Entries.IndexOf(SelectedEntry);
-            Entries.Move(currentIndex, currentIndex + 1);
-
-            OnSelectedEntryMoved();
+            MoveSelection(false, false);
         }
 
         private void ExecuteMoveSelectedEntryFirst()
         {
-            if (!CanMoveSelectedEntryUp()) return;
-
-            int currentIndex = Entries.IndexOf(SelectedEntry);
-            Entries.Move(currentIndex, 0);
-
-            OnSelectedEntryMoved();
+            MoveSelection(true, true);
         }
 
         private void ExecuteMoveSelectedEntryLast()
         {
-            if (!CanMoveSelectedEntryDown()) return;
+            MoveSelection(false, true);
+        }
 
-            int currentIndex = Entries.IndexOf(SelectedEntry);
-            Entries.Move(currentIndex, Entries.Count - 1);
+        private void MoveSelection(bool up, bool allTheWay)
+        {
+            if (up && !CanMoveSelectedEntryUp()) return;
+            if (!up && !CanMoveSelectedEntryDown()) return;
+
+            bool hasGap = SelectionHasGap();
+            int indexShift = hasGap ? 0 : 1;
+
+            var orderedSelection = _selectedItems.OrderBy(i => Entries.IndexOf(i)).ToList();
+            
+            if (up)
+            {
+                int firstIndex;
+
+                if (allTheWay)
+                    firstIndex = 0;
+                else
+                    firstIndex = Entries.IndexOf(orderedSelection.First()) - indexShift;
+
+                for (int i = 0; i < orderedSelection.Count; i++)
+                {
+                    int currentIndex = Entries.IndexOf(orderedSelection[i]);
+                    if (currentIndex != firstIndex + i)
+                        Entries.Move(currentIndex, firstIndex + i);
+                }
+            }
+            else
+            {
+                int lastIndex;
+
+                if (allTheWay)
+                    lastIndex = Entries.Count - 1;
+                else
+                    lastIndex = Entries.IndexOf(orderedSelection.Last()) + indexShift;
+
+                orderedSelection.Reverse();
+
+                for (int i = 0; i < orderedSelection.Count; i++)
+                {
+                    int currentIndex = Entries.IndexOf(orderedSelection[i]);
+                    if (currentIndex != lastIndex - i)
+                        Entries.Move(currentIndex, lastIndex - i);
+                }
+            }
 
             OnSelectedEntryMoved();
         }
@@ -586,6 +632,13 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnSelectedEntryMoved()
         {
             SelectedEntryMoved?.Invoke(this, EventArgs.Empty);
+        }
+
+        private List<PlaylistEntry> _selectedItems;
+
+        public void SetSelectedItems(IEnumerable<PlaylistEntry> entries)
+        {
+            _selectedItems = entries.ToList();
         }
     }
 }
