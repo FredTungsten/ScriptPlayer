@@ -37,7 +37,9 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<SamsungVrConnectionSettings>> RequestSamsungVrConnectionSettings;
         public event EventHandler<RequestEventArgs<ZoomPlayerConnectionSettings>> RequestZoomPlayerConnectionSettings;
         public event EventHandler<RequestEventArgs<KodiConnectionSettings>> RequestKodiConnectionSettings;
+        public event EventHandler<RequestEventArgs<WindowStateModel>> RequestGetWindowState;
 
+        public event EventHandler<WindowStateModel> RequestSetWindowState;
         public event EventHandler RequestHideSkipButton;
         public event EventHandler RequestShowSkipButton;
         public event EventHandler RequestShowSkipNextButton;
@@ -406,6 +408,8 @@ namespace ScriptPlayer.ViewModels
                 playerState.Volume = Volume;
             if (Settings.RememberPlaybackMode)
                 playerState.PlaybackMode = PlaybackMode;
+            if (Settings.RememberWindowPosition)
+                playerState.WindowState = OnRequestWindowState();
 
             playerState.Save(GetPlayerStateFilePath());
 
@@ -816,6 +820,9 @@ namespace ScriptPlayer.ViewModels
 
                 if (playerState.PlaybackMode != null)
                     PlaybackMode = (PlaybackMode)playerState.PlaybackMode;
+
+                if(playerState.WindowState != null)
+                    OnRequestSetWindowState(playerState.WindowState);
             }
         }
 
@@ -3357,6 +3364,17 @@ namespace ScriptPlayer.ViewModels
             //_controllers.Remove(controller);
         }
 
+        protected virtual WindowStateModel OnRequestWindowState()
+        {
+            RequestEventArgs<WindowStateModel> eventArgs = new RequestEventArgs<WindowStateModel>();
+
+            RequestGetWindowState?.Invoke(this, eventArgs);
+
+            if (eventArgs.Handled)
+                return eventArgs.Value;
+            return null;
+        }
+
         protected virtual string OnRequestButtplugUrl(string defaultValue)
         {
             ButtplugUrlRequestEventArgs e = new ButtplugUrlRequestEventArgs
@@ -3512,6 +3530,11 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnIntermediateBeat(double e)
         {
             IntermediateBeat?.Invoke(this, e);
+        }
+
+        protected virtual void OnRequestSetWindowState(WindowStateModel e)
+        {
+            RequestSetWindowState?.Invoke(this, e);
         }
     }
 

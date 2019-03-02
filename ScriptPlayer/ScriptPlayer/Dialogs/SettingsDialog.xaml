@@ -470,6 +470,7 @@
                             <CheckBox Margin="4" Content="Playlist" IsChecked="{Binding Settings.RememberPlaylist}"/>
                             <CheckBox Margin="4" Content="Volume" IsChecked="{Binding Settings.RememberVolume}"/>
                             <CheckBox Margin="4" Content="Playback Mode" IsChecked="{Binding Settings.RememberPlaybackMode}"/>
+                            <CheckBox Margin="4" Content="Window Position" IsChecked="{Binding Settings.RememberWindowPosition}"/>
                         </StackPanel>
                     </Grid>
                 </controls:PageSelector.Elements>

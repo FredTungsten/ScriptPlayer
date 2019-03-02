@@ -1,14 +1,26 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
 using System.Xml.Serialization;
 
 namespace ScriptPlayer.ViewModels
 {
+    public class WindowStateModel
+    {
+        public bool IsMaximized { get; set; }
+
+        public bool IsFullscreen { get; set; }
+
+        public Rect WindowPosition { get; set; }
+    }
+
     public class PlayerStateModel
     {
         public double? Volume { get; set; }
         public PlaybackMode? PlaybackMode { get; set; }
+
+        public WindowStateModel WindowState { get; set; }
 
         public void Save(string filename)
         {

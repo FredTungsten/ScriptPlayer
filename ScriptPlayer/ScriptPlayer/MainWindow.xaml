@@ -13,7 +13,7 @@
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
-        Height="591" Width="954" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico">
+        Height="591" Width="954" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico" Closed="MainWindow_OnClosed">
     <Window.Style>
         <Style TargetType="Window">
             <Setter Property="Title" Value="{Binding Path=Title, StringFormat={}ScriptPlayer - {0}}"/>

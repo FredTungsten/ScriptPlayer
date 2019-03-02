@@ -151,6 +151,7 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _patternSpeed = TimeSpan.FromMilliseconds(300);
         private ChapterMode _chapterMode = ChapterMode.RandomChapter;
         private TimeSpan _chapterTargetDuration = TimeSpan.FromSeconds(60);
+        private bool _rememberWindowPosition;
 
         public SettingsViewModel()
         {
@@ -340,6 +341,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _rememberPlaybackMode) return;
                 _rememberPlaybackMode = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool RememberWindowPosition
+        {
+            get => _rememberWindowPosition;
+            set
+            {
+                if (value == _rememberWindowPosition) return;
+                _rememberWindowPosition = value;
                 OnPropertyChanged();
             }
         }

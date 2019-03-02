@@ -35,11 +35,16 @@ namespace ScriptPlayer
 
         public MainWindow()
         {
-            Closed += OnClosed;
             ViewModel = new MainViewModel();
         }
 
-        private void OnClosed(object sender, EventArgs eventArgs)
+        private void MainWindow_OnClosing(object sender, CancelEventArgs e)
+        {
+            SaveCurrentWindowRect();
+            ViewModel.Dispose();
+        }
+
+        private void MainWindow_OnClosed(object sender, EventArgs e)
         {
             ViewModel.Unload();
         }
@@ -55,7 +60,9 @@ namespace ScriptPlayer
             ViewModel.RequestMpcConnectionSettings += ViewModelOnRequestMpcConnectionSettings;
             ViewModel.RequestSamsungVrConnectionSettings += ViewModelOnRequestSamsungVrConnectionSettings;
             ViewModel.RequestKodiConnectionSettings += ViewModelOnRequestKodiConnectionSettings;
+            ViewModel.RequestGetWindowState += ViewModelOnRequestGetWindowState;
 
+            ViewModel.RequestSetWindowState += ViewModelOnRequestSetWindowState;
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.RequestFolder += ViewModelOnRequestFolder;
@@ -67,6 +74,26 @@ namespace ScriptPlayer
             ViewModel.IntermediateBeat += ViewModelOnIntermediateBeat;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
+        }
+
+        private void ViewModelOnRequestSetWindowState(object sender, WindowStateModel windowStateModel)
+        {
+            _windowState = windowStateModel.IsMaximized ? WindowState.Maximized : WindowState.Normal;
+            _windowPosition = windowStateModel.WindowPosition;
+
+            RestoreWindowRect();
+            SetFullscreen(windowStateModel.IsFullscreen, false);
+        }
+
+        private void ViewModelOnRequestGetWindowState(object sender, RequestEventArgs<WindowStateModel> e)
+        {
+            e.Value = new WindowStateModel
+            {
+                IsMaximized = _windowState == WindowState.Maximized,
+                IsFullscreen = _fullscreen,
+                WindowPosition = _windowPosition
+            };
+            e.Handled = true;
         }
 
         private void ViewModelOnRequestFolder(object sender, RequestEventArgs<string> e)
@@ -205,11 +232,6 @@ namespace ScriptPlayer
             ToggleFullscreen();
         }
 
-        private void MainWindow_OnClosing(object sender, CancelEventArgs e)
-        {
-            ViewModel.Dispose();
-        }
-
         private void ViewModelOnRequestOverlay(object sender, string text, TimeSpan timeSpan, string designation)
         {
             Notifications.AddNotification(text, timeSpan, designation);
@@ -277,18 +299,17 @@ namespace ScriptPlayer
             SetFullscreen(!_fullscreen);
         }
 
-        private void SetFullscreen(bool isFullscreen)
+        private void SetFullscreen(bool isFullscreen, bool updateRestorePosition = true)
         {
             if (_fullscreen == isFullscreen) return;
 
-            _fullscreen = isFullscreen;
-
-            if (_fullscreen)
+            if (!_fullscreen)
             {
                 WindowStyle = WindowStyle.None;
                 ResizeMode = ResizeMode.NoResize;
 
-                SaveCurrentWindowRect();
+                if(updateRestorePosition)
+                    SaveCurrentWindowRect();
 
                 var screenBounds = System.Windows.Forms.Screen.FromHandle(new WindowInteropHelper(this).Handle).Bounds;
 
@@ -317,6 +338,8 @@ namespace ScriptPlayer
                 Grid.SetRow(GridVideo, 1);
                 Grid.SetRowSpan(GridVideo, 1);
             }
+
+            _fullscreen = isFullscreen;
         }
 
         private void RestoreWindowRect()
@@ -330,6 +353,9 @@ namespace ScriptPlayer
 
         private void SaveCurrentWindowRect()
         {
+            if (_fullscreen)
+                return;
+
             _windowPosition = new Rect(Left, Top, Width, Height);
             _windowState = WindowState;
         }
@@ -470,7 +496,6 @@ namespace ScriptPlayer
                     }
                 case Key.NumPad0:
                     {
-
                         break;
                     }
                 case Key.NumPad1:
