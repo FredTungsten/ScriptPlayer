@@ -411,6 +411,8 @@
                     <MenuItem Header="Add file to Playlist" Command="{Binding AddScriptsToPlaylistCommand}"/>
                     <MenuItem Header="Add folder to Playlist" Command="{Binding AddFolderToPlaylistCommand}"/>
                     <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
+                    <Separator/>
+                    <MenuItem Header="Generate Preview GIF" Click="MnuCreatePreview_OnClick"/>
                 </MenuItem>
                 <MenuItem Header="Devices">
                     <MenuItem Header="Show Devices" Click="mnuShowDevices_Click"/>

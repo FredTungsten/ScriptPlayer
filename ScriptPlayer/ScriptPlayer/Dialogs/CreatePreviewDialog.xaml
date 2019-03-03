@@ -1,0 +1,13 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
+        xmlns:Shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared" x:Class="ScriptPlayer.Dialogs.CreatePreviewDialog"
+        mc:Ignorable="d"
+        Title="Preview GIF Creator" Height="287.924" Width="350" Loaded="Window_Loaded">
+    <Grid>
+        <Shared:GifPlayer Name="gifPlayer"/>
+    </Grid>
+</Window>

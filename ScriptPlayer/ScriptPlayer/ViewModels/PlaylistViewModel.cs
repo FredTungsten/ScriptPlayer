@@ -7,9 +7,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using System.Xml;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Helpers;
@@ -18,11 +15,27 @@ namespace ScriptPlayer.ViewModels
 {
     public class PlaylistViewModel : INotifyPropertyChanged, IDisposable
     {
-        private ObservableCollection<PlaylistEntry> _entries;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler<PlaylistEntry> PlayEntry;
+
+        private readonly Random _rng = new Random();
+        private readonly Thread _mediaInfoThread;
+
+        private bool _disposed;
+
+        private bool _randomChapters;
+        private bool _repeatSingleFile;
         private bool _shuffle;
-        private PlaylistEntry _selectedEntry;
         private bool _repeat;
 
+        private ObservableCollection<PlaylistEntry> _entries;
+        private List<PlaylistEntry> _selectedItems;
+        private List<PlaylistEntry> _filteredEntries;
+        private PlaylistEntry _selectedEntry;
+        
+        private string _filter;
+        
         public event EventHandler<RequestEventArgs<string>> RequestMediaFileName;
         public event EventHandler<RequestEventArgs<string>> RequestScriptFileName;
         public event EventHandler SelectedEntryMoved; 
@@ -35,7 +48,19 @@ namespace ScriptPlayer.ViewModels
                 if (Equals(value, _entries)) return;
                 UpdateEntryEvents(_entries, value);
                 _entries = value;
+                UpdateFilter();
                 CommandManager.InvalidateRequerySuggested();
+                OnPropertyChanged();
+            }
+        }
+
+        public List<PlaylistEntry> FilteredEntries
+        {
+            get => _filteredEntries;
+            set
+            {
+                if (Equals(value, _filteredEntries)) return;
+                _filteredEntries = value;
                 OnPropertyChanged();
             }
         }
@@ -53,8 +78,9 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private static void EntriesChanged(object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
+        private void EntriesChanged(object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
         {
+            UpdateFilter();
             CommandManager.InvalidateRequerySuggested();
         }
 
@@ -117,6 +143,42 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public string Filter        
+        {
+            get => _filter;
+            set
+            {
+                if (value == _filter) return;
+                _filter = value;
+                UpdateFilter();
+                OnPropertyChanged();
+            }
+        }
+
+        private void UpdateFilter()
+        {
+            FilteredEntries = FilterEntries(Entries, Filter);
+        }
+
+        private List<PlaylistEntry> FilterEntries(IList<PlaylistEntry> entries, string filter)
+        {
+            List<PlaylistEntry> filtered = new List<PlaylistEntry>();
+
+            foreach(PlaylistEntry entry in entries)
+                if(MatchesFilter(entry.Shortname, filter))
+                    filtered.Add(entry);
+
+            return filtered;
+        }
+
+        private bool MatchesFilter(string text, string filter)
+        {
+            if (string.IsNullOrWhiteSpace(filter))
+                return true;
+
+            return text.IndexOf(filter, StringComparison.InvariantCultureIgnoreCase) >= 0;
+        }
+
         public RelayCommand<string[]> PlayNextEntryCommand { get; set; }
         public RelayCommand<string[]> PlayPreviousEntryCommand { get; set; }
         public RelayCommand MoveSelectedEntryUpCommand { get; set; }
@@ -131,6 +193,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand SortShuffleCommand { get; set; }
         public int EntryCount => Entries.Count;
 
+        
         public PlaylistViewModel()
         {
             Entries = new ObservableCollection<PlaylistEntry>();
@@ -148,7 +211,6 @@ namespace ScriptPlayer.ViewModels
             SortByPathCommand = new RelayCommand<bool>(ExecuteSortByPath, CanSort);
             SortShuffleCommand = new RelayCommand(ExecuteSortShuffle, CanSort);
 
-            _dispatcher = Dispatcher.CurrentDispatcher;
             _mediaInfoThread = new Thread(MediaInfoLoop);
             _mediaInfoThread.Start();
         }
@@ -444,9 +506,6 @@ namespace ScriptPlayer.ViewModels
             OnSelectedEntryMoved();
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        public event EventHandler<PlaylistEntry> PlayEntry;
-
         public void AddEntry(PlaylistEntry entry)
         {
             EnsureDuration(entry);
@@ -563,13 +622,6 @@ namespace ScriptPlayer.ViewModels
             return previousEntry;
         }
 
-        readonly Random _rng = new Random();
-        private bool _randomChapters;
-        private bool _repeatSingleFile;
-        private Dispatcher _dispatcher;
-        private Thread _mediaInfoThread;
-        private bool _disposed;
-
         private PlaylistEntry AnythingButThis(params string[] currentEntryFiles)
         {
             if (Entries.Count == 0)
@@ -640,9 +692,7 @@ namespace ScriptPlayer.ViewModels
         {
             SelectedEntryMoved?.Invoke(this, EventArgs.Empty);
         }
-
-        private List<PlaylistEntry> _selectedItems;
-
+        
         public void SetSelectedItems(IEnumerable<PlaylistEntry> entries)
         {
             _selectedItems = entries.ToList();

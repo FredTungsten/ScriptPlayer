@@ -651,5 +651,11 @@ namespace ScriptPlayer
         {
             ViewModel.ReloadScript();
         }
+
+        private void MnuCreatePreview_OnClick(object sender, RoutedEventArgs e)
+        {
+            var dialog = new CreatePreviewDialog(ViewModel.LoadedVideo, ViewModel.TimeSource.Progress);
+            dialog.ShowDialog();
+        }
     }
 }

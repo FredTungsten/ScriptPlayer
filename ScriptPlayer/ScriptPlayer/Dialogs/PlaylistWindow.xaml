@@ -54,7 +54,7 @@
                 <MenuItem Header="Shuffle" Command="{Binding Playlist.SortShuffleCommand}"/>
             </MenuItem>
         </Menu>
-        <ListBox x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,42" ItemsSource="{Binding Path=Playlist.Entries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" SelectionChanged="LstEntries_OnSelectionChanged" AllowDrop="True" Drop="ListBox_Drop" SelectionMode="Extended">
+        <ListBox x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,41,10,42" ItemsSource="{Binding Path=Playlist.FilteredEntries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" SelectionChanged="LstEntries_OnSelectionChanged" AllowDrop="True" Drop="ListBox_Drop" SelectionMode="Extended">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
@@ -109,5 +109,6 @@
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_bookmark}"/>
             </CheckBox>
         </UniformGrid>
+        <TextBox x:Name="txtSearch" Text="{Binding Path=Playlist.Filter, UpdateSourceTrigger=PropertyChanged}" Height="22" Margin="10,10,10,0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top"/>
     </Grid>
 </Window>

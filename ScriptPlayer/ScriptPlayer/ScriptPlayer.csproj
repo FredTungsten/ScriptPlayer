@@ -94,6 +94,9 @@
     <Compile Include="Converters\BooleanAndConverter.cs" />
     <Compile Include="Converters\CollectionNullOrEmptyToVisibilityConverter.cs" />
     <Compile Include="Converters\DurationConverter.cs" />
+    <Compile Include="Dialogs\CreatePreviewDialog.xaml.cs">
+      <DependentUpon>CreatePreviewDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\KodiConnectionSettingsDialog.xaml.cs">
       <DependentUpon>KodiConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
@@ -153,6 +156,10 @@
     <Compile Include="ViewModels\RequestFileEventArgs.cs" />
     <Compile Include="ViewModels\TestPatternDefinition.cs" />
     <Page Include="Dialogs\ButtplugConnectionSettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\CreatePreviewDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
