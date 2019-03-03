@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
@@ -128,20 +129,36 @@ namespace ScriptPlayer.Shared
         private TimeSpan _downTime;
         private Point _downPosition;
         private TimeSpan _downCenter;
+        private static readonly Typeface _typeface;
+        private TimeSpan _lastRender;
 
         public TimeSpan Offset
         {
-            get { return (TimeSpan)GetValue(OffsetProperty); }
-            set { SetValue(OffsetProperty, value); }
+            get => (TimeSpan)GetValue(OffsetProperty);
+            set => SetValue(OffsetProperty, value);
         }
 
         static TimeLineHeader()
         {
             BackgroundProperty.OverrideMetadata(typeof(TimeLineHeader), new FrameworkPropertyMetadata(Brushes.Black));
+
+            //Cache the typeface (not much but should help a little)
+            _typeface = new Typeface(new FontFamily("Arial"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
         }
 
         protected override void OnRender(DrawingContext drawingContext)
         {
+            // Dirty hack, should remove later (whenever or never)
+            if (((UIElement) this.Parent).Visibility != Visibility.Visible)
+                return;
+
+            //var diffToLast = Math.Abs(TimeSpanToPosition(_lastRender));
+            //Debug.WriteLine(diffToLast);
+            //if (diffToLast < 10)
+            //    return;
+            
+            //_lastRender = Offset;
+
             Rect rectAll = new Rect(0, 0, ActualWidth, ActualHeight);
             drawingContext.DrawRectangle(Background, null, rectAll);
 
@@ -150,8 +167,6 @@ namespace ScriptPlayer.Shared
             TimeSpan earliestFull = RoundDown(Offset, scale.MajorScale);
 
             TimeSpan currentPosition = earliestFull;
-
-            Typeface typeface = new Typeface(new FontFamily("Arial"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 
             if (ShowMarker)
             {
@@ -166,10 +181,8 @@ namespace ScriptPlayer.Shared
                 double x = TimeSpanToPosition(currentPosition);
 
                 drawingContext.DrawLine(new Pen(Brushes.White, 1), new Point(x, 32), new Point(x, 64));
-
-
-
-                FormattedText text = new FormattedText(GetText(currentPosition), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, 10, Brushes.White);
+                
+                FormattedText text = new FormattedText(GetText(currentPosition), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, _typeface, 10, Brushes.White, 96);
 
                 drawingContext.DrawText(text, new Point(x - text.Width / 2, text.Height));
 
