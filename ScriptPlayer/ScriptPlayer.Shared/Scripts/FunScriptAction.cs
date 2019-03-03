@@ -23,5 +23,15 @@ namespace ScriptPlayer.Shared.Scripts
         {
             return (action as FunScriptAction)?.Position == Position;
         }
+
+        public FunScriptAction Duplicate()
+        {
+            return new FunScriptAction
+            {
+                Position = Position,
+                TimeStamp = TimeStamp,
+                OriginalAction = OriginalAction
+            };
+        }
     }
 }

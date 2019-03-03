@@ -1317,6 +1317,7 @@ namespace ScriptPlayer.ViewModels
                         UpdatePlaylistRepeatSingleFile();
                         break;
                     }
+                case nameof(SettingsViewModel.RangeExtender):
                 case nameof(SettingsViewModel.FillGaps):
                 case nameof(SettingsViewModel.FillFirstGap):
                 case nameof(SettingsViewModel.FillLastGap):
@@ -1343,6 +1344,7 @@ namespace ScriptPlayer.ViewModels
 
         private void UpdateFillGaps()
         {
+            _scriptHandler.RangeExtender = Settings.RangeExtender;
             _scriptHandler.FillGapIntervall = Settings.FillGapIntervall;
             _scriptHandler.FillGapGap = Settings.FillGapGap;
             _scriptHandler.MinGapDuration = Settings.MinGapDuration;

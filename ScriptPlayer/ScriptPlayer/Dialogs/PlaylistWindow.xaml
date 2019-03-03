@@ -48,6 +48,9 @@
                 <MenuItem Header="Name (ascending)"  Command="{Binding Playlist.SortByNameCommand}" CommandParameter="{shared:Boolean true}"/>
                 <MenuItem Header="Name (descending)"  Command="{Binding Playlist.SortByNameCommand}" CommandParameter="{shared:Boolean false}"/>
                 <Separator/>
+                <MenuItem Header="Path (ascending)"  Command="{Binding Playlist.SortByPathCommand}" CommandParameter="{shared:Boolean true}"/>
+                <MenuItem Header="Path (descending)"  Command="{Binding Playlist.SortByPathCommand}" CommandParameter="{shared:Boolean false}"/>
+                <Separator/>
                 <MenuItem Header="Shuffle" Command="{Binding Playlist.SortShuffleCommand}"/>
             </MenuItem>
         </Menu>

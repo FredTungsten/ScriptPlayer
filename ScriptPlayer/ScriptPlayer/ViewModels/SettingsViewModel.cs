@@ -152,6 +152,7 @@ namespace ScriptPlayer.ViewModels
         private ChapterMode _chapterMode = ChapterMode.RandomChapter;
         private TimeSpan _chapterTargetDuration = TimeSpan.FromSeconds(60);
         private bool _rememberWindowPosition;
+        private int _rangeExtender;
 
         public SettingsViewModel()
         {
@@ -506,6 +507,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _logMarkers) return;
                 _logMarkers = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int RangeExtender
+        {
+            get => _rangeExtender;
+            set
+            {
+                if (value == _rangeExtender) return;
+                _rangeExtender = value;
                 OnPropertyChanged();
             }
         }

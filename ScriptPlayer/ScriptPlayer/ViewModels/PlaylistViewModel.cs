@@ -127,6 +127,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand ClearPlaylistCommand { get; set; }
         public RelayCommand<bool> SortByDurationCommand { get; set; }
         public RelayCommand<bool> SortByNameCommand { get; set; }
+        public RelayCommand<bool> SortByPathCommand { get; set; }
         public RelayCommand SortShuffleCommand { get; set; }
         public int EntryCount => Entries.Count;
 
@@ -144,6 +145,7 @@ namespace ScriptPlayer.ViewModels
             PlayPreviousEntryCommand = new RelayCommand<string[]>(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
             SortByDurationCommand = new RelayCommand<bool>(ExecuteSortByDuration, CanSort);
             SortByNameCommand = new RelayCommand<bool>(ExecuteSortByName, CanSort);
+            SortByPathCommand = new RelayCommand<bool>(ExecuteSortByPath, CanSort);
             SortShuffleCommand = new RelayCommand(ExecuteSortShuffle, CanSort);
 
             _dispatcher = Dispatcher.CurrentDispatcher;
@@ -180,6 +182,11 @@ namespace ScriptPlayer.ViewModels
         private void ExecuteSortByName(bool ascending)
         {
             SetEntries(Entries.OrderBy(e => e.Shortname), ascending);
+        }
+
+        private void ExecuteSortByPath(bool ascending)
+        {
+            SetEntries(Entries.OrderBy(e => e.Fullname), ascending);
         }
 
         private void SetEntries(IOrderedEnumerable<PlaylistEntry> entries, bool sortAscending)

@@ -629,6 +629,10 @@
                                 <TextBlock Margin="4,0" Text="{Binding Settings.MinPosition}" DockPanel.Dock="Left"/>
                                 <TextBlock Margin="4,0" Text="{Binding Settings.MaxPosition}" DockPanel.Dock="Right"/>
                             </DockPanel>
+
+                            <TextBlock Margin="0" HorizontalAlignment="Center" Text="Range Extender"/>
+                            <Slider Margin="0,4" Minimum="0" Maximum="99" Value="{Binding Settings.RangeExtender}"/>
+                            <TextBlock TextAlignment="Center" Margin="0" Text="{Binding Path=Settings.RangeExtender}"/>
                             <Grid>
                                 <Grid.Resources>
                                     <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}">

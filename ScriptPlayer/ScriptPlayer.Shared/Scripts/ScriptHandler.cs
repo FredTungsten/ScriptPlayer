@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace ScriptPlayer.Shared.Scripts
@@ -18,7 +19,7 @@ namespace ScriptPlayer.Shared.Scripts
         private TimeSource _timesource;
         private ConversionMode _conversionMode = ConversionMode.UpOrDown;
         private static TimeSpan _delay = TimeSpan.Zero;
-        
+
         private bool _fillGaps;
         private bool _fillFirstGap;
         private bool _fillLastGap;
@@ -27,6 +28,7 @@ namespace ScriptPlayer.Shared.Scripts
         private TimeSpan _fillGapIntervall;
         private TimeSpan _minGapDuration;
         private RepeatablePattern _fillGapPattern;
+        private int _rangeExtender;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> IntermediateScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> InstantUpdateRaised;
@@ -35,7 +37,7 @@ namespace ScriptPlayer.Shared.Scripts
 
         public TimeSpan Delay { get; set; }
 
-        public ConversionMode ConversionMode  
+        public ConversionMode ConversionMode
         {
             get => _conversionMode;
             set
@@ -70,7 +72,7 @@ namespace ScriptPlayer.Shared.Scripts
             get => _fillLastGap;
             set
             {
-                _fillLastGap = value; 
+                _fillLastGap = value;
                 ProcessScript();
             }
         }
@@ -114,7 +116,7 @@ namespace ScriptPlayer.Shared.Scripts
             get => _duration;
             set
             {
-                _duration = value; 
+                _duration = value;
                 ProcessScript();
             }
         }
@@ -124,7 +126,17 @@ namespace ScriptPlayer.Shared.Scripts
             get => _fillGapPattern;
             set
             {
-                _fillGapPattern = value; 
+                _fillGapPattern = value;
+                ProcessScript();
+            }
+        }
+
+        public int RangeExtender
+        {
+            get => _rangeExtender;
+            set
+            {
+                _rangeExtender = value;
                 ProcessScript();
             }
         }
@@ -180,7 +192,7 @@ namespace ScriptPlayer.Shared.Scripts
                 return new List<ScriptAction>();
 
             return _originalActions.AsReadOnly();
-        } 
+        }
 
         public void SetScript(IEnumerable<ScriptAction> script)
         {
@@ -194,13 +206,13 @@ namespace ScriptPlayer.Shared.Scripts
         private void ConvertScript()
         {
             if (_originalScript.FirstOrDefault() is BeatScriptAction)
-            { 
+            {
                 _originalActions = BeatsToFunScriptConverter.Convert(_originalScript.Select(s => s.TimeStamp), new ConversionSettings
-                    {
-                        Min = 5,
-                        Max = 95,
-                        Mode =_conversionMode 
-                    })
+                {
+                    Min = 5,
+                    Max = 95,
+                    Mode = _conversionMode
+                })
                     .OrderBy(a => a.TimeStamp)
                     .ToList();
             }
@@ -214,8 +226,97 @@ namespace ScriptPlayer.Shared.Scripts
         {
             ConvertScript();
             FillScriptGaps();
-            UpdatePositions();
+            ExtendRange();
             ResetCache();
+
+            UpdatePositions();
+        }
+
+        private void ExtendRange()
+        {
+            if (RangeExtender == 0)
+                return;
+
+            if (_filledActions.Count < 3)
+                return;
+
+            DateTime start = DateTime.Now;
+
+            List<FunScriptAction> extendedActions = new List<FunScriptAction>();
+
+            int lastExtremeIndex = 0;
+            byte lastValue = _filledActions[0].Position;
+            byte lastExtremeValue = lastValue;
+
+            byte lowest = lastValue;
+            byte highest = lastValue;
+
+            bool? goingUp = null;
+
+            extendedActions.Add(_filledActions.First().Duplicate());
+
+            for (int index = 0; index < _filledActions.Count; index++)
+            {
+                // Direction unknown
+                if (goingUp == null)
+                {
+                    if (_filledActions[index].Position < lastExtremeValue)
+                        goingUp = false;
+                    else if (_filledActions[index].Position > lastExtremeValue)
+                        goingUp = true;
+                }
+                else
+                {
+                    if ((_filledActions[index].Position < lastValue && (bool)goingUp)     //previous was highpoint
+                        || (_filledActions[index].Position > lastValue && (bool)!goingUp) //previous was lowpoint
+                        || (index == _filledActions.Count - 1))                            //last action
+                    {
+                        for (int i = lastExtremeIndex + 1; i < index; i++)
+                        {
+                            FunScriptAction action = _filledActions[i].Duplicate();
+                            action.Position = StretchPosition(action.Position, lowest, highest, RangeExtender);
+                            extendedActions.Add(action);
+                        }
+
+                        lastExtremeValue = _filledActions[index - 1].Position;
+                        lastExtremeIndex = index - 1;
+
+                        highest = lastExtremeValue;
+                        lowest = lastExtremeValue;
+
+                        goingUp ^= true;
+                    }
+
+                    lastValue = _filledActions[index].Position;
+                    if (lastValue > highest)
+                        highest = lastValue;
+                    if (lastValue < lowest)
+                        lowest = lastValue;
+                }
+            }
+
+            extendedActions.Add(_filledActions.Last().Duplicate());
+
+            //
+            //Debug.WriteLine($"RangeExtender done in {(DateTime.Now - start).TotalMilliseconds} ms");
+
+            _filledActions = extendedActions;
+        }
+
+        private byte StretchPosition(byte position, byte lowest, byte highest, int extension)
+        {
+            byte newHigh = ClampPosition(highest + extension);
+            byte newLow = ClampPosition(lowest - extension);
+
+            double relativePosition = (position - lowest) / (double)(highest - lowest);
+            double newposition = relativePosition * (newHigh - newLow) + newLow;
+
+            return ClampPosition(newposition);
+        }
+
+        private byte ClampPosition(double position)
+        {
+            return (byte)Math.Min(99, Math.Max(0, position));
         }
 
         private void FillScriptGaps()
@@ -240,7 +341,7 @@ namespace ScriptPlayer.Shared.Scripts
                 {
                     if (FillFirstGap)
                     {
-                        bool nextIsLow =  action.Position < 50;
+                        bool nextIsLow = action.Position < 50;
                         if (action.TimeStamp > MinGapDuration)
                         {
                             additionalActions.AddRange(GenerateGapFiller(FillGapPattern, TimeSpan.Zero,
@@ -281,13 +382,13 @@ namespace ScriptPlayer.Shared.Scripts
             }
 
             _filledActions.AddRange(additionalActions);
-            _filledActions.Sort((a,b) => a.TimeStamp.CompareTo(b.TimeStamp));
+            _filledActions.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
         }
 
         private IEnumerable<FunScriptAction> GenerateGapFiller(RepeatablePattern pattern, TimeSpan start, TimeSpan end, bool? startHigh = false, bool? endHigh = false)
         {
-            if(pattern == null)
-                pattern = new RepeatablePattern(0,99);
+            if (pattern == null)
+                pattern = new RepeatablePattern(0, 99);
 
             List<FunScriptAction> additionalActions = new List<FunScriptAction>();
             TimeSpan gapduration = end - start;
@@ -299,18 +400,18 @@ namespace ScriptPlayer.Shared.Scripts
 
             if (startHigh != null && endHigh != null)
             {
-                up = (bool) startHigh;
+                up = (bool)startHigh;
                 shouldBeEven = startHigh != endHigh;
             }
             else if (startHigh != null)
             {
-                up = (bool) startHigh;
+                up = (bool)startHigh;
                 shouldBeEven = null;
             }
             else if (endHigh != null)
             {
                 bool wouldBeEven = Round(approximateFillers, null) % 2 == 0;
-                up = !(wouldBeEven ^ (bool) endHigh);
+                up = !(wouldBeEven ^ (bool)endHigh);
                 shouldBeEven = null;
             }
             else
@@ -341,7 +442,7 @@ namespace ScriptPlayer.Shared.Scripts
             int patternIndex = 0;
             int duration = 1;
 
-            for (int i = 0; i <= fillers; i+= duration)
+            for (int i = 0; i <= fillers; i += duration)
             {
                 additionalActions.Add(new FunScriptAction
                 {
@@ -365,18 +466,18 @@ namespace ScriptPlayer.Shared.Scripts
             {
                 case true:
                 case false:
-                {
-                    if (((int) Math.Ceiling(value) % 2 == 0) == shouldBeEven)
-                        result = (int) Math.Ceiling(value);
-                    else
-                        result = (int) Math.Floor(value);
-                    break;
-                }
+                    {
+                        if (((int)Math.Ceiling(value) % 2 == 0) == shouldBeEven)
+                            result = (int)Math.Ceiling(value);
+                        else
+                            result = (int)Math.Floor(value);
+                        break;
+                    }
                 default:
-                {
-                    result = (int) Math.Round(value);
-                    break;
-                }
+                    {
+                        result = (int)Math.Round(value);
+                        break;
+                    }
             }
 
             if (result <= 0)
@@ -453,23 +554,24 @@ namespace ScriptPlayer.Shared.Scripts
 
                 TimeSpan duration = next - previous;
 
-                if(duration < MinIntermediateCommandDuration.Multiply(2))
+                if (duration < MinIntermediateCommandDuration.Multiply(2))
                     return;
 
                 int intermediateCommands = (int)Math.Floor(duration.Divide(MinIntermediateCommandDuration));
                 TimeSpan intermediateDuration = duration.Divide(intermediateCommands + 1);
 
-                int passedIntermediateCommand = (int) Math.Floor((newTimeSpan - previous).Divide(intermediateDuration));
+                int passedIntermediateCommand = (int)Math.Floor((newTimeSpan - previous).Divide(intermediateDuration));
 
                 if (_lastIntermediateIndex < passedIntermediateCommand)
                 {
                     _lastIntermediateIndex = passedIntermediateCommand;
-                    double progress = passedIntermediateCommand / (double) (intermediateCommands + 1);
+                    double progress = passedIntermediateCommand / (double)(intermediateCommands + 1);
 
                     IntermediateScriptActionEventArgs args =
                         new IntermediateScriptActionEventArgs(_filledActions[_lastIndex],
                             _filledActions[_lastIndex + 1],
-                            progress) {TimeStamp = newTimeSpan};
+                            progress)
+                        { TimeStamp = newTimeSpan };
 
                     //Debug.WriteLine($"{DateTime.Now:HH:mm:ss.fff}: Intermediate {passedIntermediateCommand}/{intermediateCommands+1}, {progress :P0}");
 
