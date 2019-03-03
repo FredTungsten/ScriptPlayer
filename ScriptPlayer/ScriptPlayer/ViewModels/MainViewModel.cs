@@ -148,6 +148,18 @@ namespace ScriptPlayer.ViewModels
                 if (Equals(value, _selectedRange)) return;
                 _selectedRange = value;
                 OnPropertyChanged();
+                UpdateDisplayedSelection();
+            }
+        }
+
+        public Section DisplayedRange
+        {
+            get => _displayedRange;
+            set
+            {
+                if (Equals(value, _displayedRange)) return;
+                _displayedRange = value;
+                OnPropertyChanged();
             }
         }
 
@@ -202,11 +214,11 @@ namespace ScriptPlayer.ViewModels
         private ObservableCollection<RepeatablePattern> _patterns;
         private VideoThumbnailCollection _thumbnails;
         private CommandSource _previousCommandSource;
-        private List<ScriptplayerCommand> _commands;
         private string _lastFolder;
         private Section _selectedRange;
         private string _randomChapterToolTip;
-        
+        private Section _displayedRange;
+
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
         {
@@ -363,6 +375,8 @@ namespace ScriptPlayer.ViewModels
                 case nameof(PlaylistViewModel.RandomChapters):
                     {
                         Settings.RandomChapters = Playlist.RandomChapters;
+                        if(!Playlist.RandomChapters)
+                            SelectedRange = null;
                         break;
                     }
             }
@@ -1161,6 +1175,7 @@ namespace ScriptPlayer.ViewModels
         public ScriptplayerCommand StartScanningButtplugCommand { get; set; }
 
         public ScriptplayerCommand SetLoopACommand { get; set; }
+
         public ScriptplayerCommand SetLoopBCommand { get; set; }
 
         public ScriptplayerCommand ClearLoopCommand { get; set; }
@@ -1937,16 +1952,27 @@ namespace ScriptPlayer.ViewModels
         {
             _loopA = TimeSpan.MinValue;
             _loopB = TimeSpan.MinValue;
+            UpdateDisplayedSelection();
         }
 
         private void ExecuteSetLoopB()
         {
             _loopB = TimeSource.Progress;
+            UpdateDisplayedSelection();
         }
 
         private void ExecuteSetLoopA()
         {
             _loopA = TimeSource.Progress;
+            UpdateDisplayedSelection();
+        }
+
+        private void UpdateDisplayedSelection()
+        {
+            if (_loopA != TimeSpan.MinValue && _loopB != TimeSpan.MinValue)
+                DisplayedRange = new Section(_loopA, _loopB);
+            else
+                DisplayedRange = SelectedRange;
         }
 
         private void ExecuteSavePlaylist()

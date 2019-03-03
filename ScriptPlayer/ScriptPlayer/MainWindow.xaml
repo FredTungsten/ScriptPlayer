@@ -587,7 +587,7 @@
             <Slider VerticalAlignment="Center" Margin="16,0" Width="50" Value="{Binding Volume, Mode=TwoWay}" Minimum="0" Maximum="100" DockPanel.Dock="Right" Style="{DynamicResource VolumeSliderStyle}"></Slider>
             <Button Command="{Binding Playlist.PlayNextEntryCommand}" CommandParameter="{Binding LoadedFiles}" ToolTip="Play next video in playlist" Content=":" DockPanel.Dock="Right" />
             <Button Command="{Binding Playlist.PlayPreviousEntryCommand}" CommandParameter="{Binding LoadedFiles}" ToolTip="Play previous video in playlist" Content="9" DockPanel.Dock="Right"/>
-            <shared:SeekBar HighlightRange="{Binding SelectedRange}" SnapsToDevicePixels="True" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Thumbnails="{Binding Thumbnails}" Progress="{Binding Path=TimeSource.Progress}" Duration="{Binding Path=TimeSource.Duration}" Seek="SeekBar_OnSeek">
+            <shared:SeekBar HighlightRange="{Binding DisplayedRange}" SnapsToDevicePixels="True" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Thumbnails="{Binding Thumbnails}" Progress="{Binding Path=TimeSource.Progress}" Duration="{Binding Path=TimeSource.Duration}" Seek="SeekBar_OnSeek">
                 <shared:SeekBar.OverlayOpacity>
                     <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
                         <GradientStop Offset="0" Color="#20000000"/>
