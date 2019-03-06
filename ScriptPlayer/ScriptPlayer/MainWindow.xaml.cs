@@ -79,7 +79,7 @@ namespace ScriptPlayer
         private void ViewModelOnRequestSetWindowState(object sender, WindowStateModel windowStateModel)
         {
             _windowState = windowStateModel.IsMaximized ? WindowState.Maximized : WindowState.Normal;
-            _windowPosition = windowStateModel.WindowPosition;
+            _windowPosition = windowStateModel.GetPosition();
 
             RestoreWindowRect();
             SetFullscreen(windowStateModel.IsFullscreen, false);
@@ -356,8 +356,12 @@ namespace ScriptPlayer
             if (_fullscreen)
                 return;
 
-            _windowPosition = new Rect(Left, Top, Width, Height);
             _windowState = WindowState;
+
+            if (_windowState != WindowState.Normal)
+                _windowPosition = new Rect(RestoreBounds.Left, RestoreBounds.Top, RestoreBounds.Width, RestoreBounds.Height);
+            else
+                _windowPosition = new Rect(Left, Top, Width, Height);
         }
 
         private async void VideoPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

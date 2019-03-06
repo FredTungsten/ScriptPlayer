@@ -12,7 +12,33 @@ namespace ScriptPlayer.ViewModels
 
         public bool IsFullscreen { get; set; }
 
-        public Rect WindowPosition { get; set; }
+        public double Width { get; set; }
+
+        public double Height { get; set; }
+
+        public double X { get; set; }
+
+        public double Y { get; set; }
+
+        [XmlIgnore]
+        public Rect WindowPosition
+        {
+            get => GetPosition();
+            set => SetPosition(value);
+        }
+
+        public void SetPosition(Rect value)
+        {
+            X = value.X;
+            Y = value.Y;
+            Width = value.Width;
+            Height = value.Height;
+        }
+
+        public Rect GetPosition()
+        {
+            return new Rect(X, Y, Width, Height);
+        }
     }
 
     public class PlayerStateModel

@@ -836,7 +836,8 @@ namespace ScriptPlayer.ViewModels
                     PlaybackMode = (PlaybackMode)playerState.PlaybackMode;
 
                 if(playerState.WindowState != null)
-                    OnRequestSetWindowState(playerState.WindowState);
+                    if(playerState.WindowState.Width > 0 && playerState.WindowState.Height > 0)
+                        OnRequestSetWindowState(playerState.WindowState);
             }
         }
 
