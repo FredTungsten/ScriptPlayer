@@ -3565,6 +3565,11 @@ namespace ScriptPlayer.ViewModels
         {
             RequestSetWindowState?.Invoke(this, e);
         }
+
+        public void RecheckForAdditionalFiles()
+        {
+            TryFindMatchingThumbnails(LoadedVideo);
+        }
     }
 
     public enum ChapterMode

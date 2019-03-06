@@ -8,9 +8,10 @@ using Newtonsoft.Json.Linq;
 
 namespace ScriptPlayer.Shared.Classes
 {
-    public class VideoThumbnailCollection
+    public class VideoThumbnailCollection : IDisposable
     {
         private readonly List<VideoThumbnail> _thumbnails = new List<VideoThumbnail>();
+        public int Count => _thumbnails.Count;
 
         public void Add(TimeSpan timestamp, BitmapSource thumbnail)
         {
@@ -102,6 +103,36 @@ namespace ScriptPlayer.Shared.Classes
 
                 Add(thumbnail);
             }
+        }
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+            Dispose(true);
+        }
+
+        ~VideoThumbnailCollection()
+        {
+            Dispose(false);
+        }
+
+        private bool _disposed;
+        private void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+
+            if (disposing)
+            {
+                foreach (var frame in _thumbnails)
+                {
+                    frame.Thumbnail = null;
+                }
+            }
+
+            _thumbnails.Clear();
         }
     }
 

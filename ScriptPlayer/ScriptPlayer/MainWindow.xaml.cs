@@ -660,6 +660,8 @@ namespace ScriptPlayer
         {
             var dialog = new CreatePreviewDialog(ViewModel.LoadedVideo, ViewModel.TimeSource.Progress);
             dialog.ShowDialog();
+
+            ViewModel.RecheckForAdditionalFiles();
         }
     }
 }
