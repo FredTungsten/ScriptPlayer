@@ -1,19 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
@@ -25,14 +14,15 @@ namespace ScriptPlayer.Dialogs
     /// </summary>
     public partial class CreatePreviewDialog : Window
     {
-        private string _filePath;
-        private TimeSpan _start;
-        private ManualTimeSource _timeSource;
+        private readonly string _videoFile;
+        private readonly TimeSpan _start;
+        private readonly ManualTimeSource _timeSource;
+        private FrameConverterWrapper _wrapper;
 
         public CreatePreviewDialog(string videoFilePath, TimeSpan start)
         {
             _timeSource = new ManualTimeSource(new DispatcherClock(Dispatcher, TimeSpan.FromMilliseconds(10)));
-            _filePath = videoFilePath;
+            _videoFile = videoFilePath;
             _start = start;
 
             InitializeComponent();
@@ -70,14 +60,14 @@ namespace ScriptPlayer.Dialogs
                 int durationInSeconds = 5;
                 int outputHeight = 170;
 
-                string clip = Path.Combine(Path.GetTempPath(), Path.GetFileName(_filePath) + "-clip.mkv");
-                string palette = Path.Combine(Path.GetTempPath(), Path.GetFileName(_filePath) + "-palette.png");
-                string gif = Path.Combine(Path.GetDirectoryName(_filePath), Path.GetFileNameWithoutExtension(_filePath) + ".gif");
+                string clip = Path.Combine(Path.GetTempPath(), Path.GetFileName(_videoFile) + "-clip.mkv");
+                string palette = Path.Combine(Path.GetTempPath(), Path.GetFileName(_videoFile) + "-palette.png");
+                string gif = Path.Combine(Path.GetDirectoryName(_videoFile), Path.GetFileNameWithoutExtension(_videoFile) + ".gif");
 
                 string clipArguments = 
                     "-y " + //Yes to override existing files
                     $"-ss {startPosition:hh\\:mm\\:ss\\.ff} " + // Starting Position
-                    $"-i \"{_filePath}\" " + // Input File
+                    $"-i \"{_videoFile}\" " + // Input File
                     $"-t {durationInSeconds} " + //Duration
                     "-vf select=\"mod(n-1\\,2)\",\"" + //Every 2nd Frame
                     "setpts=PTS-STARTPTS, " +
@@ -116,25 +106,28 @@ namespace ScriptPlayer.Dialogs
                         gifPlayer.Load(gif);
                 }));
 
-                string tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("D"));
-                if (!tempPath.EndsWith("\\"))
-                    tempPath += "\\";
+                
 
-                Directory.CreateDirectory(tempPath);
-
-                string thumbArguments = $"-i \"{_filePath}\" -vf \"scale=200:-1, fps=1/10\" \"{tempPath}%04d.jpg\" -stats";
+                //string thumbArguments = $"-i \"{_filePath}\" -vf \"scale=200:-1, fps=1/10\" \"{tempPath}%04d.jpg\" -stats";
 
                 SetStatus("Generating Thumbnails", 0);
 
-                FrameConverterWrapper wrapper = new FrameConverterWrapper(ffmpegexe, thumbArguments);
+                FrameConverterWrapper wrapper = new FrameConverterWrapper(ffmpegexe);
+                wrapper.Intervall = 10; //1 Frame every 10 seconds;
+                wrapper.VideoFile = _videoFile;
+                wrapper.Width = 200;
                 wrapper.ProgressChanged += (sender, progress) =>
                 {
                     SetStatus("Generating Thumbnails", progress);
                 };
 
+                _wrapper = wrapper;
+
                 wrapper.Execute();
 
                 SetStatus("Saving Thumbnails");
+
+                string tempPath = wrapper.OutputPath;
 
                 VideoThumbnailCollection thumbnails = new VideoThumbnailCollection();
 
@@ -158,7 +151,7 @@ namespace ScriptPlayer.Dialogs
                     usedFiles.Add(file);
                 }
 
-                string thumbfile = Path.ChangeExtension(_filePath, "thumbs");
+                string thumbfile = Path.ChangeExtension(_videoFile, "thumbs");
                 using (FileStream stream = new FileStream(thumbfile, FileMode.Create, FileAccess.Write))
                 {
                     thumbnails.Save(stream);
@@ -179,26 +172,6 @@ namespace ScriptPlayer.Dialogs
                 }));
 
             }).Start();
-
-            /*
-             SET "INPUT_FILE=D:\Videos\CH\7. Done\CH\Awesome-X Cock Hero Temptation 4.mp4"
-             SET "START_POSITION=3:14"
-             SET "DURATION_SECONDS=5"
-             SET "OUTPUT_HEIGHT=170"
-             SET "OUTPUT_TYPE=gif"
-
-             SET "FFMPEG=C:\Program Files (x86)\FFmpeg\bin\ffmpeg.exe"
-             SET "CLIP_FILE=%INPUT_FILE%-clip.mkv"
-             SET "PALETTE_FILE=%CLIP_FILE%-palette.png"
-
-             "%FFMPEG%" -ss %START_POSITION% -i "%INPUT_FILE%" -t %DURATION_SECONDS% -vf select="mod(n-1\,2)","setpts=PTS-STARTPTS, hqdn3d=10, scale=-2:%OUTPUT_HEIGHT%" -vcodec libx264 -crf 24 "%CLIP_FILE%"
-             
-             "%FFMPEG%" -i "%CLIP_FILE%" -vf palettegen "%PALETTE_FILE%"
-
-             "%FFMPEG%" -i "%CLIP_FILE%" -i "%PALETTE_FILE%" -filter_complex paletteuse -plays 0 "%INPUT_FILE%.%OUTPUT_TYPE%"
-
-             pause
-             */
         }
 
         private void SetStatus(string text, double progress = -1)
@@ -218,94 +191,10 @@ namespace ScriptPlayer.Dialogs
                 txtStatus.Text = text;
             }));
         }
-    }
 
-    public class ConsoleWrapper
-    {
-        private readonly ProcessStartInfo _startInfo;
-
-        public ConsoleWrapper(string file, string arguments)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            _startInfo = new ProcessStartInfo(file, arguments);
-            _startInfo.UseShellExecute = false;
-            _startInfo.CreateNoWindow = true;
-            _startInfo.RedirectStandardError = true;
-            _startInfo.RedirectStandardInput = true;
-            _startInfo.RedirectStandardOutput = true;
-        }
-
-        public void Execute()
-        {
-            Process process = Process.Start(_startInfo);
-
-            Thread _outputThread = new Thread(ReadOutput);
-            _outputThread.Start(process.StandardOutput);
-
-            Thread _errorThread = new Thread(ReadOutput);
-            _errorThread.Start(process.StandardError);
-
-            process.WaitForExit();
-
-            _outputThread.Join();
-            _errorThread.Join();
-        }
-
-        private void ReadOutput(object streamReader)
-        {
-            StreamReader reader = (StreamReader) streamReader;
-
-            while (!reader.EndOfStream)
-            {
-                ProcessLine(reader.ReadLine());
-            }
-        }
-
-        protected virtual void ProcessLine(string line)
-        {
-            Debug.WriteLine(line);
-        }
-    }
-
-    public class FrameConverterWrapper : ConsoleWrapper
-    {
-        public event EventHandler<double> ProgressChanged;
-
-        public FrameConverterWrapper(string file, string arguments) : base(file, arguments)
-        {
-        }
-
-        //  Duration: 00:01:38.26
-        Regex _durationRegex = new Regex(@"^\s*Duration:\s*(?<Duration>\d{2}:\d{2}:\d{2}\.\d{2})", RegexOptions.Compiled);
-
-        //frame=   10 fps=2.8 q=1.6 Lsize=N/A time=00:01:40.00 bitrate=N/A speed=28.2x
-        Regex _frameRegex = new Regex(@"^\s*frame=.*time=(?<Duration>\d{2}:\d{2}:\d{2}\.\d{2})", RegexOptions.Compiled);
-
-        TimeSpan _duration = TimeSpan.Zero;
-
-        protected override void ProcessLine(string line)
-        {
-            if (_durationRegex.IsMatch(line))
-            {
-                string duraString = _durationRegex.Match(line).Groups["Duration"].Value;
-                Debug.WriteLine("DURATION: " + duraString);
-
-                _duration = TimeSpan.ParseExact(duraString, "hh\\:mm\\:ss\\.ff", CultureInfo.InvariantCulture);
-            }
-            else if (_frameRegex.IsMatch(line))
-            {
-                string duraString = _frameRegex.Match(line).Groups["Duration"].Value;
-                //Debug.WriteLine("POSITION: " + duraString);
-                var position = TimeSpan.ParseExact(duraString, "hh\\:mm\\:ss\\.ff", CultureInfo.InvariantCulture);
-                var progress = position.TotalSeconds / _duration.TotalSeconds;
-                Debug.WriteLine("Progress: " + progress.ToString("P1"));
-
-                OnProgressChanged(progress);
-            }
-        }
-
-        protected virtual void OnProgressChanged(double e)
-        {
-            ProgressChanged?.Invoke(this, e);
+            _wrapper.Cancel();
         }
     }
 }

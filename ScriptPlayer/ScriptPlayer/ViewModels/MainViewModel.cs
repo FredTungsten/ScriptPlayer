@@ -71,6 +71,8 @@ namespace ScriptPlayer.ViewModels
         private byte _maxScriptPosition;
         private byte _minScriptPosition;
 
+        public WindowStateModel InitialPlayerState { get; private set; }
+
         public ObservableCollection<RepeatablePattern> Patterns
         {
             get => _patterns;
@@ -819,11 +821,9 @@ namespace ScriptPlayer.ViewModels
             CheckForArguments();
             if (Settings.CheckForNewVersionOnStartup)
                 Version.CheckIfYouHaventAlready();
-
-            LoadPlayerState();
         }
 
-        private void LoadPlayerState()
+        public void LoadPlayerState()
         {
             PlayerStateModel playerState = PlayerStateModel.FromFile(GetPlayerStateFilePath());
 
@@ -837,7 +837,7 @@ namespace ScriptPlayer.ViewModels
 
                 if(playerState.WindowState != null)
                     if(playerState.WindowState.Width > 0 && playerState.WindowState.Height > 0)
-                        OnRequestSetWindowState(playerState.WindowState);
+                        InitialPlayerState = playerState.WindowState;
             }
         }
 

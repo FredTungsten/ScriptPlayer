@@ -10,9 +10,11 @@
         Title="Preview GIF Creator" SizeToContent="WidthAndHeight" Loaded="Window_Loaded">
     <Grid>
         <StackPanel>
-            <Shared:GifPlayer Name="gifPlayer" Width="350" Height="200"/>
-            <TextBlock Name="txtStatus" Margin="5"/>
-            <ProgressBar Name="proConversion" IsIndeterminate="True" Minimum="0" Maximum="1" Height="15"/>
+            <Shared:GifPlayer Name="gifPlayer" Width="350" Height="200" Margin="5,5,5,0"/>
+            <TextBlock Name="txtStatus" Margin="5,5,5,0"/>
+            <ProgressBar Name="proConversion" IsIndeterminate="True" Minimum="0" Maximum="1" Height="15" Margin="5,5,5,0"/>
+
+            <Button HorizontalAlignment="Stretch" Height="25" Margin="5,5,5,5" Click="Button_Click" >Cancel</Button>
         </StackPanel>
     </Grid>
 </Window>

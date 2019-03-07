@@ -36,6 +36,8 @@ namespace ScriptPlayer
         public MainWindow()
         {
             ViewModel = new MainViewModel();
+            ViewModel.LoadPlayerState();
+            RestoreWindowState(ViewModel.InitialPlayerState);
         }
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
@@ -74,15 +76,24 @@ namespace ScriptPlayer
             ViewModel.IntermediateBeat += ViewModelOnIntermediateBeat;
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
+
+            SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
         }
 
         private void ViewModelOnRequestSetWindowState(object sender, WindowStateModel windowStateModel)
         {
+            RestoreWindowState(windowStateModel);
+        }
+
+        private void RestoreWindowState(WindowStateModel windowStateModel)
+        {
             _windowState = windowStateModel.IsMaximized ? WindowState.Maximized : WindowState.Normal;
             _windowPosition = windowStateModel.GetPosition();
-
+            
             RestoreWindowRect();
-            SetFullscreen(windowStateModel.IsFullscreen, false);
+
+            if (IsInitialized)
+                SetFullscreen(windowStateModel.IsFullscreen, false);
         }
 
         private void ViewModelOnRequestGetWindowState(object sender, RequestEventArgs<WindowStateModel> e)
@@ -301,7 +312,8 @@ namespace ScriptPlayer
 
         private void SetFullscreen(bool isFullscreen, bool updateRestorePosition = true)
         {
-            if (_fullscreen == isFullscreen) return;
+            if (_fullscreen == isFullscreen)
+                return;
 
             if (!_fullscreen)
             {
