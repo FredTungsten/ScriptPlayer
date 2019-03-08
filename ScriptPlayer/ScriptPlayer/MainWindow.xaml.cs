@@ -63,6 +63,8 @@ namespace ScriptPlayer
             ViewModel.RequestSamsungVrConnectionSettings += ViewModelOnRequestSamsungVrConnectionSettings;
             ViewModel.RequestKodiConnectionSettings += ViewModelOnRequestKodiConnectionSettings;
             ViewModel.RequestGetWindowState += ViewModelOnRequestGetWindowState;
+            ViewModel.RequestThumbnailGeneratorSettings += ViewModelOnRequestThumbnailGeneratorSettings;
+            ViewModel.RequestGenerateThumbnails += ViewModelOnRequestGenerateThumbnails;
 
             ViewModel.RequestSetWindowState += ViewModelOnRequestSetWindowState;
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
@@ -78,6 +80,25 @@ namespace ScriptPlayer
             ViewModel.Load();
 
             SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
+        }
+
+        private void ViewModelOnRequestGenerateThumbnails(object sender, ThumbnailGeneratorSettings settings)
+        {
+            var createDialog = new CreateThumbnailsDialog(settings) {Owner = this};
+            if (createDialog.ShowDialog() != true)
+                return;
+
+            ViewModel.RecheckForAdditionalFiles();
+        }
+
+        private void ViewModelOnRequestThumbnailGeneratorSettings(object sender, RequestEventArgs<ThumbnailGeneratorSettings> eventArgs)
+        {
+            var settingsDialog = new ThumbnailGeneratorSettingsDialog(ViewModel, eventArgs.Value) {Owner = this};
+            if (settingsDialog.ShowDialog() != true)
+                return;
+
+            eventArgs.Value = settingsDialog.Result;
+            eventArgs.Handled = true;
         }
 
         private void ViewModelOnRequestSetWindowState(object sender, WindowStateModel windowStateModel)
@@ -671,9 +692,17 @@ namespace ScriptPlayer
         private void MnuCreatePreview_OnClick(object sender, RoutedEventArgs e)
         {
             var dialog = new CreatePreviewDialog(ViewModel.LoadedVideo, ViewModel.TimeSource.Progress);
+            dialog.Owner = this;
             dialog.ShowDialog();
 
             ViewModel.RecheckForAdditionalFiles();
+        }
+
+        private void MnuCreateThumbnails_OnClick(object sender, RoutedEventArgs e)
+        {
+            
+
+            
         }
     }
 }

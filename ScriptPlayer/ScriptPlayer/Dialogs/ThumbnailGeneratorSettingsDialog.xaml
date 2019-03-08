@@ -1,0 +1,29 @@
+﻿<Window x:Class="ScriptPlayer.Dialogs.ThumbnailGeneratorSettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
+        mc:Ignorable="d"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="Thumbnail Generator Settings" Height="153.568" Width="261.899" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
+    <Grid>
+
+        <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="Width" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="57,10,0,0" TextWrapping="Wrap" Text="{Binding FrameWidth}" VerticalAlignment="Top" Width="74"/>
+        <TextBlock HorizontalAlignment="Left" Margin="136,11,0,0" TextWrapping="Wrap" Text="px" VerticalAlignment="Top"/>
+        <CheckBox Content="Automatic" IsChecked="{Binding FrameAutoWidth}" HorizontalAlignment="Left" Margin="163,12,0,0" VerticalAlignment="Top"/>
+
+        <TextBlock HorizontalAlignment="Left" Margin="10,35,0,0" TextWrapping="Wrap" Text="Height" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="57,34,0,0" TextWrapping="Wrap" Text="{Binding FrameHeight}" VerticalAlignment="Top" Width="74"/>
+        <TextBlock HorizontalAlignment="Left" Margin="136,35,0,0" TextWrapping="Wrap" Text="px" VerticalAlignment="Top"/>
+        <CheckBox Content="Automatic" IsChecked="{Binding FrameAutoHeight}" HorizontalAlignment="Left" Margin="163,36,0,0" VerticalAlignment="Top"/>
+
+        <TextBlock HorizontalAlignment="Left" Margin="10,59,0,0" TextWrapping="Wrap" Text="Intervall" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="57,58,0,0" TextWrapping="Wrap" Text="{Binding FrameIntervall}" VerticalAlignment="Top" Width="74"/>
+        <TextBlock HorizontalAlignment="Left" Margin="136,59,0,0" TextWrapping="Wrap" Text="s" VerticalAlignment="Top"/>
+
+        <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="BtnOk_Click"/>
+        <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="BtnCancel_Click"/>
+    </Grid>
+</Window>

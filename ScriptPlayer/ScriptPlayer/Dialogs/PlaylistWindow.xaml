@@ -40,6 +40,8 @@
                 <MenuItem Header="Load Playlist" Command="{Binding LoadPlaylistCommand}"/>
                 <MenuItem Header="Save Playlist" Command="{Binding SavePlaylistCommand}"/>
                 <MenuItem Header="Clear Playlist" Command="{Binding Playlist.ClearPlaylistCommand}"/>
+                <Separator/>
+                <MenuItem Header="Generate Thumbnails" Command="{Binding Playlist.GenerateThumbnailsForSelectedVideosCommand}"></MenuItem>
             </MenuItem>
             <MenuItem Header="Sort">
                 <MenuItem Header="Duration (ascending)"  Command="{Binding Playlist.SortByDurationCommand}" CommandParameter="{shared:Boolean true}"/>

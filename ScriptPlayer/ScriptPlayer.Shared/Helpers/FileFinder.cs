@@ -8,6 +8,9 @@ namespace ScriptPlayer.Shared.Helpers
     {
         public static string FindFile(string filename, string[] extensions, string[] additionalPaths)
         {
+            if (string.IsNullOrEmpty(filename))
+                return null;
+
             //With removed second extension
             string stripped = TrimExtension(filename, extensions);
             if (File.Exists(stripped))

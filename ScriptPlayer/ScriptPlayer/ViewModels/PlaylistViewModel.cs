@@ -15,9 +15,10 @@ namespace ScriptPlayer.ViewModels
 {
     public class PlaylistViewModel : INotifyPropertyChanged, IDisposable
     {
-
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler<PlaylistEntry> PlayEntry;
+
+        private readonly BlockingQueue<PlaylistEntry> _playlistEntriesWithoutDuration = new BlockingQueue<PlaylistEntry>();
 
         private readonly Random _rng = new Random();
         private readonly Thread _mediaInfoThread;
@@ -37,7 +38,10 @@ namespace ScriptPlayer.ViewModels
         private string _filter;
         
         public event EventHandler<RequestEventArgs<string>> RequestMediaFileName;
+        public event EventHandler<RequestEventArgs<string>> RequestVideoFileName;
         public event EventHandler<RequestEventArgs<string>> RequestScriptFileName;
+
+        public event EventHandler<string[]> RequestGenerateThumbnails;
         public event EventHandler SelectedEntryMoved; 
 
         public ObservableCollection<PlaylistEntry> Entries
@@ -191,6 +195,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand<bool> SortByNameCommand { get; set; }
         public RelayCommand<bool> SortByPathCommand { get; set; }
         public RelayCommand SortShuffleCommand { get; set; }
+        public RelayCommand GenerateThumbnailsForSelectedVideosCommand { get; set; }
         public int EntryCount => Entries.Count;
 
         
@@ -210,9 +215,24 @@ namespace ScriptPlayer.ViewModels
             SortByNameCommand = new RelayCommand<bool>(ExecuteSortByName, CanSort);
             SortByPathCommand = new RelayCommand<bool>(ExecuteSortByPath, CanSort);
             SortShuffleCommand = new RelayCommand(ExecuteSortShuffle, CanSort);
+            GenerateThumbnailsForSelectedVideosCommand = new RelayCommand(ExecuteGenerateThumbnailsForSelectedVideos, CanGenerateThumbnailsForSelectedVideos);
 
             _mediaInfoThread = new Thread(MediaInfoLoop);
             _mediaInfoThread.Start();
+        }
+
+        private bool CanGenerateThumbnailsForSelectedVideos()
+        {
+            return _selectedItems.Count > 0;
+        }
+
+        private void ExecuteGenerateThumbnailsForSelectedVideos()
+        {
+            string[] videos = _selectedItems.Select(e => OnRequestVideoFileName(e.Fullname)).Where(v => !string.IsNullOrEmpty(v)).ToArray();
+            if (videos.Length == 0)
+                return;
+
+            OnRequestGenerateThumbnails(videos);
         }
 
         private bool CanSort()
@@ -513,8 +533,6 @@ namespace ScriptPlayer.ViewModels
             CommandManager.InvalidateRequerySuggested();
         }
 
-        private readonly BlockingQueue<PlaylistEntry> _playlistEntriesWithoutDuration = new BlockingQueue<PlaylistEntry>();
-
         private void EnsureDuration(PlaylistEntry entry)
         {
             if (entry.Duration == null || entry.Duration == TimeSpan.Zero)
@@ -671,6 +689,14 @@ namespace ScriptPlayer.ViewModels
             return !eventArgs.Handled ? null : eventArgs.Value;
         }
 
+        protected virtual string OnRequestVideoFileName(string fileName)
+        {
+            RequestEventArgs<string> eventArgs = new RequestEventArgs<string>(fileName);
+            RequestVideoFileName?.Invoke(this, eventArgs);
+
+            return !eventArgs.Handled ? null : eventArgs.Value;
+        }
+
         public void Dispose()
         {
             if (_disposed)
@@ -696,6 +722,11 @@ namespace ScriptPlayer.ViewModels
         public void SetSelectedItems(IEnumerable<PlaylistEntry> entries)
         {
             _selectedItems = entries.ToList();
+        }
+
+        protected virtual void OnRequestGenerateThumbnails(string[] videos)
+        {
+            RequestGenerateThumbnails?.Invoke(this, videos);
         }
     }
 }

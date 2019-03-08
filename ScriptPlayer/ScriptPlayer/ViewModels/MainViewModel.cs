@@ -17,6 +17,7 @@ using System.Windows.Threading;
 using System.Xml.Serialization;
 using FMUtils.KeyboardHook;
 using JetBrains.Annotations;
+using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Helpers;
@@ -38,7 +39,9 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<ZoomPlayerConnectionSettings>> RequestZoomPlayerConnectionSettings;
         public event EventHandler<RequestEventArgs<KodiConnectionSettings>> RequestKodiConnectionSettings;
         public event EventHandler<RequestEventArgs<WindowStateModel>> RequestGetWindowState;
+        public event EventHandler<RequestEventArgs<ThumbnailGeneratorSettings>> RequestThumbnailGeneratorSettings;
 
+        public event EventHandler<ThumbnailGeneratorSettings> RequestGenerateThumbnails;
         public event EventHandler<WindowStateModel> RequestSetWindowState;
         public event EventHandler RequestHideSkipButton;
         public event EventHandler RequestShowSkipButton;
@@ -62,6 +65,7 @@ namespace ScriptPlayer.ViewModels
         private List<ConversionMode> _conversionModes;
 
         private Brush _heatMap;
+        private ThumbnailGeneratorSettings _lastThumbnailSettings;
 
         private TimeSpan _loopA = TimeSpan.MinValue;
         private TimeSpan _loopB = TimeSpan.MinValue;
@@ -327,7 +331,9 @@ namespace ScriptPlayer.ViewModels
                 Playlist.PlayEntry += PlaylistOnPlayEntry;
                 Playlist.PropertyChanged += PlaylistOnPropertyChanged;
                 Playlist.RequestMediaFileName += Playlist_RequestMediaFileName;
+                Playlist.RequestVideoFileName += Playlist_RequestVideoFileName;
                 Playlist.RequestScriptFileName += Playlist_RequestScriptFileName;
+                Playlist.RequestGenerateThumbnails += PlaylistOnRequestGenerateThumbnails;
             }
 
             if (Settings.RememberPlaylist)
@@ -343,6 +349,11 @@ namespace ScriptPlayer.ViewModels
             UpdateRandomChapterTooltip();
         }
 
+        private void PlaylistOnRequestGenerateThumbnails(object sender, string[] videos)
+        {
+            GenerateThumbnails(videos);
+        }
+
         private void Playlist_RequestScriptFileName(object sender, RequestEventArgs<string> e)
         {
             e.Handled = true;
@@ -353,6 +364,12 @@ namespace ScriptPlayer.ViewModels
         {
             e.Handled = true;
             e.Value = GetMediaFile(e.Value);
+        }
+
+        private void Playlist_RequestVideoFileName(object sender, RequestEventArgs<string> e)
+        {
+            e.Handled = true;
+            e.Value = GetVideoFile(e.Value);
         }
 
         private void PlaylistOnPropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
@@ -1203,6 +1220,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand OpenScriptCommand { get; set; }
 
+        public ScriptplayerCommand GenerateThumbnailsForLoadedVideoCommand { get; set; }
+
 
         public PlaylistViewModel Playlist
         {
@@ -1505,7 +1524,7 @@ namespace ScriptPlayer.ViewModels
         private void TryFindMatchingThumbnails(string videoFileName)
         {
             Thumbnails = null;
-            string thumbnailFile = FileFinder.FindFile(videoFileName, new string[] {"thumbs"}, GetAdditionalPaths());
+            string thumbnailFile = FileFinder.FindFile(videoFileName, new [] {"thumbs"}, GetAdditionalPaths());
 
             if (string.IsNullOrWhiteSpace(thumbnailFile))
                 return;
@@ -1590,7 +1609,21 @@ namespace ScriptPlayer.ViewModels
             LoadVideo(videoFile, false);
         }
 
-        public string GetMediaFile(string filename)
+        public string GetVideoFile(string fileName)
+        {
+            string extension = Path.GetExtension(fileName).TrimStart('.').ToLowerInvariant();
+
+            if (_supportedVideoExtensions.Contains(extension))
+                return fileName;
+
+            string videoFile = FileFinder.FindFile(fileName, _supportedVideoExtensions, GetAdditionalPaths());
+            if (string.IsNullOrWhiteSpace(videoFile))
+                return null;
+
+            return fileName;
+        }
+
+        public string GetRelatedFile(string filename, string[] supportedOutput, string[] supportedInput = null)
         {
             string extension = Path.GetExtension(filename);
             if (string.IsNullOrWhiteSpace(extension))
@@ -1598,32 +1631,24 @@ namespace ScriptPlayer.ViewModels
 
             extension = extension.TrimStart('.').ToLower();
 
-            if (_supportedMediaExtensions.Contains(extension))
+            if (supportedOutput.Contains(extension))
                 return filename;
 
-            if (!_supportedScriptExtensions.Contains(extension))
+            if (supportedInput != null && !supportedInput.Contains(extension))
                 return null;
 
-            return FileFinder.FindFile(filename, _supportedMediaExtensions, GetAdditionalPaths());
+            return FileFinder.FindFile(filename, supportedOutput, GetAdditionalPaths());
+        }
+
+        public string GetMediaFile(string filename)
+        {
+            return GetRelatedFile(filename, _supportedMediaExtensions, _supportedScriptExtensions);
         }
 
         public string GetScriptFile(string filename)
         {
-            string extension = Path.GetExtension(filename);
-            if (string.IsNullOrWhiteSpace(extension))
-                return null;
-
-            extension = extension.TrimStart('.').ToLower();
-
-            if (_supportedScriptExtensions.Contains(extension))
-                return filename;
-
-            if (!_supportedMediaExtensions.Contains(extension))
-                return null;
-
-            return FileFinder.FindFile(filename, _supportedScriptExtensions, GetAdditionalPaths());
+            return GetRelatedFile(filename, _supportedScriptExtensions, _supportedMediaExtensions);
         }
-
 
         private bool IsMatchingScriptLoaded(string videoFileName)
         {
@@ -1753,6 +1778,13 @@ namespace ScriptPlayer.ViewModels
 
         private void InitializeCommands()
         {
+            GenerateThumbnailsForLoadedVideoCommand = new ScriptplayerCommand(GenerateThumbnailsForLoadedVideo,
+                CanGenerateThumbnailsForLoadedVideo)
+            {
+                CommandId = "GenerateThumbnailsForLoadedVideo",
+                DisplayText = "Generate Thumbnails for loaded Video"
+            };
+
             OpenScriptCommand = new ScriptplayerCommand(OpenScript)
             {
                 CommandId = "OpenScriptFile",
@@ -3569,6 +3601,48 @@ namespace ScriptPlayer.ViewModels
         public void RecheckForAdditionalFiles()
         {
             TryFindMatchingThumbnails(LoadedVideo);
+        }
+
+        public void GenerateThumbnailsForLoadedVideo()
+        {
+            if (!CanGenerateThumbnailsForLoadedVideo())
+                return;
+
+            GenerateThumbnails(new [] {LoadedVideo});
+        }
+
+        private void GenerateThumbnails(string[] videos)
+        {
+            ThumbnailGeneratorSettings settings = _lastThumbnailSettings?.DuplicateWithoutVideos();
+            settings = OnRequestThumbnailGeneratorSettings(settings);
+            if (settings == null)
+                return;
+
+            _lastThumbnailSettings = settings;
+            settings.Videos = videos;
+
+            OnRequestGenerateThumbnails(settings);
+        }
+
+        private bool CanGenerateThumbnailsForLoadedVideo()
+        {
+            return !String.IsNullOrEmpty(LoadedVideo);
+        }
+
+        protected virtual ThumbnailGeneratorSettings OnRequestThumbnailGeneratorSettings(ThumbnailGeneratorSettings initialSettings)
+        {
+            var eventArgs = new RequestEventArgs<ThumbnailGeneratorSettings>(initialSettings);
+            RequestThumbnailGeneratorSettings?.Invoke(this, eventArgs);
+
+            if (!eventArgs.Handled)
+                return null;
+
+            return eventArgs.Value;
+        }
+
+        protected virtual void OnRequestGenerateThumbnails(ThumbnailGeneratorSettings e)
+        {
+            RequestGenerateThumbnails?.Invoke(this, e);
         }
     }
 

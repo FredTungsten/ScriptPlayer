@@ -1,0 +1,27 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
+        xmlns:Shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared" x:Class="ScriptPlayer.Dialogs.CreateThumbnailsDialog"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        mc:Ignorable="d"
+        Title="CreateThumbnailsDialog" Height="450" Width="800" Loaded="Window_Loaded">
+    <Grid>
+        <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding Entries}" IsReadOnly="True" Margin="10,10,10,36">
+            <DataGrid.Columns>
+                <DataGridTextColumn Width="2*" Header="Video" Binding="{Binding FileName}"></DataGridTextColumn>
+                <DataGridTextColumn Width="2*" Header="Status" Binding="{Binding Status}"></DataGridTextColumn>
+                <DataGridTemplateColumn Width="*" Header="Progress">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="{x:Type local:ThumbnailProgressEntry}">
+                            <ProgressBar HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Maximum="1" Value="{Binding Progress}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Content="{Binding CloseButtonText}" Height="21" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="btnClose_Click"/>
+    </Grid>
+</Window>

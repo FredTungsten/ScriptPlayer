@@ -10,16 +10,18 @@ namespace ScriptPlayer.Shared
     {
         public string VideoFile { get; set; }
 
-        public string OutputPath { get; protected set; }
+        public string OutputPath { get; set; }
 
         public int Width { get; set; }
+
+        public int Height { get; set; }
 
         public int Intervall { get; set; }
 
         protected FrameConverterWrapper()
         {
-            CreateOutputPath();
             Width = 200;
+            Height = -1;
             Intervall = 10;
         }
 
@@ -37,9 +39,17 @@ namespace ScriptPlayer.Shared
             Directory.CreateDirectory(OutputPath);
         }
 
+        public void GenerateRandomOutputPath()
+        {
+            CreateOutputPath();
+        }
+
         protected override void BeforeExecute()
         {
-            Arguments = $"-i \"{VideoFile}\" -vf \"scale={Width}:-1, fps=1/{Intervall}\" \"{OutputPath}%05d.jpg\" -stats";
+            if(string.IsNullOrEmpty(OutputPath))
+                CreateOutputPath();
+
+            Arguments = $"-i \"{VideoFile}\" -vf \"scale={Width}:{Height}, fps=1/{Intervall}\" \"{OutputPath}%05d.jpg\" -stats";
         }
 
         public void Cancel()

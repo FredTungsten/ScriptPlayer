@@ -413,6 +413,7 @@
                     <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
                     <Separator/>
                     <MenuItem Header="Generate Preview GIF" Click="MnuCreatePreview_OnClick"/>
+                    <MenuItem Header="Generate Thumbnails" Command="{Binding GenerateThumbnailsForLoadedVideoCommand}"/>
                 </MenuItem>
                 <MenuItem Header="Devices">
                     <MenuItem Header="Show Devices" Click="mnuShowDevices_Click"/>
