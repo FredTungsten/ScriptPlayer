@@ -725,7 +725,7 @@ namespace ScriptPlayer
 
             settings = settingsDialog.Result;
             
-            var dialog = new CreatePreviewDialog(settings);
+            var dialog = new CreatePreviewDialog(ViewModel, settings);
             dialog.Owner = this;
             dialog.ShowDialog();
 

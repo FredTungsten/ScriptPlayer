@@ -73,10 +73,10 @@ namespace ScriptPlayer.Dialogs
 
             var entries = Entries;
 
+            string ffmpegexe = ViewModel.Settings.FfmpegPath;
+
             _processThread = new Thread(() =>
             {
-                string ffmpegexe = ViewModel.Settings.FfmpegPath;
-
                 FrameConverterWrapper wrapper = new FrameConverterWrapper(ffmpegexe);
                 _wrapper = wrapper;
 

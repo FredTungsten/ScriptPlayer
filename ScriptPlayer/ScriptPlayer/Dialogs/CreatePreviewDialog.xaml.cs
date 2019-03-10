@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Windows;
 using ScriptPlayer.Shared;
+using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Dialogs
 {
@@ -11,6 +12,15 @@ namespace ScriptPlayer.Dialogs
     /// </summary>
     public partial class CreatePreviewDialog : Window
     {
+        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
+            "ViewModel", typeof(MainViewModel), typeof(CreatePreviewDialog), new PropertyMetadata(default(MainViewModel)));
+
+        public MainViewModel ViewModel
+        {
+            get { return (MainViewModel) GetValue(ViewModelProperty); }
+            set { SetValue(ViewModelProperty, value); }
+        }
+
         private readonly PreviewGeneratorSettings _settings;
 
         private ConsoleWrapper _wrapper;
@@ -19,8 +29,9 @@ namespace ScriptPlayer.Dialogs
         private bool _success;
         private bool _canceled;
         
-        public CreatePreviewDialog(PreviewGeneratorSettings settings)
+        public CreatePreviewDialog(MainViewModel viewModel, PreviewGeneratorSettings settings)
         {
+            ViewModel = viewModel;
             _settings = settings;
             InitializeComponent();
         }
@@ -32,6 +43,8 @@ namespace ScriptPlayer.Dialogs
 
         private void GeneratePreviewGif()
         {
+            string ffmpegexe = ViewModel.Settings.FfmpegPath;
+
             _thread = new Thread(() =>
             {
                 string clip = Path.Combine(Path.GetTempPath(), Path.GetFileName(_settings.Video) + "-clip.mkv");
@@ -41,10 +54,6 @@ namespace ScriptPlayer.Dialogs
 
                 try
                 {
-                    // https://ffmpeg.zeranoe.com/builds/
-
-                    string ffmpegexe = @"C:\Program Files (x86)\FFmpeg\bin\ffmpeg.exe";
-                    
                     string clipArguments =
                         "-y " +                                                     //Yes to override existing files
                         $"-ss {_settings.Start:hh\\:mm\\:ss\\.ff} " +               // Starting Position
