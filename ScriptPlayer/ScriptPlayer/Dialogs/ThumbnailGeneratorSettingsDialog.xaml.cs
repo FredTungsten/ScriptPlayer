@@ -79,8 +79,17 @@ namespace ScriptPlayer.Dialogs
 
         public ThumbnailGeneratorSettings Result
         {
-            get { return (ThumbnailGeneratorSettings) GetValue(ResultProperty); }
-            set { SetValue(ResultProperty, value); }
+            get => (ThumbnailGeneratorSettings) GetValue(ResultProperty);
+            set => SetValue(ResultProperty, value);
+        }
+
+        public static readonly DependencyProperty SkipExistingProperty = DependencyProperty.Register(
+            "SkipExisting", typeof(bool), typeof(ThumbnailGeneratorSettingsDialog), new PropertyMetadata(default(bool)));
+
+        public bool SkipExisting
+        {
+            get => (bool) GetValue(SkipExistingProperty);
+            set => SetValue(SkipExistingProperty, value);
         }
 
         public ThumbnailGeneratorSettingsDialog(MainViewModel viewModel, ThumbnailGeneratorSettings initialValues)
@@ -99,6 +108,7 @@ namespace ScriptPlayer.Dialogs
                     FrameAutoHeight = true;
 
                 FrameIntervall = initialValues.Intervall;
+                SkipExisting = initialValues.SkipExisting;
             }
             else
             {
@@ -109,6 +119,7 @@ namespace ScriptPlayer.Dialogs
                 FrameAutoHeight = true;
 
                 FrameIntervall = 10;
+                SkipExisting = true;
             }
         }
 
@@ -141,7 +152,8 @@ namespace ScriptPlayer.Dialogs
             {
                 Height = FrameAutoHeight ? -1 : FrameHeight,
                 Width = FrameAutoWidth ? -1 : FrameWidth,
-                Intervall = FrameIntervall
+                Intervall = FrameIntervall,
+                SkipExisting = SkipExisting
             };
 
             DialogResult = true;
@@ -156,13 +168,16 @@ namespace ScriptPlayer.Dialogs
 
         public string[] Videos { get; set; }
 
+        public bool SkipExisting { get; set; }
+
         public ThumbnailGeneratorSettings DuplicateWithoutVideos()
         {
             return new ThumbnailGeneratorSettings
             {
                 Width =  Width,
                 Height = Height,
-                Intervall = Intervall
+                Intervall = Intervall,
+                SkipExisting = SkipExisting
             };
         }
     }

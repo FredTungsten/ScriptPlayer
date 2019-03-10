@@ -153,6 +153,7 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _chapterTargetDuration = TimeSpan.FromSeconds(60);
         private bool _rememberWindowPosition;
         private int _rangeExtender;
+        private string _ffmpegPath;
 
         public SettingsViewModel()
         {
@@ -975,7 +976,18 @@ namespace ScriptPlayer.ViewModels
                 OnPropertyChanged();
             }
         }
-        
+
+        public string FfmpegPath
+        {
+            get => _ffmpegPath;
+            set
+            {
+                if (value == _ffmpegPath) return;
+                _ffmpegPath = value;
+                OnPropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]

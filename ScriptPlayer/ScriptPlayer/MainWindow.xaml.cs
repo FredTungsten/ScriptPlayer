@@ -66,6 +66,7 @@ namespace ScriptPlayer
             ViewModel.RequestThumbnailGeneratorSettings += ViewModelOnRequestThumbnailGeneratorSettings;
             ViewModel.RequestGenerateThumbnails += ViewModelOnRequestGenerateThumbnails;
 
+            ViewModel.RequestShowSettings += ViewModelOnRequestShowSettings;
             ViewModel.RequestSetWindowState += ViewModelOnRequestSetWindowState;
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
@@ -82,9 +83,17 @@ namespace ScriptPlayer
             SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
         }
 
+        private void ViewModelOnRequestShowSettings(object sender, string settingsId)
+        {
+            SettingsDialog settings = new SettingsDialog(ViewModel.Settings, settingsId) { Owner = this };
+            if (settings.ShowDialog() != true) return;
+
+            ViewModel.ApplySettings(settings.Settings);
+        }
+
         private void ViewModelOnRequestGenerateThumbnails(object sender, ThumbnailGeneratorSettings settings)
         {
-            var createDialog = new CreateThumbnailsDialog(settings) {Owner = this};
+            var createDialog = new CreateThumbnailsDialog(ViewModel, settings) {Owner = this};
             if (createDialog.ShowDialog() != true)
                 return;
 
@@ -645,10 +654,7 @@ namespace ScriptPlayer
 
         private void mnuSettings_Click(object sender, RoutedEventArgs e)
         {
-            SettingsDialog settings = new SettingsDialog(ViewModel.Settings) { Owner = this };
-            if (settings.ShowDialog() != true) return;
-
-            ViewModel.ApplySettings(settings.Settings);
+            ViewModel.ShowSettings();
         }
 
         private void mnuVersion_Click(object sender, RoutedEventArgs e)
@@ -691,18 +697,39 @@ namespace ScriptPlayer
 
         private void MnuCreatePreview_OnClick(object sender, RoutedEventArgs e)
         {
-            var dialog = new CreatePreviewDialog(ViewModel.LoadedVideo, ViewModel.TimeSource.Progress);
+            if (!ViewModel.CheckFfmpeg())
+                return;
+
+            var settings = new PreviewGeneratorSettings
+            {
+                Video = ViewModel.LoadedVideo,
+            };
+
+            settings.Destination = settings.SuggestDestination();
+
+            if (ViewModel.DisplayedRange != null)
+            {
+                settings.Start = ViewModel.DisplayedRange.Start;
+                settings.Duration = ViewModel.DisplayedRange.Duration;
+            }
+            else
+            {
+                settings.Start = ViewModel.TimeSource.Progress;
+                settings.Duration = TimeSpan.FromSeconds(5);
+            }
+
+            PreviewGeneratorSettingsDialog settingsDialog = new PreviewGeneratorSettingsDialog(settings);
+            settingsDialog.Owner = this;
+            if (settingsDialog.ShowDialog() != true)
+                return;
+
+            settings = settingsDialog.Result;
+            
+            var dialog = new CreatePreviewDialog(settings);
             dialog.Owner = this;
             dialog.ShowDialog();
 
             ViewModel.RecheckForAdditionalFiles();
-        }
-
-        private void MnuCreateThumbnails_OnClick(object sender, RoutedEventArgs e)
-        {
-            
-
-            
         }
     }
 }

@@ -41,6 +41,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<WindowStateModel>> RequestGetWindowState;
         public event EventHandler<RequestEventArgs<ThumbnailGeneratorSettings>> RequestThumbnailGeneratorSettings;
 
+        public event EventHandler<string> RequestShowSettings;
         public event EventHandler<ThumbnailGeneratorSettings> RequestGenerateThumbnails;
         public event EventHandler<WindowStateModel> RequestSetWindowState;
         public event EventHandler RequestHideSkipButton;
@@ -1222,6 +1223,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand GenerateThumbnailsForLoadedVideoCommand { get; set; }
 
+        public ScriptplayerCommand ShowSettingsCommand { get; set; }
+
 
         public PlaylistViewModel Playlist
         {
@@ -1778,6 +1781,12 @@ namespace ScriptPlayer.ViewModels
 
         private void InitializeCommands()
         {
+            ShowSettingsCommand = new ScriptplayerCommand(ShowSettings)
+            {
+                CommandId = "ShowSettings",
+                DisplayText = "Show Settings"
+            };
+
             GenerateThumbnailsForLoadedVideoCommand = new ScriptplayerCommand(GenerateThumbnailsForLoadedVideo,
                 CanGenerateThumbnailsForLoadedVideo)
             {
@@ -3139,6 +3148,22 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public string GetVideoFileOpenDialog()
+        {
+            string mediaFilters = $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}";
+
+            int x = 0;
+            return OnRequestFile(mediaFilters, ref x, false);
+        }
+
+        public string GetGifFileSaveDialog()
+        {
+            string mediaFilters = $"GIF Files|*.gif";
+
+            int x = 0;
+            return OnRequestFile(mediaFilters, ref x, true);
+        }
+
         public void AddFileToPlaylist()
         {
             ScriptFileFormatCollection formats = ScriptLoaderManager.GetFormats();
@@ -3613,6 +3638,9 @@ namespace ScriptPlayer.ViewModels
 
         private void GenerateThumbnails(string[] videos)
         {
+            if (!CheckFfmpeg())
+                return;
+
             ThumbnailGeneratorSettings settings = _lastThumbnailSettings?.DuplicateWithoutVideos();
             settings = OnRequestThumbnailGeneratorSettings(settings);
             if (settings == null)
@@ -3643,6 +3671,39 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnRequestGenerateThumbnails(ThumbnailGeneratorSettings e)
         {
             RequestGenerateThumbnails?.Invoke(this, e);
+        }
+
+        public void ShowSettings()
+        {
+            ShowSettings(null);
+        }
+
+        public void ShowSettings(string settingsId)
+        {
+            OnRequestShowSettings(settingsId);
+        }
+
+        protected virtual void OnRequestShowSettings(string settingsId)
+        {
+            RequestShowSettings?.Invoke(this, settingsId);
+        }
+
+        public bool CheckFfmpeg()
+        {
+            if (!String.IsNullOrEmpty(Settings.FfmpegPath) && File.Exists(Settings.FfmpegPath))
+                return true;
+
+            var response =
+                OnRequestMessageBox(
+                    "You need to configure FFmpeg before you can generate thumbnails and gifs. Would you like to open the settings now?",
+                    "FFmpeg.exe not found", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (response != MessageBoxResult.Yes)
+                return false;
+
+            ShowSettings("FFmpeg");
+
+            return !String.IsNullOrEmpty(Settings.FfmpegPath) && File.Exists(Settings.FfmpegPath);
         }
     }
 

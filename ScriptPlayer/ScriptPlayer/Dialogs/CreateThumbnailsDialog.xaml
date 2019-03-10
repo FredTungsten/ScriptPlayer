@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         Title="CreateThumbnailsDialog" Height="450" Width="800" Loaded="Window_Loaded">
     <Grid>
-        <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding Entries}" IsReadOnly="True" Margin="10,10,10,36">
+        <DataGrid Name="dataGrid" AutoGenerateColumns="False" ItemsSource="{Binding Entries}" IsReadOnly="True" Margin="10,10,10,36">
             <DataGrid.Columns>
                 <DataGridTextColumn Width="2*" Header="Video" Binding="{Binding FileName}"></DataGridTextColumn>
                 <DataGridTextColumn Width="2*" Header="Status" Binding="{Binding Status}"></DataGridTextColumn>

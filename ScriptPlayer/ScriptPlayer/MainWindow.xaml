@@ -477,7 +477,7 @@
                     <MenuItem Header="Toggle Fullscreen" Command="{Binding ToggleFullScreenCommand}"/>
                     <MenuItem Header="Stay On Top" IsCheckable="True" IsChecked="{Binding Path=Settings.StayOnTop, Mode=TwoWay}"/>
                 </MenuItem>
-                <MenuItem Header="Settings" Click="mnuSettings_Click">
+                <MenuItem Header="Settings" Command="{Binding ShowSettingsCommand}">
                 </MenuItem>
                 <MenuItem Header="Help">
                     <MenuItem Header="Documentation (Online)" Click="mnuDocs_Click"/>

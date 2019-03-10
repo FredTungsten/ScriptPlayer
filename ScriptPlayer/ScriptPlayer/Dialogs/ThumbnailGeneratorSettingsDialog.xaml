@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
         mc:Ignorable="d"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Thumbnail Generator Settings" Height="153.568" Width="261.899" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
+        Title="Thumbnail Generator Settings" Height="180.235" Width="261.899" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
     <Grid>
 
         <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="Width" VerticalAlignment="Top"/>
@@ -25,5 +25,6 @@
 
         <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="BtnOk_Click"/>
         <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="BtnCancel_Click"/>
+        <CheckBox IsChecked="{Binding SkipExisting}" Content="Skip existing" HorizontalAlignment="Left" Margin="10,92,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

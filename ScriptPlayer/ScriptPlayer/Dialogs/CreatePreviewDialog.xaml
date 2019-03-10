@@ -3,17 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:Shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared" x:Class="ScriptPlayer.Dialogs.CreatePreviewDialog"
+        xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared" x:Class="ScriptPlayer.Dialogs.CreatePreviewDialog"
         mc:Ignorable="d"
-    
-        Title="Preview GIF Creator" SizeToContent="WidthAndHeight" Loaded="Window_Loaded">
+        Width="439.5" Height="361"
+        Title="Preview GIF Creator" Loaded="Window_Loaded">
     <Grid>
-        <StackPanel>
-            <Shared:GifPlayer Name="gifPlayer" Width="350" Height="200" Margin="5,5,5,0"/>
-            <TextBlock Name="txtStatus" Margin="5,5,5,0"/>
-            <ProgressBar Name="proConversion" IsIndeterminate="True" Minimum="0" Maximum="1" Height="15" Margin="5,5,5,0"/>
-
-            <Button HorizontalAlignment="Stretch" Height="25" Margin="5,5,5,5" Click="Button_Click" >Cancel</Button>
-        </StackPanel>
+        <shared:GifPlayer x:Name="gifPlayer" Margin="10,10,10,85" Background="Black" Stretch="Uniform" AutoPlay="True"/>
+        <TextBlock x:Name="txtStatus" Margin="10,0,10,58" Height="22" VerticalAlignment="Bottom"/>
+        <ProgressBar x:Name="proConversion" Minimum="0"  Maximum="1" Margin="10,0,10,40" Height="13" VerticalAlignment="Bottom"/>
+        <Button x:Name="btnClose"  HorizontalAlignment="Stretch" Height="25" Margin="10,0,10,10" Width="Auto" Click="btnClose_Click" Content="Cancel" VerticalAlignment="Bottom" />
     </Grid>
 </Window>

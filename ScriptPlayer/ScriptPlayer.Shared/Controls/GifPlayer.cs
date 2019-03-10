@@ -7,7 +7,10 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using Point = System.Windows.Point;
+using Size = System.Windows.Size;
 
 namespace ScriptPlayer.Shared
 {
@@ -21,6 +24,12 @@ namespace ScriptPlayer.Shared
         private static void OnProgressChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((GifPlayer)d).UpdateIndex();
+        }
+
+        protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+        {
+            base.OnRenderSizeChanged(sizeInfo);
+            InvalidateVisual();
         }
 
         private void UpdateIndex()
@@ -44,13 +53,24 @@ namespace ScriptPlayer.Shared
                 }
             }
 
-            if (index == _index) return;
+            if (index == _index)
+                return;
+
             _index = index;
 
             if (_index < 0 || _index >= Frames.Count)
                 throw new ArgumentException();
 
             InvalidateVisual();
+        }
+
+        public static readonly DependencyProperty AutoPlayProperty = DependencyProperty.Register(
+            "AutoPlay", typeof(bool), typeof(GifPlayer), new PropertyMetadata(default(bool)));
+
+        public bool AutoPlay
+        {
+            get => (bool)GetValue(AutoPlayProperty);
+            set => SetValue(AutoPlayProperty, value);
         }
 
         public static readonly DependencyProperty StretchProperty = DependencyProperty.Register(
@@ -65,14 +85,14 @@ namespace ScriptPlayer.Shared
 
         public Stretch Stretch
         {
-            get { return (Stretch)GetValue(StretchProperty); }
-            set { SetValue(StretchProperty, value); }
+            get => (Stretch)GetValue(StretchProperty);
+            set => SetValue(StretchProperty, value);
         }
 
         public double Progress
         {
-            get { return (double)GetValue(ProgressProperty); }
-            set { SetValue(ProgressProperty, value); }
+            get => (double)GetValue(ProgressProperty);
+            set => SetValue(ProgressProperty, value);
         }
 
         public static readonly DependencyProperty FramesProperty = DependencyProperty.Register(
@@ -80,17 +100,25 @@ namespace ScriptPlayer.Shared
 
         private static void OnFramesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((GifPlayer)d)._index = 0;
-            ((GifPlayer)d).InvalidateMeasure();
-            ((GifPlayer)d).InvalidateArrange();
-            ((GifPlayer)d).InvalidateVisual();
-            ((GifPlayer)d).OnFramesReady();
+            ((GifPlayer)d).FramesChanged();
+        }
+
+        private void FramesChanged()
+        {
+            _index = 0;
+            InvalidateMeasure();
+            InvalidateArrange();
+            InvalidateVisual();
+            OnFramesReady();
+
+            if (AutoPlay)
+                Start();
         }
 
         public GifFrameCollection Frames
         {
-            get { return (GifFrameCollection)GetValue(FramesProperty); }
-            set { SetValue(FramesProperty, value); }
+            get => (GifFrameCollection)GetValue(FramesProperty);
+            set => SetValue(FramesProperty, value);
         }
 
         private int _index;
@@ -135,25 +163,25 @@ namespace ScriptPlayer.Shared
         protected override void OnRender(DrawingContext drawingContext)
         {
             Rect dimensions = new Rect(0, 0, ActualWidth, ActualHeight);
+
+            drawingContext.DrawRectangle(Background, null, dimensions);
+
             if (Frames == null || Frames.Count == 0)
             {
-                drawingContext.DrawRectangle(Brushes.Black, null, dimensions);
                 return;
             }
 
             Size scaledSize = GetScaledSize(RenderSize);
+            Point offset = new Point((dimensions.Width - scaledSize.Width) / 2, (dimensions.Height - scaledSize.Height) / 2);
 
-            for (int index = 0; index <= _index; index++)
-            {
-                GifFrame frame = Frames[index];
-                Rect final = new Rect(
-                    frame.Left / (double)Frames.Width * scaledSize.Width,
-                    frame.Top / (double)Frames.Height * scaledSize.Height,
-                    frame.Width / (double)Frames.Width * scaledSize.Width,
-                    frame.Height / (double)Frames.Height * scaledSize.Height);
+            GifFrame frame = Frames[_index];
+            Rect final = new Rect(
+                offset.X,
+                offset.Y,
+                scaledSize.Width,
+                scaledSize.Height);
 
-                drawingContext.DrawImage(frame.Image, final);
-            }
+            drawingContext.DrawImage(frame.Image, final);
         }
 
         private Size GetScaledSize(Size constraint)
@@ -191,9 +219,19 @@ namespace ScriptPlayer.Shared
             return scaledSize;
         }
 
+        public void Start()
+        {
+            Start(Frames.Duration);
+        }
+
         public void Start(TimeSpan duration)
         {
-            //BeginAnimation(ProgressProperty, new DoubleAnimation(0, 1, duration) { RepeatBehavior = RepeatBehavior.Forever });
+            BeginAnimation(ProgressProperty, new DoubleAnimation(0, 1, duration) { RepeatBehavior = RepeatBehavior.Forever });
+        }
+
+        public void Stop()
+        {
+            BeginAnimation(ProgressProperty, null);
         }
 
         public void Load(string filename)
@@ -222,8 +260,8 @@ namespace ScriptPlayer.Shared
     public class GifFrame
     {
         public BitmapSource Image { get; set; }
-        public UInt16 Left { get; set; }
-        public UInt16 Top { get; set; }
+        public ushort Left { get; set; }
+        public ushort Top { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
         public int Delay { get; set; }
@@ -232,60 +270,57 @@ namespace ScriptPlayer.Shared
     public class GifFrameCollection
     {
         private GifFrame[] _frames;
-        private int _height;
-        private int _width;
 
-        public GifFrame this[int index]
-        {
-            get { return _frames[index]; }
-        }
+        public GifFrame this[int index] => _frames[index];
 
-        public int Count
-        {
-            get { return _frames.Length; }
-        }
+        public int Count => _frames.Length;
 
-        public int Height
-        {
-            get { return _height; }
-        }
+        public int Height { get; private set; }
 
-        public int Width
-        {
-            get { return _width; }
-        }
+        public int Width { get; private set; }
 
         public TimeSpan Duration { get; set; }
 
-        private static object _loadLocker = new object();
+        private static readonly object LoadLocker = new object();
 
         private void Load(Stream stream)
         {
             GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
 
-            _width = decoder.Frames[0].PixelWidth;
-            _height = decoder.Frames[0].PixelHeight;
+            Width = decoder.Frames[0].PixelWidth;
+            Height = decoder.Frames[0].PixelHeight;
             _frames = new GifFrame[decoder.Frames.Count];
 
             int duration = 0;
 
+            BitmapSource previousRenderResult = null;
+            
             for (int index = 0; index < decoder.Frames.Count; index++)
             {
                 BitmapFrame frame = decoder.Frames[index].GetAsFrozen() as BitmapFrame;
                 BitmapMetadata metadata = frame.Metadata as BitmapMetadata;
-                int delay = (UInt16)metadata.GetQuery("/grctlext/Delay") * 10;
-
-                if (delay < 60)
-                    delay = 100;
-
-                UInt16 left = (UInt16)metadata.GetQuery("/imgdesc/Left");
-                UInt16 top = (UInt16)metadata.GetQuery("/imgdesc/Top");
+                int delay = (ushort)metadata.GetQuery("/grctlext/Delay") * 10;
+                ushort left = (ushort)metadata.GetQuery("/imgdesc/Left");
+                ushort top = (ushort)metadata.GetQuery("/imgdesc/Top");
                 int width = frame.PixelWidth;
                 int height = frame.PixelHeight;
 
+                DrawingVisual drawingVisual = new DrawingVisual();
+                using (DrawingContext dc = drawingVisual.RenderOpen())
+                {
+                    if (previousRenderResult != null)
+                        dc.DrawImage(previousRenderResult, new Rect(0, 0, Width, Height));
+                    dc.DrawImage(frame, new Rect(left, top, width, height));
+                }
+
+                RenderTargetBitmap bitmap = new RenderTargetBitmap(Width, Height, 96, 96, PixelFormats.Pbgra32);
+                bitmap.Render(drawingVisual);
+
+                previousRenderResult = (BitmapSource)bitmap.GetAsFrozen();
+
                 _frames[index] = new GifFrame
                 {
-                    Image = frame,
+                    Image = previousRenderResult,
                     Height = height,
                     Left = left,
                     Top = top,
@@ -296,10 +331,11 @@ namespace ScriptPlayer.Shared
                 duration += delay;
             }
 
+
             List<int> delays = _frames.Select(f => f.Delay).Distinct().ToList();
             if (delays.Count != 1)
             {
-                Debug.WriteLine(String.Join(" ", delays));
+                Debug.WriteLine(string.Join(" ", delays));
             }
 
             Duration = TimeSpan.FromMilliseconds(duration);
@@ -307,7 +343,7 @@ namespace ScriptPlayer.Shared
 
         public void Load(string filename)
         {
-            lock (_loadLocker)
+            lock (LoadLocker)
             {
                 using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
                 {

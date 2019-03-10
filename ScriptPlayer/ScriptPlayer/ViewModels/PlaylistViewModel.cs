@@ -223,6 +223,8 @@ namespace ScriptPlayer.ViewModels
 
         private bool CanGenerateThumbnailsForSelectedVideos()
         {
+            if (_selectedItems == null)
+                return false;
             return _selectedItems.Count > 0;
         }
 

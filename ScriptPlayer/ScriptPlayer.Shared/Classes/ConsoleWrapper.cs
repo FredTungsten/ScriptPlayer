@@ -21,10 +21,14 @@ namespace ScriptPlayer.Shared
             set => _startInfo.Arguments = value;
         }
 
-        public ConsoleWrapper(string file, string arguments) : this()
+        public ConsoleWrapper(string file, string arguments) : this(file)
         {
-            _startInfo.FileName = file;
-            _startInfo.Arguments = arguments;
+            Arguments = arguments;
+        }
+
+        public ConsoleWrapper(string file) : this()
+        {
+            File = file;
         }
 
         protected ConsoleWrapper()
@@ -38,9 +42,15 @@ namespace ScriptPlayer.Shared
         }
 
         protected virtual void BeforeExecute() { }
-        protected virtual void AfterExecute() { }
+        protected virtual void AfterExecute(int exitCode) { }
 
-        public void Execute()
+        public int Execute(string arguments)
+        {
+            Arguments = arguments;
+            return Execute();
+        }
+
+        public int Execute()
         {
             BeforeExecute();
 
@@ -55,18 +65,20 @@ namespace ScriptPlayer.Shared
             errorThread.Start(new Tuple<StreamReader, bool>(process.StandardError, true));
 
             process.WaitForExit();
+            int exitCode = process.ExitCode;
 
-            Debug.WriteLine("EXITCODE = " + process.ExitCode);
+            Debug.WriteLine("EXITCODE = " + exitCode);
 
             _input = null;
 
             outputThread.Join();
             errorThread.Join();
 
-            AfterExecute();
+            AfterExecute(exitCode);
+            return exitCode;
         }
 
-        protected void Input(string text, bool enter = true)
+        public void Input(string text, bool enter = true)
         {
             if(enter)
                 _input?.WriteLine(text);

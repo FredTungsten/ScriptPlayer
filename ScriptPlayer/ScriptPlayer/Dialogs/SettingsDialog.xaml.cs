@@ -98,7 +98,7 @@ namespace ScriptPlayer.Dialogs
 
         private static string _lastSelected;
 
-        public SettingsDialog(SettingsViewModel initialSettings)
+        public SettingsDialog(SettingsViewModel initialSettings, string selectedPage = null)
         {
             Settings = initialSettings.Duplicate();
             CreateInputMappings(GlobalCommandManager.CommandMappings);
@@ -106,7 +106,7 @@ namespace ScriptPlayer.Dialogs
             InitializeComponent();
 
             Pages = BuildPages(PageSelector);
-            SelectedPage = FindPage(_lastSelected) ?? Pages.FirstOrDefault();
+            SelectedPage = FindPage(selectedPage) ?? FindPage(_lastSelected) ?? Pages.FirstOrDefault();
         }
 
         private void CreateInputMappings(List<InputMapping> inputMappings)
@@ -416,6 +416,25 @@ namespace ScriptPlayer.Dialogs
                 return;
 
             inputMapping.Shortcut = dialog.Shortcut;
+        }
+
+        private void BtnFfmpeg_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("https://www.ffmpeg.org/download.html");
+        }
+
+        private void BtnBrowseForFfmpeg_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog
+            {
+                FileName = "ffmpeg.exe",
+                Filter = "ffmpeg.exe|ffmpeg.exe"
+            };
+
+            if (dialog.ShowDialog(this) != true)
+                return;
+
+            Settings.FfmpegPath = dialog.FileName;
         }
     }
 

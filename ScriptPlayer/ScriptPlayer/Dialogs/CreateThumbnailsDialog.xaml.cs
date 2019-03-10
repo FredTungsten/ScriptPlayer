@@ -6,11 +6,13 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Shell;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
+using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Dialogs
 {
@@ -19,14 +21,11 @@ namespace ScriptPlayer.Dialogs
     /// </summary>
     public partial class CreateThumbnailsDialog : Window
     {
-        private readonly int _width;
-        private readonly int _height;
-        private readonly int _intervall;
-
         public static readonly DependencyProperty EntriesProperty = DependencyProperty.Register(
             "Entries", typeof(List<ThumbnailProgressEntry>), typeof(CreateThumbnailsDialog),
             new PropertyMetadata(default(List<ThumbnailProgressEntry>)));
 
+        private readonly ThumbnailGeneratorSettings _settings;
         private FrameConverterWrapper _wrapper;
         private bool _canceled;
         private bool _done;
@@ -47,12 +46,19 @@ namespace ScriptPlayer.Dialogs
             set { SetValue(CloseButtonTextProperty, value); }
         }
 
-        public CreateThumbnailsDialog(ThumbnailGeneratorSettings settings)
-        {
-            _width = settings.Width;
-            _height = settings.Height;
-            _intervall = settings.Intervall;
+        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
+            "ViewModel", typeof(MainViewModel), typeof(CreateThumbnailsDialog), new PropertyMetadata(default(MainViewModel)));
 
+        public MainViewModel ViewModel
+        {
+            get { return (MainViewModel) GetValue(ViewModelProperty); }
+            set { SetValue(ViewModelProperty, value); }
+        }
+
+        public CreateThumbnailsDialog(MainViewModel viewmodel, ThumbnailGeneratorSettings settings)
+        {
+            ViewModel = viewmodel;
+            _settings = settings;
             Entries = settings.Videos.Select(vf => new ThumbnailProgressEntry(vf)).ToList();
 
             InitializeComponent();
@@ -69,14 +75,14 @@ namespace ScriptPlayer.Dialogs
 
             _processThread = new Thread(() =>
             {
-                string ffmpegexe = @"C:\Program Files (x86)\FFmpeg\bin\ffmpeg.exe";
+                string ffmpegexe = ViewModel.Settings.FfmpegPath;
 
                 FrameConverterWrapper wrapper = new FrameConverterWrapper(ffmpegexe);
                 _wrapper = wrapper;
 
-                wrapper.Intervall = _intervall;
-                wrapper.Width = _width;
-                wrapper.Height = _height;
+                wrapper.Intervall = _settings.Intervall;
+                wrapper.Width = _settings.Width;
+                wrapper.Height = _settings.Height;
 
                 ThumbnailProgressEntry currentEntry = null;
 
@@ -88,6 +94,20 @@ namespace ScriptPlayer.Dialogs
                         return;
 
                     currentEntry = entry;
+
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        dataGrid.SelectedItem = currentEntry;
+                        dataGrid.ScrollIntoView(currentEntry);
+                    }));
+
+                    string thumbfile = Path.ChangeExtension(currentEntry.FilePath, "thumbs");
+
+                    if (File.Exists(thumbfile) && _settings.SkipExisting)
+                    {
+                        SetStatus(currentEntry, "Skipped", 1);
+                        continue;
+                    }
 
                     SetStatus(currentEntry, "Extracting Frames", 0);
 
@@ -122,9 +142,7 @@ namespace ScriptPlayer.Dialogs
                         thumbnails.Add(position, frame);
                         usedFiles.Add(file);
                     }
-
-                    string thumbfile = Path.ChangeExtension(currentEntry.FilePath, "thumbs");
-
+                    
                     using (FileStream stream = new FileStream(thumbfile, FileMode.Create, FileAccess.Write))
                     {
                         thumbnails.Save(stream);

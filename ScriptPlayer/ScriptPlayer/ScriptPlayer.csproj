@@ -103,6 +103,9 @@
     <Compile Include="Dialogs\KodiConnectionSettingsDialog.xaml.cs">
       <DependentUpon>KodiConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\PreviewGeneratorSettings.xaml.cs">
+      <DependentUpon>PreviewGeneratorSettings.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\ShortcutInputDialog.xaml.cs">
       <DependentUpon>ShortcutInputDialog.xaml</DependentUpon>
     </Compile>
@@ -178,6 +181,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\KodiConnectionSettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\PreviewGeneratorSettings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
