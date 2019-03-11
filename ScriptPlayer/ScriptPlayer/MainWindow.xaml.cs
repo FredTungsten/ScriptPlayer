@@ -11,6 +11,9 @@ using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
 using Microsoft.Win32;
+using System.Threading;
+using System.Runtime.InteropServices;
+using System.IO;
 
 namespace ScriptPlayer
 {
@@ -33,11 +36,46 @@ namespace ScriptPlayer
         private WindowState _windowState;
         private DateTime _doubleClickTimeStamp = DateTime.MinValue;
 
+        private Mutex _singleInstanceMutex = null;
+        // https://stackoverflow.com/questions/184084/how-to-force-c-sharp-net-app-to-run-only-one-instance-in-windows
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
+
         public MainWindow()
         {
+            bool createdNew = true;
+            _singleInstanceMutex = new Mutex(true, "ScriptPlayer", out createdNew);
+            
             ViewModel = new MainViewModel();
             ViewModel.LoadPlayerState();
             RestoreWindowState(ViewModel.InitialPlayerState);
+            if(!createdNew)
+            {
+                // another instance is already running
+                // find process
+                Process current = Process.GetCurrentProcess();
+                foreach (Process process in Process.GetProcessesByName(current.ProcessName))
+                {
+                    if (process.Id != current.Id)
+                    {
+                        // bring other window into foreground and exit
+                        SetForegroundWindow(process.MainWindowHandle);
+                        // get current start parameters
+                        string[] args = Environment.GetCommandLineArgs();
+                        if (args.Length > 1)
+                        {
+                            string fileToLoad = args[1];
+                            if (File.Exists(fileToLoad))
+                            {
+                                // somehow tell the other process to open the file
+                            }
+                        }
+
+                        Environment.Exit(0);
+                    }
+                }
+            }
         }
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
