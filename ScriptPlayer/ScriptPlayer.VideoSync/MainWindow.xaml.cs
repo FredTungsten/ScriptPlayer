@@ -2216,7 +2216,7 @@ namespace ScriptPlayer.VideoSync
             if (videoPlayer == null)
                 return;
 
-            Brush heatmap = HeatMapGenerator.Generate2(Beats.ToList(), TimeSpan.Zero, videoPlayer.Duration);
+            Brush heatmap = HeatMapGenerator.Generate2(Beats.ToList(), TimeSpan.FromSeconds(10), TimeSpan.Zero, videoPlayer.Duration);
             SeekBar.Background = heatmap;
         }
 
