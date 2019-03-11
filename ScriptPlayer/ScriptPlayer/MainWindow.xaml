@@ -31,6 +31,7 @@
         <converters1:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
         <converters:BooleanToColumnSpanConverter x:Key="ColumnSpanConverter" OnFalse="1" OnTrue="2" />
         <converters:BooleanInverter x:Key="Inverter"/>
+        <converters1:EqualsConverter x:Key="EqualsConverter"/>
         <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
 
         <!-- Used in code -->
@@ -562,13 +563,34 @@
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrows}"></controls:AwesomeTextBlock>
             </Button>
             <TextBlock MouseLeftButtonDown="TimeDisplay_OnMouseLeftButtonDown" TextAlignment="Right" DockPanel.Dock="Right" VerticalAlignment="Center" Width="95" Margin="0,0,8,0">
+                <TextBlock.ContextMenu>
+                    <ContextMenu>
+                        <ContextMenu.Resources>
+                            <Style TargetType="MenuItem">
+                                <Setter Property="Command" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.SetTimeDisplayModeCommand}"/>
+                                <Setter Property="CommandParameter" Value="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"></Setter>
+                                <Setter Property="IsChecked">
+                                    <Setter.Value>
+                                        <MultiBinding Converter="{StaticResource EqualsConverter}">
+                                            <Binding RelativeSource="{RelativeSource Self}" Path="Tag"/>
+                                            <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}" Path="PlacementTarget.DataContext.Settings.TimeDisplayMode"/>
+                                        </MultiBinding>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ContextMenu.Resources>
+                        <MenuItem Header="Media Progress" Tag="{x:Static viewModels:TimeDisplayMode.Original}"/>
+                        <MenuItem Header="Content and Gaps" Tag="{x:Static viewModels:TimeDisplayMode.ContentAndGaps}"/>
+                        <MenuItem Header="Content Only" Tag="{x:Static viewModels:TimeDisplayMode.ContentOnly}"/>
+                    </ContextMenu>
+                </TextBlock.ContextMenu>
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Text">
                             <Setter.Value>
                                 <MultiBinding StringFormat="{}{0:h\:mm\:ss} / {1:h\:mm\:ss}">
-                                    <Binding Path="TimeSource.Progress"/>
-                                    <Binding Path="TimeSource.Duration"/>
+                                    <Binding Path="DisplayedProgress"/>
+                                    <Binding Path="DisplayedDuration"/>
                                 </MultiBinding>
                             </Setter.Value>
                         </Setter>
@@ -577,8 +599,8 @@
                                 <Setter Property="Text">
                                     <Setter.Value>
                                         <MultiBinding Converter="{StaticResource TimeLeftConverter}">
-                                            <Binding Path="TimeSource.Progress"/>
-                                            <Binding Path="TimeSource.Duration"/>
+                                            <Binding Path="DisplayedProgress"/>
+                                            <Binding Path="DisplayedDuration"/>
                                         </MultiBinding>
                                     </Setter.Value>
                                 </Setter>

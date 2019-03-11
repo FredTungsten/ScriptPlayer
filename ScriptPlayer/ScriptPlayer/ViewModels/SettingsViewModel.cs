@@ -64,7 +64,7 @@ namespace ScriptPlayer.ViewModels
 
         private TimeSpan _fillGapIntervall = TimeSpan.FromMilliseconds(500);
         private TimeSpan _fillGapGap = TimeSpan.FromSeconds(2);
-        private TimeSpan _minGapDuration = TimeSpan.FromSeconds(10);
+        private TimeSpan _minGapDuration = TimeSpan.FromSeconds(10); //This is for fillers, not the same as MainViewModel._gapDuration!
         private bool _invertPosition;
         private bool _randomChapters;
         private bool _softSeekFiles = true;
@@ -154,6 +154,7 @@ namespace ScriptPlayer.ViewModels
         private bool _rememberWindowPosition;
         private int _rangeExtender;
         private string _ffmpegPath;
+        private TimeDisplayMode _timeDisplayMode;
 
         public SettingsViewModel()
         {
@@ -168,6 +169,7 @@ namespace ScriptPlayer.ViewModels
             KodiIp = null;
             KodiTcpPort = 0;
             KodiHttpPort = 0;
+            TimeDisplayMode = TimeDisplayMode.ContentOnly;
         }
 
         public SettingsViewModel Duplicate()
@@ -984,6 +986,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _ffmpegPath) return;
                 _ffmpegPath = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public TimeDisplayMode TimeDisplayMode
+        {
+            get => _timeDisplayMode;
+            set
+            {
+                if (value == _timeDisplayMode) return;
+                _timeDisplayMode = value;
                 OnPropertyChanged();
             }
         }

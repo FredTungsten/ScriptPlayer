@@ -125,30 +125,12 @@ namespace ScriptPlayer.Shared
             return brush;
         }
 
-        public static Brush Generate2(List<TimeSpan> beats, TimeSpan timeFrom, TimeSpan timeTo, double multiplier = 1.0)
+        public static Brush Generate2(List<TimeSpan> beats, TimeSpan gapDuration, TimeSpan timeFrom, TimeSpan timeTo, double multiplier = 1.0)
         {
-            List<List<TimeSpan>> segments = new List<List<TimeSpan>>();
+            List<List<TimeSpan>> segments = GetSegments(beats, gapDuration, timeFrom, timeTo);
 
-            TimeSpan previous = timeFrom;
-            TimeSpan isGap = TimeSpan.FromSeconds(10);
             TimeSpan fastest = TimeSpan.FromMilliseconds(200);
             TimeSpan duration = timeTo - timeFrom;
-
-            foreach (TimeSpan beat in beats)
-            {
-                if (beat < timeFrom || beat > timeTo) continue;
-
-                if (beat - previous >= isGap)
-                {
-                    segments.Add(new List<TimeSpan>());
-                }
-
-                if (segments.Count == 0)
-                    segments.Add(new List<TimeSpan>());
-
-                segments.Last().Add(beat);
-                previous = beat;
-            }
 
             GradientStopCollection stops = new GradientStopCollection();
             stops.Add(new GradientStop(Colors.Black, 0.0));
@@ -216,6 +198,31 @@ namespace ScriptPlayer.Shared
             brush.MappingMode = BrushMappingMode.RelativeToBoundingBox;
 
             return brush;
+        }
+
+        public static List<List<TimeSpan>> GetSegments(List<TimeSpan> beats, TimeSpan gapDuration, TimeSpan timeFrom, TimeSpan timeTo)
+        {
+            List<List<TimeSpan>> segments = new List<List<TimeSpan>>();
+
+            TimeSpan previous = timeFrom;
+            
+            foreach (TimeSpan beat in beats)
+            {
+                if (beat < timeFrom || beat > timeTo) continue;
+
+                if (beat - previous >= gapDuration)
+                {
+                    segments.Add(new List<TimeSpan>());
+                }
+
+                if (segments.Count == 0)
+                    segments.Add(new List<TimeSpan>());
+
+                segments.Last().Add(beat);
+                previous = beat;
+            }
+
+            return segments;
         }
 
         public static GradientStopCollection FillGradients(GradientStopCollection stops)

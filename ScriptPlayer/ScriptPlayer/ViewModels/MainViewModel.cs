@@ -1,4 +1,11 @@
-﻿using System;
+﻿using FMUtils.KeyboardHook;
+using JetBrains.Annotations;
+using ScriptPlayer.Dialogs;
+using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Classes;
+using ScriptPlayer.Shared.Helpers;
+using ScriptPlayer.Shared.Scripts;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -15,13 +22,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml.Serialization;
-using FMUtils.KeyboardHook;
-using JetBrains.Annotations;
-using ScriptPlayer.Dialogs;
-using ScriptPlayer.Shared;
-using ScriptPlayer.Shared.Classes;
-using ScriptPlayer.Shared.Helpers;
-using ScriptPlayer.Shared.Scripts;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -170,6 +170,28 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public TimeSpan DisplayedProgress
+        {
+            get => _displayedProgress;
+            set
+            {
+                if (value.Equals(_displayedProgress)) return;
+                _displayedProgress = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public TimeSpan DisplayedDuration
+        {
+            get => _displayedDuration;
+            set
+            {
+                if (value.Equals(_displayedDuration)) return;
+                _displayedDuration = value;
+                OnPropertyChanged();
+            }
+        }
+
         private PatternGenerator _pattern;
         private CommandSource _commandSource = CommandSource.Video;
         private PlaylistViewModel _playlist;
@@ -226,6 +248,18 @@ namespace ScriptPlayer.ViewModels
         private string _randomChapterToolTip;
         private Section _displayedRange;
 
+        //TODO Make this configurable (5-20s?)
+
+        /// <summary>
+        /// Gap Duration always >=, not just >
+        /// </summary>
+        private readonly TimeSpan _gapDuration = TimeSpan.FromSeconds(10);
+
+        private TimeSpan _displayedDuration;
+        private TimeSpan _displayedProgress;
+        private List<Section> _chapters;
+        private TimeSpan _previousProgress = TimeSpan.MinValue;
+
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
         {
@@ -270,7 +304,7 @@ namespace ScriptPlayer.ViewModels
         public MainViewModel()
         {
             _supportedMediaExtensions = _supportedVideoExtensions.Concat(_supportedAudioExtensions).ToArray();
-            
+
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             Version = new VersionViewModel();
 
@@ -344,7 +378,7 @@ namespace ScriptPlayer.ViewModels
             Playlist.RandomChapters = Settings.RandomChapters;
             Playlist.Shuffle = Settings.ShufflePlaylist;
 
-            if(!GlobalCommandManager.LoadMappings(GetCommandMappingsFilePath()))
+            if (!GlobalCommandManager.LoadMappings(GetCommandMappingsFilePath()))
                 GlobalCommandManager.BuildDefaultShortcuts();
 
             UpdateRandomChapterTooltip();
@@ -395,7 +429,7 @@ namespace ScriptPlayer.ViewModels
                 case nameof(PlaylistViewModel.RandomChapters):
                     {
                         Settings.RandomChapters = Playlist.RandomChapters;
-                        if(!Playlist.RandomChapters)
+                        if (!Playlist.RandomChapters)
                             SelectedRange = null;
                         break;
                     }
@@ -674,7 +708,7 @@ namespace ScriptPlayer.ViewModels
                     case PlaybackMode.Kodi:
                         {
                             HideBanner();
-                            if(Settings.KodiHttpPort == 0)
+                            if (Settings.KodiHttpPort == 0)
                             {
                                 KodiConnectionSettings settings =
                                     OnRequestKodiConnectionSettings(new KodiConnectionSettings
@@ -686,7 +720,7 @@ namespace ScriptPlayer.ViewModels
                                         User = KodiConnectionSettings.DefaultUser
                                     });
 
-                                if(settings == null)
+                                if (settings == null)
                                 {
                                     PlaybackMode = PlaybackMode.Local;
                                     return;
@@ -726,6 +760,7 @@ namespace ScriptPlayer.ViewModels
         private void ClearScript()
         {
             _scriptHandler.Clear();
+            RefreshChapters();
         }
 
         private VlcConnectionSettings OnRequestVlcConnectionSettings(VlcConnectionSettings currentSettings)
@@ -853,8 +888,8 @@ namespace ScriptPlayer.ViewModels
                 if (playerState.PlaybackMode != null)
                     PlaybackMode = (PlaybackMode)playerState.PlaybackMode;
 
-                if(playerState.WindowState != null)
-                    if(playerState.WindowState.Width > 0 && playerState.WindowState.Height > 0)
+                if (playerState.WindowState != null)
+                    if (playerState.WindowState.Width > 0 && playerState.WindowState.Height > 0)
                         InitialPlayerState = playerState.WindowState;
             }
         }
@@ -990,6 +1025,8 @@ namespace ScriptPlayer.ViewModels
 
         private void TimeSourceOnProgressChanged(object sender, TimeSpan e)
         {
+            UpdateDisplayedProgress();
+
             if (!TimeSource.IsPlaying || IsSeeking) return;
 
             if (_loopA != TimeSpan.MinValue && _loopB != TimeSpan.MinValue)
@@ -1010,6 +1047,26 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        private bool SimilarTimeSpan(TimeSpan t1, TimeSpan t2)
+        {
+            return (int)t1.TotalSeconds == (int)t2.TotalSeconds;
+        }
+
+        private void UpdateDisplayedProgress()
+        {
+            if (_chapters == null)
+                RefreshChapters();
+
+            if (TimeSource == null)
+                return;
+
+            if (SimilarTimeSpan(TimeSource.Progress, _previousProgress))
+                return;
+
+            DisplayedProgress = TranslateMediaPosition(_chapters, TimeSource.Progress, Settings.TimeDisplayMode);
+            _previousProgress = TimeSource.Progress;
+        }
+
         private void TimeSourceOnDurationChanged(object sender, TimeSpan timeSpan)
         {
             TimeSourceDurationChanged();
@@ -1019,6 +1076,29 @@ namespace ScriptPlayer.ViewModels
         {
             _scriptHandler.Duration = TimeSource.Duration;
             UpdateHeatMap();
+            UpdateDisplayedDuration();
+        }
+
+        private void UpdateDisplayedDuration()
+        {
+            if (_chapters == null)
+                RefreshChapters();
+
+            if (TimeSource == null)
+                return;
+
+            DisplayedDuration = TranslateMediaPosition(_chapters, TimeSource.Duration, Settings.TimeDisplayMode);
+
+            _previousProgress = TimeSpan.MinValue;
+
+            UpdateDisplayedProgress();
+        }
+
+        private void RefreshChapters()
+        {
+            _chapters = GetChapters(TimeSpan.Zero, _gapDuration, false).Cast<Section>().ToList();
+
+            UpdateDisplayedDuration();
         }
 
         public List<ConversionMode> ConversionModes
@@ -1225,6 +1305,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand ShowSettingsCommand { get; set; }
 
+        public RelayCommand<TimeDisplayMode> SetTimeDisplayModeCommand { get; set; }
+
 
         public PlaylistViewModel Playlist
         {
@@ -1356,6 +1438,11 @@ namespace ScriptPlayer.ViewModels
                         UpdatePatternSpeed();
                         break;
                     }
+                case nameof(SettingsViewModel.TimeDisplayMode):
+                    {
+                        UpdateDisplayedDuration();
+                        break;
+                    }
             }
         }
 
@@ -1374,6 +1461,8 @@ namespace ScriptPlayer.ViewModels
             _scriptHandler.FillFirstGap = Settings.FillFirstGap;
             _scriptHandler.FillLastGap = Settings.FillLastGap;
             _scriptHandler.FillGaps = Settings.FillGaps;
+
+            RefreshChapters();
         }
 
         private void UpdateConversionMode()
@@ -1527,7 +1616,7 @@ namespace ScriptPlayer.ViewModels
         private void TryFindMatchingThumbnails(string videoFileName)
         {
             Thumbnails = null;
-            string thumbnailFile = FileFinder.FindFile(videoFileName, new [] {"thumbs"}, GetAdditionalPaths());
+            string thumbnailFile = FileFinder.FindFile(videoFileName, new[] { "thumbs" }, GetAdditionalPaths());
 
             if (string.IsNullOrWhiteSpace(thumbnailFile))
                 return;
@@ -1778,9 +1867,11 @@ namespace ScriptPlayer.ViewModels
                     throw new ArgumentOutOfRangeException(nameof(commandSource), commandSource, null);
             }
         }
-
+        
         private void InitializeCommands()
         {
+            SetTimeDisplayModeCommand = new RelayCommand<TimeDisplayMode>(SetTimeDisplayMode);
+
             ShowSettingsCommand = new ScriptplayerCommand(ShowSettings)
             {
                 CommandId = "ShowSettings",
@@ -1814,7 +1905,7 @@ namespace ScriptPlayer.ViewModels
 
             AddFolderToPlaylistCommand = new ScriptplayerCommand(AddFolderToPlaylist)
             {
-                CommandId="AddFolderToPlaylist",
+                CommandId = "AddFolderToPlaylist",
                 DisplayText = "Add Folder To Playlist"
             };
 
@@ -1933,6 +2024,11 @@ namespace ScriptPlayer.ViewModels
                 CommandId = "DecreaseScriptDelay",
                 DisplayText = "Decrease Script Delay"
             });
+        }
+
+        private void SetTimeDisplayMode(TimeDisplayMode mode)
+        {
+            Settings.TimeDisplayMode = mode;
         }
 
         private void ExecuteRemoveMissingFilesFromPlaylist()
@@ -2401,10 +2497,11 @@ namespace ScriptPlayer.ViewModels
             IEnumerable<ScriptAction> actions = Settings.ShowFilledGapsInHeatMap ? _scriptHandler.GetScript() : _scriptHandler.GetUnfilledScript();
 
             List<TimeSpan> timeStamps = FilterDuplicates(actions.ToList()).Select(s => s.TimeStamp).ToList();
-            Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, TimeSource.Duration, TimeSource.PlaybackRate);
+            Brush heatmap = HeatMapGenerator.Generate2(timeStamps, _gapDuration, TimeSpan.Zero, TimeSource.Duration, TimeSource.PlaybackRate);
             HeatMap = heatmap;
         }
 
+        //TODO very similar to HeatMapGenerator.GetSegments --> unify?
         private List<CommandSection> GetChapters(TimeSpan minChapterDuration, TimeSpan gapDuration, bool includePositions)
         {
             List<CommandSection> result = new List<CommandSection>();
@@ -2625,7 +2722,7 @@ namespace ScriptPlayer.ViewModels
                         Debug.WriteLine($"{DateTime.Now:T}: Selected Range about to end");
                         skipState = SkipState.Gap;
                     }
-                    else if (timeToNextOriginalEvent > TimeSpan.FromSeconds(10))
+                    else if (timeToNextOriginalEvent >= _gapDuration)
                     {
                         Debug.WriteLine($"{DateTime.Now:T}: Gap Detected");
                         skipState = SkipState.Gap;
@@ -2644,7 +2741,7 @@ namespace ScriptPlayer.ViewModels
                     else
                     {
                         timeToNextOriginalEvent = nextOriginalAction.TimeStamp - eventArgs.CurrentAction.TimeStamp;
-                        skipState = timeToNextOriginalEvent > TimeSpan.FromSeconds(10) ? SkipState.FillerGap : SkipState.Filler;
+                        skipState = timeToNextOriginalEvent >= _gapDuration ? SkipState.FillerGap : SkipState.Filler;
                     }
                 }
             }
@@ -2940,36 +3037,58 @@ namespace ScriptPlayer.ViewModels
                 SkipToNextEventInternal();
         }
 
-        //private async void SkipToRandomChapter()
-        //{
-        //    OnRequestHideSkipButton();
-        //    OnRequestHideNotification("Events");
+        private TimeSpan TranslateMediaPosition(List<Section> sections, TimeSpan rawProgress, TimeDisplayMode mode)
+        {
+            switch (mode)
+            {
+                case TimeDisplayMode.Original:
+                    return rawProgress;
+                case TimeDisplayMode.ContentAndGaps:
+                    {
+                        if (sections.Count == 0)
+                            return TimeSpan.Zero;
 
-        //    if (IsSeeking)
-        //        return;
+                        if (rawProgress < sections.First().Start)
+                            return TimeSpan.Zero;
 
-        //    try
-        //    {
-        //        IsSeeking = true;
+                        if (rawProgress > sections.Last().End)
+                            return sections.Last().End;
 
-        //        TimeSpan skipTo = GetRandomChapter();
-        //        if (skipTo == TimeSpan.Zero)
-        //            return;
+                        return rawProgress - sections.First().Start;
+                    }
+                case TimeDisplayMode.ContentOnly:
+                    {
+                        if (sections.Count == 0)
+                            return TimeSpan.Zero;
 
-        //        await SkipTo(skipTo, true);
-        //    }
-        //    finally
-        //    {
-        //        IsSeeking = false;
-        //    }
-        //}
+                        if (rawProgress < sections.First().Start)
+                            return TimeSpan.Zero;
+
+                        TimeSpan total = TimeSpan.Zero;
+
+                        foreach (Section section in sections)
+                        {
+                            if (section.Start >= rawProgress)
+                                break;
+
+                            if (section.End <= rawProgress)
+                                total += section.Duration;
+                            else
+                                total += rawProgress - section.Start;
+                        }
+
+                        return total;
+                    }
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+            }
+        }
 
         private Section GetRandomChapter()
         {
             var minDuration = TimeSpan.FromSeconds(30);
-            var gapDuration = TimeSpan.FromSeconds(10);
 
-            var chapters = GetChapters(minDuration, gapDuration, true);
+            var chapters = GetChapters(minDuration, _gapDuration, true);
 
             if (chapters.Count == 0)
                 return Section.Empty;
@@ -2980,91 +3099,91 @@ namespace ScriptPlayer.ViewModels
             switch (mode)
             {
                 case ChapterMode.RandomChapter:
-                {
-                    Random r = new Random();
-                    return chapters[r.Next(chapters.Count)];
-                }
+                    {
+                        Random r = new Random();
+                        return chapters[r.Next(chapters.Count)];
+                    }
                 case ChapterMode.FastestChapter:
-                {
-                    double mostCommandsPerSecond = 0.0;
-                    var fastestChapter = Section.Empty;
-
-                    foreach (var chapter in chapters)
                     {
-                        if (chapter.CommandsPerSecond > mostCommandsPerSecond)
-                        {
-                            mostCommandsPerSecond = chapter.CommandsPerSecond;
-                            fastestChapter = chapter;
-                        }
-                    }
+                        double mostCommandsPerSecond = 0.0;
+                        var fastestChapter = Section.Empty;
 
-                    return fastestChapter;
-                }
+                        foreach (var chapter in chapters)
+                        {
+                            if (chapter.CommandsPerSecond > mostCommandsPerSecond)
+                            {
+                                mostCommandsPerSecond = chapter.CommandsPerSecond;
+                                fastestChapter = chapter;
+                            }
+                        }
+
+                        return fastestChapter;
+                    }
                 case ChapterMode.FastestTimeSpan:
-                {
-                    TimeSpan span = Settings.ChapterTargetDuration;
-                    TimeSpan span2 = TimeSpan.FromTicks((long) (span.Ticks * 0.8));
-
-                    CommandSection fastestSection = new CommandSection(TimeSpan.Zero, TimeSpan.Zero, 1);
-                    List<CommandSection> candidates = new List<CommandSection>();
-
-                    foreach (var chapter in chapters)
                     {
-                        int startIndex = 0;
-                        int endIndex = 0;
+                        TimeSpan span = Settings.ChapterTargetDuration;
+                        TimeSpan span2 = TimeSpan.FromTicks((long)(span.Ticks * 0.8));
 
-                        List<TimeSpan> timeStamps = new List<TimeSpan>();
-                        timeStamps.Add(chapter.Positions[0]);
+                        CommandSection fastestSection = new CommandSection(TimeSpan.Zero, TimeSpan.Zero, 1);
+                        List<CommandSection> candidates = new List<CommandSection>();
 
-                        while (startIndex < chapter.Positions.Count)
+                        foreach (var chapter in chapters)
                         {
-                            while (chapter.Positions[endIndex] - chapter.Positions[startIndex] < span)
+                            int startIndex = 0;
+                            int endIndex = 0;
+
+                            List<TimeSpan> timeStamps = new List<TimeSpan>();
+                            timeStamps.Add(chapter.Positions[0]);
+
+                            while (startIndex < chapter.Positions.Count)
                             {
-                                if (endIndex + 1 >= chapter.Positions.Count)
-                                    break;
-
-                                if (chapter.Positions[endIndex + 1] - chapter.Positions[startIndex] > span)
-                                    break;
-
-                                endIndex++;
-
-                                if (timeStamps.Count > 0)
-                                    if (chapter.Positions[endIndex] - timeStamps.Last() > gapDuration)
-                                    {
-                                        startIndex = endIndex;
-                                        timeStamps.Clear();
-                                        timeStamps.Add(chapter.Positions[endIndex]);
-                                        continue;
-                                    }
-
-                                timeStamps.Add(chapter.Positions[endIndex]);
-                            }
-
-                            CommandSection currentSection = new CommandSection(timeStamps, false);
-
-                            if (currentSection.Duration >= span2)
-                            {
-                                if (currentSection.CommandsPerSecond > fastestSection.CommandsPerSecond)
+                                while (chapter.Positions[endIndex] - chapter.Positions[startIndex] < span)
                                 {
-                                    if (!fastestSection.IsEmpty && !fastestSection.Overlaps(currentSection, true))
-                                    {
-                                        candidates.Add(fastestSection);
-                                    }
+                                    if (endIndex + 1 >= chapter.Positions.Count)
+                                        break;
 
-                                    fastestSection = currentSection;
+                                    if (chapter.Positions[endIndex + 1] - chapter.Positions[startIndex] > span)
+                                        break;
+
+                                    endIndex++;
+
+                                    if (timeStamps.Count > 0)
+                                        if (chapter.Positions[endIndex] - timeStamps.Last() >= _gapDuration)
+                                        {
+                                            startIndex = endIndex;
+                                            timeStamps.Clear();
+                                            timeStamps.Add(chapter.Positions[endIndex]);
+                                            continue;
+                                        }
+
+                                    timeStamps.Add(chapter.Positions[endIndex]);
                                 }
+
+                                CommandSection currentSection = new CommandSection(timeStamps, false);
+
+                                if (currentSection.Duration >= span2)
+                                {
+                                    if (currentSection.CommandsPerSecond > fastestSection.CommandsPerSecond)
+                                    {
+                                        if (!fastestSection.IsEmpty && !fastestSection.Overlaps(currentSection, true))
+                                        {
+                                            candidates.Add(fastestSection);
+                                        }
+
+                                        fastestSection = currentSection;
+                                    }
+                                }
+
+                                if (startIndex + 1 >= chapter.Positions.Count)
+                                    break;
+
+                                startIndex++;
+                                timeStamps.RemoveAt(0);
                             }
-
-                            if (startIndex + 1 >= chapter.Positions.Count)
-                                break;
-
-                            startIndex++;
-                            timeStamps.RemoveAt(0);
                         }
-                    }
 
-                    return fastestSection;
-                }
+                        return fastestSection;
+                    }
                 default:
                     return Section.Empty;
             }
@@ -3134,7 +3253,7 @@ namespace ScriptPlayer.ViewModels
 
         public void AddFolderToPlaylist()
         {
-            string folder =OnRequestFolder(_lastFolder);
+            string folder = OnRequestFolder(_lastFolder);
             if (string.IsNullOrWhiteSpace(folder))
                 return;
             _lastFolder = folder;
@@ -3143,7 +3262,7 @@ namespace ScriptPlayer.ViewModels
 
             foreach (string file in files)
             {
-                if(_supportedMediaExtensions.Contains(Path.GetExtension(file).TrimStart('.').ToLower()))
+                if (_supportedMediaExtensions.Contains(Path.GetExtension(file).TrimStart('.').ToLower()))
                     Playlist.AddEntry(new PlaylistEntry(file));
             }
         }
@@ -3309,6 +3428,8 @@ namespace ScriptPlayer.ViewModels
             if (actions == null) return false;
 
             _scriptHandler.SetScript(actions);
+
+            RefreshChapters();
             RefreshManualDuration();
             LoadedScript = fileName;
 
@@ -3633,7 +3754,7 @@ namespace ScriptPlayer.ViewModels
             if (!CanGenerateThumbnailsForLoadedVideo())
                 return;
 
-            GenerateThumbnails(new [] {LoadedVideo});
+            GenerateThumbnails(new[] { LoadedVideo });
         }
 
         private void GenerateThumbnails(string[] videos)
@@ -3729,7 +3850,7 @@ namespace ScriptPlayer.ViewModels
         EndFiller,
         EndNext,
         End,
-    }    
+    }
 
     public class CommandSection : Section
     {
@@ -3750,7 +3871,7 @@ namespace ScriptPlayer.ViewModels
             else
                 CommandsPerSecond = (CommandCount - 1) / Duration.TotalSeconds;
 
-            if(savePositions)
+            if (savePositions)
                 Positions = positions.Select(p => p.TimeStamp).ToList();
         }
 
@@ -3782,5 +3903,26 @@ namespace ScriptPlayer.ViewModels
             else
                 CommandsPerSecond = (CommandCount - 1) / Duration.TotalSeconds;
         }
+    }
+
+    /// <summary>
+    /// Determines how the progress time is displayed
+    /// </summary>
+    public enum TimeDisplayMode
+    {
+        /// <summary>
+        /// Original Video Position regardless of script
+        /// </summary>
+        Original,
+
+        /// <summary>
+        /// First Command to Last Command
+        /// </summary>
+        ContentAndGaps,
+
+        /// <summary>
+        /// Only Content in Sections/Chapters
+        /// </summary>
+        ContentOnly
     }
 }

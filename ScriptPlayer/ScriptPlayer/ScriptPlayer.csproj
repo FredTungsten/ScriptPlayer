@@ -94,6 +94,7 @@
     <Compile Include="Converters\BooleanAndConverter.cs" />
     <Compile Include="Converters\CollectionNullOrEmptyToVisibilityConverter.cs" />
     <Compile Include="Converters\DurationConverter.cs" />
+    <Compile Include="Converters\EqualsConverter.cs" />
     <Compile Include="Dialogs\CreatePreviewDialog.xaml.cs">
       <DependentUpon>CreatePreviewDialog.xaml</DependentUpon>
     </Compile>
