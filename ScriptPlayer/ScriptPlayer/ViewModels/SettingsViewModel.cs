@@ -1000,6 +1000,9 @@ namespace ScriptPlayer.ViewModels
         {
             try
             {
+                if (!File.Exists(filename))
+                    return null;
+
                 using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
                 {
                     XmlSerializer serializer = new XmlSerializer(typeof(SettingsViewModel));

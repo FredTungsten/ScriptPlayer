@@ -153,9 +153,9 @@ namespace ScriptPlayer.Dialogs
                 return;
             }
 
-            if (FrameRate <= 0)
+            if (FrameRate <= 1)
             {
-                MessageBox.Show("Framerate must be greater than zero!", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Framerate must be greater than 1!", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 

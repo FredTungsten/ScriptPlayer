@@ -80,7 +80,8 @@ namespace ScriptPlayer
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
 
-            SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
+            if(ViewModel.InitialPlayerState != null)
+                SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
         }
 
         private void ViewModelOnRequestShowSettings(object sender, string settingsId)
@@ -117,6 +118,9 @@ namespace ScriptPlayer
 
         private void RestoreWindowState(WindowStateModel windowStateModel)
         {
+            if (windowStateModel == null)
+                return;
+
             _windowState = windowStateModel.IsMaximized ? WindowState.Maximized : WindowState.Normal;
             _windowPosition = windowStateModel.GetPosition();
             
@@ -724,9 +728,8 @@ namespace ScriptPlayer
                 return;
 
             settings = settingsDialog.Result;
-            
-            var dialog = new CreatePreviewDialog(ViewModel, settings);
-            dialog.Owner = this;
+
+            var dialog = new CreatePreviewDialog(ViewModel, settings) {Owner = this};
             dialog.ShowDialog();
 
             ViewModel.RecheckForAdditionalFiles();

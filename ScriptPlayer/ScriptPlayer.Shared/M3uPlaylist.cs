@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -29,9 +30,18 @@ namespace ScriptPlayer.Shared
 
         public void Save(string filename)
         {
+            string directory = Path.GetDirectoryName(filename);
+
+            if (string.IsNullOrWhiteSpace(directory))
+                throw new ArgumentException(@"Directory is null", nameof(filename));
+
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
             using (FileStream stream = new FileStream(filename, FileMode.Create, FileAccess.Write))
                 Save(stream);
         }
+
         public void Save(Stream stream)
         {
             using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
@@ -106,6 +116,9 @@ namespace ScriptPlayer.Shared
         {
             try
             {
+                if (!File.Exists(filename))
+                    return null;
+
                 M3uPlaylist playlist = new M3uPlaylist();
                 playlist.Load(filename);
                 return playlist;
