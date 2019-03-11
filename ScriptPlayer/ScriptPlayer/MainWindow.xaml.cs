@@ -14,6 +14,7 @@ using Microsoft.Win32;
 using System.Threading;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.IO.Pipes;
 
 namespace ScriptPlayer
 {
@@ -36,7 +37,8 @@ namespace ScriptPlayer
         private WindowState _windowState;
         private DateTime _doubleClickTimeStamp = DateTime.MinValue;
 
-        private Mutex _singleInstanceMutex = null;
+        private static Mutex SingleInstanceMutex = null;
+        private static NamedPipeServerStream PipeServer = null;
         // https://stackoverflow.com/questions/184084/how-to-force-c-sharp-net-app-to-run-only-one-instance-in-windows
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -45,11 +47,7 @@ namespace ScriptPlayer
         public MainWindow()
         {
             bool createdNew = true;
-            _singleInstanceMutex = new Mutex(true, "ScriptPlayer", out createdNew);
-            
-            ViewModel = new MainViewModel();
-            ViewModel.LoadPlayerState();
-            RestoreWindowState(ViewModel.InitialPlayerState);
+            SingleInstanceMutex = new Mutex(true, "ScriptPlayer", out createdNew);
             if(!createdNew)
             {
                 // another instance is already running
@@ -69,13 +67,50 @@ namespace ScriptPlayer
                             if (File.Exists(fileToLoad))
                             {
                                 // somehow tell the other process to open the file
+                                using (NamedPipeClientStream client = new NamedPipeClientStream(".", "ScriptPlayer-pipe", PipeDirection.Out, PipeOptions.Asynchronous))
+                                using (StreamWriter writer = new StreamWriter(client))
+                                {
+                                    client.Connect(3000); // 3000ms timeout
+                                    writer.Write(fileToLoad);
+                                }
                             }
                         }
-
                         Environment.Exit(0);
                     }
                 }
             }
+            ViewModel = new MainViewModel();
+            ViewModel.LoadPlayerState();
+            RestoreWindowState(ViewModel.InitialPlayerState);
+            
+            // pipeserver listens to messages from other ScriptPlayer processes
+            PipeServer = new NamedPipeServerStream("ScriptPlayer-pipe", PipeDirection.In, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            PipeServer.BeginWaitForConnection(new AsyncCallback(PipeConnection), PipeServer);
+        }
+        private void PipeConnection(IAsyncResult result)
+        {
+            Console.WriteLine("connection");
+            var pipe = (NamedPipeServerStream)result.AsyncState;
+            pipe.EndWaitForConnection(result);
+            using(StreamReader reader = new StreamReader(pipe))
+            {
+                string file = reader.ReadLine();
+                PipeLoadFile(file);
+            }           
+        }
+
+        private void PipeLoadFile(string file)
+        {
+            if (!CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action(() => { PipeLoadFile(file); }));
+                return;
+            }
+
+            ViewModel.LoadFile(file);
+            // wait for next connection not sure how to do this better
+            PipeServer = new NamedPipeServerStream("ScriptPlayer-pipe", PipeDirection.In, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            PipeServer.BeginWaitForConnection(new AsyncCallback(PipeConnection), PipeServer);
         }
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
