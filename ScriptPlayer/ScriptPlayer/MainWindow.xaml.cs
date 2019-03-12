@@ -89,7 +89,6 @@ namespace ScriptPlayer
 
         private void PipeConnection(IAsyncResult result)
         {
-            Console.WriteLine("connection");
             PipeServer.EndWaitForConnection(result);
             using(StreamReader reader = new StreamReader(PipeServer))
             {
