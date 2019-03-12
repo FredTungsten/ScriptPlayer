@@ -47,7 +47,7 @@ namespace ScriptPlayer
         public MainWindow()
         {
             bool createdNew = true;
-            SingleInstanceMutex = new Mutex(true, "ScriptPlayer", out createdNew);
+            SingleInstanceMutex = new Mutex(true, "ScriptPlayerInstance", out createdNew);
             if(!createdNew)
             {
                 // another instance is already running
