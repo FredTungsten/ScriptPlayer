@@ -3635,6 +3635,7 @@ namespace ScriptPlayer.ViewModels
 
         public void Unload()
         {
+            InstanceHandler.CommandLineReceived -= InstanceHandlerOnCommandLineReceived;
             InstanceHandler.Shutdown();
 
             SaveSettings();
