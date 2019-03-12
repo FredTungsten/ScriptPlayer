@@ -37,6 +37,9 @@
   <PropertyGroup>
     <ApplicationIcon>ScriptPlayerIcon.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>ScriptPlayer.App</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="FMUtils.KeyboardHook, Version=1.0.140.2145, Culture=neutral, PublicKeyToken=1acd76c568cde84e, processorArchitecture=MSIL">
       <HintPath>..\packages\FMUtils.KeyboardHook.1.0.140.2145\lib\net40-Client\FMUtils.KeyboardHook.dll</HintPath>
@@ -125,6 +128,8 @@
     <Compile Include="FlashOverlay.xaml.cs">
       <DependentUpon>FlashOverlay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\CommandLineSplitter.cs" />
+    <Compile Include="ViewModels\InstanceHandler.cs" />
     <Compile Include="ViewModels\PlaybackMode.cs" />
     <Compile Include="ViewModels\PlayerStateModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />

@@ -41,6 +41,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<WindowStateModel>> RequestGetWindowState;
         public event EventHandler<RequestEventArgs<ThumbnailGeneratorSettings>> RequestThumbnailGeneratorSettings;
 
+        public event EventHandler RequestActivate;
         public event EventHandler<string> RequestShowSettings;
         public event EventHandler<ThumbnailGeneratorSettings> RequestGenerateThumbnails;
         public event EventHandler<WindowStateModel> RequestSetWindowState;
@@ -874,6 +875,30 @@ namespace ScriptPlayer.ViewModels
             CheckForArguments();
             if (Settings.CheckForNewVersionOnStartup)
                 Version.CheckIfYouHaventAlready();
+
+            InstanceHandler.CommandLineReceived += InstanceHandlerOnCommandLineReceived;
+            InstanceHandler.EnableEvents();
+        }
+
+        private void InstanceHandlerOnCommandLineReceived(object sender, string commandLine)
+        {
+            Debug.WriteLine("Received Commandline: " + commandLine);
+            PassCommandLineAlong(commandLine);
+        }
+
+        private void PassCommandLineAlong(string commandLine)
+        {
+            if (!Application.Current.CheckAccess())
+            {
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    PassCommandLineAlong(commandLine);
+                }));
+                return;
+            }
+
+            string[] args = CommandLineSplitter.CommandLineToArgs(commandLine);
+            ProcessArguments(args, false);
         }
 
         public void LoadPlayerState()
@@ -2359,8 +2384,15 @@ namespace ScriptPlayer.ViewModels
         private void CheckForArguments()
         {
             string[] args = Environment.GetCommandLineArgs();
+            ProcessArguments(args, true);
+        }
 
+        private void ProcessArguments(string[] args, bool original)
+        {
             if (args.Length <= 1) return;
+
+            if (!original)
+                OnRequestActivate();
 
             string fileToLoad = args[1];
             if (File.Exists(fileToLoad))
@@ -3603,6 +3635,8 @@ namespace ScriptPlayer.ViewModels
 
         public void Unload()
         {
+            InstanceHandler.Shutdown();
+
             SaveSettings();
             SavePlaylist();
         }
@@ -3825,6 +3859,11 @@ namespace ScriptPlayer.ViewModels
             ShowSettings("FFmpeg");
 
             return !String.IsNullOrEmpty(Settings.FfmpegPath) && File.Exists(Settings.FfmpegPath);
+        }
+
+        protected virtual void OnRequestActivate()
+        {
+            RequestActivate?.Invoke(this, EventArgs.Empty);
         }
     }
 

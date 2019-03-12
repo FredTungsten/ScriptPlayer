@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Threading;
 using ScriptPlayer.Shared.Elevation;
 using ScriptPlayer.Shared.Helpers;
+using ScriptPlayer.ViewModels;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -16,10 +17,14 @@ namespace ScriptPlayer
     {
         public App()
         {
-            if (AppDomain.CurrentDomain.FriendlyName.EndsWith("vshost.exe")) return;
+            if (AppDomain.CurrentDomain.FriendlyName.EndsWith(".vshost.exe")) return;
+            {
+                Application.Current.DispatcherUnhandledException += CurrentOnDispatcherUnhandledException;
+                AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+            }
 
-            Application.Current.DispatcherUnhandledException += CurrentOnDispatcherUnhandledException;
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+            if(!InstanceHandler.Startup("ScriptPlayer-Instance", "ScriptPlayer-CommandLinePipe"))
+                Environment.Exit(0);
         }
 
         private void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs args)
