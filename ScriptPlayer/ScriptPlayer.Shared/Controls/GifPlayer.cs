@@ -16,6 +16,15 @@ namespace ScriptPlayer.Shared
 {
     public class GifPlayer : Control
     {
+        public static readonly DependencyProperty AutoSizeProperty = DependencyProperty.Register(
+            "AutoSize", typeof(bool), typeof(GifPlayer), new FrameworkPropertyMetadata(default(bool), FrameworkPropertyMetadataOptions.AffectsMeasure));
+
+        public bool AutoSize
+        {
+            get { return (bool) GetValue(AutoSizeProperty); }
+            set { SetValue(AutoSizeProperty, value); }
+        }
+
         public event EventHandler FramesReady;
 
         public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
@@ -127,9 +136,14 @@ namespace ScriptPlayer.Shared
         {
             if (Frames == null)
             {
-                if (IsUndefined(constraint))
+                if (IsUndefined(constraint) || AutoSize)
                     return new Size(1, 1);
                 return constraint;
+            }
+
+            if (AutoSize)
+            {
+                return new Size(Frames.Width, Frames.Height);
             }
 
             if (!IsUndefined(constraint))
@@ -221,7 +235,8 @@ namespace ScriptPlayer.Shared
 
         public void Start()
         {
-            Start(Frames.Duration);
+            if(Frames != null)
+                Start(Frames.Duration);
         }
 
         public void Start(TimeSpan duration)
@@ -232,6 +247,14 @@ namespace ScriptPlayer.Shared
         public void Stop()
         {
             BeginAnimation(ProgressProperty, null);
+        }
+
+        public void Close()
+        {
+            Stop();
+            Frames = null;
+            
+            InvalidateMeasure();
         }
 
         public void Load(string filename)

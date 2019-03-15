@@ -161,8 +161,8 @@ namespace ScriptPlayer.Dialogs
 
             Result = new PreviewGeneratorSettings
             {
-                Height = FrameAutoHeight ? -1 : FrameHeight,
-                Width = FrameAutoWidth ? -1 : FrameWidth,
+                Height = FrameAutoHeight ? -2 : FrameHeight,
+                Width = FrameAutoWidth ? -2 : FrameWidth,
                 Framerate = FrameRate,
                 Start = Start,
                 Duration = Duration,

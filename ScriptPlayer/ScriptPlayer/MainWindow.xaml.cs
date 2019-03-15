@@ -744,5 +744,28 @@ namespace ScriptPlayer
 
             ViewModel.RecheckForAdditionalFiles();
         }
+
+        private void ToolTip_OnOpened(object sender, RoutedEventArgs e)
+        {
+            var entry = ViewModel.Playlist.GetNextEntry(ViewModel.LoadedFiles);
+            if (entry == null)
+            {
+                playerNext.Close();
+                titleNext.Text = "Unknown";
+                return;
+            }
+
+            string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new [] {"gif"});
+            if (string.IsNullOrEmpty(gifFile))
+                return;
+
+            playerNext.Load(gifFile);
+            titleNext.Text = entry.Shortname;
+        }
+
+        private void ToolTip_OnClosed(object sender, RoutedEventArgs e)
+        {
+            playerNext.Close();
+        }
     }
 }
