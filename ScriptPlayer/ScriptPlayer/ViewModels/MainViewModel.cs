@@ -875,7 +875,7 @@ namespace ScriptPlayer.ViewModels
             CheckForArguments();
             if (Settings.CheckForNewVersionOnStartup)
                 Version.CheckIfYouHaventAlready();
-
+            
             InstanceHandler.CommandLineReceived += InstanceHandlerOnCommandLineReceived;
             InstanceHandler.EnableEvents();
         }

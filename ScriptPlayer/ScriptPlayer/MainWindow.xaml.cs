@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -11,10 +12,7 @@ using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
 using Microsoft.Win32;
-using System.Threading;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.IO.Pipes;
+using Point = System.Windows.Point;
 
 namespace ScriptPlayer
 {
@@ -46,7 +44,9 @@ namespace ScriptPlayer
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
         {
-            SaveCurrentWindowRect();
+            if(!_fullscreen)
+                SaveCurrentWindowRect();
+
             ViewModel.Dispose();
         }
 
@@ -80,13 +80,15 @@ namespace ScriptPlayer
             ViewModel.RequestShowSkipNextButton += ViewModelOnRequestShowSkipNextButton;
             ViewModel.RequestHideSkipButton += ViewModelOnRequestHideSkipButton;
             ViewModel.RequestHideNotification += ViewModelOnRequestHideNotification;
-            ViewModel.Beat += ViewModelOnBeat;
-            ViewModel.IntermediateBeat += ViewModelOnIntermediateBeat;
+
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
 
-            if(ViewModel.InitialPlayerState != null)
+            if (ViewModel.InitialPlayerState != null)
+            {
+                WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
+            }
         }
 
         private void ViewModelOnRequestActivate(object sender, EventArgs eventArgs)
@@ -131,10 +133,10 @@ namespace ScriptPlayer
             if (windowStateModel == null)
                 return;
 
-            _windowState = windowStateModel.IsMaximized ? WindowState.Maximized : WindowState.Normal;
             _windowPosition = windowStateModel.GetPosition();
+            _windowState = windowStateModel.IsMaximized ? WindowState.Maximized : WindowState.Normal;
             
-            RestoreWindowRect();
+            RestoreWindowRect(IsInitialized);
 
             if (IsInitialized)
                 SetFullscreen(windowStateModel.IsFullscreen, false);
@@ -163,25 +165,6 @@ namespace ScriptPlayer
 
             e.Handled = true;
             e.Value = x.SelectedPath;
-        }
-
-        private void ViewModelOnIntermediateBeat(object sender, double d)
-        {
-
-        }
-
-
-        private void ViewModelOnBeat(object sender, EventArgs eventArgs)
-        {
-            return;
-
-            if (!CheckAccess())
-            {
-                Dispatcher.BeginInvoke(new Action(() => { ViewModelOnBeat(sender, eventArgs); }));
-                return;
-            }
-
-            FlashOverlay.Flash();
         }
 
         private void ViewModelOnRequestHideNotification(object sender, string designation)
@@ -359,22 +342,26 @@ namespace ScriptPlayer
             if (_fullscreen == isFullscreen)
                 return;
 
-            if (!_fullscreen)
-            {
-                WindowStyle = WindowStyle.None;
-                ResizeMode = ResizeMode.NoResize;
+            bool currentlyFullScreen = _fullscreen;
 
-                if(updateRestorePosition)
+            _fullscreen = isFullscreen;
+
+            if (_fullscreen)
+            {
+                if(updateRestorePosition && !currentlyFullScreen)
                     SaveCurrentWindowRect();
 
-                var screenBounds = System.Windows.Forms.Screen.FromHandle(new WindowInteropHelper(this).Handle).Bounds;
+                var screenBounds = FindScreenWithMostOverlap();
+
+                WindowStyle = WindowStyle.None;
+                ResizeMode = ResizeMode.NoResize;
+                WindowState = WindowState.Normal;
 
                 Width = screenBounds.Width;
                 Height = screenBounds.Height;
                 Left = screenBounds.Left;
                 Top = screenBounds.Top;
-                WindowState = WindowState.Normal;
-
+                
                 HideOnHover.SetIsActive(MnuMain, true);
                 HideOnHover.SetIsActive(PlayerControls, true);
 
@@ -386,7 +373,7 @@ namespace ScriptPlayer
                 WindowStyle = WindowStyle.SingleBorderWindow;
                 ResizeMode = ResizeMode.CanResize;
 
-                RestoreWindowRect();
+                RestoreWindowRect(true);
 
                 HideOnHover.SetIsActive(MnuMain, false);
                 HideOnHover.SetIsActive(PlayerControls, false);
@@ -398,20 +385,40 @@ namespace ScriptPlayer
             _fullscreen = isFullscreen;
         }
 
-        private void RestoreWindowRect()
+        public Rectangle GetWindowRectangle()
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                var handle = new WindowInteropHelper(this).Handle;
+                var screen = System.Windows.Forms.Screen.FromHandle(handle);
+                return screen.WorkingArea;
+            }
+
+            return new Rectangle((int)Left, (int)Top,(int)ActualWidth, (int)ActualHeight);
+        }
+
+        private Rect FindScreenWithMostOverlap()
+        {
+            Rectangle windowBounds = GetWindowRectangle();
+
+            Rectangle screenBounds = System.Windows.Forms.Screen.FromRectangle(windowBounds).Bounds;
+
+            return new Rect(screenBounds.X, screenBounds.Y, screenBounds.Width, screenBounds.Height);
+        }
+
+        private void RestoreWindowRect(bool includeWindowState)
         {
             Left = _windowPosition.Left;
             Top = _windowPosition.Top;
             Width = _windowPosition.Width;
             Height = _windowPosition.Height;
-            WindowState = _windowState;
+
+            if(includeWindowState)
+                WindowState = _windowState;
         }
 
         private void SaveCurrentWindowRect()
         {
-            if (_fullscreen)
-                return;
-
             _windowState = WindowState;
 
             if (_windowState != WindowState.Normal)
@@ -491,21 +498,22 @@ namespace ScriptPlayer
 
         private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
-            bool handled = true;
-
-            Key[] modifiers = new[] {Key.LeftAlt, Key.LeftCtrl, Key.LeftShift, Key.RightAlt, Key.RightCtrl, Key.RightShift};
+            Key[] modifiers = {Key.LeftAlt, Key.LeftCtrl, Key.LeftShift, Key.RightAlt, Key.RightCtrl, Key.RightShift};
 
             if (modifiers.Contains(e.Key))
                 return;
 
             ModifierKeys activeMods = GlobalCommandManager.GetActiveModifierKeys();
 
-            handled = GlobalCommandManager.ProcessInput(e.Key, activeMods);
+            bool handled = GlobalCommandManager.ProcessInput(e.Key, activeMods);
+
             if (handled)
             {
                 e.Handled = true;
                 return;
             }
+
+            handled = true;
 
             switch (e.Key)
             {
@@ -665,12 +673,6 @@ namespace ScriptPlayer
             }
         }
 
-
-        private void mnuSettings_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.ShowSettings();
-        }
-
         private void mnuVersion_Click(object sender, RoutedEventArgs e)
         {
             VersionDialog dialog = new VersionDialog(ViewModel.Version) { Owner = this };
@@ -681,15 +683,6 @@ namespace ScriptPlayer
         {
             Process.Start("https://github.com/FredTungsten/ScriptPlayer/wiki");
         }
-
-        /*
-        private void mnuDownloadScript_Click(object sender, RoutedEventArgs e)
-        {
-            //Process.Start("https://github.com/FredTungsten/Scripts");
-            ScriptDownloadDialog dialog = new ScriptDownloadDialog(){Owner = this};
-            dialog.ShowDialog();
-        }
-        */
 
         private void TimeDisplay_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
