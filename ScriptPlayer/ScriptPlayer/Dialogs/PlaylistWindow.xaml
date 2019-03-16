@@ -35,7 +35,8 @@
                 <MenuItem Header="Add Files" Command="{Binding AddScriptsToPlaylistCommand}"/>
                 <MenuItem Header="Add Folder" Command="{Binding AddFolderToPlaylistCommand}"/>
                 <Separator/>
-                <MenuItem Header="Remove Missing Files" Command="{Binding RemoveMissingFilesFromPlaylistCommand}"/>
+                <MenuItem Header="Remove Missing Entries" Command="{Binding RemoveMissingEntriesFromPlaylistCommand}"/>
+                <MenuItem Header="Remove Incomplete Entries" Command="{Binding RemoveIncompleteEntriesFromPlaylistCommand}"/>
                 <Separator/>
                 <MenuItem Header="Load Playlist" Command="{Binding LoadPlaylistCommand}"/>
                 <MenuItem Header="Save Playlist" Command="{Binding SavePlaylistCommand}"/>
@@ -67,7 +68,22 @@
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="viewModels:PlaylistEntry">
                     <DockPanel HorizontalAlignment="Stretch">
-                        <TextBlock Text="{Binding Path=Duration, Converter={StaticResource DurationConverter}}" DockPanel.Dock="Right" Margin="8,0,2,0"/>
+                        <DockPanel.Style>
+                            <Style TargetType="FrameworkElement">
+                                <Style.Setters>
+                                    <Setter Property="TextElement.Foreground" Value="DimGray"/>
+                                </Style.Setters>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.FilesOk}">
+                                        <Setter Property="TextElement.Foreground" Value="Black"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.MissingFile}">
+                                        <Setter Property="TextElement.Foreground" Value="Red"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DockPanel.Style>
+                        <TextBlock Text="{Binding Path=Duration, Converter={StaticResource DurationConverter}}" DockPanel.Dock="Right" Margin="8,0,2,0" />
                         <TextBlock Text="{Binding Shortname}" DockPanel.Dock="Left" TextTrimming="CharacterEllipsis" Margin="2,0,0,0"/>
                     </DockPanel>
                 </DataTemplate>
@@ -114,3 +130,4 @@
         <TextBox x:Name="txtSearch" Text="{Binding Path=Playlist.Filter, UpdateSourceTrigger=PropertyChanged}" Height="22" Margin="10,10,10,0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top"/>
     </Grid>
 </Window>
+

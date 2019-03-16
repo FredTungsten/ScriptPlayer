@@ -40,8 +40,7 @@ namespace ScriptPlayer.Dialogs
         private void PlaylistEntry_DoubleClicked(object sender, MouseButtonEventArgs e)
         {
             ListBoxItem item = sender as ListBoxItem;
-            PlaylistEntry entry = item?.DataContext as PlaylistEntry;
-            if (entry == null)
+            if (!(item?.DataContext is PlaylistEntry entry))
                 return;
 
             ViewModel.Playlist.RequestPlayEntry(entry);

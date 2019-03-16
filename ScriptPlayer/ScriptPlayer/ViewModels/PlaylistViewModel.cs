@@ -18,7 +18,7 @@ namespace ScriptPlayer.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler<PlaylistEntry> PlayEntry;
 
-        private readonly BlockingQueue<PlaylistEntry> _playlistEntriesWithoutDuration = new BlockingQueue<PlaylistEntry>();
+        private readonly BlockingQueue<PlaylistEntry> _uncheckedPlaylistEntries = new BlockingQueue<PlaylistEntry>();
 
         private readonly Random _rng = new Random();
         private readonly Thread _mediaInfoThread;
@@ -287,12 +287,23 @@ namespace ScriptPlayer.ViewModels
         {
             while (!_disposed)
             {
-                PlaylistEntry entry = _playlistEntriesWithoutDuration.Deqeue();
+                PlaylistEntry entry = _uncheckedPlaylistEntries.Deqeue();
                 if (entry == null)
                     return;
 
                 string mediaFile = OnRequestMediaFileName(entry.Fullname);
-                entry.Duration = MediaHelper.GetDuration(mediaFile);
+                if (!string.IsNullOrEmpty(mediaFile))
+                {
+                    entry.HasMedia = true;
+
+                    if(entry.Duration == null)
+                        entry.Duration = MediaHelper.GetDuration(mediaFile);
+                }
+
+                string scriptFile = OnRequestScriptFileName(entry.Fullname);
+                entry.HasScript = !string.IsNullOrWhiteSpace(scriptFile);
+
+                entry.UpdateStatus();
 
                 //TODO Generate Preview
                 //Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, TimeSource.Duration);
@@ -537,9 +548,9 @@ namespace ScriptPlayer.ViewModels
 
         private void EnsureDuration(PlaylistEntry entry)
         {
-            if (entry.Duration == null || entry.Duration == TimeSpan.Zero)
+            if (entry.Status == PlaylistEntryStatus.Loading)
             {
-                _playlistEntriesWithoutDuration.Enqueue(entry);
+                _uncheckedPlaylistEntries.Enqueue(entry);
             }
         }
 
@@ -705,7 +716,7 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             _disposed = true;
-            _playlistEntriesWithoutDuration.Close();
+            _uncheckedPlaylistEntries.Close();
 
             try
             {

@@ -1316,7 +1316,9 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand AddFolderToPlaylistCommand { get; set; }
 
-        public ScriptplayerCommand RemoveMissingFilesFromPlaylistCommand { get; set; }
+        public ScriptplayerCommand RemoveMissingEntriesFromPlaylistCommand { get; set; }
+
+        public ScriptplayerCommand RemoveIncompleteEntriesFromPlaylistCommand { get; set; }
 
         public ScriptplayerCommand LoadPlaylistCommand { get; set; }
 
@@ -1995,7 +1997,8 @@ namespace ScriptPlayer.ViewModels
 
             LoadPlaylistCommand = new ScriptplayerCommand(ExecuteLoadPlaylist);
             SavePlaylistCommand = new ScriptplayerCommand(ExecuteSavePlaylist);
-            RemoveMissingFilesFromPlaylistCommand = new ScriptplayerCommand(ExecuteRemoveMissingFilesFromPlaylist);
+            RemoveMissingEntriesFromPlaylistCommand = new ScriptplayerCommand(ExecuteRemoveMissingEntriesFromPlaylist);
+            RemoveIncompleteEntriesFromPlaylistCommand = new ScriptplayerCommand(ExecuteRemoveIncompleteEntriesFromPlaylist);
 
             SetLoopACommand = new ScriptplayerCommand(ExecuteSetLoopA);
             SetLoopBCommand = new ScriptplayerCommand(ExecuteSetLoopB);
@@ -2056,9 +2059,16 @@ namespace ScriptPlayer.ViewModels
             Settings.TimeDisplayMode = mode;
         }
 
-        private void ExecuteRemoveMissingFilesFromPlaylist()
+        private void ExecuteRemoveMissingEntriesFromPlaylist()
         {
             var toRemove = Playlist.Entries.Where(entry => !File.Exists(entry.Fullname)).ToList();
+            foreach (var entry in toRemove)
+                Playlist.Entries.Remove(entry);
+        }
+
+        private void ExecuteRemoveIncompleteEntriesFromPlaylist()
+        {
+            var toRemove = Playlist.Entries.Where(entry => entry.Status == PlaylistEntryStatus.MissingFile).ToList();
             foreach (var entry in toRemove)
                 Playlist.Entries.Remove(entry);
         }
