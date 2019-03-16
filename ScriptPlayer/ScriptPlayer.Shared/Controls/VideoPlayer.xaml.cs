@@ -212,7 +212,7 @@ namespace ScriptPlayer.Shared
                 _sideBySide = value;
                 UpdateVideoBrush();
                 UpdateStandByBrush();
-                UpdateResolution();
+                UpdateResolutions();
             }
         }
 
@@ -433,6 +433,7 @@ namespace ScriptPlayer.Shared
 
             void Success(object sender, EventArgs args)
             {
+                UpdateResolution(sender as MediaPlayer);
                 loadEvent.Set();
             }
 
@@ -458,6 +459,7 @@ namespace ScriptPlayer.Shared
 
         private void SwapPlayers()
         {
+            Debug.WriteLine("Swapping Splayers");
             MediaPlayer tmp = _player;
             _player = _standByPlayer;
             _standByPlayer = tmp;
@@ -467,6 +469,8 @@ namespace ScriptPlayer.Shared
                 ActualResolution = _player.HasVideo
                     ? new Resolution(_player.NaturalVideoWidth, _player.NaturalVideoHeight)
                     : new Resolution(0, 0);
+
+                Debug.WriteLine($"ActualResolution = {ActualResolution.Horizontal}x{ActualResolution.Vertical}");
             }
 
             if (_standByPlayer != null)
@@ -474,9 +478,11 @@ namespace ScriptPlayer.Shared
                 ActualStandByResolution = _standByPlayer.HasVideo
                     ? new Resolution(_standByPlayer.NaturalVideoWidth, _standByPlayer.NaturalVideoHeight)
                     : new Resolution(0, 0);
+
+                Debug.WriteLine($"ActualStandByResolution = {ActualStandByResolution.Horizontal}x{ActualStandByResolution.Vertical}");
             }
 
-            UpdateResolution();
+            UpdateResolutions();
 
             UpdateVideoBrush();
             UpdateStandByBrush();
@@ -582,47 +588,49 @@ namespace ScriptPlayer.Shared
 
         private void PlayerOnMediaOpened(object sender, EventArgs e)
         {
-            MediaPlayer player = sender as MediaPlayer;
-            if (player == null) return;
-
-            /*if (ReferenceEquals(player, _player))
-            {
-                Duration = player.NaturalDuration.TimeSpan;
-                ActualResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
-                UpdateResolution();
-                OnMediaOpened();
-            }
-            else if (ReferenceEquals(player, _standByPlayer))
-            {*/
-
+            if (!(sender is MediaPlayer player)) return;
 
             if (player.NaturalDuration.HasTimeSpan)
                 Duration = player.NaturalDuration.TimeSpan;
 
-            if (player.HasVideo)
-            {
-                if(ReferenceEquals(player, _player))
-                    ActualResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
-                else
-                    ActualStandByResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
-
-                UpdateResolution();
-            }
+            Debug.WriteLine("PlayerOnMediaOpened");
+            UpdateResolution(player);
 
             OnMediaOpened();
-
-            //}
         }
 
-        private void UpdateResolution()
+        private void UpdateResolution(MediaPlayer player)
         {
+            if (!player.HasVideo) return;
+
+            if (ReferenceEquals(player, _player))
+            {
+                ActualResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
+                Debug.WriteLine($"ActualResolution = {ActualResolution.Horizontal}x{ActualResolution.Vertical}");
+            }
+            else
+            {
+                ActualStandByResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
+                Debug.WriteLine($"ActualStandByResolution = {ActualStandByResolution.Horizontal}x{ActualStandByResolution.Vertical}");
+            }
+
+            UpdateResolutions();
+        }
+
+        private void UpdateResolutions()
+        {
+            Debug.WriteLine("UpdateResolutions");
             Resolution = !SideBySide
                 ? ActualResolution
                 : new Resolution(ActualResolution.Horizontal / 2, ActualResolution.Vertical);
 
+            Debug.WriteLine($"Resolution = {Resolution.Horizontal}x{Resolution.Vertical}");
+
             StandByResolution = !SideBySide
                 ? ActualStandByResolution
                 : new Resolution(ActualStandByResolution.Horizontal / 2, ActualStandByResolution.Vertical);
+
+            Debug.WriteLine($"StandByResolution = {StandByResolution.Horizontal}x{StandByResolution.Vertical}");
         }
 
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
