@@ -12,18 +12,18 @@
                 <Viewbox>
                     <Grid>
                         <Border x:Name="BackgroundBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=StandByResolution.Horizontal}" 
-                                Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=StandByResolution.Vertical}"
-                                Background="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=StandByBrush}">
+                                Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=StandByPlayer.Resolution.Horizontal}" 
+                                Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=StandByPlayer.Resolution.Vertical}"
+                                Background="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=StandByPlayer.VideoBrush}">
                         </Border>
                     </Grid>
                 </Viewbox>
                 <Grid Background="Black" x:Name="ForegroundLayer">
                     <Viewbox LayoutUpdated="Viewbox_LayoutUpdated">
                         <Border x:Name="Border" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MouseLeftButtonDown="Border_MouseLeftButtonDown" MouseLeftButtonUp="Border_MouseLeftButtonUp"
-                        Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=Resolution.Horizontal}" 
-                        Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=Resolution.Vertical}" 
-                        Background="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=VideoBrush}">
+                        Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=Player.Resolution.Horizontal}" 
+                        Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=Player.Resolution.Vertical}" 
+                        Background="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=shared:VideoPlayer}, Path=Player.VideoBrush}">
                             <Rectangle Fill="#20ff0000" Stroke="Red" StrokeThickness="1" Name="rectSample" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top" />
                         </Border>
                     </Viewbox>

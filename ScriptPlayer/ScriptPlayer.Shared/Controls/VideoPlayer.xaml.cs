@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using ScriptPlayer.Shared.Controls;
 
 namespace ScriptPlayer.Shared
 {
@@ -45,18 +46,6 @@ namespace ScriptPlayer.Shared
         public static readonly DependencyProperty DisplayedHeightProperty = DependencyProperty.Register(
             "DisplayedHeight", typeof(double), typeof(VideoPlayer), new PropertyMetadata(default(double)));
 
-        public static readonly DependencyProperty ResolutionProperty = DependencyProperty.Register(
-            "Resolution", typeof(Resolution), typeof(VideoPlayer), new PropertyMetadata(new Resolution(0, 0)));
-
-        public static readonly DependencyProperty StandByResolutionProperty = DependencyProperty.Register(
-            "StandByResolution", typeof(Resolution), typeof(VideoPlayer), new PropertyMetadata(new Resolution(0,0)));
-
-        public static readonly DependencyProperty StandByBrushProperty = DependencyProperty.Register(
-            "StandByBrush", typeof(Brush), typeof(VideoPlayer), new PropertyMetadata(default(Brush)));
-
-        public static readonly DependencyProperty VideoBrushProperty = DependencyProperty.Register(
-            "VideoBrush", typeof(Brush), typeof(VideoPlayer), new PropertyMetadata(default(Brush)));
-
         public static readonly DependencyProperty DurationProperty = DependencyProperty.Register(
             "Duration", typeof(TimeSpan), typeof(VideoPlayer), new PropertyMetadata(default(TimeSpan)));
 
@@ -68,6 +57,25 @@ namespace ScriptPlayer.Shared
 
         public static readonly DependencyProperty RotateProperty = DependencyProperty.Register(
             "Rotate", typeof(bool), typeof(VideoPlayer), new PropertyMetadata(default(bool), OnRotatePropertyChanged));
+
+
+        public static readonly DependencyProperty PlayerProperty = DependencyProperty.Register(
+            "Player", typeof(MediaWrapper), typeof(VideoPlayer), new PropertyMetadata(default(MediaWrapper)));
+
+        public MediaWrapper Player
+        {
+            get { return (MediaWrapper) GetValue(PlayerProperty); }
+            set { SetValue(PlayerProperty, value); }
+        }
+
+        public static readonly DependencyProperty StandByPlayerProperty = DependencyProperty.Register(
+            "StandByPlayer", typeof(MediaWrapper), typeof(VideoPlayer), new PropertyMetadata(default(MediaWrapper)));
+
+        public MediaWrapper StandByPlayer
+        {
+            get { return (MediaWrapper) GetValue(StandByPlayerProperty); }
+            set { SetValue(StandByPlayerProperty, value); }
+        }
 
         private static void OnRotatePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -90,11 +98,8 @@ namespace ScriptPlayer.Shared
         private bool _down;
         private Point _offset;
 
-        private MediaPlayer _player;
-
         private double _scale;
         private bool _sideBySide;
-        private MediaPlayer _standByPlayer;
 
         private readonly SemaphoreSlim _seekSemaphore = new SemaphoreSlim(1, 1);
         private ulong _seekPriority;
@@ -158,24 +163,6 @@ namespace ScriptPlayer.Shared
             set => SetValue(DisplayedHeightProperty, value);
         }
 
-        public Resolution Resolution
-        {
-            get => (Resolution)GetValue(ResolutionProperty);
-            set => SetValue(ResolutionProperty, value);
-        }
-
-        public Resolution StandByResolution
-        {
-            get => (Resolution)GetValue(StandByResolutionProperty);
-            set => SetValue(StandByResolutionProperty, value);
-        }
-
-        public Brush StandByBrush
-        {
-            get => (Brush)GetValue(StandByBrushProperty);
-            set => SetValue(StandByBrushProperty, value);
-        }
-
         public TimeSpan Duration
         {
             get => (TimeSpan)GetValue(DurationProperty);
@@ -198,30 +185,21 @@ namespace ScriptPlayer.Shared
             set => SetValue(OpenedFileProperty, value);
         }
 
-        public Brush VideoBrush
-        {
-            get => (Brush)GetValue(VideoBrushProperty);
-            set => SetValue(VideoBrushProperty, value);
-        }
-
         public bool SideBySide
         {
             get => _sideBySide;
             set
             {
                 _sideBySide = value;
-                UpdateVideoBrush();
-                UpdateStandByBrush();
-                UpdateResolutions();
+                Player.SideBySide = value;
+                StandByPlayer.SideBySide = value;
             }
         }
 
         public void Dispose()
         {
-            _player.Stop();
-            _player.Close();
-            _standByPlayer.Stop();
-            _standByPlayer.Close();
+            Player.Dispose();
+            StandByPlayer.Dispose();
         }
 
         private static void OnSpeedPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -231,7 +209,7 @@ namespace ScriptPlayer.Shared
 
         private void OnSpeedChanged()
         {
-            _player.SpeedRatio = SpeedRatio;
+            Player.SpeedRatio = SpeedRatio;
         }
 
         private static void OnVolumePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -252,7 +230,7 @@ namespace ScriptPlayer.Shared
 
         private void OnMainVolumeChanged()
         {
-            _player.Volume = MainVolume * Volume / 100.0;
+            Player.Volume = MainVolume * Volume / 100.0;
         }
 
         private static void OnStandByVolumePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -262,7 +240,7 @@ namespace ScriptPlayer.Shared
 
         private void OnStandByVolumeChanged()
         {
-            _standByPlayer.Volume = StandByVolume * Volume / 100.0;
+            StandByPlayer.Volume = StandByVolume * Volume / 100.0;
         }
 
         private static void OnHideMousePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -372,13 +350,13 @@ namespace ScriptPlayer.Shared
 
             if (seekEntry.Duration == TimeSpan.Zero)
             {
-                _player.Position = position;
+                Player.Position = position;
             }
             else
             {
-                TimeSpan diff = position - _player.Position;
+                TimeSpan diff = position - Player.Position;
 
-                if (position > _player.Position && diff < TimeSpan.FromSeconds(4))
+                if (position > Player.Position && diff < TimeSpan.FromSeconds(4))
                     return;
 
                 await CrossFade(position, seekEntry.Duration, seekEntry.Priority);
@@ -391,17 +369,19 @@ namespace ScriptPlayer.Shared
 
             if (seekEntry.Duration == TimeSpan.Zero)
             {
-                SetPrimaryPlayer(_player);
-                SetEventSource(_player);
-                await OpenAndWaitFor(_player, seekEntry.FileName);
+                SetPrimaryPlayer(Player);
+                SetEventSource(Player);
+                await Player.Seek(seekEntry.FileName, seekEntry.Position);
+
+                //await Player.OpenAndWaitFor(seekEntry.FileName);
             }
             else
             {
                 OpenedFile = seekEntry.FileName;
 
-                SetEventSource(_standByPlayer);
+                SetEventSource(StandByPlayer);
 
-                await OpenAndWaitFor(_standByPlayer, seekEntry.FileName);
+                await StandByPlayer.OpenAndWaitFor(seekEntry.FileName);
 
                 if (iteration != _loadIteration) return;
 
@@ -409,16 +389,16 @@ namespace ScriptPlayer.Shared
 
                 if (iteration != _loadIteration) return;
 
-                await OpenAndWaitFor(_standByPlayer, seekEntry.FileName);
+                await StandByPlayer.OpenAndWaitFor(seekEntry.FileName);
             }
         }
 
-        private void SetEventSource(MediaPlayer player)
+        private void SetEventSource(MediaWrapper player)
         {
-            _player.MediaOpened -= PlayerOnMediaOpened;
-            _player.MediaEnded -= PlayerOnMediaEnded;
-            _standByPlayer.MediaOpened -= PlayerOnMediaOpened;
-            _standByPlayer.MediaEnded -= PlayerOnMediaEnded;
+            Player.MediaOpened -= PlayerOnMediaOpened;
+            Player.MediaEnded -= PlayerOnMediaEnded;
+            StandByPlayer.MediaOpened -= PlayerOnMediaOpened;
+            StandByPlayer.MediaEnded -= PlayerOnMediaEnded;
 
             if (player != null)
             {
@@ -427,96 +407,39 @@ namespace ScriptPlayer.Shared
             }
         }
 
-        public async Task OpenAndWaitFor(MediaPlayer player, string filename)
-        {
-            ManualResetEvent loadEvent = new ManualResetEvent(false);
-
-            void Success(object sender, EventArgs args)
-            {
-                UpdateResolution(sender as MediaPlayer);
-                loadEvent.Set();
-            }
-
-            void Failure(object sender, ExceptionEventArgs args)
-            {
-                loadEvent.Set();
-            }
-
-            player.MediaOpened += Success;
-            player.MediaFailed += Failure;
-
-            player.Open(new Uri(filename, UriKind.Absolute));
-
-            await Task.Run(() =>
-            {
-                //Wait until Success or Failure event is raised but 5 seconds max.
-                loadEvent.WaitOne(TimeSpan.FromSeconds(5));
-            });
-
-            player.MediaOpened -= Success;
-            player.MediaFailed -= Failure;
-        }
-
         private void SwapPlayers()
         {
-            Debug.WriteLine("Swapping Splayers");
-            MediaPlayer tmp = _player;
-            _player = _standByPlayer;
-            _standByPlayer = tmp;
-
-            if (_player != null)
-            {
-                ActualResolution = _player.HasVideo
-                    ? new Resolution(_player.NaturalVideoWidth, _player.NaturalVideoHeight)
-                    : new Resolution(0, 0);
-
-                Debug.WriteLine($"ActualResolution = {ActualResolution.Horizontal}x{ActualResolution.Vertical}");
-            }
-
-            if (_standByPlayer != null)
-            {
-                ActualStandByResolution = _standByPlayer.HasVideo
-                    ? new Resolution(_standByPlayer.NaturalVideoWidth, _standByPlayer.NaturalVideoHeight)
-                    : new Resolution(0, 0);
-
-                Debug.WriteLine($"ActualStandByResolution = {ActualStandByResolution.Horizontal}x{ActualStandByResolution.Vertical}");
-            }
-
-            UpdateResolutions();
-
-            UpdateVideoBrush();
-            UpdateStandByBrush();
+            Debug.WriteLine("Swapping Players");
+            MediaWrapper tmp = Player;
+            Player = StandByPlayer;
+            StandByPlayer = tmp;
         }
 
-        public void SetPrimaryPlayer(MediaPlayer player)
+        public void SetPrimaryPlayer(MediaWrapper player)
         {
-            ((MediaPlayerTimeSource)TimeSource).SetPlayer(player);
+            player.SetTimeSource(((MediaPlayerTimeSource)TimeSource));
         }
 
         private void InitializePlayer()
         {
-            _player = new MediaPlayer
+            Player = new MediaWrapper
             {
-                ScrubbingEnabled = true,
-                Volume = MainVolume
+                Volume = MainVolume,
+                EmptyBrush = new SolidColorBrush(Colors.Red)
             };
 
-            _standByPlayer = new MediaPlayer
+            StandByPlayer = new MediaWrapper
             {
-                ScrubbingEnabled = true,
-                Volume = StandByVolume
+                Volume = StandByVolume,
+                EmptyBrush = new SolidColorBrush(Colors.Blue)
             };
 
-            TimeSource = new MediaPlayerTimeSource(_player, new DispatcherClock(Dispatcher, TimeSpan.FromMilliseconds(10)));
+            TimeSource = Player.CreateTimeSource(new DispatcherClock(Dispatcher, TimeSpan.FromMilliseconds(10)));
             TimeSource.IsPlayingChanged += TimeSourceOnIsPlayingChanged;
-
-            UpdateVideoBrush();
-            UpdateStandByBrush();
         }
 
         private void TimeSourceOnIsPlayingChanged(object sender, bool isPlaying)
         {
-
             if (isPlaying)
             {
                 Debug.WriteLine("now playing");
@@ -525,112 +448,30 @@ namespace ScriptPlayer.Shared
             SetIsPlaying(isPlaying);
         }
 
-        private void UpdateVideoBrush()
-        {
-            if (_player == null)
-                return;
-
-            Rect rect = new Rect(0, 0, 1, 1);
-
-            if (SideBySide)
-                rect = new Rect(0, 0, 0.5, 1);
-
-            VideoDrawing videoDrawing = new VideoDrawing
-            {
-                Player = _player,
-                Rect = rect
-            };
-
-            VideoBrush = new DrawingBrush(videoDrawing)
-            {
-                Stretch = Stretch.Fill,
-                Viewbox = rect
-            };
-        }
-
-        private void UpdateStandByBrush()
-        {
-            if (_standByPlayer == null)
-                return;
-
-            Rect rect = new Rect(0, 0, 1, 1);
-
-            if (SideBySide)
-                rect = new Rect(0, 0, 0.5, 1);
-
-            VideoDrawing videoDrawing = new VideoDrawing
-            {
-                Player = _standByPlayer,
-                Rect = rect
-            };
-
-            StandByBrush = new DrawingBrush(videoDrawing)
-            {
-                Stretch = Stretch.Fill,
-                Viewbox = rect
-            };
-        }
-
         private void PlayerOnMediaEnded(object sender, EventArgs eventArgs)
         {
-            MediaPlayer player = sender as MediaPlayer;
+            MediaWrapper player = sender as MediaWrapper;
             if (player == null) return;
 
-            if (ReferenceEquals(player, _player))
+            if (ReferenceEquals(player, Player))
             {
                 SetIsPlaying(false);
                 OnMediaEnded();
             }
-            else if (ReferenceEquals(player, _standByPlayer))
+            else if (ReferenceEquals(player, StandByPlayer))
             {
             }
         }
 
         private void PlayerOnMediaOpened(object sender, EventArgs e)
         {
-            if (!(sender is MediaPlayer player)) return;
+            if (!(sender is MediaWrapper player)) return;
 
-            if (player.NaturalDuration.HasTimeSpan)
-                Duration = player.NaturalDuration.TimeSpan;
+            Duration = player.Duration;
 
             Debug.WriteLine("PlayerOnMediaOpened");
-            UpdateResolution(player);
 
             OnMediaOpened();
-        }
-
-        private void UpdateResolution(MediaPlayer player)
-        {
-            if (!player.HasVideo) return;
-
-            if (ReferenceEquals(player, _player))
-            {
-                ActualResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
-                Debug.WriteLine($"ActualResolution = {ActualResolution.Horizontal}x{ActualResolution.Vertical}");
-            }
-            else
-            {
-                ActualStandByResolution = new Resolution(player.NaturalVideoWidth, player.NaturalVideoHeight);
-                Debug.WriteLine($"ActualStandByResolution = {ActualStandByResolution.Horizontal}x{ActualStandByResolution.Vertical}");
-            }
-
-            UpdateResolutions();
-        }
-
-        private void UpdateResolutions()
-        {
-            Debug.WriteLine("UpdateResolutions");
-            Resolution = !SideBySide
-                ? ActualResolution
-                : new Resolution(ActualResolution.Horizontal / 2, ActualResolution.Vertical);
-
-            Debug.WriteLine($"Resolution = {Resolution.Horizontal}x{Resolution.Vertical}");
-
-            StandByResolution = !SideBySide
-                ? ActualStandByResolution
-                : new Resolution(ActualStandByResolution.Horizontal / 2, ActualStandByResolution.Vertical);
-
-            Debug.WriteLine($"StandByResolution = {StandByResolution.Horizontal}x{StandByResolution.Vertical}");
         }
 
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -646,8 +487,8 @@ namespace ScriptPlayer.Shared
 
         private void ClampPosition(Point point, out int x, out int y)
         {
-            x = (int)Math.Max(0, Math.Min(Resolution.Horizontal, Math.Round(point.X)));
-            y = (int)Math.Max(0, Math.Min(Resolution.Vertical, Math.Round(point.Y)));
+            x = (int)Math.Max(0, Math.Min(Player.Resolution.Horizontal, Math.Round(point.X)));
+            y = (int)Math.Max(0, Math.Min(Player.Resolution.Vertical, Math.Round(point.Y)));
         }
 
         private void Border_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -678,7 +519,7 @@ namespace ScriptPlayer.Shared
                 CancelAnimations();
 
             position = ClampTimestamp(position);
-            _player.Position = position;
+            Player.Position = position;
         }
 
         private TimeSpan ClampTimestamp(TimeSpan position)
@@ -686,8 +527,8 @@ namespace ScriptPlayer.Shared
             if (position < TimeSpan.Zero)
                 return TimeSpan.Zero;
 
-            if (position > _player.NaturalDuration)
-                return _player.NaturalDuration.TimeSpan;
+            if (position > Player.Duration)
+                return Player.Duration;
 
             return position;
         }
@@ -704,9 +545,9 @@ namespace ScriptPlayer.Shared
 
         private async Task CrossFade(TimeSpan position, TimeSpan duration, ulong priority = 0)
         {
-            await PlayAndSeek(_standByPlayer, position - duration.Divide(2.0));
+            await StandByPlayer.PlayAndSeek(position - duration.Divide(2.0));
 
-            SetPrimaryPlayer(_standByPlayer);
+            SetPrimaryPlayer(StandByPlayer);
 
             //This would be a good spot to disable IsSeeking
             // -----------
@@ -724,37 +565,8 @@ namespace ScriptPlayer.Shared
             OnVolumeChanged();
             OnStandByVolumeChanged();
 
-            _standByPlayer.Pause();
+            StandByPlayer.Pause();
             ForegroundLayer.Opacity = 1;
-        }
-
-        private async Task PlayAndSeek(MediaPlayer player, TimeSpan position)
-        {
-            TimeSpan maxSeekDelay = TimeSpan.FromSeconds(1.0);
-            TimeSpan maxPlayDelay = TimeSpan.FromSeconds(0.1);
-
-            DateTime start = DateTime.Now;
-            DateTime startPlay = DateTime.Now;
-
-            Debug.WriteLine("Starting Fallback Player ... ");
-
-            player.Play();
-            while (player.Position == TimeSpan.Zero && DateTime.Now - startPlay <= maxPlayDelay)
-                await Task.Delay(10);
-
-            Debug.WriteLine("Started Fallback Player in " + (DateTime.Now - startPlay));
-
-            Debug.WriteLine("Seeking " + position);
-            player.Position = position;
-
-            DateTime startSeek = DateTime.Now;
-            while (player.Position <= position && DateTime.Now - startSeek <= maxSeekDelay)
-            {
-                await Task.Delay(10);
-            }
-
-            Debug.WriteLine("Seeked in " + (DateTime.Now - startSeek));
-            Debug.Write("Play and Seek done in " + (DateTime.Now - start));
         }
 
         private void Fade(TimeSpan duration)
@@ -836,7 +648,7 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan GetPosition()
         {
-            return _player.Position;
+            return Player.Position;
         }
 
         public void ResetTransform()
