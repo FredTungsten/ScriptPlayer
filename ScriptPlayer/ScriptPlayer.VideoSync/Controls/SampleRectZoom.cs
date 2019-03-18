@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Controls;
 
 namespace ScriptPlayer.VideoSync.Controls
 {
@@ -64,13 +65,13 @@ namespace ScriptPlayer.VideoSync.Controls
                 BindingOperations.SetBinding(this, SampleRectProperty,
                     new Binding { Source = Player, Path = new PropertyPath(VideoPlayer.SampleRectProperty), Mode = BindingMode.OneWay });
                 BindingOperations.SetBinding(this, VideoBrushProperty,
-                    new Binding { Source = Player, Path = new PropertyPath(VideoPlayer.VideoBrushProperty), Mode = BindingMode.OneWay });
+                    new Binding { Source = Player.Player, Path = new PropertyPath(MediaWrapper.VideoBrushProperty), Mode = BindingMode.OneWay });
 
                 BindingOperations.SetBinding(this, ResolutionProperty,
                     new Binding
                     {
-                        Source = Player,
-                        Path = new PropertyPath(VideoPlayer.ResolutionProperty),
+                        Source = Player.Player,
+                        Path = new PropertyPath(MediaWrapper.ResolutionProperty),
                         Mode = BindingMode.OneWay
                     });
             }
