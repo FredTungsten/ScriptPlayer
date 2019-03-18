@@ -3242,7 +3242,9 @@ namespace ScriptPlayer.ViewModels
             //TODO Skip duplicates too!
 
             TimeSpan currentPosition = TimeSource.Progress;
-            ScriptAction nextAction = _scriptHandler.FirstOriginalEventAfter(currentPosition - _scriptHandler.Delay);
+
+            //ScriptAction nextAction = _scriptHandler.FirstOriginalEventAfter(currentPosition - _scriptHandler.Delay);
+            ScriptAction nextAction = FindNextChapterStart(currentPosition - _scriptHandler.Delay);
 
             if (nextAction == null)
             {
@@ -3256,6 +3258,20 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             SkipTo(skipTo, Settings.SoftSeekGaps, Settings.SoftSeekGapDuration);
+        }
+
+        private ScriptAction FindNextChapterStart(TimeSpan timeSpan)
+        {
+            var chapters = GetChapters(TimeSpan.Zero, _gapDuration, false);
+            var nextChapter = chapters.FirstOrDefault(c => c.Start > timeSpan);
+
+            if (nextChapter == null)
+                return null;
+
+            return new FunScriptAction
+            {
+                TimeStamp = nextChapter.Start
+            };
         }
 
         private void SkipTo(TimeSpan position, bool softSeek, TimeSpan duration)

@@ -98,8 +98,9 @@ namespace ScriptPlayer.Shared.Controls
             set => _player.SpeedRatio = value;
         }
 
+        public string LoadedMedia { get; private set; }
+
         private readonly MediaPlayer _player;
-        private string _loadedMedia;
 
         public MediaWrapper()
         {
@@ -108,7 +109,7 @@ namespace ScriptPlayer.Shared.Controls
             _player.MediaFailed += MediaOpenedFailure;
             _player.MediaEnded += PlayerOnMediaEnded;
             _player.ScrubbingEnabled = true;
-
+            
             EmptyBrush = new SolidColorBrush(Colors.Black);
             Resolution = new Resolution();
         }
@@ -174,7 +175,7 @@ namespace ScriptPlayer.Shared.Controls
         {
             bool fileChanged = false;
 
-            if (filename != _loadedMedia)
+            if (filename != LoadedMedia)
             {
                 fileChanged = true;
                 await OpenAndWaitFor(filename);
@@ -233,8 +234,14 @@ namespace ScriptPlayer.Shared.Controls
 
             try
             {
+                if (filename == LoadedMedia)
+                {
+                    Debug.WriteLine("File already loaded: " + filename);
+                    return;
+                }
 
                 _player.Open(new Uri(filename, UriKind.Absolute));
+                _player.Play();
 
                 bool timeout = !await Task.Run(() => loadEvent.WaitOne(TimeSpan.FromSeconds(5)));
 
@@ -252,7 +259,7 @@ namespace ScriptPlayer.Shared.Controls
 
         private void OnMediaSuccessfullyLoaded(string filename)
         {
-            _loadedMedia = filename;
+            LoadedMedia = filename;
         }
 
         private void UpdateActualResolution()

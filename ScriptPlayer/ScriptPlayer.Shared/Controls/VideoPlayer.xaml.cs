@@ -322,14 +322,16 @@ namespace ScriptPlayer.Shared
                     //Since awaiting the Semaphore, another entry was added to the queue --> Skip this one
                     return false;
 
-                if (seekEntry.FileName != OpenedFile)
-                {
-                    await ProcessFileSeekEntry(seekEntry);
-                }
-                else
-                {
-                    await ProcessPositionSeekEntry(seekEntry);
-                }
+                await ProcessFileSeekEntry(seekEntry);
+
+                //if (seekEntry.FileName != OpenedFile)
+                //{
+                //    await ProcessFileSeekEntry(seekEntry);
+                //}
+                //else
+                //{
+                //    await ProcessPositionSeekEntry(seekEntry);
+                //}
 
                 return true;
             }
@@ -367,8 +369,11 @@ namespace ScriptPlayer.Shared
         {
             ulong iteration = ++_loadIteration;
 
+            //No fade, just seek
             if (seekEntry.Duration == TimeSpan.Zero)
             {
+                OpenedFile = seekEntry.FileName;
+
                 SetPrimaryPlayer(Player);
                 SetEventSource(Player);
                 await Player.Seek(seekEntry.FileName, seekEntry.Position);
@@ -387,9 +392,11 @@ namespace ScriptPlayer.Shared
 
                 await CrossFade(seekEntry.Position, seekEntry.Duration);
 
-                if (iteration != _loadIteration) return;
+                // This was to make sure the standbyplayer has the new video loaded (e.g. for seeking / gap-skipping
+                // Maybe we can do without
 
-                await StandByPlayer.OpenAndWaitFor(seekEntry.FileName);
+                //if (iteration != _loadIteration) return;
+                //await StandByPlayer.OpenAndWaitFor(seekEntry.FileName);
             }
         }
 
@@ -466,6 +473,8 @@ namespace ScriptPlayer.Shared
         private void PlayerOnMediaOpened(object sender, EventArgs e)
         {
             if (!(sender is MediaWrapper player)) return;
+
+            Debug.WriteLine("MediaOpened: " + player.LoadedMedia);
 
             Duration = player.Duration;
 

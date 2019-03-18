@@ -200,8 +200,8 @@ namespace ScriptPlayer.VideoSync
 
         private void RefreshSampler()
         {
-            Sampler.Resolution = videoPlayer.Resolution;
-            Sampler.Source = videoPlayer.VideoBrush;
+            Sampler.Resolution = videoPlayer.Player.Resolution;
+            Sampler.Source = videoPlayer.Player.VideoBrush;
             Sampler.TimeSource = videoPlayer.TimeSource;
             Sampler.Refresh();
         }
