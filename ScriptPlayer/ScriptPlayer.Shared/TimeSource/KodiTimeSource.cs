@@ -37,15 +37,6 @@ namespace ScriptPlayer.Shared
     {
         private KodiConnectionSettings _connectionSettings;
 
-        public static readonly DependencyProperty IsConnectedProperty = DependencyProperty.Register(
-            "IsConnected", typeof(bool), typeof(KodiTimeSource), new PropertyMetadata(default(bool)));
-
-        public bool IsConnected
-        {
-            get => (bool)GetValue(IsConnectedProperty);
-            set => SetValue(IsConnectedProperty, value);
-        }
-
         public event EventHandler<string> FileOpened;
 
         private Thread _clientLoop;

@@ -45,6 +45,8 @@ namespace ScriptPlayer.Shared
                 else
                     _player.Pause();
             }
+
+            IsConnected = _player != null;
         }
 
         private void PlayerOnMediaEnded(object sender, EventArgs eventArgs)

@@ -34,6 +34,8 @@ namespace ScriptPlayer.Shared
 
         public ManualTimeSource(ISampleClock clock, TimeSpan maxOffset)
         {
+            IsConnected = true;
+
             _maxOffset = maxOffset;
             _clock = clock;
             _clock.Tick += ClockOnTick;

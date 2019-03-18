@@ -3,22 +3,12 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Net;
 using System.Threading;
-using System.Windows;
 
 namespace ScriptPlayer.Shared
 {
     public class MpcTimeSource : TimeSource, IDisposable
     {
         private MpcConnectionSettings _connectionSettings;
-
-        public static readonly DependencyProperty IsConnectedProperty = DependencyProperty.Register(
-            "IsConnected", typeof(bool), typeof(MpcTimeSource), new PropertyMetadata(default(bool)));
-
-        public bool IsConnected
-        {
-            get => (bool)GetValue(IsConnectedProperty);
-            set => SetValue(IsConnectedProperty, value);
-        }
 
         public event EventHandler<string> FileOpened;
 

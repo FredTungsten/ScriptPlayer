@@ -432,6 +432,7 @@ namespace ScriptPlayer.Shared
             Player = new MediaWrapper
             {
                 Volume = MainVolume,
+                // Should never be visible - if it is, make sure they have different colors
                 EmptyBrush = new SolidColorBrush(Colors.Red)
             };
 
@@ -457,8 +458,7 @@ namespace ScriptPlayer.Shared
 
         private void PlayerOnMediaEnded(object sender, EventArgs eventArgs)
         {
-            MediaWrapper player = sender as MediaWrapper;
-            if (player == null) return;
+            if (!(sender is MediaWrapper player)) return;
 
             if (ReferenceEquals(player, Player))
             {

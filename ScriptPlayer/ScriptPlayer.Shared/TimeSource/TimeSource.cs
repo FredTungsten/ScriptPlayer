@@ -13,7 +13,18 @@ namespace ScriptPlayer.Shared
         public event EventHandler<TimeSpan> ProgressChanged;
         public event EventHandler<TimeSpan> DurationChanged;
         public event EventHandler<double> PlaybackRateChanged; 
-        public event EventHandler<bool> IsPlayingChanged; 
+        public event EventHandler<bool> IsPlayingChanged;
+
+        private static readonly DependencyPropertyKey IsConnectedPropertyKey = DependencyProperty.RegisterReadOnly(
+            "IsConnected", typeof(bool), typeof(TimeSource), new PropertyMetadata(default(bool)));
+
+        public DependencyProperty IsConnectedProperty = IsConnectedPropertyKey.DependencyProperty;
+
+        public bool IsConnected
+        {
+            get => (bool) GetValue(IsConnectedProperty);
+            protected set => SetValue(IsConnectedPropertyKey, value);
+        }
 
         private static readonly DependencyPropertyKey ProgressPropertyKey = DependencyProperty.RegisterReadOnly(
             "Progress", typeof (TimeSpan), typeof (TimeSource), new PropertyMetadata(default(TimeSpan), OnProgressChangedCallback));
