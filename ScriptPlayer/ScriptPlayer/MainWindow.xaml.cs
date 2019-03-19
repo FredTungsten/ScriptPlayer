@@ -760,5 +760,10 @@ namespace ScriptPlayer
         {
             playerNext.Close();
         }
+
+        private void MnuDownloadButtplug_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start(ButtplugAdapter.GetDownloadUrl());
+        }
     }
 }

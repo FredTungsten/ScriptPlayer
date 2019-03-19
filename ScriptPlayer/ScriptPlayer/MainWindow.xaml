@@ -451,6 +451,8 @@
                             <Run Text="{Binding ButtplugApiVersion}"/>
                             </TextBlock>
                         </MenuItem.Header>
+                        <MenuItem Header="Download" Click="MnuDownloadButtplug_Click"/>
+                        <Separator/>
                         <MenuItem Header="Connect" Command="{Binding ConnectButtplugCommand}"/>
                         <MenuItem Header="Disconnect" Command="{Binding DisconnectButtplugCommand}"/>
                         <MenuItem Header="Scan for Devices" Command="{Binding StartScanningButtplugCommand}"/>

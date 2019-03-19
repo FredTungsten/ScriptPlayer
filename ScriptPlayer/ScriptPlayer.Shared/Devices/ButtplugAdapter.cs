@@ -246,6 +246,11 @@ namespace ScriptPlayer.Shared
             return fileVersionInfo.ProductVersion;
         }
 
+        public static string GetDownloadUrl()
+        {
+            return "https://github.com/buttplugio/buttplug-windows-suite/releases/tag/" + GetButtplugApiVersion();
+        }
+
         public override async void ScanForDevices()
         {
             await StartScanning();
