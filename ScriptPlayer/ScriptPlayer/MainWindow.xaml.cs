@@ -757,10 +757,11 @@ namespace ScriptPlayer
             }
 
             string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new [] {"gif"});
-            if (string.IsNullOrEmpty(gifFile))
-                return;
+            if (!string.IsNullOrEmpty(gifFile))
+            {
+                playerNext.Load(gifFile);
+            }
 
-            playerNext.Load(gifFile);
             titleNext.Text = entry.Shortname;
         }
 
