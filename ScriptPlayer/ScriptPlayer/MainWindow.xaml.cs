@@ -702,6 +702,14 @@ namespace ScriptPlayer
             ViewModel.ReloadScript();
         }
 
+        private void MnuCreateScenes_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (!ViewModel.CheckFfmpeg())
+                return;
+
+            new SceneSelectorDialog(ViewModel, ViewModel.LoadedVideo).ShowDialog();
+        }
+
         private void MnuCreatePreview_OnClick(object sender, RoutedEventArgs e)
         {
             if (!ViewModel.CheckFfmpeg())
