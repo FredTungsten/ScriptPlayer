@@ -554,7 +554,8 @@ namespace ScriptPlayer.Shared
 
         private async Task CrossFade(TimeSpan position, TimeSpan duration, ulong priority = 0)
         {
-            await StandByPlayer.PlayAndSeek(position - duration.Divide(2.0));
+            //await StandByPlayer.PlayAndSeek(position - duration.Divide(2.0));
+            await StandByPlayer.PlayAndSeek(position - duration);
 
             SetPrimaryPlayer(StandByPlayer);
 

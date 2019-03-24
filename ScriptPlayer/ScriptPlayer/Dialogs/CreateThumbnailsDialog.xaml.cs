@@ -86,12 +86,32 @@ namespace ScriptPlayer.Dialogs
 
                 ThumbnailProgressEntry currentEntry = null;
 
+                List<ThumbnailProgressEntry> skipped = new List<ThumbnailProgressEntry>();
+
                 wrapper.ProgressChanged += (s, progress) => { SetStatus(currentEntry, null, progress); };
-                
+
                 foreach (var entry in entries)
                 {
                     if (_canceled)
                         return;
+
+                    string thumbfile = Path.ChangeExtension(entry.FilePath, "thumbs");
+
+                    if (File.Exists(thumbfile) && _settings.SkipExisting)
+                    {
+                        SetStatus(entry, "Skipped", 1);
+                        skipped.Add(entry);
+                        continue;
+                    }
+                }
+
+                foreach (var entry in entries)
+                {
+                    if (_canceled)
+                        return;
+
+                    if (skipped.Contains(entry))
+                        continue;
 
                     currentEntry = entry;
 
