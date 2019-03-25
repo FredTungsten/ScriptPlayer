@@ -774,5 +774,10 @@ namespace ScriptPlayer
         {
             Process.Start(ButtplugAdapter.GetDownloadUrl());
         }
+
+        private void mnuAttributions_Click(object sender, RoutedEventArgs e)
+        {
+            new AttributionDialog(){Owner = this}.Show();
+        }
     }
 }

@@ -98,6 +98,9 @@
     <Compile Include="Converters\CollectionNullOrEmptyToVisibilityConverter.cs" />
     <Compile Include="Converters\DurationConverter.cs" />
     <Compile Include="Converters\EqualsConverter.cs" />
+    <Compile Include="Dialogs\AttributionDialog.xaml.cs">
+      <DependentUpon>AttributionDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\CreatePreviewDialog.xaml.cs">
       <DependentUpon>CreatePreviewDialog.xaml</DependentUpon>
     </Compile>
@@ -173,6 +176,10 @@
     <Compile Include="ViewModels\RequestEventArgs.cs" />
     <Compile Include="ViewModels\RequestFileEventArgs.cs" />
     <Compile Include="ViewModels\TestPatternDefinition.cs" />
+    <Page Include="Dialogs\AttributionDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\ButtplugConnectionSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

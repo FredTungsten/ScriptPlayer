@@ -485,6 +485,8 @@
                 </MenuItem>
                 <MenuItem Header="Help">
                     <MenuItem Header="Documentation (Online)" Click="mnuDocs_Click"/>
+                    <MenuItem Header="Attributions" Click="mnuAttributions_Click"/>
+                    <Separator/>
                     <MenuItem Header="About / Check for new Version" Click="mnuVersion_Click"/>
                 </MenuItem>
             </Menu>
