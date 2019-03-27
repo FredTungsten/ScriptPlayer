@@ -24,9 +24,10 @@ namespace ScriptPlayer.Shared.Classes
 
         public Section(TimeSpan start, TimeSpan end)
         {
-            Start = start;
-            End = end;
-            Duration = end - start;
+            Start = start > end ? end : start;
+            End = end > start ? end : start;
+
+            Duration = End - Start;
         }
 
         public bool Contains(TimeSpan timeStamp, bool includeBorders)

@@ -260,6 +260,7 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _displayedProgress;
         private List<Section> _chapters;
         private TimeSpan _previousProgress = TimeSpan.MinValue;
+        private bool _loopSelection;
 
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
@@ -1052,14 +1053,21 @@ namespace ScriptPlayer.ViewModels
         {
             UpdateDisplayedProgress();
 
-            if (!TimeSource.IsPlaying || IsSeeking) return;
+            if (!TimeSource.IsPlaying || IsSeeking)
+                return;
 
-            if (_loopA != TimeSpan.MinValue && _loopB != TimeSpan.MinValue)
+            if(_loopSelection)
             {
-                if (e >= _loopB)
+                if (_loopA != TimeSpan.MinValue && _loopB != TimeSpan.MinValue)
                 {
-                    SkipTo(_loopA, Settings.SoftSeekLoops, Settings.SoftSeekLoopsDuration);
-                    return;
+                    TimeSpan loopStart = _loopA < _loopB ? _loopA : _loopB;
+                    TimeSpan loopEnd = _loopA > _loopB ? _loopA : _loopB;
+
+                    if (e >= loopEnd)
+                    {
+                        SkipTo(loopStart, Settings.SoftSeekLoops, Settings.SoftSeekLoopsDuration);
+                        return;
+                    }
                 }
             }
 
@@ -1245,6 +1253,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (Equals(value, _testPatterns)) return;
                 _testPatterns = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool LoopSelection
+        {
+            get => _loopSelection;
+            set
+            {
+                if (value == _loopSelection) return;
+                _loopSelection = value;
                 OnPropertyChanged();
             }
         }
