@@ -733,7 +733,7 @@ namespace ScriptPlayer
                 settings.Duration = TimeSpan.FromSeconds(5);
             }
 
-            PreviewGeneratorSettingsDialog settingsDialog = new PreviewGeneratorSettingsDialog(settings);
+            PreviewGeneratorSettingsDialog settingsDialog = new PreviewGeneratorSettingsDialog(ViewModel, settings);
             settingsDialog.Owner = this;
             if (settingsDialog.ShowDialog() != true)
                 return;

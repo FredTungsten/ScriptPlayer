@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -183,6 +184,7 @@ namespace ScriptPlayer.ViewModels
             return text.IndexOf(filter, StringComparison.InvariantCultureIgnoreCase) >= 0;
         }
 
+        public RelayCommand<PlaylistEntry> OpenInExplorerCommand { get; set; }
         public RelayCommand<string[]> PlayNextEntryCommand { get; set; }
         public RelayCommand<string[]> PlayPreviousEntryCommand { get; set; }
         public RelayCommand MoveSelectedEntryUpCommand { get; set; }
@@ -203,6 +205,7 @@ namespace ScriptPlayer.ViewModels
         {
             Entries = new ObservableCollection<PlaylistEntry>();
 
+            OpenInExplorerCommand = new RelayCommand<PlaylistEntry>(ExecuteOpenInExplorer, EntryNotNull);
             MoveSelectedEntryDownCommand = new RelayCommand(ExecuteMoveSelectedEntryDown, CanMoveSelectedEntryDown);
             MoveSelectedEntryUpCommand = new RelayCommand(ExecuteMoveSelectedEntryUp, CanMoveSelectedEntryUp);
             MoveSelectedEntryLastCommand = new RelayCommand(ExecuteMoveSelectedEntryLast, CanMoveSelectedEntryDown);
@@ -219,6 +222,16 @@ namespace ScriptPlayer.ViewModels
 
             _mediaInfoThread = new Thread(MediaInfoLoop);
             _mediaInfoThread.Start();
+        }
+
+        private void ExecuteOpenInExplorer(PlaylistEntry obj)
+        {
+            OpenInExplorer(obj.Fullname);
+        }
+
+        private bool EntryNotNull(PlaylistEntry arg)
+        {
+            return arg != null;
         }
 
         private bool CanGenerateThumbnailsForSelectedVideos()
@@ -740,6 +753,12 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnRequestGenerateThumbnails(string[] videos)
         {
             RequestGenerateThumbnails?.Invoke(this, videos);
+        }
+
+        public static void OpenInExplorer(string path)
+        {
+            ProcessStartInfo info = new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"");
+            Process.Start(info);
         }
     }
 }

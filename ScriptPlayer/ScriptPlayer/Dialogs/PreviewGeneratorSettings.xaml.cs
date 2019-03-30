@@ -121,8 +121,9 @@ namespace ScriptPlayer.Dialogs
             set => SetValue(ResultProperty, value);
         }
 
-        public PreviewGeneratorSettingsDialog(PreviewGeneratorSettings initialSettings)
+        public PreviewGeneratorSettingsDialog(MainViewModel viewModel, PreviewGeneratorSettings initialSettings)
         {
+            ViewModel = viewModel;
             VideoPath = initialSettings.Video;
             GifPath = initialSettings.Destination;
 

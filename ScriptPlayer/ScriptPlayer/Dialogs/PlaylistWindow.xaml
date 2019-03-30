@@ -8,10 +8,15 @@
         xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
         xmlns:converters="clr-namespace:ScriptPlayer.Converters"
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
+        xmlns:dialogs="clr-namespace:ScriptPlayer.Dialogs"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
         Title="Playlist" Height="300" Width="300" WindowStyle="ToolWindow">
     <Window.Resources>
+        <ContextMenu x:Key="ItemContextMenu">
+            <MenuItem Header="Open in Explorer" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.OpenInExplorerCommand}"
+                      CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext}"/>
+        </ContextMenu>
         <converters:DurationConverter x:Key="DurationConverter"/>
         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
             <Setter Property="Focusable" Value="False"/>
@@ -63,6 +68,8 @@
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
                     <Setter Property="ToolTip" Value="{Binding Fullname}"/>
                     <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                    <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"></Setter>
+                    <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=dialogs:PlaylistWindow}, Path=DataContext}"></Setter>
                 </Style>
             </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
