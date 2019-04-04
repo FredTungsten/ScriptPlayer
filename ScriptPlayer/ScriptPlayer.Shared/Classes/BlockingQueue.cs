@@ -113,5 +113,14 @@ namespace ScriptPlayer.Shared
                 Enqueue(item);
             }
         }
+
+        public void Clear()
+        {
+            lock (_queueLock)
+            {
+                while (!_queue.IsEmpty)
+                    _queue.TryDequeue(out T _);
+            }
+        }
     }
 }

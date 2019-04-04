@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -198,6 +199,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand<bool> SortByPathCommand { get; set; }
         public RelayCommand SortShuffleCommand { get; set; }
         public RelayCommand GenerateThumbnailsForSelectedVideosCommand { get; set; }
+        public RelayCommand RecheckAllCommand { get; set; }
         public int EntryCount => Entries.Count;
 
         
@@ -219,9 +221,15 @@ namespace ScriptPlayer.ViewModels
             SortByPathCommand = new RelayCommand<bool>(ExecuteSortByPath, CanSort);
             SortShuffleCommand = new RelayCommand(ExecuteSortShuffle, CanSort);
             GenerateThumbnailsForSelectedVideosCommand = new RelayCommand(ExecuteGenerateThumbnailsForSelectedVideos, CanGenerateThumbnailsForSelectedVideos);
+            RecheckAllCommand = new RelayCommand(ExecuteRecheckAll);
 
             _mediaInfoThread = new Thread(MediaInfoLoop);
             _mediaInfoThread.Start();
+        }
+
+        private void ExecuteRecheckAll()
+        {
+            RecheckAllEntries();
         }
 
         private void ExecuteOpenInExplorer(PlaylistEntry obj)
@@ -304,17 +312,25 @@ namespace ScriptPlayer.ViewModels
                 if (entry == null)
                     return;
 
+                if (entry.Removed)
+                    continue;
+
                 string mediaFile = OnRequestMediaFileName(entry.Fullname);
-                if (!string.IsNullOrEmpty(mediaFile))
+                if (!string.IsNullOrEmpty(mediaFile) && File.Exists(mediaFile))
                 {
                     entry.HasMedia = true;
 
                     if(entry.Duration == null)
                         entry.Duration = MediaHelper.GetDuration(mediaFile);
                 }
+                else
+                {
+                    entry.HasMedia = false;
+                    entry.Duration = null;
+                }
 
                 string scriptFile = OnRequestScriptFileName(entry.Fullname);
-                entry.HasScript = !string.IsNullOrWhiteSpace(scriptFile);
+                entry.HasScript = !string.IsNullOrWhiteSpace(scriptFile) && File.Exists(scriptFile);
 
                 entry.UpdateStatus();
 
@@ -437,7 +453,10 @@ namespace ScriptPlayer.ViewModels
             int currentIndex = Entries.IndexOf(_selectedItems.First());
 
             foreach (var item in itemsToRemove)
+            {
+                item.Removed = true;
                 Entries.Remove(item);
+            }
 
             if (currentIndex < Entries.Count)
                 SelectedEntry = Entries[currentIndex];
@@ -554,12 +573,23 @@ namespace ScriptPlayer.ViewModels
 
         public void AddEntry(PlaylistEntry entry)
         {
-            EnsureDuration(entry);
+            EnsureMediaInfo(entry);
             Entries.Add(entry);
             CommandManager.InvalidateRequerySuggested();
         }
 
-        private void EnsureDuration(PlaylistEntry entry)
+        private void RecheckAllEntries()
+        {
+            _uncheckedPlaylistEntries.Clear();
+
+            foreach (PlaylistEntry entry in Entries)
+            {
+                entry.Reset();
+                _uncheckedPlaylistEntries.Enqueue(entry);
+            }
+        }
+
+        private void EnsureMediaInfo(PlaylistEntry entry)
         {
             if (entry.Status == PlaylistEntryStatus.Loading)
             {
@@ -573,7 +603,7 @@ namespace ScriptPlayer.ViewModels
             foreach (string filename in filenames)
             {
                 var entry = new PlaylistEntry(filename);
-                EnsureDuration(entry);
+                EnsureMediaInfo(entry);
                 Entries.Add(entry);
             }
 
@@ -584,7 +614,7 @@ namespace ScriptPlayer.ViewModels
         {
             foreach (PlaylistEntry entry in entries)
             {
-                EnsureDuration(entry);
+                EnsureMediaInfo(entry);
                 Entries.Add(entry);
             }
 
@@ -593,6 +623,9 @@ namespace ScriptPlayer.ViewModels
 
         public void Clear()
         {
+            foreach (var entry in Entries)
+                entry.Removed = true;
+
             Entries.Clear();
             CommandManager.InvalidateRequerySuggested();
         }

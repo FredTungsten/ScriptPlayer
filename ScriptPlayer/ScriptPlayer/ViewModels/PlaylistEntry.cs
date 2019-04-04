@@ -27,6 +27,8 @@ namespace ScriptPlayer.ViewModels
         public string Shortname { get; set; }
         public string Fullname { get; set; }
 
+        public bool Removed { get; set; }
+
         public PlaylistEntryStatus Status
         {
             get => _status;
@@ -63,6 +65,12 @@ namespace ScriptPlayer.ViewModels
         public void UpdateStatus()
         {
             Status = HasMedia && HasScript ? PlaylistEntryStatus.FilesOk : PlaylistEntryStatus.MissingFile;
+        }
+
+        public void Reset()
+        {
+            Status = PlaylistEntryStatus.Loading;
+            Duration = null;
         }
 
         public bool HasScript
