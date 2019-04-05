@@ -18,12 +18,22 @@ namespace ScriptPlayer.Shared
 
         // Reverted to 0.0 by request of github user "sextoydb":
         // https://github.com/FredTungsten/ScriptPlayer/issues/64
-        public static double LaunchToVibrator(byte position)
+        public static double LaunchPositionToVibratorSpeed(byte position)
         {
             const double max = 1.0;
             const double min = 0.0;
 
             double speedRelative = 1.0 - ((position + 1) / 100.0);
+            double result = min + (max - min) * speedRelative;
+            return Math.Min(max, Math.Max(min, result));
+        }
+
+        public static double LaunchSpeedToVibratorSpeed(byte speed)
+        {
+            const double max = 1.0;
+            const double min = 0.0;
+
+            double speedRelative = (speed + 1) / 100.0;
             double result = min + (max - min) * speedRelative;
             return Math.Min(max, Math.Max(min, result));
         }

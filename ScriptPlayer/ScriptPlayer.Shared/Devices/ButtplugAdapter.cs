@@ -22,6 +22,8 @@ namespace ScriptPlayer.Shared
         private readonly string _url;
         private readonly List<ButtplugDevice> _devices;
 
+        public VibratorConversionMode VibratorConversionMode { get; set; } = VibratorConversionMode.PositionToSpeed;
+
         public ButtplugAdapter(ButtplugConnectionSettings settings)
         {
             _devices = new List<ButtplugDevice>();
@@ -105,11 +107,40 @@ namespace ScriptPlayer.Shared
 
             if (device.AllowedMessages.ContainsKey(nameof(SingleMotorVibrateCmd)))
             {
-                double speedFrom = CommandConverter.LaunchToVibrator(information.DeviceInformation.PositionFromOriginal);
-                double speedTo = CommandConverter.LaunchToVibrator(information.DeviceInformation.PositionToOriginal);
+                double speed;
+                switch (VibratorConversionMode)
+                {
+                    case VibratorConversionMode.PositionToSpeed:
+                    {
+                        double speedFrom = CommandConverter.LaunchPositionToVibratorSpeed(information.DeviceInformation.PositionFromOriginal);
+                        double speedTo = CommandConverter.LaunchPositionToVibratorSpeed(information.DeviceInformation.PositionToOriginal);
 
-                double speed = speedFrom * (1 - information.Progress) + speedTo * information.Progress * information.DeviceInformation.SpeedMultiplier;
-                speed = information.DeviceInformation.TransformSpeed(speed);
+                        speed = speedFrom * (1 - information.Progress) + speedTo * information.Progress * information.DeviceInformation.SpeedMultiplier;
+                        speed = information.DeviceInformation.TransformSpeed(speed);
+
+                        break;
+                    }
+                    case VibratorConversionMode.SpeedHalfDuration:
+                    {
+                        if (information.Progress < 0.5)
+                        {
+                            speed = CommandConverter.LaunchSpeedToVibratorSpeed(information.DeviceInformation.SpeedTransformed);
+                        }
+                        else
+                        {
+                            speed = 0.0;
+                        }
+
+                        break;
+                    }
+                    case VibratorConversionMode.SpeedFullDuration:
+                    {
+                        speed = CommandConverter.LaunchSpeedToVibratorSpeed(information.DeviceInformation.SpeedTransformed);
+                        break;
+                    }
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
 
                 try
                 {
@@ -147,11 +178,22 @@ namespace ScriptPlayer.Shared
                 }
                 /*else if (device.AllowedMessages.ContainsKey(nameof(VibrateCmd)))
                 {
-                    message = new VibrateCmd(device.Index, new List<VibrateCmd.VibrateSubcommand>{new VibrateCmd.VibrateSubcommand(0, LaunchToVibrator(information.PositionFromOriginal))});
+                    message = new VibrateCmd(device.Index, new List<VibrateCmd.VibrateSubcommand>{new VibrateCmd.VibrateSubcommand(0, LaunchPositionToVibratorSpeed(information.PositionFromOriginal))});
                 }*/
                 else if (device.AllowedMessages.ContainsKey(nameof(SingleMotorVibrateCmd)))
                 {
-                    message = new SingleMotorVibrateCmd(device.Index, information.TransformSpeed(CommandConverter.LaunchToVibrator(information.PositionFromOriginal)));
+                    switch(VibratorConversionMode)
+                    {
+                        case VibratorConversionMode.PositionToSpeed:
+                            message = new SingleMotorVibrateCmd(device.Index, information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed(information.PositionFromOriginal)));
+                            break;
+                        case VibratorConversionMode.SpeedHalfDuration:
+                        case VibratorConversionMode.SpeedFullDuration:
+                            message = new SingleMotorVibrateCmd(device.Index, information.TransformSpeed(CommandConverter.LaunchSpeedToVibratorSpeed(information.SpeedTransformed)));
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
                 }
                 else if (device.AllowedMessages.ContainsKey(nameof(VorzeA10CycloneCmd)))
                 {
@@ -267,6 +309,13 @@ namespace ScriptPlayer.Shared
                 Debug.WriteLine("Exception in ButtplugAdapter.Dispose: " + e.Message);
             }
         }
+    }
+
+    public enum VibratorConversionMode
+    {
+        PositionToSpeed,
+        SpeedHalfDuration,
+        SpeedFullDuration
     }
 
     public class ButtplugConnectionSettings
