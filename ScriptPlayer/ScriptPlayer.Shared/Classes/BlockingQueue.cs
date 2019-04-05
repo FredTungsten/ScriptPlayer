@@ -11,8 +11,6 @@ namespace ScriptPlayer.Shared
 
         private readonly object _queueLock = new object();
 
-        private readonly ManualResetEvent _event = new ManualResetEvent(false);
-
         private bool _closed;
 
         public void Close()
@@ -21,13 +19,11 @@ namespace ScriptPlayer.Shared
             {
                 if (_closed) return;
 
-                _closed = true;
-                _event.Set();
-                Thread.Yield();
-                _event.Set();
-                Thread.Yield();
-
-                _event.Close();
+                lock (_queueLock)
+                {
+                    _closed = true;
+                    Monitor.PulseAll(_queueLock);
+                }
             }
             catch (Exception e)
             {
@@ -51,7 +47,7 @@ namespace ScriptPlayer.Shared
             lock (_queueLock)
             {
                 _queue.Enqueue(item);
-                _event.Set();
+                Monitor.Pulse(_queueLock);
             }
         }
 
@@ -61,23 +57,20 @@ namespace ScriptPlayer.Shared
             {
                 if (_closed) return null;
 
-                T result;
-
-                while (!_queue.TryDequeue(out result))
+                lock (_queueLock)
                 {
-                    if (_closed) return null;
+                    T result;
 
-                    while (_queue.IsEmpty)
+                    while (!_queue.TryDequeue(out result))
                     {
-                        if (_closed) return null;
-                        _event.WaitOne();
+                        if (_closed)
+                            return null;
 
-                        if (_closed) return null;
-                        _event.Reset();
+                        Monitor.Wait(_queueLock);
                     }
-                }
 
-                return result;
+                    return result;
+                }
             }
             catch (ObjectDisposedException)
             {
