@@ -11,7 +11,7 @@
         xmlns:dialogs="clr-namespace:ScriptPlayer.Dialogs"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
-        Title="Playlist" Height="300" Width="300" WindowStyle="ToolWindow">
+        Title="Playlist" Height="423" Width="300" WindowStyle="ToolWindow">
     <Window.Resources>
         <ContextMenu x:Key="ItemContextMenu">
             <MenuItem Header="Open in Explorer" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.OpenInExplorerCommand}"
@@ -63,7 +63,10 @@
                 <MenuItem Header="Shuffle" Command="{Binding Playlist.SortShuffleCommand}"/>
             </MenuItem>
         </Menu>
-        <ListBox x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,41,10,42" ItemsSource="{Binding Path=Playlist.FilteredEntries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" SelectionChanged="LstEntries_OnSelectionChanged" AllowDrop="True" Drop="ListBox_Drop" SelectionMode="Extended">
+
+        <TextBox x:Name="txtSearch" Text="{Binding Path=Playlist.Filter, UpdateSourceTrigger=PropertyChanged}" Height="22" Margin="10,10,10,0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top"/>
+
+        <ListBox x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,41,10,77" ItemsSource="{Binding Path=Playlist.FilteredEntries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" SelectionChanged="LstEntries_OnSelectionChanged" AllowDrop="True" Drop="ListBox_Drop" SelectionMode="Extended">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
@@ -100,6 +103,21 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Margin="10,0,10,37" Height="35" VerticalAlignment="Bottom">
+            <Run Text="Playlist: "/>
+            <Run Text="{Binding Mode=OneWay, Path=Playlist.Entries.Count}"/>
+            <Run Text="entries ["/>
+            <Run Text="{Binding Mode=OneWay, Path=Playlist.TotalDurationString}"/>
+            <Run Text="]"/>
+            <LineBreak/>
+            <Run Text="Selection: "/>
+            <Run Text="{Binding Mode=OneWay, Path=Playlist.SelectedEntries.Count}"/>
+            <Run Text="entries ["/>
+            <Run Text="{Binding Mode=OneWay, Path=Playlist.SelectedDurationString}"/>
+            <Run Text="]"/>
+        </TextBlock>
+
         <UniformGrid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom" Grid.Row="1" Columns="9">
             <Button ToolTip="Move First" Command="{Binding Playlist.MoveSelectedEntryFirstCommand}" 
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -138,7 +156,6 @@
                 <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_bookmark}"/>
             </CheckBox>
         </UniformGrid>
-        <TextBox x:Name="txtSearch" Text="{Binding Path=Playlist.Filter, UpdateSourceTrigger=PropertyChanged}" Height="22" Margin="10,10,10,0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top"/>
     </Grid>
 </Window>
 

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Input;
+using System.Windows.Threading;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Helpers;
@@ -22,6 +23,7 @@ namespace ScriptPlayer.ViewModels
 
         private readonly BlockingQueue<PlaylistEntry> _uncheckedPlaylistEntries = new BlockingQueue<PlaylistEntry>();
 
+        private readonly Dispatcher _dispatcher;
         private readonly Random _rng = new Random();
         private readonly Thread _mediaInfoThread;
 
@@ -33,12 +35,28 @@ namespace ScriptPlayer.ViewModels
         private bool _repeat;
 
         private ObservableCollection<PlaylistEntry> _entries;
-        private List<PlaylistEntry> _selectedItems;
+        private List<PlaylistEntry> _selectedEntries;
         private List<PlaylistEntry> _filteredEntries;
         private PlaylistEntry _selectedEntry;
         
         private string _filter;
-        
+        private TimeSpan _totalDuration;
+        private TimeSpan _selectedDuration;
+        private string _totalDurationString = "0:00:00";
+        private string _selectedDurationString = "0:00:00";
+
+        public TimeSpan SelectedDuration
+        {
+            get => _selectedDuration;
+            private set
+            {
+                if (value.Equals(_selectedDuration)) return;
+                _selectedDuration = value;
+                SelectedDurationString = $"{_selectedDuration.Days * 24 + _selectedDuration.Hours:0}:{_selectedDuration.Minutes:00}:{_selectedDuration.Seconds:00}";
+                OnPropertyChanged();
+            }
+        }
+
         public event EventHandler<RequestEventArgs<string>> RequestMediaFileName;
         public event EventHandler<RequestEventArgs<string>> RequestVideoFileName;
         public event EventHandler<RequestEventArgs<string>> RequestScriptFileName;
@@ -88,6 +106,66 @@ namespace ScriptPlayer.ViewModels
         {
             UpdateFilter();
             CommandManager.InvalidateRequerySuggested();
+            UpdateTotalDuration();
+        }
+
+        private void UpdateTotalDuration()
+        {
+            if (!_dispatcher.CheckAccess())
+            {
+                _dispatcher.BeginInvoke(new Action(UpdateTotalDuration));
+                return;
+            }
+
+            TotalDuration = Entries?.Aggregate(TimeSpan.Zero, (span, entry) => span + (entry.Duration ?? TimeSpan.Zero)) ?? TimeSpan.Zero;
+
+            UpdateSelectedDuration();
+        }
+
+        private void UpdateSelectedDuration()
+        {
+            if (!_dispatcher.CheckAccess())
+            {
+                _dispatcher.BeginInvoke(new Action(UpdateSelectedDuration));
+                return;
+            }
+
+            SelectedDuration = SelectedEntries?.Aggregate(TimeSpan.Zero, (span, entry) => span + entry.Duration ?? TimeSpan.Zero) ?? TimeSpan.Zero;
+        }
+
+        public TimeSpan TotalDuration   
+        {
+            get => _totalDuration;
+            private set
+            {
+                if (value.Equals(_totalDuration)) return;
+                _totalDuration = value;
+                TotalDurationString = $"{_totalDuration.Days * 24 + _totalDuration.Hours:0}:{_totalDuration.Minutes:00}:{_totalDuration.Seconds:00}";
+                OnPropertyChanged();
+
+            }
+        }
+
+        public string SelectedDurationString
+        {
+            get => _selectedDurationString;
+            private set
+            {
+                if (value == _selectedDurationString) return;
+                _selectedDurationString = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string TotalDurationString
+        {
+            get => _totalDurationString;
+            private set
+            {
+                if (value == _totalDurationString) return;
+                _totalDurationString = value;
+                OnPropertyChanged();
+            }
         }
 
         public bool Shuffle
@@ -206,6 +284,7 @@ namespace ScriptPlayer.ViewModels
         public PlaylistViewModel()
         {
             Entries = new ObservableCollection<PlaylistEntry>();
+            SelectedEntries = new List<PlaylistEntry>();
 
             OpenInExplorerCommand = new RelayCommand<PlaylistEntry>(ExecuteOpenInExplorer, EntryNotNull);
             MoveSelectedEntryDownCommand = new RelayCommand(ExecuteMoveSelectedEntryDown, CanMoveSelectedEntryDown);
@@ -223,6 +302,7 @@ namespace ScriptPlayer.ViewModels
             GenerateThumbnailsForSelectedVideosCommand = new RelayCommand(ExecuteGenerateThumbnailsForSelectedVideos, CanGenerateThumbnailsForSelectedVideos);
             RecheckAllCommand = new RelayCommand(ExecuteRecheckAll);
 
+            _dispatcher = Dispatcher.CurrentDispatcher;
             _mediaInfoThread = new Thread(MediaInfoLoop);
             _mediaInfoThread.Start();
         }
@@ -244,14 +324,14 @@ namespace ScriptPlayer.ViewModels
 
         private bool CanGenerateThumbnailsForSelectedVideos()
         {
-            if (_selectedItems == null)
+            if (_selectedEntries == null)
                 return false;
-            return _selectedItems.Count > 0;
+            return _selectedEntries.Count > 0;
         }
 
         private void ExecuteGenerateThumbnailsForSelectedVideos()
         {
-            string[] videos = _selectedItems.Select(e => OnRequestVideoFileName(e.Fullname)).Where(v => !string.IsNullOrEmpty(v)).ToArray();
+            string[] videos = _selectedEntries.Select(e => OnRequestVideoFileName(e.Fullname)).Where(v => !string.IsNullOrEmpty(v)).ToArray();
             if (videos.Length == 0)
                 return;
 
@@ -320,8 +400,12 @@ namespace ScriptPlayer.ViewModels
                 {
                     entry.HasMedia = true;
 
-                    if(entry.Duration == null)
+                    if (entry.Duration == null)
+                    {
                         entry.Duration = MediaHelper.GetDuration(mediaFile);
+                        if (entry.Duration != null)
+                            UpdateTotalDuration();
+                    }
                 }
                 else
                 {
@@ -449,8 +533,8 @@ namespace ScriptPlayer.ViewModels
             if (!CanRemoveSelectedEntry())
                 return;
 
-            var itemsToRemove = _selectedItems.OrderBy(i => Entries.IndexOf(i)).ToList();
-            int currentIndex = Entries.IndexOf(_selectedItems.First());
+            var itemsToRemove = _selectedEntries.OrderBy(i => Entries.IndexOf(i)).ToList();
+            int currentIndex = Entries.IndexOf(_selectedEntries.First());
 
             foreach (var item in itemsToRemove)
             {
@@ -470,16 +554,16 @@ namespace ScriptPlayer.ViewModels
         
         private bool SelectionHasGap()
         {
-            List<int> indices = _selectedItems.Select(i => Entries.IndexOf(i)).ToList();
+            List<int> indices = _selectedEntries.Select(i => Entries.IndexOf(i)).ToList();
             return indices.Max() - indices.Min() + 1 != indices.Count;
         }
 
         private bool SelectionIsEmpty()
         {
-            if (_selectedItems == null)
+            if (_selectedEntries == null)
                 return true;
 
-            return _selectedItems.Count <= 0;
+            return _selectedEntries.Count <= 0;
         }
 
         private bool CanMoveSelectedEntryUp()
@@ -500,7 +584,7 @@ namespace ScriptPlayer.ViewModels
             if (SelectionHasGap())
                 return true;
 
-            return !_selectedItems.Contains(up ? Entries.First() : Entries.Last());
+            return !_selectedEntries.Contains(up ? Entries.First() : Entries.Last());
         }
 
         private void ExecuteMoveSelectedEntryUp()
@@ -531,7 +615,7 @@ namespace ScriptPlayer.ViewModels
             bool hasGap = SelectionHasGap();
             int indexShift = hasGap ? 0 : 1;
 
-            var orderedSelection = _selectedItems.OrderBy(i => Entries.IndexOf(i)).ToList();
+            var orderedSelection = _selectedEntries.OrderBy(i => Entries.IndexOf(i)).ToList();
             
             if (up)
             {
@@ -780,7 +864,19 @@ namespace ScriptPlayer.ViewModels
         
         public void SetSelectedItems(IEnumerable<PlaylistEntry> entries)
         {
-            _selectedItems = entries.ToList();
+            SelectedEntries = entries.ToList();
+            UpdateSelectedDuration();
+        }
+
+        public List<PlaylistEntry> SelectedEntries
+        {
+            get => _selectedEntries;
+            private set
+            {
+                if (Equals(value, _selectedEntries)) return;
+                _selectedEntries = value;
+                OnPropertyChanged();
+            }
         }
 
         protected virtual void OnRequestGenerateThumbnails(string[] videos)
