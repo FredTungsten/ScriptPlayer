@@ -1392,7 +1392,7 @@ namespace ScriptPlayer.ViewModels
         {
             UpdateFilter();
             UpdateScriptDelay();
-            UpdateCommandDelay();
+            UpdateDeviceSettings();
             UpdateConversionMode();
             UpdatePlaylistShuffle();
             UpdatePlaylistRepeat();
@@ -1443,9 +1443,10 @@ namespace ScriptPlayer.ViewModels
                         UpdateScriptDelay();
                         break;
                     }
+                case nameof(SettingsViewModel.VibratorConversionMode):
                 case nameof(SettingsViewModel.CommandDelay):
                     {
-                        UpdateCommandDelay();
+                        UpdateDeviceSettings();
                         break;
                     }
                 case nameof(SettingsViewModel.ConversionMode):
@@ -1589,11 +1590,18 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void UpdateCommandDelay()
+        private void UpdateDeviceSettings()
         {
             _scriptHandler.MinIntermediateCommandDuration = Settings.CommandDelay;
             foreach (Device device in _devices)
+            {
                 device.MinDelayBetweenCommands = Settings.CommandDelay;
+            }
+
+            foreach (var buttplugAdapter in _controllers.OfType<ButtplugAdapter>())
+            {
+                buttplugAdapter.VibratorConversionMode = Settings.VibratorConversionMode;
+            }
         }
 
         public void OpenVideo()
@@ -3589,9 +3597,11 @@ namespace ScriptPlayer.ViewModels
             {
                 Url = Settings.ButtplugUrl
             });
+
             controller.Disconnected += DeviceController_Disconnected;
             controller.DeviceFound += DeviceController_DeviceFound;
             controller.DeviceRemoved += DeviceController_DeviceRemoved;
+            controller.VibratorConversionMode = Settings.VibratorConversionMode;
 
             _controllers.Add(controller);
 

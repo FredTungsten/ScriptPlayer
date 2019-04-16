@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
+using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 
 namespace ScriptPlayer.ViewModels
@@ -85,6 +86,17 @@ namespace ScriptPlayer.ViewModels
         private string _kodiUser;
         private string _kodiPassword;
 
+        public VibratorConversionMode VibratorConversionMode
+        {
+            get => _vibratorConversionMode;
+            set
+            {
+                if (value == _vibratorConversionMode) return;
+                _vibratorConversionMode = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string KodiIp
         {
             get => _kodiIp;
@@ -155,6 +167,7 @@ namespace ScriptPlayer.ViewModels
         private int _rangeExtender;
         private string _ffmpegPath;
         private TimeDisplayMode _timeDisplayMode;
+        private VibratorConversionMode _vibratorConversionMode = VibratorConversionMode.PositionToSpeed;
 
         public SettingsViewModel()
         {
