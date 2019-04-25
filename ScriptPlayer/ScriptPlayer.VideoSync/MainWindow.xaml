@@ -127,13 +127,26 @@
                                 <HeaderedContentControl Header="Capture Rect" DockPanel.Dock="Top">
                                     <Grid Name="GridSampleRect">
                                         <TextBlock  HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="X" VerticalAlignment="Top"/>
-                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,8,0,0" TextWrapping="Wrap" Text="{Binding SampleX}" VerticalAlignment="Top" Width="162"/>
+                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,8,0,0" TextWrapping="Wrap" Text="{Binding SampleX}" VerticalAlignment="Top" Width="126"/>
+                                        <Button FontFamily="Webdings" FontSize="8" Content="3" HorizontalAlignment="Left" Margin="159,8,0,0" VerticalAlignment="Top" Width="11" Height="23" Click="BtnXMinus_Click"/>
+                                        <Button FontFamily="Webdings" FontSize="8" Content="4" HorizontalAlignment="Left" Margin="171,8,0,0" VerticalAlignment="Top" Width="11" Height="23" Click="BtnXPlus_Click"/>
+
                                         <TextBlock  HorizontalAlignment="Left" Margin="10,38,0,0" TextWrapping="Wrap" Text="Y" VerticalAlignment="Top"/>
-                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,36,0,0" TextWrapping="Wrap" Text="{Binding SampleY}" VerticalAlignment="Top" Width="162"/>
+                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,36,0,0" TextWrapping="Wrap" Text="{Binding SampleY}" VerticalAlignment="Top" Width="126"/>
+                                        <Button FontFamily="Webdings" FontSize="8" Content="5" HorizontalAlignment="Left" Margin="159,36,0,0" VerticalAlignment="Top" Width="23" Height="11" Click="BtnYMinus_Click"/>
+                                        <Button FontFamily="Webdings" FontSize="8" Content="6" HorizontalAlignment="Left" Margin="159,48,0,0" VerticalAlignment="Top" Width="23" Height="11" Click="BtnYPlus_Click"/>
+
+
                                         <TextBlock  HorizontalAlignment="Left" Margin="10,66,0,0" TextWrapping="Wrap" Text="W" VerticalAlignment="Top"/>
-                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,64,0,0" TextWrapping="Wrap" Text="{Binding SampleW}" VerticalAlignment="Top" Width="162"/>
+                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,64,0,0" TextWrapping="Wrap" Text="{Binding SampleW}" VerticalAlignment="Top" Width="126"/>
+                                        <Button FontFamily="Webdings" FontSize="8" Content="3" HorizontalAlignment="Left" Margin="159,64,0,0" VerticalAlignment="Top" Width="11" Height="23" Click="BtnWMinus_Click"/>
+                                        <Button FontFamily="Webdings" FontSize="8" Content="4" HorizontalAlignment="Left" Margin="171,64,0,0" VerticalAlignment="Top" Width="11" Height="23" Click="BtnWPlus_Click"/>
+
                                         <TextBlock  HorizontalAlignment="Left" Margin="10,94,0,0" TextWrapping="Wrap" Text="H" VerticalAlignment="Top"/>
-                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,92,0,0" TextWrapping="Wrap" Text="{Binding SampleH}" VerticalAlignment="Top" Width="162"/>
+                                        <TextBox  HorizontalAlignment="Left" Height="23" Margin="28,92,0,0" TextWrapping="Wrap" Text="{Binding SampleH}" VerticalAlignment="Top" Width="126"/>
+                                        <Button FontFamily="Webdings" FontSize="8" Content="5" HorizontalAlignment="Left" Margin="159,92,0,0" VerticalAlignment="Top" Width="23" Height="11" Click="BtnHMinus_Click"/>
+                                        <Button FontFamily="Webdings" FontSize="8" Content="6" HorizontalAlignment="Left" Margin="159,104,0,0" VerticalAlignment="Top" Width="23" Height="11" Click="BtnHPlus_Click"/>
+
                                         <Button Content="Reset to Samples"  HorizontalAlignment="Stretch" Margin="10,120,10,10" VerticalAlignment="Top" Click="btnResetSamples_Click"/>
                                     </Grid>
                                 </HeaderedContentControl>
@@ -193,7 +206,8 @@
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=SoundAfterBeat}">Sound after Beat</CheckBox>
 
                                         <TextBlock Margin="2" VerticalAlignment="Center" Text="Sound Delay"/>
-                                        <DockPanel><Button Width="20" Height="20" DockPanel.Dock="Right" ToolTip="Apply to Selection" Click="BtnApplySoundShiftToSelection_Click">A</Button>
+                                        <DockPanel>
+                                            <Button Width="20" Height="20" DockPanel.Dock="Right" ToolTip="Apply to Selection" Click="BtnApplySoundShiftToSelection_Click">A</Button>
                                             <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="-250" Maximum="250" 
                                                 Value="{Binding ElementName=BeatBar, Path=SoundDelay}" SmallChange="1" LargeChange="1"/>
                                         </DockPanel>

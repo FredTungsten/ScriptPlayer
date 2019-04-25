@@ -2254,5 +2254,45 @@ namespace ScriptPlayer.VideoSync
             ShiftSelection(TimeSpan.FromMilliseconds(BeatBar.SoundDelay));
             BeatBar.SoundDelay = 0;
         }
+
+        private void BtnYMinus_Click(object sender, RoutedEventArgs e)
+        {
+            SampleY = Math.Max(0, SampleY - 1);
+        }
+
+        private void BtnYPlus_Click(object sender, RoutedEventArgs e)
+        {
+            SampleY++;
+        }
+
+        private void BtnWMinus_Click(object sender, RoutedEventArgs e)
+        {
+            SampleW = Math.Max(1, SampleW - 1);
+        }
+
+        private void BtnWPlus_Click(object sender, RoutedEventArgs e)
+        {
+            SampleW++;
+        }
+
+        private void BtnXMinus_Click(object sender, RoutedEventArgs e)
+        {
+            SampleX = Math.Max(0, SampleX - 1);
+        }
+
+        private void BtnXPlus_Click(object sender, RoutedEventArgs e)
+        {
+            SampleX++;
+        }
+
+        private void BtnHMinus_Click(object sender, RoutedEventArgs e)
+        {
+            SampleH = Math.Max(1, SampleH - 1);
+        }
+
+        private void BtnHPlus_Click(object sender, RoutedEventArgs e)
+        {
+            SampleH++;
+        }
     }
 }
