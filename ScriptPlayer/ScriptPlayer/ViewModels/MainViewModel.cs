@@ -55,7 +55,7 @@ namespace ScriptPlayer.ViewModels
         private readonly string[] _supportedScriptExtensions;
 
         private readonly string[] _supportedVideoExtensions =
-            {"mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf", "webm"};
+            {"mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf", "webm", "flv"};
 
         private readonly string[] _supportedAudioExtensions =
             {"mp3", "wav", "wma"};
@@ -133,6 +133,8 @@ namespace ScriptPlayer.ViewModels
                 _loadedScript = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(LoadedFiles));
+
+                Playlist.SetCurrentEntry(LoadedFiles);
             }
         }
 
@@ -145,6 +147,8 @@ namespace ScriptPlayer.ViewModels
                 _loadedVideo = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(LoadedFiles));
+
+                Playlist.SetCurrentEntry(LoadedFiles);
             }
         }
 
@@ -1631,8 +1635,7 @@ namespace ScriptPlayer.ViewModels
             }
             else if (Playlist.EntryCount > 0)
             {
-                Playlist.PlayNextEntry(LoadedFiles);
-                //LoadFile(Playlist.FirstEntry().Fullname);
+                Playlist.PlayNextEntry();
             }
         }
 
@@ -2732,7 +2735,7 @@ namespace ScriptPlayer.ViewModels
             if (eventArgs.NextAction == null)
             {
                 // Script Ended
-                skipState = Playlist.CanPlayNextEntry(LoadedFiles) ? SkipState.EndNext : SkipState.End;
+                skipState = Playlist.CanPlayNextEntry() ? SkipState.EndNext : SkipState.End;
             }
             else
             {
@@ -2805,7 +2808,7 @@ namespace ScriptPlayer.ViewModels
                     if (nextOriginalAction == null)
                     {
                         // No more original actions
-                        skipState = Playlist.CanPlayNextEntry(LoadedFiles) ? SkipState.EndFillerNext : SkipState.EndFiller;
+                        skipState = Playlist.CanPlayNextEntry() ? SkipState.EndFillerNext : SkipState.EndFiller;
                     }
                     else
                     {
@@ -3063,13 +3066,13 @@ namespace ScriptPlayer.ViewModels
         private void PlayNextPlaylistEntry()
         {
             if (!TimeSource.CanOpenMedia) return;
-            Playlist.PlayNextEntry(LoadedFiles);
+            Playlist.PlayNextEntry();
         }
 
         private void PlayPreviousPlaylistEntry()
         {
             if (!TimeSource.CanOpenMedia) return;
-            Playlist.PlayPreviousEntry(LoadedFiles);
+            Playlist.PlayPreviousEntry();
         }
 
         private void VideoPlayer_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -3101,7 +3104,7 @@ namespace ScriptPlayer.ViewModels
         public void SkipToNextEvent()
         {
             if (Settings.RandomChapters)
-                Playlist.PlayNextEntry(LoadedFiles);
+                Playlist.PlayNextEntry();
             else
                 SkipToNextEventInternal();
         }
@@ -3275,7 +3278,7 @@ namespace ScriptPlayer.ViewModels
 
             if (nextAction == null)
             {
-                Playlist.PlayNextEntry(LoadedFiles);
+                Playlist.PlayNextEntry();
                 return;
             }
 
@@ -3398,25 +3401,6 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             LoadScript(scriptFileName, true);
-
-            /*ScriptFileFormat[] format = formats.GetFormats(_lastScriptFilterIndex - 1, scriptFileName);
-
-            ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(format);
-
-            if (!LoadScript(loaders, scriptFileName))
-            {
-                ScriptLoader[] otherLoaders = ScriptLoaderManager.GetAllLoaders().Except(loaders).ToArray();
-                if (!LoadScript(otherLoaders, scriptFileName))
-                {
-                    if (Settings.NotifyFileLoaded)
-                        OnRequestOverlay($"The script file '{scriptFileName}' could not be loaded!", TimeSpan.FromSeconds(6));
-                    return;
-                }
-            }
-
-            TryFindMatchingVideo(scriptFileName);
-
-            UpdateHeatMap();*/
         }
 
 

@@ -21,6 +21,8 @@ namespace ScriptPlayer.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler<PlaylistEntry> PlayEntry;
 
+        private List<PlaylistEntry> _previousEntries = new List<PlaylistEntry>();
+
         private readonly BlockingQueue<PlaylistEntry> _uncheckedPlaylistEntries = new BlockingQueue<PlaylistEntry>();
 
         private readonly Dispatcher _dispatcher;
@@ -44,6 +46,9 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _selectedDuration;
         private string _totalDurationString = "0:00:00";
         private string _selectedDurationString = "0:00:00";
+        private PlaylistEntry _currentEntry;
+        private PlaylistEntry _previousEntry;
+        private PlaylistEntry _nextEntry;
 
         public TimeSpan SelectedDuration
         {
@@ -175,9 +180,19 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _shuffle) return;
                 _shuffle = value;
+
+                UpdateNextAndPrevious();
                 CommandManager.InvalidateRequerySuggested();
                 OnPropertyChanged();
             }
+        }
+
+        private void UpdateNextEntry()
+        {
+            NextEntry = GetNextEntry();
+
+            if (PreviousEntry == null || PreviousEntry == NextEntry)
+                PreviousEntry = GetPreviousEntry();
         }
 
         public bool RandomChapters
@@ -198,6 +213,8 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _repeat) return;
                 _repeat = value;
+
+                UpdateNextEntry();
                 CommandManager.InvalidateRequerySuggested();
                 OnPropertyChanged();
             }
@@ -210,9 +227,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _repeatSingleFile) return;
                 _repeatSingleFile = value;
+
+                UpdateNextAndPrevious();
                 CommandManager.InvalidateRequerySuggested();
                 OnPropertyChanged();
             }
+        }
+
+        private void UpdateNextAndPrevious()
+        {
+            PreviousEntry = GetPreviousEntry();
+            NextEntry = GetNextEntry();
         }
 
         public PlaylistEntry SelectedEntry
@@ -264,8 +289,8 @@ namespace ScriptPlayer.ViewModels
         }
 
         public RelayCommand<PlaylistEntry> OpenInExplorerCommand { get; set; }
-        public RelayCommand<string[]> PlayNextEntryCommand { get; set; }
-        public RelayCommand<string[]> PlayPreviousEntryCommand { get; set; }
+        public RelayCommand PlayNextEntryCommand { get; set; }
+        public RelayCommand PlayPreviousEntryCommand { get; set; }
         public RelayCommand MoveSelectedEntryUpCommand { get; set; }
         public RelayCommand MoveSelectedEntryDownCommand { get; set; }
         public RelayCommand MoveSelectedEntryFirstCommand { get; set; }
@@ -293,8 +318,8 @@ namespace ScriptPlayer.ViewModels
             MoveSelectedEntryFirstCommand = new RelayCommand(ExecuteMoveSelectedEntryFirst, CanMoveSelectedEntryUp);
             RemoveSelectedEntryCommand = new RelayCommand(ExecuteRemoveSelectedEntry, CanRemoveSelectedEntry);
             ClearPlaylistCommand = new RelayCommand(ExecuteClearPlaylist, CanClearPlaylist);
-            PlayNextEntryCommand = new RelayCommand<string[]>(ExecutePlayNextEntry, CanPlayNextEntry);
-            PlayPreviousEntryCommand = new RelayCommand<string[]>(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
+            PlayNextEntryCommand = new RelayCommand(ExecutePlayNextEntry, CanPlayNextEntry);
+            PlayPreviousEntryCommand = new RelayCommand(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
             SortByDurationCommand = new RelayCommand<bool>(ExecuteSortByDuration, CanSort);
             SortByNameCommand = new RelayCommand<bool>(ExecuteSortByName, CanSort);
             SortByPathCommand = new RelayCommand<bool>(ExecuteSortByPath, CanSort);
@@ -433,9 +458,9 @@ namespace ScriptPlayer.ViewModels
             Clear();
         }
 
-        private bool CanPlayPreviousEntry(params string[] currentFiles)
+        private bool CanPlayPreviousEntry()
         {
-            bool canPlaySameAgain = currentFiles != null && currentFiles.Length > 0 && !string.IsNullOrWhiteSpace(currentFiles.First());
+            bool canPlaySameAgain = CurrentEntry != null;
 
             if (Repeat)
                 return Entries.Count > 0 || canPlaySameAgain;
@@ -446,24 +471,20 @@ namespace ScriptPlayer.ViewModels
             if (Entries.Count == 0)
                 return false;
 
-            if (currentFiles == null)
+            if (CurrentEntry == null)
                 return true;
-
-            var currentEntry = Entries.FirstOrDefault(p => currentFiles.Contains(p.Fullname));
-            if (currentEntry == null)
-                return false;
 
             if (Shuffle)
                 return Entries.Count > 1;
 
-            int index = Entries.IndexOf(currentEntry);
+            int index = Entries.IndexOf(CurrentEntry);
 
             return index > 0;
         }
 
-        public bool CanPlayNextEntry(params string[] currentFiles)
+        public bool CanPlayNextEntry()
         {
-            bool canPlaySameAgain = currentFiles != null && currentFiles.Length > 0 && !string.IsNullOrWhiteSpace(currentFiles.First());
+            bool canPlaySameAgain = CurrentEntry != null;
 
             if (Repeat)
                 return Entries.Count > 0 || canPlaySameAgain;
@@ -474,53 +495,46 @@ namespace ScriptPlayer.ViewModels
             if (Entries.Count == 0)
                 return false;
 
-            if (currentFiles == null)
-                return true;
-
-            var currentEntry = Entries.FirstOrDefault(p => currentFiles.Contains(p.Fullname));
-            if (currentEntry == null)
+            if (CurrentEntry == null)
                 return true;
 
             if (Shuffle)
                 return Entries.Count > 1;
 
-            int index = Entries.IndexOf(currentEntry);
+            int index = Entries.IndexOf(CurrentEntry);
 
             return index < Entries.Count -1;
         }
-        private void ExecutePlayPreviousEntry(string[] currentFiles)
+
+        private void ExecutePlayPreviousEntry()
         {
-            PlayPreviousEntry(currentFiles);
+            PlayPreviousEntry();
         }
 
-        public void PlayPreviousEntry(params string[] currentFiles)
+        public void PlayPreviousEntry()
         {
-            if (!CanPlayPreviousEntry(currentFiles))
+            if (!CanPlayPreviousEntry())
                 return;
 
-            PlaylistEntry entry = GetPreviousEntry(currentFiles);
+            OnPlayEntry(PreviousEntry);
+        }
+
+
+        public void PlayNextEntry()
+        {
+            if (!CanPlayNextEntry())
+                return;
+
+            PlaylistEntry entry = NextEntry;
             if (entry == null)
                 return;
 
             OnPlayEntry(entry);
         }
 
-
-        public void PlayNextEntry(params string[] currentFiles)
+        private void ExecutePlayNextEntry()
         {
-            if (!CanPlayNextEntry(currentFiles))
-                return;
-
-            PlaylistEntry entry = GetNextEntry(currentFiles);
-            if (entry == null)
-                return;
-
-            OnPlayEntry(entry);
-        }
-
-        private void ExecutePlayNextEntry(string[] currentFiles)
-        {
-            PlayNextEntry(currentFiles);
+            PlayNextEntry();
         }
 
         private bool CanRemoveSelectedEntry()
@@ -540,6 +554,14 @@ namespace ScriptPlayer.ViewModels
             {
                 item.Removed = true;
                 Entries.Remove(item);
+
+                if (NextEntry == item)
+                    NextEntry = null;
+
+                if (PreviousEntry == item)
+                    PreviousEntry = null;
+
+                _previousEntries.Remove(item);
             }
 
             if (currentIndex < Entries.Count)
@@ -548,6 +570,8 @@ namespace ScriptPlayer.ViewModels
                 SelectedEntry = Entries[Entries.Count - 1];
             else
                 SelectedEntry = null;
+
+            UpdateNextAndPreviousIfNull();
 
             CommandManager.InvalidateRequerySuggested();
         }
@@ -659,6 +683,9 @@ namespace ScriptPlayer.ViewModels
         {
             EnsureMediaInfo(entry);
             Entries.Add(entry);
+
+            UpdateNextAndPreviousIfNull();
+
             CommandManager.InvalidateRequerySuggested();
         }
 
@@ -691,7 +718,18 @@ namespace ScriptPlayer.ViewModels
                 Entries.Add(entry);
             }
 
+            UpdateNextAndPreviousIfNull();
+
             CommandManager.InvalidateRequerySuggested();
+        }
+
+        private void UpdateNextAndPreviousIfNull()
+        {
+            if (NextEntry == null)
+                NextEntry = GetNextEntry();
+
+            if (PreviousEntry == null || PreviousEntry == NextEntry)
+                PreviousEntry = GetPreviousEntry();
         }
 
         public void AddEntries(IEnumerable<PlaylistEntry> entries)
@@ -702,6 +740,8 @@ namespace ScriptPlayer.ViewModels
                 Entries.Add(entry);
             }
 
+            UpdateNextAndPreviousIfNull();
+
             CommandManager.InvalidateRequerySuggested();
         }
 
@@ -711,7 +751,67 @@ namespace ScriptPlayer.ViewModels
                 entry.Removed = true;
 
             Entries.Clear();
+            _previousEntries.Clear();
+            PreviousEntry = null;
+            NextEntry = null;
             CommandManager.InvalidateRequerySuggested();
+        }
+
+        public void SetCurrentEntry(string[] files)
+        {
+            PlaylistEntry existingEntry = GetEntry(files);
+            if (existingEntry == CurrentEntry)
+                return;
+
+            if (existingEntry == null)
+            {
+
+            }
+
+            CurrentEntry = existingEntry;
+            PreviousEntry = GetPreviousEntry();
+            NextEntry = GetNextEntry();
+        }
+
+        public PlaylistEntry CurrentEntry
+        {
+            get => _currentEntry;
+            set
+            {
+                if (Equals(value, _currentEntry)) return;
+                _currentEntry = value;
+
+                _previousEntries.Remove(_currentEntry);
+                _previousEntries.Insert(0,_currentEntry);
+                OnPropertyChanged();
+            }
+        }
+
+        public PlaylistEntry PreviousEntry
+        {
+            get => _previousEntry;
+            set
+            {
+                if (Equals(value, _previousEntry)) return;
+                _previousEntry = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public PlaylistEntry NextEntry
+        {
+            get => _nextEntry;
+            set
+            {
+                if (Equals(value, _nextEntry)) return;
+                _nextEntry = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private PlaylistEntry GetEntry(string[] files)
+        {
+            return Entries.FirstOrDefault(p => files.Contains(p.Fullname));
         }
 
         public PlaylistEntry FirstEntry()
@@ -719,20 +819,18 @@ namespace ScriptPlayer.ViewModels
             return Entries.FirstOrDefault();
         }
 
-        public PlaylistEntry GetNextEntry(params string[] currentEntryFiles)
+        public PlaylistEntry GetNextEntry()
         {
-            if(RepeatSingleFile && currentEntryFiles.Length > 0)
-                return new PlaylistEntry(currentEntryFiles.First());
+            if(RepeatSingleFile && CurrentEntry != null)
+                return CurrentEntry;
 
             if(Shuffle)
-                return AnythingButThis(currentEntryFiles);
+                return GetRandomEntry();
 
-            var currentEntry = Entries.FirstOrDefault(p => currentEntryFiles.Contains(p.Fullname));
-
-            if (currentEntry == null)
+            if (CurrentEntry == null)
                 return FirstEntry();
 
-            int currentIndex = Entries.IndexOf(currentEntry);
+            int currentIndex = Entries.IndexOf(CurrentEntry);
 
             if (currentIndex == Entries.Count - 1)
             {
@@ -740,8 +838,8 @@ namespace ScriptPlayer.ViewModels
                 {
                     if (Entries.Count > 0)
                         return Entries.First();
-                    if(currentEntryFiles.Length > 0)
-                        return new PlaylistEntry(currentEntryFiles.First());
+                    if (CurrentEntry != null)
+                        return CurrentEntry;
                 }
                 return null;
             }
@@ -751,20 +849,24 @@ namespace ScriptPlayer.ViewModels
             return nextEntry;
         }
 
-        public PlaylistEntry GetPreviousEntry(params string[] currentEntryFiles)
+        public PlaylistEntry GetPreviousEntry()
         {
-            if (RepeatSingleFile && currentEntryFiles.Length > 0)
-                return new PlaylistEntry(currentEntryFiles.First());
+            if (RepeatSingleFile && CurrentEntry != null)
+                return CurrentEntry;
 
             if (Shuffle)
-                return AnythingButThis(currentEntryFiles);
+                return GetRandomEntry();
 
-            var currentEntry = Entries.FirstOrDefault(p => currentEntryFiles.Contains(p.Fullname));
+            if (CurrentEntry == null)
+            {
+                if (Repeat)
+                    return LastEntry();
 
-            if (currentEntry == null)
-                return FirstEntry();
+                return null;
+            }
 
-            int currentIndex = Entries.IndexOf(currentEntry);
+
+            int currentIndex = Entries.IndexOf(CurrentEntry);
 
             if(currentIndex == 0)
             {
@@ -772,8 +874,8 @@ namespace ScriptPlayer.ViewModels
                 {
                     if (Entries.Count > 0)
                         return Entries.First();
-                    if(currentEntryFiles.Length > 0)
-                        return new PlaylistEntry(currentEntryFiles.First());
+                    if(CurrentEntry != null)
+                        return CurrentEntry;
                 }
                 return null;
             }
@@ -783,24 +885,41 @@ namespace ScriptPlayer.ViewModels
             return previousEntry;
         }
 
-        private PlaylistEntry AnythingButThis(params string[] currentEntryFiles)
+        private PlaylistEntry LastEntry()
+        {
+            return Entries.LastOrDefault();
+        }
+
+        private PlaylistEntry GetRandomEntry()
         {
             if (Entries.Count == 0)
                 return null;
+
             if (Entries.Count == 1)
                 return Entries.Single();
 
-            var currentEntry = Entries.FirstOrDefault(p => currentEntryFiles.Contains(p.Fullname));
             var otherEntries = Entries.ToList();
-            if(currentEntry != null)
-                otherEntries.Remove(currentEntry);
+            if(CurrentEntry != null)
+                otherEntries.Remove(CurrentEntry);
+
+            //Makes selection a little less random
+            const double factor = 0.5;
+            int entryCount = (int)Math.Floor(otherEntries.Count * factor);
+            var recentEntries = _previousEntries.Take(entryCount).ToList();
+
+            otherEntries.RemoveAll(p => recentEntries.Contains(p));
 
             return otherEntries[_rng.Next(0, otherEntries.Count)];
         }
 
         protected virtual void OnPlayEntry(PlaylistEntry entry)
         {
+            PreviousEntry = CurrentEntry;
+
             SelectedEntry = entry;
+            CurrentEntry = entry;
+            UpdateNextEntry();
+            
             PlayEntry?.Invoke(this, entry);
         }
 

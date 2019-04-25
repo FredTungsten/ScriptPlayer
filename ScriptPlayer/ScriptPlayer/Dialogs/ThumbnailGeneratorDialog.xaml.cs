@@ -6,7 +6,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Shell;
 using JetBrains.Annotations;
@@ -17,12 +16,12 @@ using ScriptPlayer.ViewModels;
 namespace ScriptPlayer.Dialogs
 {
     /// <summary>
-    /// Interaction logic for CreateThumbnailsDialog.xaml
+    /// Interaction logic for ThumbnailGeneratorDialog.xaml
     /// </summary>
-    public partial class CreateThumbnailsDialog : Window
+    public partial class ThumbnailGeneratorDialog : Window
     {
         public static readonly DependencyProperty EntriesProperty = DependencyProperty.Register(
-            "Entries", typeof(List<ThumbnailProgressEntry>), typeof(CreateThumbnailsDialog),
+            "Entries", typeof(List<ThumbnailProgressEntry>), typeof(ThumbnailGeneratorDialog),
             new PropertyMetadata(default(List<ThumbnailProgressEntry>)));
 
         private readonly ThumbnailGeneratorSettings _settings;
@@ -38,7 +37,7 @@ namespace ScriptPlayer.Dialogs
         }
 
         public static readonly DependencyProperty CloseButtonTextProperty = DependencyProperty.Register(
-            "CloseButtonText", typeof(string), typeof(CreateThumbnailsDialog), new PropertyMetadata("Cancel"));
+            "CloseButtonText", typeof(string), typeof(ThumbnailGeneratorDialog), new PropertyMetadata("Cancel"));
 
         public string CloseButtonText
         {
@@ -47,7 +46,9 @@ namespace ScriptPlayer.Dialogs
         }
 
         public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
-            "ViewModel", typeof(MainViewModel), typeof(CreateThumbnailsDialog), new PropertyMetadata(default(MainViewModel)));
+            "ViewModel", typeof(MainViewModel), typeof(ThumbnailGeneratorDialog), new PropertyMetadata(default(MainViewModel)));
+
+        private bool _closeWhenDone;
 
         public MainViewModel ViewModel
         {
@@ -55,7 +56,7 @@ namespace ScriptPlayer.Dialogs
             set { SetValue(ViewModelProperty, value); }
         }
 
-        public CreateThumbnailsDialog(MainViewModel viewmodel, ThumbnailGeneratorSettings settings)
+        public ThumbnailGeneratorDialog(MainViewModel viewmodel, ThumbnailGeneratorSettings settings)
         {
             ViewModel = viewmodel;
             _settings = settings;
@@ -71,7 +72,7 @@ namespace ScriptPlayer.Dialogs
                 ProgressState = TaskbarItemProgressState.Normal
             };
 
-            var entries = Entries;
+            var entries = Entries.ToList();
 
             string ffmpegexe = ViewModel.Settings.FfmpegPath;
 
@@ -86,31 +87,43 @@ namespace ScriptPlayer.Dialogs
 
                 ThumbnailProgressEntry currentEntry = null;
 
-                List<ThumbnailProgressEntry> skipped = new List<ThumbnailProgressEntry>();
-
                 wrapper.ProgressChanged += (s, progress) => { SetStatus(currentEntry, null, progress); };
 
-                foreach (var entry in entries)
+                if (_settings.SkipExisting)
                 {
-                    if (_canceled)
-                        return;
 
-                    string thumbfile = Path.ChangeExtension(entry.FilePath, "thumbs");
+                    List<ThumbnailProgressEntry> skipped = new List<ThumbnailProgressEntry>();
+                    List<ThumbnailProgressEntry> nonskipped = new List<ThumbnailProgressEntry>();
 
-                    if (File.Exists(thumbfile) && _settings.SkipExisting)
+                    foreach (var entry in entries)
                     {
-                        SetStatus(entry, "Skipped", 1);
-                        skipped.Add(entry);
-                        continue;
+                        if (_canceled)
+                            return;
+
+                        string thumbfile = Path.ChangeExtension(entry.FilePath, "thumbs");
+
+                        if (File.Exists(thumbfile) && _settings.SkipExisting)
+                        {
+                            SetStatus(entry, "Skipped", 1);
+                            skipped.Add(entry);
+                        }
+                        else
+                        {
+                            nonskipped.Add(entry);
+                        }
                     }
+
+                    entries = skipped.Concat(nonskipped).ToList();
+
+                    this.Dispatcher.Invoke(() => { Entries = entries; });
                 }
 
-                foreach (var entry in entries)
+                foreach (ThumbnailProgressEntry entry in entries)
                 {
                     if (_canceled)
                         return;
 
-                    if (skipped.Contains(entry))
+                    if (entry.SkipThis)
                         continue;
 
                     currentEntry = entry;
@@ -150,7 +163,6 @@ namespace ScriptPlayer.Dialogs
                         string number = Path.GetFileNameWithoutExtension(file);
                         int index = int.Parse(number);
 
-
                         TimeSpan position = TimeSpan.FromSeconds(index * 10 - 5);
 
                         var frame = new BitmapImage();
@@ -180,7 +192,12 @@ namespace ScriptPlayer.Dialogs
 
                 _done = true;
 
-                Dispatcher.BeginInvoke(new Action(() => { CloseButtonText = "Close"; }));
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    CloseButtonText = "Close";
+                    if (_closeWhenDone)
+                        Close();
+                }));
             });
 
             _processThread.Start();
@@ -229,15 +246,30 @@ namespace ScriptPlayer.Dialogs
 
             Close();
         }
+
+        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            _closeWhenDone = true;
+            if (_done)
+                Close();
+        }
+
+        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            _closeWhenDone = false;
+        }
     }
 
     public class ThumbnailProgressEntry : INotifyPropertyChanged
     {
         private double _progress;
         private string _status;
+
         public string FilePath { get; set; }
 
         public string FileName { get; set; }
+
+        public bool SkipThis { get; set; }
 
         public double Progress
         {
@@ -264,7 +296,7 @@ namespace ScriptPlayer.Dialogs
         public ThumbnailProgressEntry(string filePath)
         {
             FilePath = filePath;
-            FileName = System.IO.Path.GetFileName(filePath);
+            FileName = Path.GetFileName(filePath);
             Progress = 0;
             Status = "Queued";
         }

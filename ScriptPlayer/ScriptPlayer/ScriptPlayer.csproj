@@ -101,11 +101,11 @@
     <Compile Include="Dialogs\AttributionDialog.xaml.cs">
       <DependentUpon>AttributionDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dialogs\CreatePreviewDialog.xaml.cs">
-      <DependentUpon>CreatePreviewDialog.xaml</DependentUpon>
+    <Compile Include="Dialogs\PreviewGeneratorDialog.xaml.cs">
+      <DependentUpon>PreviewGeneratorDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dialogs\CreateThumbnailsDialog.xaml.cs">
-      <DependentUpon>CreateThumbnailsDialog.xaml</DependentUpon>
+    <Compile Include="Dialogs\ThumbnailGeneratorDialog.xaml.cs">
+      <DependentUpon>ThumbnailGeneratorDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\KodiConnectionSettingsDialog.xaml.cs">
       <DependentUpon>KodiConnectionSettingsDialog.xaml</DependentUpon>
@@ -184,11 +184,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dialogs\CreatePreviewDialog.xaml">
+    <Page Include="Dialogs\PreviewGeneratorDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dialogs\CreateThumbnailsDialog.xaml">
+    <Page Include="Dialogs\ThumbnailGeneratorDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

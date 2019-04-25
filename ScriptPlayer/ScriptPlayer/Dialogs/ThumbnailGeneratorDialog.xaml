@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
-        x:Class="ScriptPlayer.Dialogs.CreateThumbnailsDialog"
+        x:Class="ScriptPlayer.Dialogs.ThumbnailGeneratorDialog"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d"
         Title="Thumbnail Generator" Height="450" Width="800" Loaded="Window_Loaded">
@@ -22,6 +22,7 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
-        <Button Content="{Binding CloseButtonText}" Height="21" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="btnClose_Click"/>
+        <Button Content="{Binding Path=CloseButtonText, FallbackValue=Close/Cancel}" Height="21" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="btnClose_Click"/>
+        <CheckBox Content="Close when done" HorizontalAlignment="Right" Margin="0,0,90,13" VerticalAlignment="Bottom" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked"/>
     </Grid>
 </Window>

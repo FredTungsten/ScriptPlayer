@@ -106,7 +106,7 @@ namespace ScriptPlayer
 
         private void ViewModelOnRequestGenerateThumbnails(object sender, ThumbnailGeneratorSettings settings)
         {
-            var createDialog = new CreateThumbnailsDialog(ViewModel, settings) {Owner = this};
+            var createDialog = new ThumbnailGeneratorDialog(ViewModel, settings) {Owner = this};
             if (createDialog.ShowDialog() != true)
                 return;
 
@@ -554,12 +554,12 @@ namespace ScriptPlayer
                     }
                 case Key.PageUp:
                     {
-                        ViewModel.Playlist.PlayPreviousEntry(ViewModel.LoadedFiles);
+                        ViewModel.Playlist.PlayPreviousEntry();
                         break;
                     }
                 case Key.PageDown:
                     {
-                        ViewModel.Playlist.PlayNextEntry(ViewModel.LoadedFiles);
+                        ViewModel.Playlist.PlayNextEntry();
                         break;
                     }
                 case Key.NumPad0:
@@ -740,15 +740,15 @@ namespace ScriptPlayer
 
             settings = settingsDialog.Result;
 
-            var dialog = new CreatePreviewDialog(ViewModel, settings) {Owner = this};
+            var dialog = new PreviewGeneratorDialog(ViewModel, settings) {Owner = this};
             dialog.ShowDialog();
 
             ViewModel.RecheckForAdditionalFiles();
         }
 
-        private void ToolTip_OnOpened(object sender, RoutedEventArgs e)
+        private void ToolTipNext_OnOpened(object sender, RoutedEventArgs e)
         {
-            var entry = ViewModel.Playlist.GetNextEntry(ViewModel.LoadedFiles);
+            var entry = ViewModel.Playlist.NextEntry;
             if (entry == null)
             {
                 playerNext.Close();
@@ -756,18 +756,38 @@ namespace ScriptPlayer
                 return;
             }
 
-            string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new [] {"gif"});
+            string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new[] { "gif" });
             if (!string.IsNullOrEmpty(gifFile))
             {
                 playerNext.Load(gifFile);
             }
 
-            titleNext.Text = entry.Shortname;
+            titleNext.Text = entry.Shortname + " [" + (entry.Duration?.ToString("hh\\:mm\\:ss") ?? "?") + "]";
+        }
+
+        private void ToolTipPrevious_OnOpened(object sender, RoutedEventArgs e)
+        {
+            var entry = ViewModel.Playlist.PreviousEntry;
+            if (entry == null)
+            {
+                playerPrevious.Close();
+                titlePrevious.Text = "Unknown";
+                return;
+            }
+
+            string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new[] { "gif" });
+            if (!string.IsNullOrEmpty(gifFile))
+            {
+                playerPrevious.Load(gifFile);
+            }
+
+            titlePrevious.Text = entry.Shortname + " [" + (entry.Duration?.ToString("hh\\:mm\\:ss") ?? "?") + "]";
         }
 
         private void ToolTip_OnClosed(object sender, RoutedEventArgs e)
         {
             playerNext.Close();
+            playerPrevious.Close();
         }
 
         private void MnuDownloadButtplug_Click(object sender, RoutedEventArgs e)

@@ -8,12 +8,12 @@ using ScriptPlayer.ViewModels;
 namespace ScriptPlayer.Dialogs
 {
     /// <summary>
-    /// Interaction logic for CreatePreviewDialog.xaml
+    /// Interaction logic for PreviewGeneratorDialog.xaml
     /// </summary>
-    public partial class CreatePreviewDialog : Window
+    public partial class PreviewGeneratorDialog : Window
     {
         public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
-            "ViewModel", typeof(MainViewModel), typeof(CreatePreviewDialog), new PropertyMetadata(default(MainViewModel)));
+            "ViewModel", typeof(MainViewModel), typeof(PreviewGeneratorDialog), new PropertyMetadata(default(MainViewModel)));
 
         public MainViewModel ViewModel
         {
@@ -29,7 +29,7 @@ namespace ScriptPlayer.Dialogs
         private bool _success;
         private bool _canceled;
         
-        public CreatePreviewDialog(MainViewModel viewModel, PreviewGeneratorSettings settings)
+        public PreviewGeneratorDialog(MainViewModel viewModel, PreviewGeneratorSettings settings)
         {
             ViewModel = viewModel;
             _settings = settings;

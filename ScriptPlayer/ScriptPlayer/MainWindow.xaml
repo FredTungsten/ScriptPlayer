@@ -616,10 +616,10 @@
                 </TextBlock.Style>
             </TextBlock>
             <Slider VerticalAlignment="Center" Margin="16,0" Width="50" Value="{Binding Volume, Mode=TwoWay}" Minimum="0" Maximum="100" DockPanel.Dock="Right" Style="{DynamicResource VolumeSliderStyle}"></Slider>
-            <Button Command="{Binding Playlist.PlayNextEntryCommand}" CommandParameter="{Binding LoadedFiles}" Content=":" DockPanel.Dock="Right"
+            <Button Command="{Binding Playlist.PlayNextEntryCommand}" Content=":" DockPanel.Dock="Right"
                     ToolTipService.BetweenShowDelay="0" ToolTipService.ShowDuration="60000">
                 <Button.ToolTip>
-                    <ToolTip Padding="0" Placement="Top" Opened="ToolTip_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
+                    <ToolTip Padding="0" Placement="Top" Opened="ToolTipNext_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
                         <StackPanel Width="300">
                             <shared:GifPlayer Background="Black" AutoPlay="True" Name="playerNext" Stretch="Uniform"/>
                             <TextBlock Margin="2" Background="White" Foreground="Black" Name="titleNext" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
@@ -627,7 +627,17 @@
                     </ToolTip>
                 </Button.ToolTip>
             </Button>
-            <Button Command="{Binding Playlist.PlayPreviousEntryCommand}" CommandParameter="{Binding LoadedFiles}" ToolTip="Play previous video in playlist" Content="9" DockPanel.Dock="Right"/>
+            <Button Command="{Binding Playlist.PlayPreviousEntryCommand}" Content="9" DockPanel.Dock="Right"
+                    ToolTipService.BetweenShowDelay="0" ToolTipService.ShowDuration="60000">
+                <Button.ToolTip>
+                    <ToolTip Padding="0" Placement="Top" Opened="ToolTipPrevious_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
+                        <StackPanel Width="300">
+                            <shared:GifPlayer Background="Black" AutoPlay="True" Name="playerPrevious" Stretch="Uniform"/>
+                            <TextBlock Margin="2" Background="White" Foreground="Black" Name="titlePrevious" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </ToolTip>
+                </Button.ToolTip>
+            </Button>
             <shared:SeekBar HighlightRange="{Binding DisplayedRange}" SnapsToDevicePixels="True" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Thumbnails="{Binding Thumbnails}" Progress="{Binding Path=TimeSource.Progress}" Duration="{Binding Path=TimeSource.Duration}" Seek="SeekBar_OnSeek">
                 <shared:SeekBar.OverlayOpacity>
                     <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">

@@ -16,6 +16,42 @@ namespace ScriptPlayer.Shared
 {
     public class GifPlayer : Control
     {
+        public static readonly DependencyProperty ShowProgressProperty = DependencyProperty.Register(
+            "ShowProgress", typeof(bool), typeof(GifPlayer), new FrameworkPropertyMetadata(default(bool), FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public bool ShowProgress
+        {
+            get { return (bool) GetValue(ShowProgressProperty); }
+            set { SetValue(ShowProgressProperty, value); }
+        }
+
+        public static readonly DependencyProperty ProgressHeightProperty = DependencyProperty.Register(
+            "ProgressHeight", typeof(double), typeof(GifPlayer), new FrameworkPropertyMetadata((double)4.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public double ProgressHeight
+        {
+            get { return (double) GetValue(ProgressHeightProperty); }
+            set { SetValue(ProgressHeightProperty, value); }
+        }
+
+        public static readonly DependencyProperty ProgressBackgroundProperty = DependencyProperty.Register(
+            "ProgressBackground", typeof(Brush), typeof(GifPlayer), new FrameworkPropertyMetadata(Brushes.LightGray, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public Brush ProgressBackground
+        {
+            get { return (Brush) GetValue(ProgressBackgroundProperty); }
+            set { SetValue(ProgressBackgroundProperty, value); }
+        }
+
+        public static readonly DependencyProperty ProgressForegroundProperty = DependencyProperty.Register(
+            "ProgressForeground", typeof(Brush), typeof(GifPlayer), new FrameworkPropertyMetadata(Brushes.DodgerBlue, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public Brush ProgressForeground
+        {
+            get { return (Brush) GetValue(ProgressForegroundProperty); }
+            set { SetValue(ProgressForegroundProperty, value); }
+        }
+
         public static readonly DependencyProperty AutoSizeProperty = DependencyProperty.Register(
             "AutoSize", typeof(bool), typeof(GifPlayer), new FrameworkPropertyMetadata(default(bool), FrameworkPropertyMetadataOptions.AffectsMeasure));
 
@@ -143,26 +179,30 @@ namespace ScriptPlayer.Shared
 
             if (AutoSize)
             {
-                return new Size(Frames.Width, Frames.Height);
+                return new Size(Frames.Width, Frames.Height + ActualProgressHeight);
             }
 
             if (!IsUndefined(constraint))
             {
-                return GetScaledSize(constraint);
+                Size constraintWithoutProgress = new Size(constraint.Width, constraint.Height - ActualProgressHeight);
+                Size scaledSize = GetScaledSize(constraintWithoutProgress);
+                return new Size(scaledSize.Width, scaledSize.Height + ActualProgressHeight);
             }
 
             if (!IsUndefined(constraint.Width))
             {
-                return new Size(constraint.Width, Frames.Height * (constraint.Width / Frames.Width));
+                return new Size(constraint.Width, Frames.Height * (constraint.Width / Frames.Width) + ActualProgressHeight);
             }
 
             if (!IsUndefined(constraint.Height))
             {
-                return new Size(Frames.Width * (constraint.Height / Frames.Height), constraint.Height);
+                return new Size(Frames.Width * ((constraint.Height - ActualProgressHeight) / Frames.Height), constraint.Height);
             }
 
-            return new Size(Frames.Width, Frames.Height);
+            return new Size(Frames.Width, Frames.Height + ActualProgressHeight);
         }
+
+        public double ActualProgressHeight => ShowProgress ? ProgressHeight : 0;
 
         private bool IsUndefined(Size value)
         {
@@ -176,26 +216,41 @@ namespace ScriptPlayer.Shared
 
         protected override void OnRender(DrawingContext drawingContext)
         {
-            Rect dimensions = new Rect(0, 0, ActualWidth, ActualHeight);
+            Rect frameDimension = new Rect(0, 0, ActualWidth, ActualHeight - ActualProgressHeight);
+            Rect totalDimension = new Rect(0, 0, ActualWidth, ActualHeight);
+            
+            drawingContext.DrawRectangle(Background, null, totalDimension);
 
-            drawingContext.DrawRectangle(Background, null, dimensions);
+            double fillRatio = 0;
 
-            if (Frames == null || Frames.Count == 0)
+            if (Frames != null && Frames.Count != 0)
             {
-                return;
+                fillRatio = _index / (Frames.Count - 1.0);
+
+                Size scaledSize = GetScaledSize(RenderSize);
+                Point offset = new Point((frameDimension.Width - scaledSize.Width) / 2,
+                    (frameDimension.Height - scaledSize.Height) / 2);
+
+                GifFrame frame = Frames[_index];
+                Rect final = new Rect(
+                    offset.X,
+                    offset.Y,
+                    scaledSize.Width,
+                    scaledSize.Height);
+
+                drawingContext.DrawImage(frame.Image, final);
             }
 
-            Size scaledSize = GetScaledSize(RenderSize);
-            Point offset = new Point((dimensions.Width - scaledSize.Width) / 2, (dimensions.Height - scaledSize.Height) / 2);
+            if (ShowProgress)
+            {
+                Rect progressBackgroundDimension = new Rect(0, ActualHeight - ActualProgressHeight, ActualWidth,
+                    ProgressHeight);
+                Rect progressForegroundDimension = new Rect(0, ActualHeight - ActualProgressHeight,
+                    ActualWidth * fillRatio, ProgressHeight);
 
-            GifFrame frame = Frames[_index];
-            Rect final = new Rect(
-                offset.X,
-                offset.Y,
-                scaledSize.Width,
-                scaledSize.Height);
-
-            drawingContext.DrawImage(frame.Image, final);
+                drawingContext.DrawRectangle(ProgressBackground, null, progressBackgroundDimension);
+                drawingContext.DrawRectangle(ProgressForeground, null, progressForegroundDimension);
+            }
         }
 
         private Size GetScaledSize(Size constraint)
@@ -275,8 +330,7 @@ namespace ScriptPlayer.Shared
 
         protected virtual void OnFramesReady()
         {
-            var handler = FramesReady;
-            if (handler != null) handler(this, EventArgs.Empty);
+            FramesReady?.Invoke(this, EventArgs.Empty);
         }
     }
 
