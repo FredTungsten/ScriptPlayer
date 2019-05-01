@@ -112,6 +112,7 @@ namespace ScriptPlayer.ViewModels
             UpdateFilter();
             CommandManager.InvalidateRequerySuggested();
             UpdateTotalDuration();
+            UpdateNextAndPrevious();
         }
 
         private void UpdateTotalDuration()
