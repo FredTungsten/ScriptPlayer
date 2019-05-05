@@ -517,7 +517,11 @@ namespace ScriptPlayer.ViewModels
             if (!CanPlayPreviousEntry())
                 return;
 
-            OnPlayEntry(PreviousEntry);
+            PlaylistEntry entry = PreviousEntry;
+            if (entry == null)
+                return;
+
+            OnPlayEntry(entry);
         }
 
 
@@ -879,6 +883,11 @@ namespace ScriptPlayer.ViewModels
                         return CurrentEntry;
                 }
                 return null;
+            }
+
+            if (currentIndex == -1)
+            {
+                return FirstEntry();
             }
 
             var previousEntry = Entries[currentIndex - 1];

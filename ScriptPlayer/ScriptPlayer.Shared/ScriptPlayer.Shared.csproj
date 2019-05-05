@@ -145,6 +145,9 @@
     <Compile Include="Beats\MetronomeTick.cs" />
     <Compile Include="Classes\ConsoleWrapper.cs" />
     <Compile Include="Classes\FrameConverterWrapper.cs" />
+    <Compile Include="Classes\GlobalCommandManager.cs" />
+    <Compile Include="Classes\InputMapping.cs" />
+    <Compile Include="Classes\ScriptplayerCommand.cs" />
     <Compile Include="Classes\Section.cs" />
     <Compile Include="Classes\VideoThumbnailCollection.cs" />
     <Compile Include="Colors\AnalysisParameters.cs" />
