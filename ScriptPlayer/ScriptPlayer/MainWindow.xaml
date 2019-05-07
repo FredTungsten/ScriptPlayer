@@ -441,13 +441,13 @@
                             </Style>
                         </MenuItem.Style>
                     </MenuItem>
-                    <MenuItem>
-                        <MenuItem.Header>
+                    <MenuItem Header="Buttplug / Intiface">
+                        <!--<MenuItem.Header>
                             <TextBlock>
                             <Run Text="Buttplug "/>
                             <Run Text="{Binding ButtplugApiVersion}"/>
                             </TextBlock>
-                        </MenuItem.Header>
+                        </MenuItem.Header>-->
                         <MenuItem Header="Download" Click="MnuDownloadButtplug_Click"/>
                         <Separator/>
                         <MenuItem Header="Connect" Command="{Binding ConnectButtplugCommand}"/>
