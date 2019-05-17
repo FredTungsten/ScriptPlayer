@@ -127,7 +127,11 @@
                             <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
                                 ConverterParameter={x:Static viewModels:ChapterMode.RandomChapter}}" Content="Random Chapter"/>
                             <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
+                                ConverterParameter={x:Static viewModels:ChapterMode.RandomChapterLimitedDuration}}" Content="Random Chapter (limited)"/>
+                            <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
                                 ConverterParameter={x:Static viewModels:ChapterMode.FastestTimeSpan}}" Content="Fastest Section"/>
+                            <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
+                                ConverterParameter={x:Static viewModels:ChapterMode.RandomTimeSpan}}" Content="Random Section"/>
 
                             <DockPanel Margin="4" ToolTip="The approximate duration of randomly selected sections.">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Target Duration"/>

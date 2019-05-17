@@ -3191,6 +3191,36 @@ namespace ScriptPlayer.ViewModels
 
                         return fastestChapter;
                     }
+                case ChapterMode.RandomChapterLimitedDuration:
+                {
+                    TimeSpan duration = Settings.ChapterTargetDuration;
+
+                    Random r = new Random();
+                    var chapter = chapters[r.Next(chapters.Count)];
+
+                    if (chapter.Duration <= duration)
+                        return chapter;
+
+                    TimeSpan maxOffset = chapter.Duration - duration;
+
+                    TimeSpan start = chapter.Start + TimeSpan.FromSeconds(r.NextDouble() * maxOffset.TotalSeconds);
+                    return new Section(start, start + duration);
+                }
+                case ChapterMode.RandomTimeSpan:
+                {
+                    TimeSpan duration = Settings.ChapterTargetDuration;
+
+                    Random r = new Random();
+                    var longEnoughChapters = chapters.Where(c => c.Duration >= duration).ToList();
+                    if (longEnoughChapters.Count == 0)
+                        return chapters.FirstOrDefault(c => c.Duration == chapters.Max(c2 => c2.Duration));
+
+                    var chapter = chapters[r.Next(chapters.Count)];
+                    TimeSpan maxOffset = chapter.Duration - duration;
+
+                    TimeSpan start = chapter.Start + TimeSpan.FromSeconds(r.NextDouble() * maxOffset.TotalSeconds);
+                    return new Section(start, start + duration);
+                }
                 case ChapterMode.FastestTimeSpan:
                     {
                         TimeSpan span = Settings.ChapterTargetDuration;
@@ -3767,6 +3797,12 @@ namespace ScriptPlayer.ViewModels
                 case ChapterMode.FastestTimeSpan:
                     RandomChapterToolTip = $"Fastest Section\r\nWill only play the fastest {Settings.ChapterTargetDuration.TotalSeconds:f0}s of the script";
                     break;
+                case ChapterMode.RandomTimeSpan:
+                    RandomChapterToolTip = $"Random Section\r\nWill only play a random {Settings.ChapterTargetDuration.TotalSeconds:f0}s section of the script";
+                    break;
+                case ChapterMode.RandomChapterLimitedDuration:
+                    RandomChapterToolTip = $"Random Chapter (limited)\r\nWill only play up to {Settings.ChapterTargetDuration.TotalSeconds:f0}s of a random chapter of the script";
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -3917,6 +3953,12 @@ namespace ScriptPlayer.ViewModels
 
         [XmlEnum("FastestTimeSpan")]
         FastestTimeSpan,
+
+        [XmlEnum("RandomTimeSpan")]
+        RandomTimeSpan,
+
+        [XmlEnum("RandomChapterLimitedDuration")]
+        RandomChapterLimitedDuration
     }
     public enum SkipState
     {
