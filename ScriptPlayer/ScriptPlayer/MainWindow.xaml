@@ -572,7 +572,7 @@
                 <TextBlock.ContextMenu>
                     <ContextMenu>
                         <ContextMenu.Resources>
-                            <Style TargetType="MenuItem">
+                            <Style x:Key="DisplayModeCommand" TargetType="MenuItem">
                                 <Setter Property="Command" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.SetTimeDisplayModeCommand}"/>
                                 <Setter Property="CommandParameter" Value="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"></Setter>
                                 <Setter Property="IsChecked">
@@ -584,10 +584,27 @@
                                     </Setter.Value>
                                 </Setter>
                             </Style>
+                            <Style x:Key="TimeLeftCommand" TargetType="MenuItem">
+                                <Setter Property="Command" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.SetShowTimeLeftCommand}"/>
+                                <Setter Property="CommandParameter" Value="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"></Setter>
+                                <Setter Property="IsChecked">
+                                    <Setter.Value>
+                                        <MultiBinding Converter="{StaticResource EqualsConverter}">
+                                            <Binding RelativeSource="{RelativeSource Self}" Path="Tag"/>
+                                            <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}" Path="PlacementTarget.DataContext.Settings.ShowTimeLeft"/>
+                                        </MultiBinding>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
                         </ContextMenu.Resources>
-                        <MenuItem Header="Media Progress" Tag="{x:Static viewModels:TimeDisplayMode.Original}"/>
-                        <MenuItem Header="Content and Gaps" Tag="{x:Static viewModels:TimeDisplayMode.ContentAndGaps}"/>
-                        <MenuItem Header="Content Only" Tag="{x:Static viewModels:TimeDisplayMode.ContentOnly}"/>
+                        <MenuItem Header="Media Progress" Tag="{x:Static viewModels:TimeDisplayMode.Original}" Style="{StaticResource DisplayModeCommand}"/>
+                        <MenuItem Header="Content and Gaps" Tag="{x:Static viewModels:TimeDisplayMode.ContentAndGaps}" Style="{StaticResource DisplayModeCommand}"/>
+                        <MenuItem Header="Content Only" Tag="{x:Static viewModels:TimeDisplayMode.ContentOnly}" Style="{StaticResource DisplayModeCommand}"/>
+                        <Separator/>
+                        <MenuItem Header="Time elapsed" Tag="{x:Static viewModels:StaticBoolean.False}" Style="{StaticResource TimeLeftCommand}"/>
+                        <MenuItem Header="Time remaining" Tag="{x:Static viewModels:StaticBoolean.True}" Style="{StaticResource TimeLeftCommand}"/>
+                        <Separator/>
+                        <MenuItem Header="Limit to selection" IsCheckable="True" IsChecked="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.Settings.LimitDisplayedTimeToSelection}"/>
                     </ContextMenu>
                 </TextBlock.ContextMenu>
                 <TextBlock.Style>

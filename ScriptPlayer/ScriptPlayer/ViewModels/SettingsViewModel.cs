@@ -168,6 +168,7 @@ namespace ScriptPlayer.ViewModels
         private string _ffmpegPath;
         private TimeDisplayMode _timeDisplayMode;
         private VibratorConversionMode _vibratorConversionMode = VibratorConversionMode.PositionToSpeed;
+        private bool _limitDisplayedTimeToSelection = true;
 
         public SettingsViewModel()
         {
@@ -490,6 +491,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _showTimeLeft) return;
                 _showTimeLeft = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool LimitDisplayedTimeToSelection
+        {
+            get => _limitDisplayedTimeToSelection;
+            set
+            {
+                if (value == _limitDisplayedTimeToSelection) return;
+                _limitDisplayedTimeToSelection = value;
                 OnPropertyChanged();
             }
         }

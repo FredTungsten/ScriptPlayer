@@ -210,7 +210,7 @@
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ShowTimeLeft}" Content="Show time left instead of elapsed"/>
-
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.LimitDisplayedTimeToSelection}" Content="Limit to active selection"/>
                             <RadioButton HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.TimeDisplayMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:TimeDisplayMode.Original}}" Content="Media Progress" />
                             <RadioButton HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.TimeDisplayMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:TimeDisplayMode.ContentAndGaps}}" Content="Content and gaps" />
                             <RadioButton HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.TimeDisplayMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:TimeDisplayMode.ContentOnly}}" Content="Content only" />

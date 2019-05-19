@@ -1357,6 +1357,8 @@ namespace ScriptPlayer.ViewModels
 
         public RelayCommand<TimeDisplayMode> SetTimeDisplayModeCommand { get; set; }
 
+        public RelayCommand<bool> SetShowTimeLeftCommand { get; set; }
+
 
         public PlaylistViewModel Playlist
         {
@@ -1489,6 +1491,8 @@ namespace ScriptPlayer.ViewModels
                         UpdatePatternSpeed();
                         break;
                     }
+                case nameof(SettingsViewModel.ShowTimeLeft):
+                case nameof(SettingsViewModel.LimitDisplayedTimeToSelection):
                 case nameof(SettingsViewModel.TimeDisplayMode):
                     {
                         UpdateDisplayedDuration();
@@ -1929,6 +1933,8 @@ namespace ScriptPlayer.ViewModels
         {
             SetTimeDisplayModeCommand = new RelayCommand<TimeDisplayMode>(SetTimeDisplayMode);
 
+            SetShowTimeLeftCommand = new RelayCommand<bool>(SetShowTimeLeft);
+
             ShowSettingsCommand = new ScriptplayerCommand(ShowSettings)
             {
                 CommandId = "ShowSettings",
@@ -2082,6 +2088,11 @@ namespace ScriptPlayer.ViewModels
                 CommandId = "DecreaseScriptDelay",
                 DisplayText = "Decrease Script Delay"
             });
+        }
+
+        private void SetShowTimeLeft(bool showTimeLeft)
+        {
+            Settings.ShowTimeLeft = showTimeLeft;
         }
 
         private void SetTimeDisplayMode(TimeDisplayMode mode)
@@ -3116,6 +3127,12 @@ namespace ScriptPlayer.ViewModels
 
         private TimeSpan TranslateMediaPosition(List<Section> sections, TimeSpan rawProgress, TimeDisplayMode mode)
         {
+            if (Settings.LimitDisplayedTimeToSelection && SelectedRange != null)
+            {
+                sections = CutSections(sections, SelectedRange);
+                rawProgress = rawProgress - SelectedRange.Start;
+            }
+
             switch (mode)
             {
                 case TimeDisplayMode.Original:
@@ -3159,6 +3176,27 @@ namespace ScriptPlayer.ViewModels
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }
+        }
+
+        private List<Section> CutSections(List<Section> sections, Section range)
+        {
+            List<Section> newSections = new List<Section>();
+
+            foreach (Section section in sections)
+            {
+                if (section.End <= range.Start)
+                    continue;
+
+                if (section.Start >= range.End)
+                    continue;
+
+                TimeSpan start = section.Start < range.Start ? TimeSpan.Zero : section.Start - range.Start;
+                TimeSpan end = section.End > range.End ? range.Duration : section.End - range.Start;
+
+                newSections.Add(new Section(start, end));
+            }
+
+            return newSections;
         }
 
         private Section GetRandomChapter(ChapterMode mode)

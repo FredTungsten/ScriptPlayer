@@ -132,6 +132,7 @@
       <DependentUpon>FlashOverlay.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\CommandLineSplitter.cs" />
+    <Compile Include="ViewModels\Constants.cs" />
     <Compile Include="ViewModels\InstanceHandler.cs" />
     <Compile Include="ViewModels\PlaybackMode.cs" />
     <Compile Include="ViewModels\PlayerStateModel.cs" />
