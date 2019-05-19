@@ -71,7 +71,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Devices" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Displayed Time" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -211,9 +211,12 @@
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ShowTimeLeft}" Content="Show time left instead of elapsed"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.LimitDisplayedTimeToSelection}" Content="Limit to active selection"/>
-                            <RadioButton HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.TimeDisplayMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:TimeDisplayMode.Original}}" Content="Media Progress" />
-                            <RadioButton HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.TimeDisplayMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:TimeDisplayMode.ContentAndGaps}}" Content="Content and gaps" />
-                            <RadioButton HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.TimeDisplayMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:TimeDisplayMode.ContentOnly}}" Content="Content only" />
+                            <TextBlock Margin="4" Text="Mode:"/>
+                            <StackPanel Margin="12,0,0,0">
+                                <RadioButton Margin="2" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.TimeDisplayMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:TimeDisplayMode.Original}}" Content="Media Progress" />
+                                <RadioButton Margin="2" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.TimeDisplayMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:TimeDisplayMode.ContentAndGaps}}" Content="Content and gaps" />
+                                <RadioButton Margin="2" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.TimeDisplayMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:TimeDisplayMode.ContentOnly}}" Content="Content only" />
+                            </StackPanel>
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Debug">
