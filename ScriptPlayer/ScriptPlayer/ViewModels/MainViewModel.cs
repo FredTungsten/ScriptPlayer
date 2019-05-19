@@ -2487,7 +2487,7 @@ namespace ScriptPlayer.ViewModels
 
                 if (Settings.RandomChapters)
                 {
-                    var chapter = GetRandomChapter();
+                    var chapter = GetRandomChapter(Settings.ChapterMode);
                     SelectedRange = chapter;
                     start = chapter.Start - TimeSpan.FromSeconds(1);
 
@@ -2820,6 +2820,11 @@ namespace ScriptPlayer.ViewModels
 
             if (!TimeSource.IsPlaying) return;
 
+            if (skipState != SkipState.Available)
+            {
+                Debug.WriteLine("SkipState = " + skipState + "@" + eventArgs.CurrentAction.TimeStamp.ToString("g"));
+            }
+
             switch (skipState)
             {
                 case SkipState.Available:
@@ -2829,7 +2834,7 @@ namespace ScriptPlayer.ViewModels
                     }
                 case SkipState.Gap:
                     {
-                        if (Settings.AutoSkip)
+                        if (Settings.AutoSkip || Settings.RandomChapters)
                         {
                             SkipToNextEvent();
                         }
@@ -3156,7 +3161,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private Section GetRandomChapter()
+        private Section GetRandomChapter(ChapterMode mode)
         {
             var minDuration = TimeSpan.FromSeconds(30);
 
@@ -3164,9 +3169,6 @@ namespace ScriptPlayer.ViewModels
 
             if (chapters.Count == 0)
                 return Section.Empty;
-
-            //ChapterMode mode = ChapterMode.FastestTimeSpan;
-            ChapterMode mode = Settings.ChapterMode;
 
             switch (mode)
             {
@@ -3283,6 +3285,10 @@ namespace ScriptPlayer.ViewModels
                                 timeStamps.RemoveAt(0);
                             }
                         }
+
+                        //Can happen if all chapters are too short ...
+                        if (fastestSection.IsEmpty)
+                            return GetRandomChapter(ChapterMode.FastestChapter);
 
                         return fastestSection;
                     }

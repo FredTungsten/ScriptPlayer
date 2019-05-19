@@ -121,7 +121,8 @@
                             <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_bookmark}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
-                            <TextBlock Text="Random Chapter Mode:"/>
+                            <TextBlock Text="Chapter Mode:"/>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.RandomChapters}" Content="Enabled"/>
                             <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
                                 ConverterParameter={x:Static viewModels:ChapterMode.FastestChapter}}" Content="Fastest Chapter"/>
                             <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
