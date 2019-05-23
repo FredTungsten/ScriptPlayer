@@ -1,0 +1,22 @@
+﻿<Window x:Class="ScriptPlayer.Dialogs.ThumbnailBannerGeneratorSettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
+        DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=Settings}"
+        mc:Ignorable="d" WindowStartupLocation="CenterOwner"
+        Title="Thumbnail Banner Settings" Height="190.678" Width="304.237">
+    <Grid>
+        <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="Columns" VerticalAlignment="Top"/>
+        <TextBox Height="23" Margin="108,10,10,0" TextWrapping="Wrap" Text="{Binding Columns}" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,39,0,0" TextWrapping="Wrap" Text="Rows" VerticalAlignment="Top"/>
+        <TextBox Height="23" Margin="108,38,10,0" TextWrapping="Wrap" Text="{Binding Rows}" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,67,0,0" TextWrapping="Wrap" Text="Total Width" VerticalAlignment="Top"/>
+        <TextBox Height="23" Margin="108,66,10,0" TextWrapping="Wrap" Text="{Binding TotalWidth}" VerticalAlignment="Top"/>
+        <Button IsDefault="True" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75"/>
+        <Button IsCancel="True" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
+        <Button Content="Preview" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
+
+    </Grid>
+</Window>

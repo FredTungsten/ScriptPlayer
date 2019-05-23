@@ -101,6 +101,12 @@
     <Compile Include="Dialogs\PreviewGeneratorDialog.xaml.cs">
       <DependentUpon>PreviewGeneratorDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\ThumbnailBannerGeneratorSettingsDialog.xaml.cs">
+      <DependentUpon>ThumbnailBannerGeneratorSettingsDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ThumbnailBannerGeneratorSettingsPreviewDialog.xaml.cs">
+      <DependentUpon>ThumbnailBannerGeneratorSettingsPreviewDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\ThumbnailGeneratorDialog.xaml.cs">
       <DependentUpon>ThumbnailGeneratorDialog.xaml</DependentUpon>
     </Compile>
@@ -183,6 +189,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\PreviewGeneratorDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\ThumbnailBannerGeneratorSettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\ThumbnailBannerGeneratorSettingsPreviewDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

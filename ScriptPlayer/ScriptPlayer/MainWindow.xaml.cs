@@ -69,6 +69,8 @@ namespace ScriptPlayer
             ViewModel.RequestGetWindowState += ViewModelOnRequestGetWindowState;
             ViewModel.RequestThumbnailGeneratorSettings += ViewModelOnRequestThumbnailGeneratorSettings;
             ViewModel.RequestGenerateThumbnails += ViewModelOnRequestGenerateThumbnails;
+            ViewModel.RequestGenerateThumbnailBanner += ViewModelOnRequestGenerateThumbnailBanner;
+            ViewModel.RequestThumbnailBannerGeneratorSettings += ViewModelOnRequestThumbnailBannerGeneratorSettings;
 
             ViewModel.RequestActivate += ViewModelOnRequestActivate;
             ViewModel.RequestShowSettings += ViewModelOnRequestShowSettings;
@@ -89,6 +91,21 @@ namespace ScriptPlayer
                 WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
             }
+        }
+
+        private void ViewModelOnRequestThumbnailBannerGeneratorSettings(object sender, RequestEventArgs<ThumbnailBannerGeneratorSettings> eventArgs)
+        {
+            ThumbnailBannerGeneratorSettingsDialog dialog = new ThumbnailBannerGeneratorSettingsDialog(eventArgs.Value) { Owner = this };
+            if (dialog.ShowDialog() != true)
+                return;
+
+            eventArgs.Value = dialog.Settings;
+            eventArgs.Handled = true;
+        }
+
+        private void ViewModelOnRequestGenerateThumbnailBanner(object sender, ThumbnailBannerGeneratorSettings settings)
+        {
+            MessageBox.Show("Not done yet ...");
         }
 
         private void ViewModelOnRequestActivate(object sender, EventArgs eventArgs)

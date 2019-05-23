@@ -40,10 +40,12 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<KodiConnectionSettings>> RequestKodiConnectionSettings;
         public event EventHandler<RequestEventArgs<WindowStateModel>> RequestGetWindowState;
         public event EventHandler<RequestEventArgs<ThumbnailGeneratorSettings>> RequestThumbnailGeneratorSettings;
+        public event EventHandler<RequestEventArgs<ThumbnailBannerGeneratorSettings>> RequestThumbnailBannerGeneratorSettings;
 
         public event EventHandler RequestActivate;
         public event EventHandler<string> RequestShowSettings;
         public event EventHandler<ThumbnailGeneratorSettings> RequestGenerateThumbnails;
+        public event EventHandler<ThumbnailBannerGeneratorSettings> RequestGenerateThumbnailBanner;
         public event EventHandler<WindowStateModel> RequestSetWindowState;
         public event EventHandler RequestHideSkipButton;
         public event EventHandler RequestShowSkipButton;
@@ -265,6 +267,7 @@ namespace ScriptPlayer.ViewModels
         private List<Section> _chapters;
         private TimeSpan _previousProgress = TimeSpan.MinValue;
         private bool _loopSelection;
+        private ThumbnailBannerGeneratorSettings _lastThumbnailBannerSettings;
 
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
@@ -1353,6 +1356,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand GenerateThumbnailsForLoadedVideoCommand { get; set; }
 
+        public ScriptplayerCommand GenerateThumbnailBannerForLoadedVideoCommand { get; set; }
+
         public ScriptplayerCommand ShowSettingsCommand { get; set; }
 
         public RelayCommand<TimeDisplayMode> SetTimeDisplayModeCommand { get; set; }
@@ -1946,6 +1951,12 @@ namespace ScriptPlayer.ViewModels
             {
                 CommandId = "GenerateThumbnailsForLoadedVideo",
                 DisplayText = "Generate Thumbnails for loaded Video"
+            };
+
+            GenerateThumbnailBannerForLoadedVideoCommand = new ScriptplayerCommand(GenerateThumbnailBannerForLoadedVideo, CanGenerateThumbnailsForLoadedVideo)
+            {
+                CommandId = "GenerateThumbnailBannerForLoadedVideo",
+                DisplayText = "Generate Thumbnail Banner for loaded Video"
             };
 
             OpenScriptCommand = new ScriptplayerCommand(OpenScript)
@@ -3911,6 +3922,31 @@ namespace ScriptPlayer.ViewModels
             GenerateThumbnails(new[] { LoadedVideo });
         }
 
+        public void GenerateThumbnailBannerForLoadedVideo()
+        {
+            if (!CanGenerateThumbnailsForLoadedVideo())
+                return;
+
+            GenerateThumbnailBanner(LoadedVideo);
+        }
+
+        private void GenerateThumbnailBanner(string video)
+        {
+            if (!CheckFfmpeg())
+                return;
+
+            ThumbnailBannerGeneratorSettings settings = _lastThumbnailBannerSettings?.Clone();
+            settings = OnRequestThumbnailBannerGeneratorSettings(settings);
+            if (settings == null)
+                return;
+
+            _lastThumbnailBannerSettings = settings;
+            settings.Video = video;
+
+            OnRequestGenerateThumbnailBanner(settings);
+
+        }
+
         private void GenerateThumbnails(string[] videos)
         {
             if (!CheckFfmpeg())
@@ -3936,6 +3972,22 @@ namespace ScriptPlayer.ViewModels
         {
             var eventArgs = new RequestEventArgs<ThumbnailGeneratorSettings>(initialSettings);
             RequestThumbnailGeneratorSettings?.Invoke(this, eventArgs);
+
+            if (!eventArgs.Handled)
+                return null;
+
+            return eventArgs.Value;
+        }
+
+        protected virtual void OnRequestGenerateThumbnailBanner(ThumbnailBannerGeneratorSettings e)
+        {
+            RequestGenerateThumbnailBanner?.Invoke(this, e);
+        }
+
+        protected virtual ThumbnailBannerGeneratorSettings OnRequestThumbnailBannerGeneratorSettings(ThumbnailBannerGeneratorSettings initialSettings)
+        {
+            var eventArgs = new RequestEventArgs<ThumbnailBannerGeneratorSettings>(initialSettings);
+            RequestThumbnailBannerGeneratorSettings?.Invoke(this, eventArgs);
 
             if (!eventArgs.Handled)
                 return null;
