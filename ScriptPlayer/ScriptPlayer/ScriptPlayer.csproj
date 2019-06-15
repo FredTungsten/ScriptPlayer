@@ -91,6 +91,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Generators\FfmpegGenerator.cs" />
+    <Compile Include="Generators\FfmpegGeneratorSettings.cs" />
     <Compile Include="Converters\BooleanAndConverter.cs" />
     <Compile Include="Converters\CollectionNullOrEmptyToVisibilityConverter.cs" />
     <Compile Include="Converters\DurationConverter.cs" />
@@ -98,15 +100,27 @@
     <Compile Include="Dialogs\AttributionDialog.xaml.cs">
       <DependentUpon>AttributionDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Generators\GeneratorEntry.cs" />
+    <Compile Include="Generators\GeneratorJob.cs" />
+    <Compile Include="Dialogs\GeneratorProgressDialog.xaml.cs">
+      <DependentUpon>GeneratorProgressDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Generators\JobDoneTypes.cs" />
+    <Compile Include="Generators\JobStates.cs" />
+    <Compile Include="Generators\PreviewGenerator.cs" />
+    <Compile Include="Generators\GeneratorWorkQueue.cs" />
+    <Compile Include="Generators\IGenerator.cs" />
     <Compile Include="Dialogs\PreviewGeneratorDialog.xaml.cs">
       <DependentUpon>PreviewGeneratorDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Generators\PreviewGeneratorSettings.cs" />
     <Compile Include="Dialogs\ThumbnailBannerGeneratorSettingsDialog.xaml.cs">
       <DependentUpon>ThumbnailBannerGeneratorSettingsDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\ThumbnailBannerGeneratorSettingsPreviewDialog.xaml.cs">
       <DependentUpon>ThumbnailBannerGeneratorSettingsPreviewDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Generators\ThumbnailGenerator.cs" />
     <Compile Include="Dialogs\ThumbnailGeneratorDialog.xaml.cs">
       <DependentUpon>ThumbnailGeneratorDialog.xaml</DependentUpon>
     </Compile>
@@ -122,9 +136,12 @@
     <Compile Include="Dialogs\ShortcutInputDialog.xaml.cs">
       <DependentUpon>ShortcutInputDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Generators\ThumbnailGeneratorSettings.cs" />
     <Compile Include="Dialogs\ThumbnailGeneratorSettingsDialog.xaml.cs">
       <DependentUpon>ThumbnailGeneratorSettingsDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Generators\TimeFrame.cs" />
+    <Compile Include="Dialogs\ThumbnailProgressEntry.cs" />
     <Compile Include="Dialogs\ZoomPlayerConnectionSettingsDialog.xaml.cs">
       <DependentUpon>ZoomPlayerConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
@@ -185,6 +202,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\ButtplugConnectionSettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\GeneratorProgressDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Shell;
-using JetBrains.Annotations;
+using ScriptPlayer.Generators;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.ViewModels;
@@ -60,7 +58,7 @@ namespace ScriptPlayer.Dialogs
         {
             ViewModel = viewmodel;
             _settings = settings;
-            Entries = settings.Videos.Select(vf => new ThumbnailProgressEntry(vf)).ToList();
+            //Entries = settings.Videos.Select(vf => new ThumbnailProgressEntry(vf)).ToList();
 
             InitializeComponent();
         }
@@ -89,7 +87,7 @@ namespace ScriptPlayer.Dialogs
 
                 wrapper.ProgressChanged += (s, progress) => { SetStatus(currentEntry, null, progress); };
 
-                if (_settings.SkipExisting)
+                if (_settings.SkipIfExists)
                 {
 
                     List<ThumbnailProgressEntry> skipped = new List<ThumbnailProgressEntry>();
@@ -102,7 +100,7 @@ namespace ScriptPlayer.Dialogs
 
                         string thumbfile = Path.ChangeExtension(entry.FilePath, "thumbs");
 
-                        if (File.Exists(thumbfile) && _settings.SkipExisting)
+                        if (File.Exists(thumbfile) && _settings.SkipIfExists)
                         {
                             SetStatus(entry, "Skipped", 1);
                             skipped.Add(entry);
@@ -136,7 +134,7 @@ namespace ScriptPlayer.Dialogs
 
                     string thumbfile = Path.ChangeExtension(currentEntry.FilePath, "thumbs");
 
-                    if (File.Exists(thumbfile) && _settings.SkipExisting)
+                    if (File.Exists(thumbfile) && _settings.SkipIfExists)
                     {
                         SetStatus(currentEntry, "Skipped", 1);
                         continue;
@@ -257,56 +255,6 @@ namespace ScriptPlayer.Dialogs
         private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             _closeWhenDone = false;
-        }
-    }
-
-    public class ThumbnailProgressEntry : INotifyPropertyChanged
-    {
-        private double _progress;
-        private string _status;
-
-        public string FilePath { get; set; }
-
-        public string FileName { get; set; }
-
-        public bool SkipThis { get; set; }
-
-        public double Progress
-        {
-            get => _progress;
-            set
-            {
-                if (value.Equals(_progress)) return;
-                _progress = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string Status
-        {
-            get => _status;
-            set
-            {
-                if (value == _status) return;
-                _status = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public ThumbnailProgressEntry(string filePath)
-        {
-            FilePath = filePath;
-            FileName = Path.GetFileName(filePath);
-            Progress = 0;
-            Status = "Queued";
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

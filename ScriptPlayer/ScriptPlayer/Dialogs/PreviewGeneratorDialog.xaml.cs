@@ -1,8 +1,6 @@
 ﻿using System;
-using System.IO;
-using System.Threading;
 using System.Windows;
-using ScriptPlayer.Shared;
+using ScriptPlayer.Generators;
 using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Dialogs
@@ -21,14 +19,21 @@ namespace ScriptPlayer.Dialogs
             set { SetValue(ViewModelProperty, value); }
         }
 
+        public static readonly DependencyProperty GeneratorEntryProperty = DependencyProperty.Register(
+            "GeneratorEntry", typeof(GeneratorEntry), typeof(PreviewGeneratorDialog), new PropertyMetadata(default(GeneratorEntry)));
+
+        public GeneratorEntry GeneratorEntry
+        {
+            get { return (GeneratorEntry) GetValue(GeneratorEntryProperty); }
+            set { SetValue(GeneratorEntryProperty, value); }
+        }
+
         private readonly PreviewGeneratorSettings _settings;
 
-        private ConsoleWrapper _wrapper;
         private bool _done;
-        private Thread _thread;
+        private PreviewGenerator _generator;
         private bool _success;
-        private bool _canceled;
-        
+
         public PreviewGeneratorDialog(MainViewModel viewModel, PreviewGeneratorSettings settings)
         {
             ViewModel = viewModel;
@@ -43,84 +48,34 @@ namespace ScriptPlayer.Dialogs
 
         private void GeneratePreviewGif()
         {
-            string ffmpegexe = ViewModel.Settings.FfmpegPath;
+            _generator = new PreviewGenerator(ViewModel.Settings.FfmpegPath);
+            _generator.Done += GeneratorOnDone;
 
-            _thread = new Thread(() =>
+            GeneratorEntry entry = _generator.CreateEntry(_settings);
+            _generator.ProcessInThread(_settings, entry);
+        }
+
+        private void GeneratorOnDone(object sender, Tuple<bool, string> tuple)
+        {
+            string gifFileName = tuple.Item2;
+
+            _success = tuple.Item1;
+            _done = true;
+
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                string clip = Path.Combine(Path.GetTempPath(), Path.GetFileName(_settings.Video) + "-clip.mkv");
-                string palette = Path.Combine(Path.GetTempPath(), Path.GetFileName(_settings.Video) + "-palette.png");
-                string gif = _settings.Destination;
-                int framerate = _settings.Framerate;
+                btnClose.Content = "Close";
 
-                try
+                if (_success)
                 {
-                    string clipArguments =
-                        "-y " +                                                     //Yes to override existing files
-                        $"-ss {_settings.Start:hh\\:mm\\:ss\\.ff} " +               // Starting Position
-                        $"-i \"{_settings.Video}\" " +                              // Input File
-                        $"-t {_settings.Duration:hh\\:mm\\:ss\\.ff} " +             // Duration
-                        $"-r {framerate} " + 
-                        "-vf " +                                                    // video filter parameters" +
-                        //$"select=\"mod(n-1\\,{_settings.FramerateDivisor})\"," +    // Every 2nd Frame
-                        $"\"setpts=PTS-STARTPTS, hqdn3d=10, scale = {_settings.Width}:{_settings.Height}\" " +
-                        "-vcodec libx264 -crf 0 " +
-                        $"\"{clip}\"";
-
-                    string paletteArguments = $"-stats -y -i \"{clip}\" -vf palettegen \"{palette}\"";
-                    string gifArguments = $"-stats -y -r {framerate} -i \"{clip}\" -i \"{palette}\" -filter_complex paletteuse -plays 0 \"{gif}\"";
-
-                    SetStatus("Generating GIF (1/3): Clipping Video Section", 0);
-
-                    _wrapper = new ConsoleWrapper(ffmpegexe);
-                    _wrapper.Execute(clipArguments);
-
-                    if (_canceled)
-                        return;
-
-                    SetStatus("Generating GIF (2/3): Extracting Palette", 1 / 3.0);
-
-                    _wrapper.Execute(paletteArguments);
-
-                    if (_canceled)
-                        return;
-
-                    SetStatus("Generating GIF (3/3): Creating GIF", 2 / 3.0);
-
-                    _wrapper.Execute(gifArguments);
-
-                    if (_canceled)
-                        return;
-
-                   SetStatus("Done!", 3 / 3.0);
-                    _success = File.Exists(gif);
-                    _done = true;
-
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        btnClose.Content = "Close";
-
-                        if (_success)
-                        {
-                            SetStatus("Done!", 3 / 3.0);
-                            gifPlayer.Load(gif);
-                        }
-                        else
-                        {
-                            SetStatus("Failed!", 3 / 3.0);
-                        }
-                    }));
+                    SetStatus("Done!", 3 / 3.0);
+                    gifPlayer.Load(gifFileName);
                 }
-                finally
+                else
                 {
-                    if (File.Exists(clip))
-                        File.Delete(clip);
-
-                    if (File.Exists(palette))
-                        File.Delete(palette);
+                    SetStatus("Failed!", 3 / 3.0);
                 }
-            });
-
-            _thread.Start();
+            }));
         }
 
         private void SetStatus(string text, double progress = -1)
@@ -155,37 +110,9 @@ namespace ScriptPlayer.Dialogs
             }
             else
             {
-                _canceled = true;
-                _wrapper?.Input("q");
-                if(_thread.Join(TimeSpan.FromSeconds(5)))
-                    _thread.Abort();
+                _generator.Cancel();
                 DialogResult = false;
             }
-        }
-    }
-
-    public class PreviewGeneratorSettings
-    {
-        public string Video { get; set; }
-        public string Destination { get; set; }
-        public TimeSpan Start { get; set; }
-        public TimeSpan Duration { get; set; }
-        public int Height { get; set; }
-        public int Width { get; set; }
-        public int Framerate { get; set; }
-
-        public PreviewGeneratorSettings()
-        {
-            Start = TimeSpan.Zero;
-            Duration = TimeSpan.FromSeconds(5);
-            Height = 170;
-            Width = -2;
-            Framerate = 24;
-        }
-
-        public string SuggestDestination()
-        {
-            return Path.ChangeExtension(Video, "gif");
         }
     }
 }

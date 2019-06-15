@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using ScriptPlayer.Generators;
+using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Helpers;
 using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Dialogs
@@ -121,19 +124,37 @@ namespace ScriptPlayer.Dialogs
             set => SetValue(ResultProperty, value);
         }
 
+        public static readonly DependencyProperty DurationEachProperty = DependencyProperty.Register(
+            "DurationEach", typeof(TimeSpan), typeof(PreviewGeneratorSettingsDialog), new PropertyMetadata(TimeSpan.FromSeconds(0.8)));
+
+        public TimeSpan DurationEach
+        {
+            get { return (TimeSpan) GetValue(DurationEachProperty); }
+            set { SetValue(DurationEachProperty, value); }
+        }
+
+        public static readonly DependencyProperty SectionCountProperty = DependencyProperty.Register(
+            "SectionCount", typeof(int), typeof(PreviewGeneratorSettingsDialog), new PropertyMetadata(12));
+
+        public int SectionCount
+        {
+            get { return (int) GetValue(SectionCountProperty); }
+            set { SetValue(SectionCountProperty, value); }
+        }
+
         public PreviewGeneratorSettingsDialog(MainViewModel viewModel, PreviewGeneratorSettings initialSettings)
         {
             ViewModel = viewModel;
-            VideoPath = initialSettings.Video;
-            GifPath = initialSettings.Destination;
+            VideoPath = initialSettings.VideoFile;
+            GifPath = initialSettings.OutputFile;
 
             FrameWidth = initialSettings.Width;
             FrameAutoWidth = initialSettings.Width <= 0;
             FrameHeight = initialSettings.Height;
             FrameAutoHeight = initialSettings.Height <= 0;
             FrameRate = initialSettings.Framerate;
-            Start = initialSettings.Start;
-            Duration = initialSettings.Duration;   
+            Start = initialSettings.TimeFrames[0].StartTimeSpan;
+            Duration = initialSettings.TimeFrames[0].Duration;   
 
             InitializeComponent();
         }
@@ -165,11 +186,22 @@ namespace ScriptPlayer.Dialogs
                 Height = FrameAutoHeight ? -2 : FrameHeight,
                 Width = FrameAutoWidth ? -2 : FrameWidth,
                 Framerate = FrameRate,
-                Start = Start,
-                Duration = Duration,
-                Destination = GifPath,
-                Video = VideoPath
+                OutputFile = GifPath,
+                VideoFile = VideoPath
             };
+
+            if (rbMultiSections.IsChecked == true)
+            {
+                Result.GenerateRelativeTimeFrames(SectionCount, DurationEach);
+            }
+            else
+            { 
+                Result.TimeFrames.Add(new TimeFrame
+                {
+                    StartTimeSpan = Start,
+                    Duration = Duration
+                });
+            }
 
             DialogResult = true;
         }

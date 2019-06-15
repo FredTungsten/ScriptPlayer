@@ -477,7 +477,9 @@
                     <MenuItem Header="Preview GIF" Click="MnuCreatePreview_OnClick"/>
                     <!--<MenuItem Header="Generate Scenes" Click="MnuCreateScenes_OnClick"/>-->
                     <MenuItem Header="Thumbnails" Command="{Binding GenerateThumbnailsForLoadedVideoCommand}"/>
-                    <MenuItem Header="Thumbnail Banner" Command="{Binding GenerateThumbnailBannerForLoadedVideoCommand}"></MenuItem>
+                    <MenuItem Header="Thumbnail Banner" Command="{Binding GenerateThumbnailBannerForLoadedVideoCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="Show Progress" Click="mnuShowGeneratorProgress_OnClick"/>
                 </MenuItem>
                 <MenuItem Header="View">
                     <MenuItem Header="Toggle Fullscreen" Command="{Binding ToggleFullScreenCommand}"/>

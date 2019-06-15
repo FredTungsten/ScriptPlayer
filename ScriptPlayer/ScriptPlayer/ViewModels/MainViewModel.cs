@@ -22,6 +22,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml.Serialization;
+using ScriptPlayer.Generators;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -53,6 +54,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<string> RequestHideNotification;
         public event EventHandler Beat;
         public event EventHandler<double> IntermediateBeat;
+        public event EventHandler RequestShowGeneratorProgressDialog;
 
         private readonly string[] _supportedScriptExtensions;
 
@@ -78,6 +80,8 @@ namespace ScriptPlayer.ViewModels
         private int _lastVideoFilterIndex = 1;
         private byte _maxScriptPosition;
         private byte _minScriptPosition;
+
+        public GeneratorWorkQueue WorkQueue { get; private set; }
 
         public WindowStateModel InitialPlayerState { get; private set; }
 
@@ -312,6 +316,9 @@ namespace ScriptPlayer.ViewModels
 
         public MainViewModel()
         {
+            WorkQueue = new GeneratorWorkQueue();
+            WorkQueue.Start();
+
             _supportedMediaExtensions = _supportedVideoExtensions.Concat(_supportedAudioExtensions).ToArray();
 
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
@@ -378,6 +385,7 @@ namespace ScriptPlayer.ViewModels
                 Playlist.RequestVideoFileName += Playlist_RequestVideoFileName;
                 Playlist.RequestScriptFileName += Playlist_RequestScriptFileName;
                 Playlist.RequestGenerateThumbnails += PlaylistOnRequestGenerateThumbnails;
+                Playlist.RequestGeneratePreviews += PlaylistOnRequestGeneratePreviews;
             }
 
             if (Settings.RememberPlaylist)
@@ -396,6 +404,11 @@ namespace ScriptPlayer.ViewModels
         private void PlaylistOnRequestGenerateThumbnails(object sender, string[] videos)
         {
             GenerateThumbnails(videos);
+        }
+
+        private void PlaylistOnRequestGeneratePreviews(object sender, string[] videos)
+        {
+            GeneratePreviews(videos);
         }
 
         private void Playlist_RequestScriptFileName(object sender, RequestEventArgs<string> e)
@@ -1538,6 +1551,8 @@ namespace ScriptPlayer.ViewModels
 
         public void Dispose()
         {
+            WorkQueue.Dispose();
+
             Playlist.Dispose();
 
             _videoPlayer?.TimeSource.Pause();
@@ -3944,7 +3959,6 @@ namespace ScriptPlayer.ViewModels
             settings.Video = video;
 
             OnRequestGenerateThumbnailBanner(settings);
-
         }
 
         private void GenerateThumbnails(string[] videos)
@@ -3952,15 +3966,41 @@ namespace ScriptPlayer.ViewModels
             if (!CheckFfmpeg())
                 return;
 
-            ThumbnailGeneratorSettings settings = _lastThumbnailSettings?.DuplicateWithoutVideos();
+            ThumbnailGeneratorSettings settings = _lastThumbnailSettings?.DuplicateWithoutVideo();
             settings = OnRequestThumbnailGeneratorSettings(settings);
-            if (settings == null)
+
+            ThumbnailGenerator generator = new ThumbnailGenerator(Settings.FfmpegPath);
+
+            foreach (string video in videos)
+            {
+                var videoSettings = settings.DuplicateWithoutVideo();
+                videoSettings.VideoFile = video;
+                videoSettings.OutputFile = Path.ChangeExtension(video, "thumbs");
+
+                WorkQueue.Enqueue(generator.CreateJob(videoSettings));
+            }
+
+            OnRequestShowGeneratorProgressDialog();
+        }
+
+        private void GeneratePreviews(string[] videos)
+        {
+            if (!CheckFfmpeg())
                 return;
 
-            _lastThumbnailSettings = settings;
-            settings.Videos = videos;
+            PreviewGenerator generator = new PreviewGenerator(Settings.FfmpegPath);
 
-            OnRequestGenerateThumbnails(settings);
+            foreach (string video in videos)
+            {
+                PreviewGeneratorSettings settings = new PreviewGeneratorSettings();
+                settings.VideoFile = video;
+                settings.OutputFile = Path.ChangeExtension(video, ".gif");
+                settings.GenerateRelativeTimeFrames(12, TimeSpan.FromSeconds(0.8));
+
+                WorkQueue.Enqueue(generator.CreateJob(settings));
+            }
+
+            OnRequestShowGeneratorProgressDialog();
         }
 
         private bool CanGenerateThumbnailsForLoadedVideo()
@@ -4036,6 +4076,11 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnRequestActivate()
         {
             RequestActivate?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual void OnRequestShowGeneratorProgressDialog()
+        {
+            RequestShowGeneratorProgressDialog?.Invoke(this, EventArgs.Empty);
         }
     }
 

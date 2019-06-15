@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using ScriptPlayer.Generators;
 using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Dialogs
@@ -108,7 +109,7 @@ namespace ScriptPlayer.Dialogs
                     FrameAutoHeight = true;
 
                 FrameIntervall = initialValues.Intervall;
-                SkipExisting = initialValues.SkipExisting;
+                SkipExisting = initialValues.SkipIfExists;
             }
             else
             {
@@ -153,32 +154,10 @@ namespace ScriptPlayer.Dialogs
                 Height = FrameAutoHeight ? -1 : FrameHeight,
                 Width = FrameAutoWidth ? -1 : FrameWidth,
                 Intervall = FrameIntervall,
-                SkipExisting = SkipExisting
+                SkipIfExists = SkipExisting
             };
 
             DialogResult = true;
-        }
-    }
-
-    public class ThumbnailGeneratorSettings
-    {
-        public int Width { get; set; }
-        public int Height { get; set; }
-        public int Intervall { get; set; }
-
-        public string[] Videos { get; set; }
-
-        public bool SkipExisting { get; set; }
-
-        public ThumbnailGeneratorSettings DuplicateWithoutVideos()
-        {
-            return new ThumbnailGeneratorSettings
-            {
-                Width =  Width,
-                Height = Height,
-                Intervall = Intervall,
-                SkipExisting = SkipExisting
-            };
         }
     }
 }

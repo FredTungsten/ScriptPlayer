@@ -12,6 +12,7 @@ using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
 using Microsoft.Win32;
+using ScriptPlayer.Generators;
 using Point = System.Windows.Point;
 
 namespace ScriptPlayer
@@ -72,6 +73,7 @@ namespace ScriptPlayer
             ViewModel.RequestGenerateThumbnailBanner += ViewModelOnRequestGenerateThumbnailBanner;
             ViewModel.RequestThumbnailBannerGeneratorSettings += ViewModelOnRequestThumbnailBannerGeneratorSettings;
 
+            ViewModel.RequestShowGeneratorProgressDialog += ViewModelOnRequestShowGeneratorProgressDialog;
             ViewModel.RequestActivate += ViewModelOnRequestActivate;
             ViewModel.RequestShowSettings += ViewModelOnRequestShowSettings;
             ViewModel.RequestSetWindowState += ViewModelOnRequestSetWindowState;
@@ -91,6 +93,11 @@ namespace ScriptPlayer
                 WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
             }
+        }
+
+        private void ViewModelOnRequestShowGeneratorProgressDialog(object sender, EventArgs eventArgs)
+        {
+            ShowGeneratorProgress();
         }
 
         private void ViewModelOnRequestThumbnailBannerGeneratorSettings(object sender, RequestEventArgs<ThumbnailBannerGeneratorSettings> eventArgs)
@@ -671,6 +678,25 @@ namespace ScriptPlayer
             }
         }
 
+        private void ShowGeneratorProgress()
+        {
+            GeneratorProgressDialog existing = Application.Current.Windows.OfType<GeneratorProgressDialog>().FirstOrDefault();
+
+            if (existing == null || !existing.IsLoaded)
+            {
+                GeneratorProgressDialog progressDialog = new GeneratorProgressDialog(ViewModel);
+                progressDialog.Show();
+            }
+            else
+            {
+                if (existing.WindowState == WindowState.Minimized)
+                    existing.WindowState = WindowState.Normal;
+
+                existing.Activate();
+                existing.Focus();
+            }
+        }
+
         private void ShowPlaylist()
         {
             PlaylistWindow existing = Application.Current.Windows.OfType<PlaylistWindow>().FirstOrDefault();
@@ -734,20 +760,26 @@ namespace ScriptPlayer
 
             var settings = new PreviewGeneratorSettings
             {
-                Video = ViewModel.LoadedVideo,
+                VideoFile = ViewModel.LoadedVideo,
             };
 
-            settings.Destination = settings.SuggestDestination();
+            settings.OutputFile = settings.SuggestDestination();
 
             if (ViewModel.DisplayedRange != null)
             {
-                settings.Start = ViewModel.DisplayedRange.Start;
-                settings.Duration = ViewModel.DisplayedRange.Duration;
+                settings.TimeFrames.Add(new TimeFrame
+                {
+                    StartTimeSpan = ViewModel.DisplayedRange.Start,
+                    Duration = ViewModel.DisplayedRange.Duration
+                });
             }
             else
             {
-                settings.Start = ViewModel.TimeSource.Progress;
-                settings.Duration = TimeSpan.FromSeconds(5);
+                settings.TimeFrames.Add(new TimeFrame
+                {
+                    StartTimeSpan = ViewModel.TimeSource.Progress,
+                    Duration = TimeSpan.FromSeconds(5)
+                });
             }
 
             PreviewGeneratorSettingsDialog settingsDialog = new PreviewGeneratorSettingsDialog(ViewModel, settings);
@@ -815,6 +847,11 @@ namespace ScriptPlayer
         private void mnuAttributions_Click(object sender, RoutedEventArgs e)
         {
             new AttributionDialog(){Owner = this}.Show();
+        }
+
+        private void mnuShowGeneratorProgress_OnClick(object sender, RoutedEventArgs e)
+        {
+            ShowGeneratorProgress();
         }
     }
 }
