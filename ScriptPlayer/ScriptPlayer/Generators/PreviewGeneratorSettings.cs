@@ -19,6 +19,8 @@ namespace ScriptPlayer.Generators
             Height = 170;
             Width = -2;
             Framerate = 24;
+
+            SkipIfExists = true;
         }
 
         public string SuggestDestination()

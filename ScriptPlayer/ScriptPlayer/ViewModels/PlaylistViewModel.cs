@@ -67,6 +67,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<string>> RequestScriptFileName;
 
         public event EventHandler<string[]> RequestGenerateThumbnails;
+        public event EventHandler<string[]> RequestGenerateThumbnailBanners;
         public event EventHandler<string[]> RequestGeneratePreviews;
         public event EventHandler SelectedEntryMoved; 
 
@@ -304,6 +305,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand<bool> SortByPathCommand { get; set; }
         public RelayCommand SortShuffleCommand { get; set; }
         public RelayCommand GenerateThumbnailsForSelectedVideosCommand { get; set; }
+        public RelayCommand GenerateThumbnailBannersForSelectedVideosCommand { get; set; }
         public RelayCommand GeneratePreviewsForSelectedVideosCommand { get; set; }
         public RelayCommand RecheckAllCommand { get; set; }
         public int EntryCount => Entries.Count;
@@ -327,7 +329,8 @@ namespace ScriptPlayer.ViewModels
             SortByNameCommand = new RelayCommand<bool>(ExecuteSortByName, CanSort);
             SortByPathCommand = new RelayCommand<bool>(ExecuteSortByPath, CanSort);
             SortShuffleCommand = new RelayCommand(ExecuteSortShuffle, CanSort);
-            GenerateThumbnailsForSelectedVideosCommand = new RelayCommand(ExecuteGenerateThumbnailsForSelectedVideos, AreEntriesSelected);
+            GenerateThumbnailsForSelectedVideosCommand = new RelayCommand(ExecuteGenerateThumbnailsForSelectedVideos, AreEntriesSelected); 
+            GenerateThumbnailBannersForSelectedVideosCommand = new RelayCommand(ExecuteGenerateThumbnailBannersForSelectedVideos, AreEntriesSelected); 
             GeneratePreviewsForSelectedVideosCommand = new RelayCommand(ExecuteGeneratePreviewsForSelectedVideos, AreEntriesSelected);
             RecheckAllCommand = new RelayCommand(ExecuteRecheckAll);
 
@@ -365,6 +368,15 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             OnRequestGenerateThumbnails(videos);
+        }
+
+        private void ExecuteGenerateThumbnailBannersForSelectedVideos()
+        {
+            string[] videos = _selectedEntries.Select(e => OnRequestVideoFileName(e.Fullname)).Where(v => !string.IsNullOrEmpty(v)).ToArray();
+            if (videos.Length == 0)
+                return;
+
+            OnRequestGenerateThumbnailBanners(videos);
         }
 
         private void ExecuteGeneratePreviewsForSelectedVideos()
@@ -1023,6 +1035,11 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnRequestGenerateThumbnails(string[] videos)
         {
             RequestGenerateThumbnails?.Invoke(this, videos);
+        }
+
+        protected virtual void OnRequestGenerateThumbnailBanners(string[] videos)
+        {
+            RequestGenerateThumbnailBanners?.Invoke(this, videos);
         }
 
         protected virtual void OnRequestGeneratePreviews(string[] videos)

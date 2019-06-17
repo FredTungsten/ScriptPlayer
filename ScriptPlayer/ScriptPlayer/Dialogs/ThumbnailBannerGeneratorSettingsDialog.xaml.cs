@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using ScriptPlayer.Generators;
 
 namespace ScriptPlayer.Dialogs
 {
@@ -31,33 +32,15 @@ namespace ScriptPlayer.Dialogs
         {
             new ThumbnailBannerGeneratorSettingsPreviewDialog(settings).ShowDialog();
         }
-    }
 
-    public class ThumbnailBannerGeneratorSettings
-    {
-        public int Rows { get; set; }
-
-        public int Columns { get; set; }
-
-        public int TotalWidth { get; set; }
-
-        public string Video { get; set; }
-
-        public ThumbnailBannerGeneratorSettings()
+        private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            Rows = 5;
-            Columns = 4;
-            TotalWidth = 1024;
+            DialogResult = false;
         }
 
-        public ThumbnailBannerGeneratorSettings Clone()
+        private void Button_Click_2(object sender, RoutedEventArgs e)
         {
-            return new ThumbnailBannerGeneratorSettings
-            {
-                Rows = Rows,
-                Columns = Columns,
-                TotalWidth = TotalWidth
-            };
+            DialogResult = true;
         }
     }
 }

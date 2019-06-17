@@ -35,7 +35,7 @@ namespace ScriptPlayer.Generators
 
                 _wrapper.VideoFile = settings.VideoFile;
                 _wrapper.GenerateRandomOutputPath();
-                string tempPath = _wrapper.OutputPath;
+                string tempPath = _wrapper.OutputDirectory;
                 _wrapper.Execute();
 
                 if (_canceled)

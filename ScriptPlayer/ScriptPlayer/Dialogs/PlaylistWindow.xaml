@@ -50,6 +50,7 @@
                 <Separator/>
                 <MenuItem Header="Generate Thumbnails" Command="{Binding Playlist.GenerateThumbnailsForSelectedVideosCommand}"></MenuItem>
                 <MenuItem Header="Generate Previews" Command="{Binding Playlist.GeneratePreviewsForSelectedVideosCommand}"></MenuItem>
+                <MenuItem Header="Generate Thumbnail Banners" Command="{Binding Playlist.GenerateThumbnailBannersForSelectedVideosCommand}"></MenuItem>
             </MenuItem>
             <MenuItem Header="Sort">
                 <MenuItem Header="Duration (ascending)"  Command="{Binding Playlist.SortByDurationCommand}" CommandParameter="{shared:Boolean true}"/>

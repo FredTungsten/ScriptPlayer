@@ -7,10 +7,12 @@ namespace ScriptPlayer.Shared
 {
     public class ConsoleWrapper
     {
+        public bool DebugOutput { get; set; } = true;
+
         private readonly ProcessStartInfo _startInfo;
         private StreamWriter _input;
 
-        protected string File
+        protected string Executable
         {
             get  => _startInfo.FileName;
             set => _startInfo.FileName = value;
@@ -21,14 +23,14 @@ namespace ScriptPlayer.Shared
             set => _startInfo.Arguments = value;
         }
 
-        public ConsoleWrapper(string file, string arguments) : this(file)
+        public ConsoleWrapper(string executable, string arguments) : this(executable)
         {
             Arguments = arguments;
         }
 
-        public ConsoleWrapper(string file) : this()
+        public ConsoleWrapper(string executable) : this()
         {
-            File = file;
+            Executable = executable;
         }
 
         protected ConsoleWrapper()
@@ -98,7 +100,8 @@ namespace ScriptPlayer.Shared
 
         protected virtual void ProcessLine(string line, bool isError)
         {
-            Debug.WriteLine((isError ? "ERR: " : "OUT: ") + line);
+            if(DebugOutput)
+                Debug.WriteLine((isError ? "ERR: " : "OUT: ") + line);
         }
     }
 }

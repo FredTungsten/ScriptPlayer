@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
-namespace ScriptPlayer.Dialogs
+namespace ScriptPlayer.Generators
 {
     public class ThumbnailProgressEntry : INotifyPropertyChanged
     {

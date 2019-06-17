@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
+        xmlns:generators="clr-namespace:ScriptPlayer.Generators"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
         mc:Ignorable="d"
         Title="Generator Progress" Height="450" Width="800">
@@ -18,7 +19,7 @@
                 <DataGridTextColumn Width="1*" Header="Status" Binding="{Binding Path=Status, Mode=OneWay}"/>
                 <DataGridTemplateColumn Width="2*" Header="Progress">
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="{x:Type local:ThumbnailProgressEntry}">
+                        <DataTemplate DataType="{x:Type generators:GeneratorEntry}">
                             <ProgressBar HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Maximum="1" Value="{Binding Path=Progress, Mode=OneWay}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

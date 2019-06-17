@@ -69,7 +69,6 @@ namespace ScriptPlayer
             ViewModel.RequestKodiConnectionSettings += ViewModelOnRequestKodiConnectionSettings;
             ViewModel.RequestGetWindowState += ViewModelOnRequestGetWindowState;
             ViewModel.RequestThumbnailGeneratorSettings += ViewModelOnRequestThumbnailGeneratorSettings;
-            ViewModel.RequestGenerateThumbnails += ViewModelOnRequestGenerateThumbnails;
             ViewModel.RequestGenerateThumbnailBanner += ViewModelOnRequestGenerateThumbnailBanner;
             ViewModel.RequestThumbnailBannerGeneratorSettings += ViewModelOnRequestThumbnailBannerGeneratorSettings;
 
@@ -126,15 +125,6 @@ namespace ScriptPlayer
             if (settings.ShowDialog() != true) return;
 
             ViewModel.ApplySettings(settings.Settings);
-        }
-
-        private void ViewModelOnRequestGenerateThumbnails(object sender, ThumbnailGeneratorSettings settings)
-        {
-            var createDialog = new ThumbnailGeneratorDialog(ViewModel, settings) {Owner = this};
-            if (createDialog.ShowDialog() != true)
-                return;
-
-            ViewModel.RecheckForAdditionalFiles();
         }
 
         private void ViewModelOnRequestThumbnailGeneratorSettings(object sender, RequestEventArgs<ThumbnailGeneratorSettings> eventArgs)

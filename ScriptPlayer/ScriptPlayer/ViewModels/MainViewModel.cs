@@ -45,7 +45,6 @@ namespace ScriptPlayer.ViewModels
 
         public event EventHandler RequestActivate;
         public event EventHandler<string> RequestShowSettings;
-        public event EventHandler<ThumbnailGeneratorSettings> RequestGenerateThumbnails;
         public event EventHandler<ThumbnailBannerGeneratorSettings> RequestGenerateThumbnailBanner;
         public event EventHandler<WindowStateModel> RequestSetWindowState;
         public event EventHandler RequestHideSkipButton;
@@ -385,6 +384,7 @@ namespace ScriptPlayer.ViewModels
                 Playlist.RequestVideoFileName += Playlist_RequestVideoFileName;
                 Playlist.RequestScriptFileName += Playlist_RequestScriptFileName;
                 Playlist.RequestGenerateThumbnails += PlaylistOnRequestGenerateThumbnails;
+                Playlist.RequestGenerateThumbnailBanners += PlaylistOnRequestGenerateThumbnailBanners;
                 Playlist.RequestGeneratePreviews += PlaylistOnRequestGeneratePreviews;
             }
 
@@ -404,6 +404,11 @@ namespace ScriptPlayer.ViewModels
         private void PlaylistOnRequestGenerateThumbnails(object sender, string[] videos)
         {
             GenerateThumbnails(videos);
+        }
+
+        private void PlaylistOnRequestGenerateThumbnailBanners(object sender, string[] videos)
+        {
+            GenerateThumbnailBanners(videos);
         }
 
         private void PlaylistOnRequestGeneratePreviews(object sender, string[] videos)
@@ -3956,9 +3961,15 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             _lastThumbnailBannerSettings = settings;
-            settings.Video = video;
+            settings.VideoFile = video;
+            settings.OutputFile = Path.ChangeExtension(video, "jpg");
 
-            OnRequestGenerateThumbnailBanner(settings);
+            ThumbnailBannerGenerator generator = new ThumbnailBannerGenerator(Settings.FfmpegPath);
+            WorkQueue.Enqueue(generator.CreateJob(settings));
+
+            OnRequestShowGeneratorProgressDialog();
+
+            //OnRequestGenerateThumbnailBanner(settings);
         }
 
         private void GenerateThumbnails(string[] videos)
@@ -3976,6 +3987,28 @@ namespace ScriptPlayer.ViewModels
                 var videoSettings = settings.DuplicateWithoutVideo();
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, "thumbs");
+
+                WorkQueue.Enqueue(generator.CreateJob(videoSettings));
+            }
+
+            OnRequestShowGeneratorProgressDialog();
+        }
+
+        private void GenerateThumbnailBanners(string[] videos)
+        {
+            if (!CheckFfmpeg())
+                return;
+
+            ThumbnailBannerGeneratorSettings settings = new ThumbnailBannerGeneratorSettings();//_lastThumbnailSettings?.DuplicateWithoutVideo();
+            settings = OnRequestThumbnailBannerGeneratorSettings(settings);
+
+            ThumbnailBannerGenerator generator = new ThumbnailBannerGenerator(Settings.FfmpegPath);
+
+            foreach (string video in videos)
+            {
+                var videoSettings = settings.DuplicateWithoutVideo();
+                videoSettings.VideoFile = video;
+                videoSettings.OutputFile = Path.ChangeExtension(video, "jpg");
 
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
@@ -4033,11 +4066,6 @@ namespace ScriptPlayer.ViewModels
                 return null;
 
             return eventArgs.Value;
-        }
-
-        protected virtual void OnRequestGenerateThumbnails(ThumbnailGeneratorSettings e)
-        {
-            RequestGenerateThumbnails?.Invoke(this, e);
         }
 
         public void ShowSettings()

@@ -3,8 +3,7 @@ using System.Windows.Threading;
 
 namespace ScriptPlayer.Generators
 {
-    public abstract class FfmpegGenerator<TSettings> : IGenerator<TSettings, GeneratorEntry> 
-        where TSettings : FfmpegGeneratorSettings
+    public abstract class FfmpegGenerator<TSettings> : IGenerator<TSettings, GeneratorEntry> where TSettings : FfmpegGeneratorSettings
     {
         protected string FfmpegExePath { get; }
 
