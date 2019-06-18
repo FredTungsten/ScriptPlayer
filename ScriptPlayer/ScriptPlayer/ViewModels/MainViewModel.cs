@@ -3980,6 +3980,9 @@ namespace ScriptPlayer.ViewModels
             ThumbnailGeneratorSettings settings = _lastThumbnailSettings?.DuplicateWithoutVideo();
             settings = OnRequestThumbnailGeneratorSettings(settings);
 
+            if (settings == null)
+                return;
+
             ThumbnailGenerator generator = new ThumbnailGenerator(Settings.FfmpegPath);
 
             foreach (string video in videos)
@@ -4001,6 +4004,9 @@ namespace ScriptPlayer.ViewModels
 
             ThumbnailBannerGeneratorSettings settings = new ThumbnailBannerGeneratorSettings();//_lastThumbnailSettings?.DuplicateWithoutVideo();
             settings = OnRequestThumbnailBannerGeneratorSettings(settings);
+
+            if (settings == null)
+                return;
 
             ThumbnailBannerGenerator generator = new ThumbnailBannerGenerator(Settings.FfmpegPath);
 

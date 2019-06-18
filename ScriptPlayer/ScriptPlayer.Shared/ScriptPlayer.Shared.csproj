@@ -152,17 +152,28 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Beats\MetronomeTick.cs" />
-    <Compile Include="Classes\Wrappers\ConsoleWrapper.cs" />
-    <Compile Include="Classes\Wrappers\FfmpegWrapper.cs" />
-    <Compile Include="Classes\Wrappers\FrameConverterWrapper.cs" />
+    <Compile Include="Classes\Ffmpeg\Arguments\ClipExtractorArguments.cs" />
+    <Compile Include="Classes\Ffmpeg\Arguments\ClipMergeArguments.cs" />
+    <Compile Include="Classes\Ffmpeg\Wrappers\ConsoleWrapper.cs" />
+    <Compile Include="Classes\Ffmpeg\Arguments\FfmpegArguments.cs" />
+    <Compile Include="Classes\Ffmpeg\Wrappers\FfmpegConsoleWrapper.cs" />
+    <Compile Include="Classes\Ffmpeg\Wrappers\FfmpegWrapper.cs" />
+    <Compile Include="Classes\Ffmpeg\Arguments\FrameConverterArguments.cs" />
+    <Compile Include="Classes\Ffmpeg\Wrappers\FrameConverterWrapper.cs" />
     <Compile Include="Classes\GlobalCommandManager.cs" />
     <Compile Include="Classes\InputMapping.cs" />
     <Compile Include="Classes\ScriptplayerCommand.cs" />
     <Compile Include="Classes\Section.cs" />
     <Compile Include="Classes\VideoThumbnailCollection.cs" />
-    <Compile Include="Classes\Wrappers\SceneExtractorWrapper.cs" />
-    <Compile Include="Classes\Wrappers\SceneFrame.cs" />
-    <Compile Include="Classes\Wrappers\VideoInfoWrapper.cs" />
+    <Compile Include="Classes\Ffmpeg\Arguments\GifCreatorArguments.cs" />
+    <Compile Include="Classes\Ffmpeg\Arguments\PaletteExtractorArguments.cs" />
+    <Compile Include="Classes\Ffmpeg\Arguments\SceneExtractorArguments.cs" />
+    <Compile Include="Classes\Ffmpeg\Wrappers\SceneExtractorWrapper.cs" />
+    <Compile Include="Classes\Ffmpeg\Data\SceneFrame.cs" />
+    <Compile Include="Classes\Ffmpeg\Wrappers\StatusUpdateHandler.cs" />
+    <Compile Include="Classes\Ffmpeg\Data\VideoInfo.cs" />
+    <Compile Include="Classes\Ffmpeg\Arguments\VideoInfoArguments.cs" />
+    <Compile Include="Classes\Ffmpeg\Wrappers\VideoInfoWrapper.cs" />
     <Compile Include="Colors\AnalysisParameters.cs" />
     <Compile Include="Beats\BeatCollection.cs" />
     <Compile Include="Classes\BlockingQueue.cs" />

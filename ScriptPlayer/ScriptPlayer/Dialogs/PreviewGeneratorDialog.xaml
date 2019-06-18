@@ -5,12 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared" x:Class="ScriptPlayer.Dialogs.PreviewGeneratorDialog"
         mc:Ignorable="d"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Width="439.5" Height="361"
         Title="Preview GIF Creator" Loaded="Window_Loaded">
     <Grid>
         <shared:GifPlayer x:Name="gifPlayer" Margin="10,10,10,85" Background="Black" Stretch="Uniform" AutoPlay="True" ShowProgress="True"/>
-        <TextBlock x:Name="txtStatus" Margin="10,0,10,58" Height="22" VerticalAlignment="Bottom"/>
-        <ProgressBar x:Name="proConversion" Minimum="0"  Maximum="1" Margin="10,0,10,40" Height="13" VerticalAlignment="Bottom"/>
+        <TextBlock x:Name="txtStatus" Text="{Binding Path=GeneratorEntry.Status, Mode=OneWay}" Margin="10,0,10,58" Height="22" VerticalAlignment="Bottom"/>
+        <ProgressBar x:Name="proConversion" Value="{Binding Path=GeneratorEntry.Progress, Mode=OneWay}" Minimum="0"  Maximum="1" Margin="10,0,10,40" Height="13" VerticalAlignment="Bottom"/>
         <Button x:Name="btnClose"  HorizontalAlignment="Stretch" Height="25" Margin="10,0,10,10" Width="Auto" Click="btnClose_Click" Content="Cancel" VerticalAlignment="Bottom" />
     </Grid>
 </Window>

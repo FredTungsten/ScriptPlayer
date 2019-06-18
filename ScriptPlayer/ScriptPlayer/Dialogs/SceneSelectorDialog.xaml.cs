@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Classes.Wrappers;
 using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Dialogs
@@ -45,19 +46,23 @@ namespace ScriptPlayer.Dialogs
 
         private void Grid_Loaded(object sender, RoutedEventArgs e)
         {
-            SceneExtractorWrapper wrapper = new SceneExtractorWrapper(_viewmodel.Settings.FfmpegPath);
-            wrapper.VideoFile = _video;
-            wrapper.GenerateRandomOutputPath();
+            SceneExtractorArguments arguments = new SceneExtractorArguments
+            {
+                InputFile = _video,
+                OutputDirectory = FfmpegWrapper.CreateRandomTempDirectory()
+            };
+
+            SceneExtractorWrapper wrapper = new SceneExtractorWrapper(arguments, _viewmodel.Settings.FfmpegPath);
             wrapper.Execute();
 
             var scenes = new List<SceneViewModel>();
 
-            foreach (string imageFile in Directory.EnumerateFiles(wrapper.OutputPath))
+            foreach (string imageFile in Directory.EnumerateFiles(arguments.OutputDirectory))
             {
                 string number = Path.GetFileNameWithoutExtension(imageFile);
                 int frame = int.Parse(number);
 
-                SceneFrame scene = wrapper.Result.Single(w => w.Index == frame);
+                SceneFrame scene = arguments.Result.Single(w => w.Index == frame);
 
                 scenes.Add(new SceneViewModel
                 {

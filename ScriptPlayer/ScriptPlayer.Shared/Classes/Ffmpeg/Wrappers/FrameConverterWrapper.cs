@@ -1,51 +1,14 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Text.RegularExpressions;
 
 namespace ScriptPlayer.Shared
 {
-    public class FrameConverterWrapper : FfmpegWrapper
+    public class FrameConverterWrapper : FfmpegConsoleWrapper
     {
-        public int Width { get; set; }
-
-        public int Height { get; set; }
-
-        public double Intervall { get; set; }
-
-        public string OutputDirectory { get; set; }
-
-        public FrameConverterWrapper(string ffmpegExe) : base(ffmpegExe)
-        {
-            Width = 200;
-            Height = -1;
-            Intervall = 10;
-        }
-
-        private void CreateOutputDirectory()
-        {
-            OutputDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("D"));
-            if (!OutputDirectory.EndsWith("\\"))
-                OutputDirectory += "\\";
-
-            Directory.CreateDirectory(OutputDirectory);
-        }
-
-        public void GenerateRandomOutputPath()
-        {
-            CreateOutputDirectory();
-        }
-
-        protected override void BeforeExecute()
-        {
-            if(string.IsNullOrEmpty(OutputDirectory))
-                CreateOutputDirectory();
-
-            base.BeforeExecute();
-        }
-
-        public event EventHandler<double> ProgressChanged;
+        public FrameConverterWrapper(FrameConverterArguments arguments, string ffmpegExe) : base(arguments, ffmpegExe)
+        { }
 
         //  Duration: 00:01:38.26
         readonly Regex _durationRegex = new Regex(@"^\s*Duration:\s*(?<Duration>\d{2}:\d{2}:\d{2}\.\d{2})", RegexOptions.Compiled);
@@ -74,20 +37,8 @@ namespace ScriptPlayer.Shared
                 var progress = position.TotalSeconds / _duration.TotalSeconds;
                 Debug.WriteLine("Progress: " + progress.ToString("P1"));
 
-                OnProgressChanged(progress);
+                UpdateProgress(progress);
             }
-        }
-
-        protected virtual void OnProgressChanged(double e)
-        {
-            ProgressChanged?.Invoke(this, e);
-        }
-
-        protected override void SetArguments()
-        {
-            string intervall = Intervall.ToString("f3", CultureInfo.InvariantCulture);
-
-            Arguments = $"-i \"{VideoFile}\" -vf \"scale={Width}:{Height}, fps=1/{intervall}\" \"{OutputDirectory}%05d.jpg\" -stats";
         }
     }
 }

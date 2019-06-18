@@ -52,6 +52,7 @@ namespace ScriptPlayer.Dialogs
             _generator.Done += GeneratorOnDone;
 
             GeneratorEntry entry = _generator.CreateEntry(_settings);
+            GeneratorEntry = entry;
             _generator.ProcessInThread(_settings, entry);
         }
 

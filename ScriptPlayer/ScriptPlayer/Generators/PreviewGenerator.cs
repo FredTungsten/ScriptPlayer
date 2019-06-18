@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using ScriptPlayer.Shared;
-using ScriptPlayer.Shared.Helpers;
+using ScriptPlayer.Shared.Classes.Wrappers;
 
 namespace ScriptPlayer.Generators
 {
@@ -12,7 +12,7 @@ namespace ScriptPlayer.Generators
     {
         public event EventHandler<Tuple<bool, string>> Done;
 
-        private ConsoleWrapper _wrapper;
+        private FfmpegWrapper _wrapper;
 
         private Thread _thread;
         private bool _canceled;
@@ -37,15 +37,35 @@ namespace ScriptPlayer.Generators
 
             try
             {
-                _wrapper = new ConsoleWrapper(FfmpegExePath);
+                _wrapper = new FfmpegWrapper(FfmpegExePath);
+
                 List<string> sectionFileNames = new List<string>();
 
                 if (settings.TimeFrames.Any(tf => tf.IsFactor))
                 {
-                    TimeSpan duration = MediaHelper.GetDuration(settings.VideoFile).Value;
+                    VideoInfo info = _wrapper.GetVideoInfo(settings.VideoFile);
+                   
+                    if (!info.IsGoodEnough())
+                    {
+                        entry.State = JobStates.Done;
+                        entry.DoneType = JobDoneTypes.Failure;
+                        entry.Update("Failed", 1);
+                        return;
+                    }
+
+                    TimeSpan duration = info.Duration;
+
                     settings.TimeFrames.ForEach(tf => tf.CalculateStart(duration));
                 }
 
+                ClipExtractorArguments clipArguments = new ClipExtractorArguments
+                {
+                    InputFile = settings.VideoFile,
+                    Width = settings.Width,
+                    Height = settings.Height,
+                    Framerate = settings.Framerate
+                };
+                
                 for (int i = 0; i < settings.TimeFrames.Count; i++)
                 {
                     string sectionFileName = Path.Combine(Path.GetTempPath(),
@@ -55,17 +75,9 @@ namespace ScriptPlayer.Generators
 
                     var timeFrame = settings.TimeFrames[i];
 
-                    string clipArguments =
-                        "-y " + //Yes to override existing files
-                        $"-ss {timeFrame.StartTimeSpan:hh\\:mm\\:ss\\.ff} " + // Starting Position
-                        $"-i \"{settings.VideoFile}\" " + // Input File
-                        $"-t {timeFrame.Duration:hh\\:mm\\:ss\\.ff} " + // Duration
-                        $"-r {settings.Framerate} " +
-                        "-vf " + // video filter parameters" +
-                        //$"select=\"mod(n-1\\,{_settings.FramerateDivisor})\"," +    // Every 2nd Frame
-                        $"\"setpts=PTS-STARTPTS, hqdn3d=10, scale = {settings.Width}:{settings.Height}\" " +
-                        "-vcodec libx264 -crf 0 " +
-                        $"\"{sectionFileName}\"";
+                    clipArguments.Duration = timeFrame.Duration;
+                    clipArguments.StartTimeSpan = timeFrame.StartTimeSpan;
+                    clipArguments.OutputFile = sectionFileName;
 
                     entry.Update($"Generating GIF (1/4): Clipping Video Section {i + 1}/{settings.TimeFrames.Count}",
                         ((i / (double) settings.TimeFrames.Count)) / 4.0);
@@ -86,16 +98,15 @@ namespace ScriptPlayer.Generators
                 }
                 else
                 {
-                    string playlistFileName = Path.Combine(Path.GetTempPath(),
-                        Path.GetFileName(settings.VideoFile) + $"-playlist.txt");
-                    clipFileName = Path.Combine(Path.GetTempPath(), Path.GetFileName(settings.VideoFile) + $"-clip.mkv");
+                    ClipMergeArguments mergeArguments = new ClipMergeArguments
+                    {
+                        InputFile = settings.VideoFile,
+                        ClipFiles = sectionFileNames.ToArray(),
+                        OutputFile = Path.Combine(Path.GetTempPath(), Path.GetFileName(settings.VideoFile) + $"-clip.mkv")
+                    };
 
-                    File.WriteAllLines(playlistFileName, sectionFileNames.Select(se => $"file '{se}'"));
-
-                    tempFiles.Add(playlistFileName);
+                    clipFileName = mergeArguments.OutputFile;
                     tempFiles.Add(clipFileName);
-
-                    string mergeArguments = $"-f concat -safe 0 -i \"{playlistFileName}\" -c copy \"{clipFileName}\"";
 
                     _wrapper.Execute(mergeArguments);
 
@@ -105,10 +116,15 @@ namespace ScriptPlayer.Generators
 
                 entry.Update("Generating GIF (3/4): Extracting Palette", 2 / 4.0);
 
-                string paletteFileName =
-                    Path.Combine(Path.GetTempPath(), Path.GetFileName(settings.VideoFile) + "-palette.png");
-                string paletteArguments = $"-stats -y -i \"{clipFileName}\" -vf palettegen \"{paletteFileName}\"";
-                tempFiles.Add(paletteFileName);
+                string paletteFile = clipFileName + "-palette.png";
+
+                PaletteExtractorArguments paletteArguments = new PaletteExtractorArguments
+                {
+                    InputFile = clipFileName,
+                    OutputFile = paletteFile
+                };
+
+                tempFiles.Add(paletteFile);
 
                 _wrapper.Execute(paletteArguments);
 
@@ -118,8 +134,12 @@ namespace ScriptPlayer.Generators
                 entry.Update("Generating GIF (3/4): Creating GIF", 3 / 4.0);
 
                 string gifFileName = settings.OutputFile;
-                string gifArguments =
-                    $"-stats -y -r {settings.Framerate} -i \"{clipFileName}\" -i \"{paletteFileName}\" -filter_complex paletteuse -plays 0 \"{gifFileName}\"";
+
+                GifCreatorArguments gifArguments = new GifCreatorArguments();
+                gifArguments.InputFile = clipFileName;
+                gifArguments.PaletteFile = paletteFile;
+                gifArguments.OutputFile = gifFileName;
+                gifArguments.Framerate = settings.Framerate;
 
                 _wrapper.Execute(gifArguments);
 
@@ -158,14 +178,14 @@ namespace ScriptPlayer.Generators
         public override void Cancel()
         {
             _canceled = true;
-            _wrapper?.Input("q");
+            _wrapper?.Cancel();
 
-            if (_thread != null)
-            {
-                if (_thread.Join(TimeSpan.FromSeconds(5)))
-                    _thread.Abort();
-                _thread = null;
-            }
+            if (_thread == null)
+                return;
+
+            if (_thread.Join(TimeSpan.FromSeconds(5)))
+                _thread.Abort();
+            _thread = null;
         }
 
         protected virtual void OnDone(Tuple<bool, string> e)

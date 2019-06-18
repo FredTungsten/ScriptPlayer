@@ -26,5 +26,6 @@
         <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="BtnOk_Click"/>
         <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="BtnCancel_Click"/>
         <CheckBox IsChecked="{Binding SkipExisting}" Content="Skip existing" HorizontalAlignment="Left" Margin="10,92,0,0" VerticalAlignment="Top"/>
+        <CheckBox Content="Automatic" IsChecked="{Binding FrameAutoIntervall}" HorizontalAlignment="Left" Margin="163,59,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

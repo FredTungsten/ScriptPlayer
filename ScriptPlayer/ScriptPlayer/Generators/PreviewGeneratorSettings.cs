@@ -8,7 +8,7 @@ namespace ScriptPlayer.Generators
     {
         public int Height { get; set; }
         public int Width { get; set; }
-        public int Framerate { get; set; }
+        public double Framerate { get; set; }
 
         public List<TimeFrame> TimeFrames { get; set; }
 

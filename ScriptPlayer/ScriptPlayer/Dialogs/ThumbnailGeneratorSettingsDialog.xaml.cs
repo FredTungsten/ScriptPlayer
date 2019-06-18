@@ -93,6 +93,15 @@ namespace ScriptPlayer.Dialogs
             set => SetValue(SkipExistingProperty, value);
         }
 
+        public static readonly DependencyProperty FrameAutoIntervallProperty = DependencyProperty.Register(
+            "FrameAutoIntervall", typeof(bool), typeof(ThumbnailGeneratorSettingsDialog), new PropertyMetadata(default(bool)));
+
+        public bool FrameAutoIntervall
+        {
+            get { return (bool) GetValue(FrameAutoIntervallProperty); }
+            set { SetValue(FrameAutoIntervallProperty, value); }
+        }
+
         public ThumbnailGeneratorSettingsDialog(MainViewModel viewModel, ThumbnailGeneratorSettings initialValues)
         {
             ViewModel = viewModel;
@@ -109,17 +118,21 @@ namespace ScriptPlayer.Dialogs
                     FrameAutoHeight = true;
 
                 FrameIntervall = initialValues.Intervall;
+                if (FrameIntervall < 1)
+                    FrameAutoIntervall = true;
+                
                 SkipExisting = initialValues.SkipIfExists;
             }
             else
             {
                 FrameWidth = 200;
                 FrameHeight = -1;
+                FrameIntervall = -1;
 
                 FrameAutoWidth = false;
                 FrameAutoHeight = true;
-
-                FrameIntervall = 10;
+                FrameAutoIntervall = true;
+                
                 SkipExisting = true;
             }
         }
@@ -153,7 +166,7 @@ namespace ScriptPlayer.Dialogs
             {
                 Height = FrameAutoHeight ? -1 : FrameHeight,
                 Width = FrameAutoWidth ? -1 : FrameWidth,
-                Intervall = FrameIntervall,
+                Intervall = FrameAutoIntervall ? -1 : FrameIntervall,
                 SkipIfExists = SkipExisting
             };
 

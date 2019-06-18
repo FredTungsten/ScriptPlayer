@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Windows.Threading;
+using ScriptPlayer.Shared;
 
 namespace ScriptPlayer.Generators
 {
@@ -29,6 +30,11 @@ namespace ScriptPlayer.Generators
             entry.State = JobStates.Processing;
             ProcessInternal(settings, entry);
             entry.State = JobStates.Done;
+        }
+
+        public T CreateWrapper<T>() where T : FfmpegConsoleWrapper
+        {
+            return (T)typeof(T).GetConstructor(new[] {typeof(string)}).Invoke(new object[]{FfmpegExePath});
         }
 
         protected abstract void ProcessInternal(TSettings settings, GeneratorEntry entry);

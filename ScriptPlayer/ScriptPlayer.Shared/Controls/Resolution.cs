@@ -18,7 +18,7 @@ namespace ScriptPlayer.Shared
             return new Size(Horizontal, Vertical);
         }
 
-        public bool TryParse(string value, out Resolution resolution)
+        public static bool TryParse(string value, out Resolution resolution)
         {
             resolution = new Resolution();
 

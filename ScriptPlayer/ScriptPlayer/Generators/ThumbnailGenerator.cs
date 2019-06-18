@@ -4,13 +4,14 @@ using System.IO;
 using System.Windows.Media.Imaging;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
+using ScriptPlayer.Shared.Classes.Wrappers;
 
 namespace ScriptPlayer.Generators
 {
     public class ThumbnailGenerator : FfmpegGenerator<ThumbnailGeneratorSettings>
     {
         private bool _canceled;
-        private FrameConverterWrapper _wrapper;
+        private FfmpegWrapper _wrapper;
 
         protected override string ProcessingType => "Thumbnails";
 
@@ -20,23 +21,38 @@ namespace ScriptPlayer.Generators
             {
                 entry.State = JobStates.Processing;
 
-                _wrapper = new FrameConverterWrapper(FfmpegExePath)
+                _wrapper = new FfmpegWrapper(FfmpegExePath);
+
+                double intervall = settings.Intervall;
+
+                if (settings.Intervall < 1)
                 {
-                    Intervall = settings.Intervall,
+                    var info = _wrapper.GetVideoInfo(settings.VideoFile);
+                    if (!info.IsGoodEnough())
+                    {
+                        entry.Update("Failed", 1);
+                        entry.DoneType = JobDoneTypes.Failure;
+                        return;
+                    }
+
+                    intervall = info.Duration.TotalSeconds / 500.0;
+                    intervall = Math.Min(Math.Max(1, intervall), 10);
+                }
+
+                FrameConverterArguments arguments = new FrameConverterArguments
+                {
+                    StatusUpdateHandler = (progress) => { entry.Update(null, progress); },
+                    InputFile = settings.VideoFile,
+                    OutputDirectory = FfmpegWrapper.CreateRandomTempDirectory(),
+                    Intervall = intervall,
                     Width = settings.Width,
                     Height = settings.Height
                 };
-
-                _wrapper.ProgressChanged += (s, progress) => { entry.Update(null, progress); };
-
+                
                 string thumbfile = Path.ChangeExtension(settings.VideoFile, "thumbs");
-
                 entry.Update("Extracting Frames", 0);
 
-                _wrapper.VideoFile = settings.VideoFile;
-                _wrapper.GenerateRandomOutputPath();
-                string tempPath = _wrapper.OutputDirectory;
-                _wrapper.Execute();
+                var frames =_wrapper.ExtractFrames(arguments);
 
                 if (_canceled)
                     return;
@@ -44,25 +60,8 @@ namespace ScriptPlayer.Generators
                 entry.Update("Saving Thumbnails", 1);
 
                 VideoThumbnailCollection thumbnails = new VideoThumbnailCollection();
-
-                List<string> usedFiles = new List<string>();
-
-                foreach (string file in Directory.EnumerateFiles(tempPath))
-                {
-                    string number = Path.GetFileNameWithoutExtension(file);
-                    int index = int.Parse(number);
-
-                    TimeSpan position = TimeSpan.FromSeconds(index * 10 - 5);
-
-                    var frame = new BitmapImage();
-                    frame.BeginInit();
-                    frame.CacheOption = BitmapCacheOption.OnLoad;
-                    frame.UriSource = new Uri(file, UriKind.Absolute);
-                    frame.EndInit();
-
-                    thumbnails.Add(position, frame);
-                    usedFiles.Add(file);
-                }
+                foreach(var frame in frames)
+                    thumbnails.Add(frame.Item1, frame.Item2);
 
                 using (FileStream stream = new FileStream(thumbfile, FileMode.Create, FileAccess.Write))
                 {
@@ -70,11 +69,6 @@ namespace ScriptPlayer.Generators
                 }
 
                 thumbnails.Dispose();
-
-                foreach (string tempFile in usedFiles)
-                    File.Delete(tempFile);
-
-                Directory.Delete(tempPath);
 
                 entry.DoneType = JobDoneTypes.Success;
                 entry.Update("Done", 1);

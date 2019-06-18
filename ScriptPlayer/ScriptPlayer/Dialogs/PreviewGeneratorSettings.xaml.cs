@@ -23,11 +23,11 @@ namespace ScriptPlayer.Dialogs
         }
 
         public static readonly DependencyProperty FrameRateProperty = DependencyProperty.Register(
-            "FrameRate", typeof(int), typeof(PreviewGeneratorSettingsDialog), new PropertyMetadata(default(int)));
+            "FrameRate", typeof(double), typeof(PreviewGeneratorSettingsDialog), new PropertyMetadata(default(double)));
 
-        public int FrameRate
+        public double FrameRate
         {
-            get => (int)GetValue(FrameRateProperty);
+            get => (double)GetValue(FrameRateProperty);
             set => SetValue(FrameRateProperty, value);
         }
 

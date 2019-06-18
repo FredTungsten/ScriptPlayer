@@ -6,14 +6,14 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ScriptPlayer.Shared;
-using ScriptPlayer.Shared.Helpers;
+using ScriptPlayer.Shared.Classes.Wrappers;
 
 namespace ScriptPlayer.Generators
 {
     public class ThumbnailBannerGenerator : FfmpegGenerator<ThumbnailBannerGeneratorSettings>
     {
         private bool _canceled;
-        private FrameConverterWrapper _wrapper;
+        private FfmpegWrapper _wrapper;
 
         public static ImageSource CreatePreview(ThumbnailBannerGeneratorSettings settings)
         {
@@ -148,60 +148,48 @@ namespace ScriptPlayer.Generators
             {
                 entry.State = JobStates.Processing;
 
-                VideoInfoWrapper infoWrapper = new VideoInfoWrapper(FfmpegExePath);
-                infoWrapper.DebugOutput = false;
-                infoWrapper.VideoFile = settings.VideoFile;
-                infoWrapper.Execute();
+                _wrapper = new FfmpegWrapper(FfmpegExePath);
 
-                if(!infoWrapper.IsGoodEnough())
-                    infoWrapper.DumpInfo();
+                var videoInfo = _wrapper.GetVideoInfo(settings.VideoFile);
 
-                TimeSpan duration = MediaHelper.GetDuration(settings.VideoFile).Value;
+                if (!videoInfo.IsGoodEnough())
+                {
+                    entry.State = JobStates.Done;
+                    entry.DoneType = JobDoneTypes.Failure;
+                    entry.Update("Failed", 1);
+                    return;
+                }
 
+                TimeSpan duration = videoInfo.Duration;
                 TimeSpan intervall = duration.Divide(settings.Columns * settings.Rows + 1);
 
-                _wrapper = new FrameConverterWrapper(FfmpegExePath)
+                var frameArguments = new FrameConverterArguments
                 {
                     Width = 800,
-                    Intervall = intervall.TotalSeconds
+                    Intervall = intervall.TotalSeconds,
+                    StatusUpdateHandler = (progress) => { entry.Update(null, progress); },
+                    InputFile = settings.VideoFile,
+                    OutputDirectory = FfmpegWrapper.CreateRandomTempDirectory()
                 };
-
-                _wrapper.ProgressChanged += (s, progress) => { entry.Update(null, progress); };
-
+                
                 entry.Update("Extracting Frames", 0);
 
-                _wrapper.VideoFile = settings.VideoFile;
-                _wrapper.GenerateRandomOutputPath();
-                string tempPath = _wrapper.OutputDirectory;
-                _wrapper.Execute();
-
+                var frames = _wrapper.ExtractFrames(frameArguments);
+                
                 if (_canceled)
                     return;
 
                 entry.Update("Saving Thumbnails", 1);
 
                 List<ThumbnailBannerGeneratorImage> images = new List<ThumbnailBannerGeneratorImage>();
-                List<string> usedFiles = new List<string>();
-
-                foreach (string file in Directory.EnumerateFiles(tempPath))
+                
+                foreach (var frame in frames)
                 {
-                    string number = Path.GetFileNameWithoutExtension(file);
-                    int index = int.Parse(number);
-
-                    TimeSpan position = intervall.Multiply(index + 1);
-
-                    var frame = new BitmapImage();
-                    frame.BeginInit();
-                    frame.CacheOption = BitmapCacheOption.OnLoad;
-                    frame.UriSource = new Uri(file, UriKind.Absolute);
-                    frame.EndInit();
-
                     images.Add(new ThumbnailBannerGeneratorImage
                     {
-                        Image = frame,
-                        Position = position
+                        Image = frame.Item2,
+                        Position = frame.Item1
                     });
-                    usedFiles.Add(file);
                 }
 
                 ThumbnailBannerGeneratorData data = new ThumbnailBannerGeneratorData();
@@ -215,16 +203,14 @@ namespace ScriptPlayer.Generators
                 using(FileStream stream = new FileStream(settings.OutputFile, FileMode.Create))
                     encoder.Save(stream);
 
-                foreach (string tempFile in usedFiles)
-                    File.Delete(tempFile);
-
-                Directory.Delete(tempPath);
+                Directory.Delete(frameArguments.OutputDirectory);
 
                 entry.DoneType = JobDoneTypes.Success;
                 entry.Update("Done", 1);
             }
             catch (Exception)
             {
+                entry.Update("Failed", 1);
                 entry.DoneType = JobDoneTypes.Failure;
             }
             finally
@@ -232,7 +218,10 @@ namespace ScriptPlayer.Generators
                 entry.State = JobStates.Done;
 
                 if (_canceled)
+                {
                     entry.DoneType = JobDoneTypes.Cancelled;
+                    entry.Update("Cancelled", 1);
+                }
             }
         }
 
