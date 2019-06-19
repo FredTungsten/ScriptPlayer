@@ -1,6 +1,5 @@
 ﻿using FMUtils.KeyboardHook;
 using JetBrains.Annotations;
-using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Helpers;
@@ -41,6 +40,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<KodiConnectionSettings>> RequestKodiConnectionSettings;
         public event EventHandler<RequestEventArgs<WindowStateModel>> RequestGetWindowState;
         public event EventHandler<RequestEventArgs<ThumbnailGeneratorSettings>> RequestThumbnailGeneratorSettings;
+        public event EventHandler<RequestEventArgs<PreviewGeneratorSettings>> RequestPreviewGeneratorSettings;
         public event EventHandler<RequestEventArgs<ThumbnailBannerGeneratorSettings>> RequestThumbnailBannerGeneratorSettings;
 
         public event EventHandler RequestActivate;
@@ -71,6 +71,8 @@ namespace ScriptPlayer.ViewModels
 
         private Brush _heatMap;
         private ThumbnailGeneratorSettings _lastThumbnailSettings;
+        private ThumbnailBannerGeneratorSettings _lastThumbnailBannerSettings;
+        private PreviewGeneratorSettings _lastPreviewSettings;
 
         private TimeSpan _loopA = TimeSpan.MinValue;
         private TimeSpan _loopB = TimeSpan.MinValue;
@@ -270,7 +272,6 @@ namespace ScriptPlayer.ViewModels
         private List<Section> _chapters;
         private TimeSpan _previousProgress = TimeSpan.MinValue;
         private bool _loopSelection;
-        private ThumbnailBannerGeneratorSettings _lastThumbnailBannerSettings;
 
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
@@ -1376,6 +1377,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand GenerateThumbnailBannerForLoadedVideoCommand { get; set; }
 
+        public ScriptplayerCommand GeneratePreviewForLoadedVideoCommand { get; set; }
+
         public ScriptplayerCommand ShowSettingsCommand { get; set; }
 
         public RelayCommand<TimeDisplayMode> SetTimeDisplayModeCommand { get; set; }
@@ -1967,16 +1970,22 @@ namespace ScriptPlayer.ViewModels
             };
 
             GenerateThumbnailsForLoadedVideoCommand = new ScriptplayerCommand(GenerateThumbnailsForLoadedVideo,
-                CanGenerateThumbnailsForLoadedVideo)
+                IsVideoLoaded)
             {
                 CommandId = "GenerateThumbnailsForLoadedVideo",
                 DisplayText = "Generate Thumbnails for loaded Video"
             };
 
-            GenerateThumbnailBannerForLoadedVideoCommand = new ScriptplayerCommand(GenerateThumbnailBannerForLoadedVideo, CanGenerateThumbnailsForLoadedVideo)
+            GenerateThumbnailBannerForLoadedVideoCommand = new ScriptplayerCommand(GenerateThumbnailBannerForLoadedVideo, IsVideoLoaded)
             {
                 CommandId = "GenerateThumbnailBannerForLoadedVideo",
                 DisplayText = "Generate Thumbnail Banner for loaded Video"
+            };
+
+            GeneratePreviewForLoadedVideoCommand = new ScriptplayerCommand(GeneratePreviewForLoadedVideo, IsVideoLoaded)
+            {
+                CommandId = "GeneratePreviewForLoadedVideo",
+                DisplayText = "Generate Preview GIF for loaded Video"
             };
 
             OpenScriptCommand = new ScriptplayerCommand(OpenScript)
@@ -3936,58 +3945,46 @@ namespace ScriptPlayer.ViewModels
 
         public void GenerateThumbnailsForLoadedVideo()
         {
-            if (!CanGenerateThumbnailsForLoadedVideo())
+            if (!IsVideoLoaded())
                 return;
 
-            GenerateThumbnails(new[] { LoadedVideo });
+            GenerateThumbnails(LoadedVideo);
         }
 
         public void GenerateThumbnailBannerForLoadedVideo()
         {
-            if (!CanGenerateThumbnailsForLoadedVideo())
+            if (!IsVideoLoaded())
                 return;
 
-            GenerateThumbnailBanner(LoadedVideo);
+            GenerateThumbnailBanners(LoadedVideo);
         }
 
-        private void GenerateThumbnailBanner(string video)
+        public void GeneratePreviewForLoadedVideo()
+        {
+            if (!IsVideoLoaded())
+                return;
+
+            GeneratePreviews(LoadedVideo);
+        }
+
+        private void GenerateThumbnails(params string[] videos)
         {
             if (!CheckFfmpeg())
                 return;
 
-            ThumbnailBannerGeneratorSettings settings = _lastThumbnailBannerSettings?.Clone();
-            settings = OnRequestThumbnailBannerGeneratorSettings(settings);
-            if (settings == null)
-                return;
-
-            _lastThumbnailBannerSettings = settings;
-            settings.VideoFile = video;
-            settings.OutputFile = Path.ChangeExtension(video, "jpg");
-
-            ThumbnailBannerGenerator generator = new ThumbnailBannerGenerator(Settings.FfmpegPath);
-            WorkQueue.Enqueue(generator.CreateJob(settings));
-
-            OnRequestShowGeneratorProgressDialog();
-
-            //OnRequestGenerateThumbnailBanner(settings);
-        }
-
-        private void GenerateThumbnails(string[] videos)
-        {
-            if (!CheckFfmpeg())
-                return;
-
-            ThumbnailGeneratorSettings settings = _lastThumbnailSettings?.DuplicateWithoutVideo();
+            ThumbnailGeneratorSettings settings = _lastThumbnailSettings?.Duplicate();
             settings = OnRequestThumbnailGeneratorSettings(settings);
 
             if (settings == null)
                 return;
 
+            _lastThumbnailSettings = settings;
+
             ThumbnailGenerator generator = new ThumbnailGenerator(Settings.FfmpegPath);
 
             foreach (string video in videos)
             {
-                var videoSettings = settings.DuplicateWithoutVideo();
+                var videoSettings = settings.Duplicate();
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, "thumbs");
 
@@ -3997,22 +3994,24 @@ namespace ScriptPlayer.ViewModels
             OnRequestShowGeneratorProgressDialog();
         }
 
-        private void GenerateThumbnailBanners(string[] videos)
+        private void GenerateThumbnailBanners(params string[] videos)
         {
             if (!CheckFfmpeg())
                 return;
 
-            ThumbnailBannerGeneratorSettings settings = new ThumbnailBannerGeneratorSettings();//_lastThumbnailSettings?.DuplicateWithoutVideo();
+            ThumbnailBannerGeneratorSettings settings = _lastThumbnailBannerSettings?.Duplicate();
             settings = OnRequestThumbnailBannerGeneratorSettings(settings);
 
             if (settings == null)
                 return;
 
+            _lastThumbnailBannerSettings = settings;
+
             ThumbnailBannerGenerator generator = new ThumbnailBannerGenerator(Settings.FfmpegPath);
 
             foreach (string video in videos)
             {
-                var videoSettings = settings.DuplicateWithoutVideo();
+                var videoSettings = settings.Duplicate();
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, "jpg");
 
@@ -4022,35 +4021,54 @@ namespace ScriptPlayer.ViewModels
             OnRequestShowGeneratorProgressDialog();
         }
 
-        private void GeneratePreviews(string[] videos)
+        private void GeneratePreviews(params string[] videos)
         {
             if (!CheckFfmpeg())
                 return;
+
+            PreviewGeneratorSettings settings = _lastPreviewSettings?.Duplicate();
+            settings = OnRequestPreviewGeneratorSettings(settings);
+
+            if (settings == null)
+                return;
+
+            _lastPreviewSettings = settings;
 
             PreviewGenerator generator = new PreviewGenerator(Settings.FfmpegPath);
 
             foreach (string video in videos)
             {
-                PreviewGeneratorSettings settings = new PreviewGeneratorSettings();
-                settings.VideoFile = video;
-                settings.OutputFile = Path.ChangeExtension(video, ".gif");
-                settings.GenerateRelativeTimeFrames(12, TimeSpan.FromSeconds(0.8));
+                PreviewGeneratorSettings videoSettings = settings.Duplicate();
+                videoSettings.VideoFile = video;
+                videoSettings.OutputFile = Path.ChangeExtension(video, ".gif");
+                videoSettings.GenerateRelativeTimeFrames(12, TimeSpan.FromSeconds(0.8));
 
-                WorkQueue.Enqueue(generator.CreateJob(settings));
+                WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
 
             OnRequestShowGeneratorProgressDialog();
         }
 
-        private bool CanGenerateThumbnailsForLoadedVideo()
+        private bool IsVideoLoaded()
         {
-            return !String.IsNullOrEmpty(LoadedVideo);
+            return !string.IsNullOrEmpty(LoadedVideo);
         }
 
         protected virtual ThumbnailGeneratorSettings OnRequestThumbnailGeneratorSettings(ThumbnailGeneratorSettings initialSettings)
         {
             var eventArgs = new RequestEventArgs<ThumbnailGeneratorSettings>(initialSettings);
             RequestThumbnailGeneratorSettings?.Invoke(this, eventArgs);
+
+            if (!eventArgs.Handled)
+                return null;
+
+            return eventArgs.Value;
+        }
+
+        protected virtual PreviewGeneratorSettings OnRequestPreviewGeneratorSettings(PreviewGeneratorSettings initialSettings)
+        {
+            var eventArgs = new RequestEventArgs<PreviewGeneratorSettings>(initialSettings);
+            RequestPreviewGeneratorSettings?.Invoke(this, eventArgs);
 
             if (!eventArgs.Handled)
                 return null;

@@ -16,17 +16,7 @@
             TotalWidth = 1024;
         }
 
-        public ThumbnailBannerGeneratorSettings Clone()
-        {
-            return new ThumbnailBannerGeneratorSettings
-            {
-                Rows = Rows,
-                Columns = Columns,
-                TotalWidth = TotalWidth
-            };
-        }
-
-        public ThumbnailBannerGeneratorSettings DuplicateWithoutVideo()
+        public ThumbnailBannerGeneratorSettings Duplicate()
         {
             return new ThumbnailBannerGeneratorSettings
             {

@@ -19,7 +19,7 @@ namespace ScriptPlayer.Dialogs
 
         public ThumbnailBannerGeneratorSettingsDialog(ThumbnailBannerGeneratorSettings initialSettings)
         {
-            Settings = initialSettings?.Clone() ?? new ThumbnailBannerGeneratorSettings();
+            Settings = initialSettings?.Duplicate() ?? new ThumbnailBannerGeneratorSettings();
             InitializeComponent();
         }
 

@@ -6,7 +6,7 @@
         public int Height { get; set; }
         public int Intervall { get; set; }
 
-        public ThumbnailGeneratorSettings DuplicateWithoutVideo()
+        public ThumbnailGeneratorSettings Duplicate()
         {
             return new ThumbnailGeneratorSettings
             {

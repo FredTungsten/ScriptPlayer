@@ -91,6 +91,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\AlternativeValueConverter.cs" />
+    <Compile Include="Converters\InverterConverter.cs" />
     <Compile Include="Generators\ThumbnailBannerGeneratorSettings.cs" />
     <Compile Include="Generators\ThumbnailBannerGenerator.cs" />
     <Compile Include="Generators\ThumbnailBannerGeneratorData.cs" />

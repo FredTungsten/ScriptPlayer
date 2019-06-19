@@ -4,42 +4,55 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
+        xmlns:converters="clr-namespace:ScriptPlayer.Converters"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d"
-        Title="Preview Generator Settings" Height="315.35" Width="359.557" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+        Title="Preview Generator Settings" Height="256.016" Width="358.89" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <Window.Resources>
+        <converters:InverterConverter x:Key="InverterConverter"/>
+        <converters:AlternativeValueConverter x:Key="AlternativeValueConverter"/>
+    </Window.Resources>
     <Grid>
-        <TextBlock HorizontalAlignment="Left" Margin="10,73,0,0" TextWrapping="Wrap" Text="Width" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,72,0,0" TextWrapping="Wrap" Text="{Binding FrameWidth}" VerticalAlignment="Top" Width="74"/>
-        <TextBlock HorizontalAlignment="Left" Margin="161,73,0,0" TextWrapping="Wrap" Text="px" VerticalAlignment="Top"/>
-        <CheckBox Content="Automatic" IsChecked="{Binding FrameAutoWidth}" HorizontalAlignment="Left" Margin="188,74,0,0" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Width" VerticalAlignment="Top"/>
+        <TextBox IsEnabled="{Binding Path=FrameAutoWidth, Converter={StaticResource InverterConverter}, Mode=OneWay}" HorizontalAlignment="Left" Height="19" Margin="82,9,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="74">
+            <TextBox.Text>
+                <MultiBinding Converter="{StaticResource AlternativeValueConverter}">
+                    <Binding Path="FrameWidth"/>
+                    <Binding Path="FrameAutoWidth"/>
+                </MultiBinding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBlock HorizontalAlignment="Left" Margin="161,10,0,0" TextWrapping="Wrap" Text="px" VerticalAlignment="Top"/>
+        <CheckBox Content="Automatic" IsChecked="{Binding FrameAutoWidth}" HorizontalAlignment="Left" Margin="188,11,0,0" VerticalAlignment="Top"/>
 
-        <TextBlock HorizontalAlignment="Left" Margin="10,97,0,0" TextWrapping="Wrap" Text="Height" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,96,0,0" TextWrapping="Wrap" Text="{Binding FrameHeight}" VerticalAlignment="Top" Width="74"/>
-        <TextBlock HorizontalAlignment="Left" Margin="161,97,0,0" TextWrapping="Wrap" Text="px" VerticalAlignment="Top"/>
-        <CheckBox Content="Automatic" IsChecked="{Binding FrameAutoHeight}" HorizontalAlignment="Left" Margin="188,98,0,0" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,34,0,0" TextWrapping="Wrap" Text="Height" VerticalAlignment="Top"/>
+        <TextBox IsEnabled="{Binding Path=FrameAutoHeight, Converter={StaticResource InverterConverter}, Mode=OneWay}" HorizontalAlignment="Left" Height="19" Margin="82,33,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="74">
+            <TextBox.Text>
+                <MultiBinding Converter="{StaticResource AlternativeValueConverter}">
+                    <Binding Path="FrameHeight"/>
+                    <Binding Path="FrameAutoHeight"/>
+                </MultiBinding>
+            </TextBox.Text>
+        </TextBox>
+        <TextBlock HorizontalAlignment="Left" Margin="161,34,0,0" TextWrapping="Wrap" Text="px" VerticalAlignment="Top"/>
+        <CheckBox Content="Automatic" IsChecked="{Binding FrameAutoHeight}" HorizontalAlignment="Left" Margin="188,35,0,0" VerticalAlignment="Top"/>
 
-        <TextBlock HorizontalAlignment="Left" Margin="10,121,0,0" TextWrapping="Wrap" Text="Framerate" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,120,0,0" TextWrapping="Wrap" Text="{Binding FrameRate}" VerticalAlignment="Top" Width="74"/>
-        <TextBlock HorizontalAlignment="Left" Margin="161,121,0,0" TextWrapping="Wrap" Text="fps" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,58,0,0" TextWrapping="Wrap" Text="Framerate" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,57,0,0" TextWrapping="Wrap" Text="{Binding FrameRate}" VerticalAlignment="Top" Width="74"/>
+        <TextBlock HorizontalAlignment="Left" Margin="161,58,0,0" TextWrapping="Wrap" Text="fps" VerticalAlignment="Top"/>
 
         <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="BtnOk_Click"/>
         <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="BtnCancel_Click"/>
-        <TextBlock HorizontalAlignment="Left" Margin="10,189,0,0" TextWrapping="Wrap" Text="Start" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,188,0,0" TextWrapping="Wrap" Text="{Binding Start}" VerticalAlignment="Top" Width="74"/>
-        <TextBlock HorizontalAlignment="Left" Margin="10,213,0,0" TextWrapping="Wrap" Text="Duration" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,212,0,0" TextWrapping="Wrap" Text="{Binding Duration}" VerticalAlignment="Top" Width="74"/>
-        <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Video (In)" VerticalAlignment="Top"/>
-        <TextBox Height="19" Margin="82,9,36,0" TextWrapping="Wrap" Text="{Binding VideoPath}" VerticalAlignment="Top"/>
-        <Button Content="..." HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="21" Height="18" Click="BtnSelectVideo_Click"/>
-        <TextBlock HorizontalAlignment="Left" Margin="10,33,0,0" TextWrapping="Wrap" Text="GIF (Out)" VerticalAlignment="Top"/>
-        <TextBox Height="19" Margin="82,32,36,0" TextWrapping="Wrap" Text="{Binding GifPath}" VerticalAlignment="Top"/>
-        <Button Content="..." HorizontalAlignment="Right" Margin="0,33,10,0" VerticalAlignment="Top" Width="21" Height="18" Click="BtnSelectGif_Click"/>
-        <RadioButton Content="Single Section" HorizontalAlignment="Left" Margin="10,165,0,0" VerticalAlignment="Top"/>
-        <RadioButton IsChecked="True" Name="rbMultiSections"  Content="Multiple Sections" HorizontalAlignment="Left" Margin="188,165,0,0" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,126,0,0" TextWrapping="Wrap" Text="Start" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,125,0,0" TextWrapping="Wrap" Text="{Binding Start}" VerticalAlignment="Top" Width="74"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,150,0,0" TextWrapping="Wrap" Text="Duration" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,149,0,0" TextWrapping="Wrap" Text="{Binding Duration}" VerticalAlignment="Top" Width="74"/>
+        <RadioButton Content="Single Section" HorizontalAlignment="Left" Margin="10,102,0,0" VerticalAlignment="Top"/>
+        <RadioButton IsChecked="True" Name="rbMultiSections"  Content="Multiple Sections" HorizontalAlignment="Left" Margin="188,102,0,0" VerticalAlignment="Top"/>
 
-        <TextBlock HorizontalAlignment="Left" Margin="188,189,0,0" TextWrapping="Wrap" Text="Count" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="19" Margin="260,188,-25,0" TextWrapping="Wrap" Text="{Binding SectionCount}" VerticalAlignment="Top" Width="74"/>
-        <TextBlock HorizontalAlignment="Left" Margin="188,213,0,0" TextWrapping="Wrap" Text="Duration" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="19" Margin="260,212,-25,0" TextWrapping="Wrap" Text="{Binding DurationEach}" VerticalAlignment="Top" Width="74"/>
+        <TextBlock HorizontalAlignment="Left" Margin="188,126,0,0" TextWrapping="Wrap" Text="Count" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="260,125,0,0" TextWrapping="Wrap" Text="{Binding SectionCount}" VerticalAlignment="Top" Width="74"/>
+        <TextBlock HorizontalAlignment="Left" Margin="188,150,0,0" TextWrapping="Wrap" Text="Duration" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="260,149,0,0" TextWrapping="Wrap" Text="{Binding DurationEach}" VerticalAlignment="Top" Width="74"/>
     </Grid>
 </Window>

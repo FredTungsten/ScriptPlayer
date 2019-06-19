@@ -111,23 +111,32 @@ namespace ScriptPlayer.Dialogs
             {
                 FrameWidth = initialValues.Width;
                 if (FrameWidth <= 0)
+                {
+                    FrameWidth = 200;
                     FrameAutoWidth = true;
+                }
 
                 FrameHeight = initialValues.Height;
                 if (FrameHeight <= 0)
+                {
+                    FrameHeight = 112;
                     FrameAutoHeight = true;
+                }
 
                 FrameIntervall = initialValues.Intervall;
                 if (FrameIntervall < 1)
+                {
+                    FrameIntervall = 10;
                     FrameAutoIntervall = true;
+                }
                 
                 SkipExisting = initialValues.SkipIfExists;
             }
             else
             {
                 FrameWidth = 200;
-                FrameHeight = -1;
-                FrameIntervall = -1;
+                FrameHeight = 112;
+                FrameIntervall = 10;
 
                 FrameAutoWidth = false;
                 FrameAutoHeight = true;
@@ -156,7 +165,7 @@ namespace ScriptPlayer.Dialogs
                 return;
             }
 
-            if (FrameIntervall <= 0)
+            if (FrameIntervall <= 0 && !FrameAutoIntervall)
             {
                 MessageBox.Show("Intervall must be greater than zero!", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;

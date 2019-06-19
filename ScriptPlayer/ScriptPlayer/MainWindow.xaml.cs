@@ -71,6 +71,7 @@ namespace ScriptPlayer
             ViewModel.RequestThumbnailGeneratorSettings += ViewModelOnRequestThumbnailGeneratorSettings;
             ViewModel.RequestGenerateThumbnailBanner += ViewModelOnRequestGenerateThumbnailBanner;
             ViewModel.RequestThumbnailBannerGeneratorSettings += ViewModelOnRequestThumbnailBannerGeneratorSettings;
+            ViewModel.RequestPreviewGeneratorSettings += ViewModelOnRequestPreviewGeneratorSettings;
 
             ViewModel.RequestShowGeneratorProgressDialog += ViewModelOnRequestShowGeneratorProgressDialog;
             ViewModel.RequestActivate += ViewModelOnRequestActivate;
@@ -92,6 +93,16 @@ namespace ScriptPlayer
                 WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
             }
+        }
+
+        private void ViewModelOnRequestPreviewGeneratorSettings(object sender, RequestEventArgs<PreviewGeneratorSettings> eventArgs)
+        {
+            PreviewGeneratorSettingsDialog dialog = new PreviewGeneratorSettingsDialog(eventArgs.Value);
+            if (dialog.ShowDialog() != true)
+                return;
+
+            eventArgs.Value = dialog.Result;
+            eventArgs.Handled = true;
         }
 
         private void ViewModelOnRequestShowGeneratorProgressDialog(object sender, EventArgs eventArgs)
@@ -741,48 +752,6 @@ namespace ScriptPlayer
                 return;
 
             new SceneSelectorDialog(ViewModel, ViewModel.LoadedVideo).ShowDialog();
-        }
-
-        private void MnuCreatePreview_OnClick(object sender, RoutedEventArgs e)
-        {
-            if (!ViewModel.CheckFfmpeg())
-                return;
-
-            var settings = new PreviewGeneratorSettings
-            {
-                VideoFile = ViewModel.LoadedVideo,
-            };
-
-            settings.OutputFile = settings.SuggestDestination();
-
-            if (ViewModel.DisplayedRange != null)
-            {
-                settings.TimeFrames.Add(new TimeFrame
-                {
-                    StartTimeSpan = ViewModel.DisplayedRange.Start,
-                    Duration = ViewModel.DisplayedRange.Duration
-                });
-            }
-            else
-            {
-                settings.TimeFrames.Add(new TimeFrame
-                {
-                    StartTimeSpan = ViewModel.TimeSource.Progress,
-                    Duration = TimeSpan.FromSeconds(5)
-                });
-            }
-
-            PreviewGeneratorSettingsDialog settingsDialog = new PreviewGeneratorSettingsDialog(ViewModel, settings);
-            settingsDialog.Owner = this;
-            if (settingsDialog.ShowDialog() != true)
-                return;
-
-            settings = settingsDialog.Result;
-
-            var dialog = new PreviewGeneratorDialog(ViewModel, settings) {Owner = this};
-            dialog.ShowDialog();
-
-            ViewModel.RecheckForAdditionalFiles();
         }
 
         private void ToolTipNext_OnOpened(object sender, RoutedEventArgs e)
