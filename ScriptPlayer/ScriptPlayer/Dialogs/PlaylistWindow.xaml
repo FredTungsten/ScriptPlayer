@@ -17,6 +17,12 @@
             <MenuItem Header="Open in Explorer" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.OpenInExplorerCommand}"
                       CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext}"/>
         </ContextMenu>
+        <ToolTip x:Key="EntryToolTip" Padding="0" Placement="Right"  Opened="ToolTip_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
+            <StackPanel Width="300">
+                <shared:GifPlayer Background="Black" AutoPlay="True" Stretch="Uniform"/>
+                <TextBlock Margin="2" Background="White" Foreground="Black" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+        </ToolTip>
         <converters:DurationConverter x:Key="DurationConverter"/>
         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
             <Setter Property="Focusable" Value="False"/>
@@ -72,10 +78,12 @@
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
-                    <Setter Property="ToolTip" Value="{Binding Fullname}"/>
+                    <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
+                    <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
                     <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
                     <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"></Setter>
-                    <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=dialogs:PlaylistWindow}, Path=DataContext}"></Setter>
+                    <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=dialogs:PlaylistWindow}, Path=DataContext}"/>
+                    <Setter Property="ToolTip" Value="{StaticResource EntryToolTip}"/>
                 </Style>
             </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows;
 using ScriptPlayer.Generators;
 using ScriptPlayer.ViewModels;
@@ -10,72 +12,96 @@ namespace ScriptPlayer.Dialogs
     /// </summary>
     public partial class GeneratorProgressDialog : Window
     {
+        public static readonly DependencyProperty CloseWhenDoneProperty = DependencyProperty.Register(
+            "CloseWhenDone", typeof(bool), typeof(GeneratorProgressDialog), new PropertyMetadata(default(bool), OnCloseWhenDonePropertyChanged));
+
+        private static void OnCloseWhenDonePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((GeneratorProgressDialog)d).CloseWhenDoneChanged();
+        }
+
+        private void CloseWhenDoneChanged()
+        {
+            CheckCloseWhenDone();
+        }
+        
+        public bool CloseWhenDone
+        {
+            get => (bool) GetValue(CloseWhenDoneProperty);
+            set => SetValue(CloseWhenDoneProperty, value);
+        }
+
         public static readonly DependencyProperty WorkQueueProperty = DependencyProperty.Register(
             "WorkQueue", typeof(GeneratorWorkQueue), typeof(GeneratorProgressDialog), new PropertyMetadata(default(GeneratorWorkQueue)));
 
         public GeneratorWorkQueue WorkQueue
         {
-            get { return (GeneratorWorkQueue) GetValue(WorkQueueProperty); }
-            set { SetValue(WorkQueueProperty, value); }
+            get => (GeneratorWorkQueue) GetValue(WorkQueueProperty);
+            set => SetValue(WorkQueueProperty, value);
         }
 
         public static readonly DependencyProperty CloseButtonTextProperty = DependencyProperty.Register(
             "CloseButtonText", typeof(string), typeof(GeneratorProgressDialog), new PropertyMetadata(default(string)));
 
-        private bool _closeWhenDone;
-
         public string CloseButtonText
         {
-            get { return (string) GetValue(CloseButtonTextProperty); }
-            set { SetValue(CloseButtonTextProperty, value); }
+            get => (string) GetValue(CloseButtonTextProperty);
+            set => SetValue(CloseButtonTextProperty, value);
         }
 
         public GeneratorProgressDialog(MainViewModel viewModel)
         {
             WorkQueue = viewModel.WorkQueue;
-
-            CloseButtonText = "Close/Cancel";
+            
+            CloseButtonText = "Close";
             InitializeComponent();
         }
 
-        private void btnClose_Click(object sender, RoutedEventArgs e)
+        private void WorkQueueOnJobStarted(object sender, GeneratorJobEventArgs eventArgs)
         {
-            //if (_done)
-            //{
-            //    DialogResult = true;
-            //}
-            //else
-            //{
-
-            //    this.IsEnabled = false;
-
-            //    _canceled = true;
-            //    _wrapper?.Cancel();
-
-            //    if (!_processThread.Join(TimeSpan.FromSeconds(5)))
-            //        _processThread.Abort();
-
-            //    DialogResult = false;
-            //}
-
-            //Close();
+            if (Dispatcher.CheckAccess())
+                dataGrid.ScrollIntoView(eventArgs.Job.Entry);
+            else
+                Dispatcher.BeginInvoke(new Action(()=> { dataGrid.ScrollIntoView(eventArgs.Job.Entry); }));
         }
 
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        private void WorkQueueOnJobFinished(object sender, GeneratorJobEventArgs eventArgs)
         {
-            //_closeWhenDone = true;
-            //if (_done)
-            //    Close();
+            if (Dispatcher.CheckAccess())
+                CheckCloseWhenDone();
+            else
+                Dispatcher.BeginInvoke(new Action(CheckCloseWhenDone));
         }
 
-        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
+        private void CheckCloseWhenDone()
         {
-            _closeWhenDone = false;
+            if (CloseWhenDone && WorkQueue.UnprocessedJobCount == 0)
+                Close();
         }
 
-        private void btnSkip_Click(object sender, RoutedEventArgs e)
+        private void btnRemoveDone_Click(object sender, RoutedEventArgs e)
         {
             WorkQueue.RemoveDone();
+        }
+
+        private void GeneratorProgressDialog_OnClosing(object sender, CancelEventArgs e)
+        {
+            WorkQueue.JobStarted -= WorkQueueOnJobStarted;
+            WorkQueue.JobFinished -= WorkQueueOnJobFinished;
+        }
+
+        private void GeneratorProgressDialog_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            WorkQueue.JobStarted += WorkQueueOnJobStarted;
+            WorkQueue.JobFinished += WorkQueueOnJobFinished;
+        }
+
+        private void MnuCancel_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (GeneratorEntry entry in dataGrid.SelectedItems)
+            {
+                entry.Job.Cancel();
+            }
         }
     }
 }

@@ -14,9 +14,10 @@
         <TextBox Height="23" Margin="108,38,10,0" TextWrapping="Wrap" Text="{Binding Rows}" VerticalAlignment="Top"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,67,0,0" TextWrapping="Wrap" Text="Total Width" VerticalAlignment="Top"/>
         <TextBox Height="23" Margin="108,66,10,0" TextWrapping="Wrap" Text="{Binding TotalWidth}" VerticalAlignment="Top"/>
-        <Button IsDefault="True" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="Button_Click_2"/>
-        <Button IsCancel="True" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="Button_Click_1"/>
-        <Button Content="Preview" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
+        <Button IsDefault="True" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="btnOk_Click"/>
+        <Button IsCancel="True" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="btnCancel_Click"/>
+        <Button Content="Preview" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="75" Click="btnPreview_Click"/>
+        <CheckBox IsChecked="{Binding SkipIfExists}" Content="Skip existing" HorizontalAlignment="Left" Margin="10,100,0,0" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>

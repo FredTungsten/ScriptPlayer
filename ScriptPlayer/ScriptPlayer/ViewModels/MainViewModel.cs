@@ -82,7 +82,7 @@ namespace ScriptPlayer.ViewModels
         private byte _maxScriptPosition;
         private byte _minScriptPosition;
 
-        public GeneratorWorkQueue WorkQueue { get; private set; }
+        public GeneratorWorkQueue WorkQueue { get; }
 
         public WindowStateModel InitialPlayerState { get; private set; }
 
@@ -316,8 +316,12 @@ namespace ScriptPlayer.ViewModels
 
         public MainViewModel()
         {
+            // Can get rather intense even fow low values, keep it at 1 for now (Ffmpeg is multi-threaded anyways)
+            int threadCount = 1; //Environment.ProcessorCount;
+
             WorkQueue = new GeneratorWorkQueue();
-            WorkQueue.Start();
+            WorkQueue.JobFinished += WorkQueueOnJobFinished;
+            WorkQueue.Start(threadCount);
 
             _supportedMediaExtensions = _supportedVideoExtensions.Concat(_supportedAudioExtensions).ToArray();
 
@@ -340,6 +344,11 @@ namespace ScriptPlayer.ViewModels
             GeneratePatterns();
 
             LoadSettings();
+        }
+
+        private void WorkQueueOnJobFinished(object sender, GeneratorJobEventArgs eventArgs)
+        {
+            RecheckForAdditionalFiles();
         }
 
         private void GeneratePatterns()
@@ -3980,13 +3989,13 @@ namespace ScriptPlayer.ViewModels
 
             _lastThumbnailSettings = settings;
 
-            ThumbnailGenerator generator = new ThumbnailGenerator(Settings.FfmpegPath);
-
             foreach (string video in videos)
             {
                 var videoSettings = settings.Duplicate();
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, "thumbs");
+
+                ThumbnailGenerator generator = new ThumbnailGenerator(Settings.FfmpegPath);
 
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
@@ -4007,13 +4016,13 @@ namespace ScriptPlayer.ViewModels
 
             _lastThumbnailBannerSettings = settings;
 
-            ThumbnailBannerGenerator generator = new ThumbnailBannerGenerator(Settings.FfmpegPath);
-
             foreach (string video in videos)
             {
                 var videoSettings = settings.Duplicate();
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, "jpg");
+
+                ThumbnailBannerGenerator generator = new ThumbnailBannerGenerator(Settings.FfmpegPath);
 
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
@@ -4034,14 +4043,14 @@ namespace ScriptPlayer.ViewModels
 
             _lastPreviewSettings = settings;
 
-            PreviewGenerator generator = new PreviewGenerator(Settings.FfmpegPath);
-
             foreach (string video in videos)
             {
                 PreviewGeneratorSettings videoSettings = settings.Duplicate();
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, ".gif");
                 videoSettings.GenerateRelativeTimeFrames(12, TimeSpan.FromSeconds(0.8));
+
+                PreviewGenerator generator = new PreviewGenerator(Settings.FfmpegPath);
 
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
@@ -4217,26 +4226,5 @@ namespace ScriptPlayer.ViewModels
             else
                 CommandsPerSecond = (CommandCount - 1) / Duration.TotalSeconds;
         }
-    }
-
-    /// <summary>
-    /// Determines how the progress time is displayed
-    /// </summary>
-    public enum TimeDisplayMode
-    {
-        /// <summary>
-        /// Original Video Position regardless of script
-        /// </summary>
-        Original,
-
-        /// <summary>
-        /// First Command to Last Command
-        /// </summary>
-        ContentAndGaps,
-
-        /// <summary>
-        /// Only Content in Sections/Chapters
-        /// </summary>
-        ContentOnly
     }
 }

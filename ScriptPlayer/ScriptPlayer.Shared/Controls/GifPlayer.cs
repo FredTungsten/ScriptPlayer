@@ -90,7 +90,11 @@ namespace ScriptPlayer.Shared
 
             for (int i = 0; i < Frames.Count; i++)
             {
-                duration += Frames[i].Delay;
+                var frame = Frames[i];
+                if (frame == null)
+                    return;
+
+                duration += frame.Delay;
                 if (duration > progress)
                 {
                     index = i;
@@ -407,9 +411,21 @@ namespace ScriptPlayer.Shared
         private GifFrame[] _frames;
         private LoadStates _loadState = LoadStates.None;
 
-        public GifFrame this[int index] => _frames[index];
+        public GifFrame this[int index]
+        {
+            get
+            {
+                if (_frames == null)
+                    return null;
 
-        public int Count => _frames.Length;
+                if (_frames.Length <= index)
+                    return null;
+
+                return _frames[index];
+            }
+        }
+
+        public int Count => _frames?.Length ?? 0;
 
         public int Height { get; private set; }
 

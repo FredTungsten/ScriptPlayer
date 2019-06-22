@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 using ScriptPlayer.Generators;
 
 namespace ScriptPlayer.Dialogs
@@ -23,7 +24,7 @@ namespace ScriptPlayer.Dialogs
             InitializeComponent();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnPreview_Click(object sender, RoutedEventArgs e)
         {
             PreviewThumbnailBanner(Settings);
         }
@@ -33,13 +34,14 @@ namespace ScriptPlayer.Dialogs
             new ThumbnailBannerGeneratorSettingsPreviewDialog(settings).ShowDialog();
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
         }
 
-        private void Button_Click_2(object sender, RoutedEventArgs e)
+        private void btnOk_Click(object sender, RoutedEventArgs e)
         {
+            ((Button) sender).Focus();
             DialogResult = true;
         }
     }

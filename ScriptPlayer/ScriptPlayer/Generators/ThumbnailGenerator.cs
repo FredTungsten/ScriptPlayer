@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Windows.Media.Imaging;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Classes.Wrappers;
@@ -15,7 +13,7 @@ namespace ScriptPlayer.Generators
 
         protected override string ProcessingType => "Thumbnails";
 
-        protected override void ProcessInternal(ThumbnailGeneratorSettings settings, GeneratorEntry entry)
+        protected override GeneratorResult ProcessInternal(ThumbnailGeneratorSettings settings, GeneratorEntry entry)
         {
             try
             {
@@ -32,10 +30,12 @@ namespace ScriptPlayer.Generators
                     {
                         entry.Update("Failed", 1);
                         entry.DoneType = JobDoneTypes.Failure;
-                        return;
+                        return GeneratorResult.Failed();
                     }
 
-                    intervall = info.Duration.TotalSeconds / 500.0;
+                    const double targetFrameCount = 500.0;
+
+                    intervall = info.Duration.TotalSeconds / targetFrameCount;
                     intervall = Math.Min(Math.Max(1, intervall), 10);
                 }
 
@@ -55,7 +55,7 @@ namespace ScriptPlayer.Generators
                 var frames =_wrapper.ExtractFrames(arguments);
 
                 if (_canceled)
-                    return;
+                    return GeneratorResult.Failed();
 
                 entry.Update("Saving Thumbnails", 1);
 
@@ -72,10 +72,13 @@ namespace ScriptPlayer.Generators
 
                 entry.DoneType = JobDoneTypes.Success;
                 entry.Update("Done", 1);
+
+                return GeneratorResult.Succeeded(thumbfile);
             }
             catch (Exception)
             {
                 entry.DoneType = JobDoneTypes.Failure;
+                return GeneratorResult.Failed();
             }
             finally
             {
@@ -89,7 +92,7 @@ namespace ScriptPlayer.Generators
         public override void Cancel()
         {
             _canceled = true;
-            _wrapper.Cancel();
+            _wrapper?.Cancel();
         }
 
         public ThumbnailGenerator(string ffmpegExePath) : base(ffmpegExePath)

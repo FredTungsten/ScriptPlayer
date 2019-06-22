@@ -112,6 +112,15 @@ namespace ScriptPlayer.Dialogs
             set => SetValue(SectionCountProperty, value);
         }
 
+        public static readonly DependencyProperty SkipExistingProperty = DependencyProperty.Register(
+            "SkipExisting", typeof(bool), typeof(PreviewGeneratorSettingsDialog), new PropertyMetadata(default(bool)));
+
+        public bool SkipExisting
+        {
+            get { return (bool) GetValue(SkipExistingProperty); }
+            set { SetValue(SkipExistingProperty, value); }
+        }
+
         public PreviewGeneratorSettingsDialog(PreviewGeneratorSettings initialSettings)
         {
             if(initialSettings == null)
@@ -122,6 +131,7 @@ namespace ScriptPlayer.Dialogs
             FrameHeight = initialSettings.Height;
             FrameAutoHeight = initialSettings.Height <= 0;
             FrameRate = initialSettings.Framerate;
+            SkipExisting = initialSettings.SkipIfExists;
             Start = TimeSpan.Zero;
             Duration = TimeSpan.FromSeconds(5);   
 
@@ -155,6 +165,7 @@ namespace ScriptPlayer.Dialogs
                 Height = FrameAutoHeight ? -2 : FrameHeight,
                 Width = FrameAutoWidth ? -2 : FrameWidth,
                 Framerate = FrameRate,
+                SkipIfExists = SkipExisting
             };
 
             if (rbMultiSections.IsChecked == true)

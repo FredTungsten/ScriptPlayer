@@ -29,7 +29,7 @@ namespace ScriptPlayer.Generators
 
         protected override string ProcessingType => "Preview GIF";
 
-        protected override void ProcessInternal(PreviewGeneratorSettings settings, GeneratorEntry entry)
+        protected override GeneratorResult ProcessInternal(PreviewGeneratorSettings settings, GeneratorEntry entry)
         {
             entry.State = JobStates.Processing;
 
@@ -50,7 +50,7 @@ namespace ScriptPlayer.Generators
                         entry.State = JobStates.Done;
                         entry.DoneType = JobDoneTypes.Failure;
                         entry.Update("Failed", 1);
-                        return;
+                        return GeneratorResult.Failed();
                     }
 
                     TimeSpan duration = info.Duration;
@@ -85,7 +85,7 @@ namespace ScriptPlayer.Generators
                     _wrapper.Execute(clipArguments);
 
                     if (_canceled)
-                        return;
+                        return GeneratorResult.Failed();
                 }
 
                 entry.Update("Generating GIF (2/4): Merging Clips", 1 / 4.0);
@@ -111,7 +111,7 @@ namespace ScriptPlayer.Generators
                     _wrapper.Execute(mergeArguments);
 
                     if (_canceled)
-                        return;
+                        return GeneratorResult.Failed();
                 }
 
                 entry.Update("Generating GIF (3/4): Extracting Palette", 2 / 4.0);
@@ -129,7 +129,7 @@ namespace ScriptPlayer.Generators
                 _wrapper.Execute(paletteArguments);
 
                 if (_canceled)
-                    return;
+                    return GeneratorResult.Failed();
 
                 entry.Update("Generating GIF (3/4): Creating GIF", 3 / 4.0);
 
@@ -144,7 +144,7 @@ namespace ScriptPlayer.Generators
                 _wrapper.Execute(gifArguments);
 
                 if (_canceled)
-                    return;
+                    return GeneratorResult.Failed();
 
                 entry.Update("Done!", 4 / 4.0);
                 bool success = File.Exists(gifFileName);
@@ -155,10 +155,16 @@ namespace ScriptPlayer.Generators
                     entry.DoneType = JobDoneTypes.Failure;
 
                 OnDone(new Tuple<bool, string>(success, gifFileName));
+
+                if(success)
+                    return GeneratorResult.Succeeded(gifFileName);
+
+                return GeneratorResult.Failed();
             }
             catch
             {
                 entry.DoneType = JobDoneTypes.Failure;
+                return GeneratorResult.Failed();
             }
             finally
             {

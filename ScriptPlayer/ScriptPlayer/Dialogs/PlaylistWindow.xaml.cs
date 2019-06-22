@@ -4,6 +4,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Dialogs
@@ -58,6 +60,48 @@ namespace ScriptPlayer.Dialogs
         private void LstEntries_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ViewModel.Playlist.SetSelectedItems(((ListBox) sender).SelectedItems.Cast<PlaylistEntry>());
+        }
+
+        private void ToolTip_OnOpened(object sender, RoutedEventArgs e)
+        {
+            var tooltip = (ToolTip) sender;
+            PlaylistEntry entry = ((FrameworkElement)tooltip.PlacementTarget).DataContext as PlaylistEntry;
+
+            GifPlayer player = tooltip.GetChildOfType<GifPlayer>();
+            TextBlock text = tooltip.GetChildOfType<TextBlock>();
+
+            string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new[] { "gif" });
+            if (!string.IsNullOrEmpty(gifFile))
+            {
+                player.Load(gifFile);
+            }
+
+            text.Text = entry.Shortname + " [" + (entry.Duration?.ToString("hh\\:mm\\:ss") ?? "?") + "]";
+        }
+
+        private void ToolTip_OnClosed(object sender, RoutedEventArgs e)
+        {
+            var tooltip = (ToolTip)sender;
+            GifPlayer player = tooltip.GetChildOfType<GifPlayer>();
+            player.Close();
+        }
+    }
+
+    public static class DependecyObjectExtensions
+    {
+        public static T GetChildOfType<T>(this DependencyObject depObj)
+            where T : DependencyObject
+        {
+            if (depObj == null) return null;
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            {
+                var child = VisualTreeHelper.GetChild(depObj, i);
+
+                var result = (child as T) ?? GetChildOfType<T>(child);
+                if (result != null) return result;
+            }
+            return null;
         }
     }
 }

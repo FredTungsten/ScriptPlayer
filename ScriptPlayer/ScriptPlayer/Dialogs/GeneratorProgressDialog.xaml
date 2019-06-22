@@ -6,11 +6,17 @@
         xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
         xmlns:generators="clr-namespace:ScriptPlayer.Generators"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}}"
-        mc:Ignorable="d"
-        Title="Generator Progress" Height="450" Width="800">
+        mc:Ignorable="d" Closing="GeneratorProgressDialog_OnClosing"
+        Loaded="GeneratorProgressDialog_OnLoaded"
+        Title="Generator Progress" Height="452" Width="792">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo ProgressState="Normal" ProgressValue="{Binding WorkQueue.TotalProgress}"/>
     </Window.TaskbarItemInfo>
+    <Window.Resources>
+        <ContextMenu x:Key="RowContextMenu">
+            <MenuItem Header="Cancel" Click="MnuCancel_Click"/>
+        </ContextMenu>
+    </Window.Resources>
     <Grid>
         <DataGrid Name="dataGrid" AutoGenerateColumns="False" ItemsSource="{Binding WorkQueue.Entries}" IsReadOnly="True" Margin="10,10,10,35">
             <DataGrid.Columns>
@@ -25,7 +31,13 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Setter Property="ContextMenu" Value="{StaticResource RowContextMenu}"/>
+                </Style>
+            </DataGrid.RowStyle>
         </DataGrid>
-        <Button Content="Remove Completed" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="132" Click="btnSkip_Click"/>
+        <Button Content="Remove Completed" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="132" Click="btnRemoveDone_Click"/>
+        <CheckBox IsChecked="{Binding CloseWhenDone}" Content="Close when done" HorizontalAlignment="Right" Margin="0,0,157,12" VerticalAlignment="Bottom"/>
     </Grid>
 </Window>

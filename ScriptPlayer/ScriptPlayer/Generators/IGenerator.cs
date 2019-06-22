@@ -6,7 +6,7 @@
 
         bool CheckSkip(TSettings settings);
 
-        void Process(TSettings settings, TEntry entry);
+        GeneratorResult Process(TSettings settings, TEntry entry);
 
         TEntry CreateEntry(TSettings settings);
 

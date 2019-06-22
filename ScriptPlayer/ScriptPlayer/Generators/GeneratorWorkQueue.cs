@@ -12,6 +12,10 @@ namespace ScriptPlayer.Generators
 {
     public class GeneratorWorkQueue : IDisposable, INotifyPropertyChanged
     {
+        public event EventHandler<GeneratorJobEventArgs> JobFinished;
+
+        public event EventHandler<GeneratorJobEventArgs> JobStarted;
+
         public double TotalProgress
         {
             get => _totalProgress;
@@ -22,12 +26,13 @@ namespace ScriptPlayer.Generators
                 OnPropertyChanged();
             }
         }
-
+        
         private readonly BlockingQueue<GeneratorJob> _unprocessedJobs = new BlockingQueue<GeneratorJob>();
 
-        private Thread _workerThread;
+        private Thread[] _workerThreads;
+        private GeneratorJob[] _activeJobs;
+
         private bool _running;
-        private GeneratorJob _activeJob;
         private double _totalProgress;
 
         public ObservableCollection<GeneratorEntry> Entries { get; }
@@ -37,6 +42,8 @@ namespace ScriptPlayer.Generators
             Entries = new ObservableCollection<GeneratorEntry>();
             Entries.CollectionChanged += EntriesOnCollectionChanged;
         }
+
+        public int UnprocessedJobCount => _unprocessedJobs.Count + _activeJobs.Count(job => job != null);
 
         private void EntriesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs eventArgs)
         {
@@ -88,23 +95,43 @@ namespace ScriptPlayer.Generators
             _unprocessedJobs.Enqueue(job);
         }
 
-        public void Start()
+        public void Start(int threadCount = 1)
         {
-            _workerThread = new Thread(WorkerLoop);
+            _workerThreads = new Thread[threadCount];
+            _activeJobs = new GeneratorJob[threadCount];
+            for (int i = 0; i < threadCount; i++)
+            {
+                _workerThreads[i] = new Thread(WorkerLoop)
+                {
+                    Name = "Generator Work Thread #" + i
+                };
+            }
+
             _running = true;
-            _workerThread.Start();
+            for (int i = 0; i < threadCount; i++)
+            {
+                int processIndex = i;
+                _workerThreads[i].Start(processIndex);
+            }
         }
 
-        private void WorkerLoop()
+        private void WorkerLoop(object args)
         {
+            int processIndex = (int) args;
+
             while (_running)
             {
-                _activeJob = _unprocessedJobs.Deqeue();
-                if (_activeJob == null)
+                _activeJobs[processIndex] = _unprocessedJobs.Deqeue();
+                if (_activeJobs[processIndex] == null)
                     return;
 
-                _activeJob.Process();
-                _activeJob = null;
+                OnJobStarted(_activeJobs[processIndex]);
+
+                var result = _activeJobs[processIndex].Process();
+                var job = _activeJobs[processIndex];
+                _activeJobs[processIndex] = null;
+
+                OnJobFinished(job, result);
             }
         }
 
@@ -113,9 +140,11 @@ namespace ScriptPlayer.Generators
             _unprocessedJobs.Close();
             _running = false;
 
-            _activeJob?.Cancel();
+            foreach(GeneratorJob job in _activeJobs)
+                job?.Cancel();
 
-            _workerThread.Join(1000);
+            foreach(Thread thread in _workerThreads)
+                thread.Join(200);
         }
 
         public void RemoveDone()
@@ -133,5 +162,28 @@ namespace ScriptPlayer.Generators
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        protected virtual void OnJobFinished(GeneratorJob job, GeneratorResult result)
+        {
+            JobFinished?.Invoke(this, new GeneratorJobEventArgs(job, result));
+        }
+
+        protected virtual void OnJobStarted(GeneratorJob job)
+        {
+            JobStarted?.Invoke(this, new GeneratorJobEventArgs(job, null));    
+        }
+    }
+
+    public class GeneratorJobEventArgs : EventArgs
+    {
+        public GeneratorJobEventArgs(GeneratorJob job, GeneratorResult result)
+        {
+            Job = job;
+            Result = result;
+        }
+
+        public GeneratorResult Result { get; set; }
+
+        public GeneratorJob Job { get; set; }
     }
 }

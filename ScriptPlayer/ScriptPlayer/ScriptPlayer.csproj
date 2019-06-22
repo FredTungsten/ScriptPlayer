@@ -93,6 +93,7 @@
     </ApplicationDefinition>
     <Compile Include="Converters\AlternativeValueConverter.cs" />
     <Compile Include="Converters\InverterConverter.cs" />
+    <Compile Include="Generators\GeneratorResult.cs" />
     <Compile Include="Generators\ThumbnailBannerGeneratorSettings.cs" />
     <Compile Include="Generators\ThumbnailBannerGenerator.cs" />
     <Compile Include="Generators\ThumbnailBannerGeneratorData.cs" />
@@ -163,6 +164,7 @@
     <Compile Include="ViewModels\PlaybackMode.cs" />
     <Compile Include="ViewModels\PlayerStateModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
+    <Compile Include="ViewModels\TimeDisplayMode.cs" />
     <Compile Include="ViewModels\VersionViewModel.cs" />
     <Compile Include="Converters\DeviceToImageConverter.cs" />
     <Compile Include="Converters\DistinctValueToBooleanConverter.cs" />

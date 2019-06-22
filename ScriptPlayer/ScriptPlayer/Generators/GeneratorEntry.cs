@@ -18,6 +18,9 @@ namespace ScriptPlayer.Generators
 
         private double _progress;
         private string _status;
+
+        public GeneratorJob Job { get; internal set; }
+
         private readonly Dispatcher _dispatcher;
 
         public string Status
@@ -56,9 +59,6 @@ namespace ScriptPlayer.Generators
             if(status != null)
                 Status = status;
         }
-
-        public GeneratorEntry() : this(Dispatcher.CurrentDispatcher)
-        { }
 
         public GeneratorEntry(Dispatcher dispatcher)
         {
