@@ -6,6 +6,15 @@
         public int Height { get; set; }
         public int Intervall { get; set; }
 
+        public ThumbnailGeneratorSettings()
+        {
+            Width = 200;
+            Height = -1;
+            Intervall = -1;
+
+            SkipIfExists = true;
+        }
+
         public ThumbnailGeneratorSettings Duplicate()
         {
             return new ThumbnailGeneratorSettings

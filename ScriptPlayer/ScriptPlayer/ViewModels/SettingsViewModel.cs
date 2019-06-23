@@ -169,6 +169,7 @@ namespace ScriptPlayer.ViewModels
         private TimeDisplayMode _timeDisplayMode;
         private VibratorConversionMode _vibratorConversionMode = VibratorConversionMode.PositionToSpeed;
         private bool _limitDisplayedTimeToSelection = true;
+        private bool _autogenerateThumbnails;
 
         public SettingsViewModel()
         {
@@ -184,6 +185,7 @@ namespace ScriptPlayer.ViewModels
             KodiTcpPort = 0;
             KodiHttpPort = 0;
             TimeDisplayMode = TimeDisplayMode.ContentOnly;
+            AutogenerateThumbnails = true;
         }
 
         public SettingsViewModel Duplicate()
@@ -1022,6 +1024,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _timeDisplayMode) return;
                 _timeDisplayMode = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AutogenerateThumbnails
+        {
+            get => _autogenerateThumbnails;
+            set
+            {
+                if (value == _autogenerateThumbnails) return;
+                _autogenerateThumbnails = value;
                 OnPropertyChanged();
             }
         }

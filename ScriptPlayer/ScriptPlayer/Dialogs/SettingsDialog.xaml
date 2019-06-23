@@ -71,7 +71,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Displayed Time" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="FFmpeg" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -113,6 +113,8 @@
                                     <Bold>ffmpeg.exe</Bold>
                                     <Run> contained in the build.</Run>
                                 </TextBlock>
+                                <TextBlock Text="Thumbnails:" Margin="0,10,0,0"/>
+                                <CheckBox Margin="4" IsChecked="{Binding Settings.AutogenerateThumbnails}" Content="Automatically generate thumbnails for opened videos"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>

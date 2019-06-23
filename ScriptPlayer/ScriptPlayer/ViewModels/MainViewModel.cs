@@ -413,7 +413,7 @@ namespace ScriptPlayer.ViewModels
 
         private void PlaylistOnRequestGenerateThumbnails(object sender, string[] videos)
         {
-            GenerateThumbnails(videos);
+            GenerateThumbnails(true, true, videos);
         }
 
         private void PlaylistOnRequestGenerateThumbnailBanners(object sender, string[] videos)
@@ -1438,9 +1438,16 @@ namespace ScriptPlayer.ViewModels
             UpdatePlaylistShuffle();
             UpdatePlaylistRepeat();
             UpdatePlaylistRepeatSingleFile();
+            UpdatePlaylistRandomChapter();
             UpdateFillGaps();
             UpdateHeatMap();
             UpdatePatternSpeed();
+        }
+
+        private void UpdatePlaylistRandomChapter()
+        {
+            if (Playlist == null) return;
+            Playlist.RandomChapters = Settings.RandomChapters;
         }
 
         private void UpdatePlaylistRepeatSingleFile()
@@ -1510,6 +1517,11 @@ namespace ScriptPlayer.ViewModels
                         UpdatePlaylistRepeatSingleFile();
                         break;
                     }
+                case nameof(SettingsViewModel.RandomChapters):
+                {
+                    UpdatePlaylistRandomChapter();
+                    break;
+                }
                 case nameof(SettingsViewModel.RangeExtender):
                 case nameof(SettingsViewModel.FillGaps):
                 case nameof(SettingsViewModel.FillFirstGap):
@@ -1717,7 +1729,11 @@ namespace ScriptPlayer.ViewModels
             string thumbnailFile = FileFinder.FindFile(videoFileName, new[] { "thumbs" }, GetAdditionalPaths());
 
             if (string.IsNullOrWhiteSpace(thumbnailFile))
+            {
+                if(Settings.AutogenerateThumbnails)
+                    GenerateThumbnails(false, false, videoFileName);
                 return;
+            }
 
             LoadThumbnails(thumbnailFile);
         }
@@ -3949,6 +3965,12 @@ namespace ScriptPlayer.ViewModels
 
         public void RecheckForAdditionalFiles()
         {
+            if (!Application.Current.CheckAccess())
+            {
+                Application.Current.Dispatcher.BeginInvoke(new Action(RecheckForAdditionalFiles));
+                return;
+            }
+
             TryFindMatchingThumbnails(LoadedVideo);
         }
 
@@ -3957,7 +3979,7 @@ namespace ScriptPlayer.ViewModels
             if (!IsVideoLoaded())
                 return;
 
-            GenerateThumbnails(LoadedVideo);
+            GenerateThumbnails(true, true, LoadedVideo);
         }
 
         public void GenerateThumbnailBannerForLoadedVideo()
@@ -3976,13 +3998,21 @@ namespace ScriptPlayer.ViewModels
             GeneratePreviews(LoadedVideo);
         }
 
-        private void GenerateThumbnails(params string[] videos)
+        private void GenerateThumbnails(bool askUserForSettings, bool showProgressDialog, params string[] videos)
         {
-            if (!CheckFfmpeg())
+            if (!CheckFfmpeg(askUserForSettings))
                 return;
 
             ThumbnailGeneratorSettings settings = _lastThumbnailSettings?.Duplicate();
-            settings = OnRequestThumbnailGeneratorSettings(settings);
+
+            if (askUserForSettings)
+            {
+                settings = OnRequestThumbnailGeneratorSettings(settings);
+            }
+            else if (settings == null)
+            {
+                settings = new ThumbnailGeneratorSettings();
+            }
 
             if (settings == null)
                 return;
@@ -4000,7 +4030,8 @@ namespace ScriptPlayer.ViewModels
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
 
-            OnRequestShowGeneratorProgressDialog();
+            if(showProgressDialog)
+                OnRequestShowGeneratorProgressDialog();
         }
 
         private void GenerateThumbnailBanners(params string[] videos)
@@ -4116,10 +4147,13 @@ namespace ScriptPlayer.ViewModels
             RequestShowSettings?.Invoke(this, settingsId);
         }
 
-        public bool CheckFfmpeg()
+        public bool CheckFfmpeg(bool showWarning = true)
         {
             if (!String.IsNullOrEmpty(Settings.FfmpegPath) && File.Exists(Settings.FfmpegPath))
                 return true;
+
+            if (!showWarning)
+                return false;
 
             var response =
                 OnRequestMessageBox(

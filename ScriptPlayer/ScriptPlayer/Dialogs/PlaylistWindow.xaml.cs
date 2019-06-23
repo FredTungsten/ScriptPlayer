@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -76,7 +75,7 @@ namespace ScriptPlayer.Dialogs
                 player.Load(gifFile);
             }
 
-            text.Text = entry.Shortname + " [" + (entry.Duration?.ToString("hh\\:mm\\:ss") ?? "?") + "]";
+            text.Text = entry.Fullname;
         }
 
         private void ToolTip_OnClosed(object sender, RoutedEventArgs e)
