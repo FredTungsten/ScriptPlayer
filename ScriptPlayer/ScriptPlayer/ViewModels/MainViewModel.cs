@@ -1725,6 +1725,9 @@ namespace ScriptPlayer.ViewModels
 
         private void TryFindMatchingThumbnails(string videoFileName)
         {
+            if (string.IsNullOrEmpty(videoFileName))
+                return;
+
             Thumbnails = null;
             string thumbnailFile = FileFinder.FindFile(videoFileName, new[] { "thumbs" }, GetAdditionalPaths());
 
@@ -4021,6 +4024,12 @@ namespace ScriptPlayer.ViewModels
 
             foreach (string video in videos)
             {
+                if (string.IsNullOrEmpty(video))
+                    continue;
+
+                if (!File.Exists(video))
+                    continue;
+
                 var videoSettings = settings.Duplicate();
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, "thumbs");
@@ -4049,6 +4058,12 @@ namespace ScriptPlayer.ViewModels
 
             foreach (string video in videos)
             {
+                if (string.IsNullOrEmpty(video))
+                    continue;
+
+                if (!File.Exists(video))
+                    continue;
+
                 var videoSettings = settings.Duplicate();
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, "jpg");
@@ -4076,6 +4091,12 @@ namespace ScriptPlayer.ViewModels
 
             foreach (string video in videos)
             {
+                if (string.IsNullOrEmpty(video))
+                    continue;
+
+                if (!File.Exists(video))
+                    continue;
+
                 PreviewGeneratorSettings videoSettings = settings.Duplicate();
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, ".gif");
