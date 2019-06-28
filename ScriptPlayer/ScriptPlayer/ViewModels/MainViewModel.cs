@@ -1781,15 +1781,23 @@ namespace ScriptPlayer.ViewModels
 
         private string[] GetScriptExtensions()
         {
-            return SortExtensionsByPreference(ScriptLoaderManager.GetSupportedExtensions());
+            return SortExtensionsByPreference(ScriptLoaderManager.GetSupportedExtensions(), Settings.ScriptFormatPreference);
         }
 
-        private string[] SortExtensionsByPreference(string[] extensions)
+        private string[] SortExtensionsByPreference(string[] extensions, string preference)
         {
-            string[] preference = { "txt", "funscript" };
+            string[] preferences;
+
+            if (string.IsNullOrWhiteSpace(preference))
+                preferences = new string[0];
+            else
+                preferences = preference
+                .Split(new[]{',',';'}, StringSplitOptions.RemoveEmptyEntries)
+                .Select(ext => ext.TrimStart('.').ToLowerInvariant())
+                .ToArray();
 
             return extensions
-                .OrderBy(ext => preference.Contains(ext) ? Array.IndexOf(preference, ext) : int.MaxValue)
+                .OrderBy(ext => preferences.Contains(ext) ? Array.IndexOf(preferences, ext) : int.MaxValue)
                 .ThenBy(ext => ext).ToArray();
         }
 
@@ -1807,7 +1815,7 @@ namespace ScriptPlayer.ViewModels
                 return;
             }
 
-            string videoFile = FileFinder.FindFile(scriptFileName, _supportedMediaExtensions, GetAdditionalPaths());
+            string videoFile = FileFinder.FindFile(scriptFileName, GetMediaExtensions(), GetAdditionalPaths());
             if (string.IsNullOrWhiteSpace(videoFile))
             {
                 if (Settings.NotifyFileLoaded)
@@ -1818,6 +1826,16 @@ namespace ScriptPlayer.ViewModels
             LoadVideo(videoFile, false);
         }
 
+        private string[] GetMediaExtensions()
+        {
+            return SortExtensionsByPreference(_supportedMediaExtensions, Settings.MediaFormatPreference);
+        }
+
+        private string[] GetVideoExtensions()
+        {
+            return SortExtensionsByPreference(_supportedVideoExtensions, Settings.MediaFormatPreference);
+        }
+
         public string GetVideoFile(string fileName)
         {
             string extension = Path.GetExtension(fileName).TrimStart('.').ToLowerInvariant();
@@ -1825,7 +1843,7 @@ namespace ScriptPlayer.ViewModels
             if (_supportedVideoExtensions.Contains(extension))
                 return fileName;
 
-            string videoFile = FileFinder.FindFile(fileName, _supportedVideoExtensions, GetAdditionalPaths());
+            string videoFile = FileFinder.FindFile(fileName, GetVideoExtensions(), GetAdditionalPaths());
             if (string.IsNullOrWhiteSpace(videoFile))
                 return null;
 
@@ -1851,12 +1869,12 @@ namespace ScriptPlayer.ViewModels
 
         public string GetMediaFile(string filename)
         {
-            return GetRelatedFile(filename, _supportedMediaExtensions, _supportedScriptExtensions);
+            return GetRelatedFile(filename, GetMediaExtensions(), GetScriptExtensions());
         }
 
         public string GetScriptFile(string filename)
         {
-            return GetRelatedFile(filename, _supportedScriptExtensions, _supportedMediaExtensions);
+            return GetRelatedFile(filename, GetScriptExtensions(), GetMediaExtensions());
         }
 
         private bool IsMatchingScriptLoaded(string videoFileName)

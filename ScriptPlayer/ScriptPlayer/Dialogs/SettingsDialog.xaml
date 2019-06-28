@@ -71,7 +71,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="FFmpeg" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Format Preference" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -80,6 +80,20 @@
                     </ControlTemplate>
                 </controls:PageSelector.Template>
                 <controls:PageSelector.Elements>
+                    <Grid controls:PageSelector.ContentIdentifier="Format Preference">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_star}"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <TextBlock Margin="4" TextWrapping="Wrap" Text="Here you can set the prefered order in which scripts and media files are selected if there are multiple files with the same name but different extensions. Separate multiple extensions with a colon or semi-colon. Extension that are not explicitly listed will be prioritized alphabetically"/>
+
+                            <TextBlock Margin="4,4,4,0" Text="Script Format Preference:"/>
+                            <TextBox Margin="4" Text="{Binding Settings.ScriptFormatPreference}"/>
+
+                            <TextBlock Margin="4,4,4,0" Text="Media Format Preference:"/>
+                            <TextBox Margin="4" Text="{Binding Settings.MediaFormatPreference}"/>
+                        </StackPanel>
+                    </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Devices">
                         <controls:PageSelector.Header>
                             <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_heartbeat}"/>
