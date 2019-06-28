@@ -3986,6 +3986,9 @@ namespace ScriptPlayer.ViewModels
 
         public void RecheckForAdditionalFiles()
         {
+            if (Application.Current == null)
+                return;
+
             if (!Application.Current.CheckAccess())
             {
                 Application.Current.Dispatcher.BeginInvoke(new Action(RecheckForAdditionalFiles));
