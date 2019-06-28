@@ -348,7 +348,8 @@ namespace ScriptPlayer.ViewModels
 
         private void WorkQueueOnJobFinished(object sender, GeneratorJobEventArgs eventArgs)
         {
-            RecheckForAdditionalFiles();
+            if(eventArgs.Result.Success)
+                RecheckForAdditionalFiles();
         }
 
         private void GeneratePatterns()

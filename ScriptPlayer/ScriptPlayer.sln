@@ -21,6 +21,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3AEBCCE0
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer.BundleHelper", "ScriptPlayer.BundleHelper\ScriptPlayer.BundleHelper.csproj", "{ED54B52F-C37C-4783-96E2-A07E799A1426}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer.BeatFileChecker", "ScriptPlayer.BeatFileChecker\ScriptPlayer.BeatFileChecker.csproj", "{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_Ubuntu|Any CPU = Debug_Ubuntu|Any CPU
@@ -297,6 +299,38 @@ Global
 		{ED54B52F-C37C-4783-96E2-A07E799A1426}.Release|x64.Build.0 = Release|Any CPU
 		{ED54B52F-C37C-4783-96E2-A07E799A1426}.Release|x86.ActiveCfg = Release|Any CPU
 		{ED54B52F-C37C-4783-96E2-A07E799A1426}.Release|x86.Build.0 = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug_Ubuntu|ARM.ActiveCfg = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug_Ubuntu|ARM.Build.0 = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug_Ubuntu|x64.ActiveCfg = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug_Ubuntu|x64.Build.0 = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug_Ubuntu|x86.ActiveCfg = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug_Ubuntu|x86.Build.0 = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug|ARM.Build.0 = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug|x64.Build.0 = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Debug|x86.Build.0 = Debug|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release_Ubuntu|ARM.ActiveCfg = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release_Ubuntu|ARM.Build.0 = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release_Ubuntu|x64.ActiveCfg = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release_Ubuntu|x64.Build.0 = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release_Ubuntu|x86.ActiveCfg = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release_Ubuntu|x86.Build.0 = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release|ARM.ActiveCfg = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release|ARM.Build.0 = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release|x64.ActiveCfg = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release|x64.Build.0 = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release|x86.ActiveCfg = Release|Any CPU
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -307,6 +341,7 @@ Global
 		{324F45E3-5A1D-497A-BEB0-38954BD728A0} = {3AEBCCE0-665A-4A01-A8F8-96286E9152CA}
 		{06000E2E-5EDA-4842-A38B-A085D38D48D6} = {3AEBCCE0-665A-4A01-A8F8-96286E9152CA}
 		{ED54B52F-C37C-4783-96E2-A07E799A1426} = {3AEBCCE0-665A-4A01-A8F8-96286E9152CA}
+		{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445} = {3AEBCCE0-665A-4A01-A8F8-96286E9152CA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {98D19ADF-D5FD-4F19-A31D-3E776E73A79E}
