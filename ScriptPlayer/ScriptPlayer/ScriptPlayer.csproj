@@ -94,6 +94,8 @@
     <Compile Include="Converters\AlternativeValueConverter.cs" />
     <Compile Include="Converters\InverterConverter.cs" />
     <Compile Include="Generators\GeneratorResult.cs" />
+    <Compile Include="Generators\HeatmapGenerator.cs" />
+    <Compile Include="Generators\HeatmapGeneratorSettings.cs" />
     <Compile Include="Generators\ThumbnailBannerGeneratorSettings.cs" />
     <Compile Include="Generators\ThumbnailBannerGenerator.cs" />
     <Compile Include="Generators\ThumbnailBannerGeneratorData.cs" />

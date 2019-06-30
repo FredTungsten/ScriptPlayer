@@ -56,6 +56,7 @@
                 <Separator/>
                 <MenuItem Header="Generate Thumbnails" Command="{Binding Playlist.GenerateThumbnailsForSelectedVideosCommand}"></MenuItem>
                 <MenuItem Header="Generate Previews" Command="{Binding Playlist.GeneratePreviewsForSelectedVideosCommand}"></MenuItem>
+                <MenuItem Header="Generate Heatmaps" Command="{Binding Playlist.GenerateHeatmapsForSelectedVideosCommand}"></MenuItem>
                 <MenuItem Header="Generate Thumbnail Banners" Command="{Binding Playlist.GenerateThumbnailBannersForSelectedVideosCommand}"></MenuItem>
             </MenuItem>
             <MenuItem Header="Sort">

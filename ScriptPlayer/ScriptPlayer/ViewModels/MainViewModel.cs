@@ -41,6 +41,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<WindowStateModel>> RequestGetWindowState;
         public event EventHandler<RequestEventArgs<ThumbnailGeneratorSettings>> RequestThumbnailGeneratorSettings;
         public event EventHandler<RequestEventArgs<PreviewGeneratorSettings>> RequestPreviewGeneratorSettings;
+        public event EventHandler<RequestEventArgs<HeatmapGeneratorSettings>> RequestHeatmapGeneratorSettings;
         public event EventHandler<RequestEventArgs<ThumbnailBannerGeneratorSettings>> RequestThumbnailBannerGeneratorSettings;
 
         public event EventHandler RequestActivate;
@@ -73,6 +74,7 @@ namespace ScriptPlayer.ViewModels
         private ThumbnailGeneratorSettings _lastThumbnailSettings;
         private ThumbnailBannerGeneratorSettings _lastThumbnailBannerSettings;
         private PreviewGeneratorSettings _lastPreviewSettings;
+        private HeatmapGeneratorSettings _lastHeatmapSettings;
 
         private TimeSpan _loopA = TimeSpan.MinValue;
         private TimeSpan _loopB = TimeSpan.MinValue;
@@ -397,6 +399,7 @@ namespace ScriptPlayer.ViewModels
                 Playlist.RequestGenerateThumbnails += PlaylistOnRequestGenerateThumbnails;
                 Playlist.RequestGenerateThumbnailBanners += PlaylistOnRequestGenerateThumbnailBanners;
                 Playlist.RequestGeneratePreviews += PlaylistOnRequestGeneratePreviews;
+                Playlist.RequestGenerateHeatmaps += PlaylistOnRequestGenerateHeatmaps;
             }
 
             if (Settings.RememberPlaylist)
@@ -410,6 +413,11 @@ namespace ScriptPlayer.ViewModels
                 GlobalCommandManager.BuildDefaultShortcuts();
 
             UpdateRandomChapterTooltip();
+        }
+
+        private void PlaylistOnRequestGenerateHeatmaps(object sender, string[] videos)
+        {
+            GenerateHeatmaps(videos);
         }
 
         private void PlaylistOnRequestGenerateThumbnails(object sender, string[] videos)
@@ -2722,7 +2730,7 @@ namespace ScriptPlayer.ViewModels
             return source.Skip(firstIndex).Take(lastIndex - firstIndex + 1).ToList();
         }
 
-        private List<ScriptAction> FilterDuplicates(List<ScriptAction> timestamps)
+        public List<ScriptAction> FilterDuplicates(List<ScriptAction> timestamps)
         {
             List<ScriptAction> result = new List<ScriptAction>();
 
@@ -3571,6 +3579,53 @@ namespace ScriptPlayer.ViewModels
                 LoadScript(_loadedScript, false, false);
         }
 
+        public List<ScriptAction> LoadScriptActions(string scriptFileName)
+        {
+            ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(scriptFileName);
+            if (loaders == null)
+                return null;
+
+            var result = LoadScriptActions(loaders, scriptFileName);
+            if (result != null)
+                return result;
+
+            ScriptLoader[] otherLoaders = ScriptLoaderManager.GetAllLoaders().Except(loaders).ToArray();
+            return LoadScriptActions(otherLoaders, scriptFileName);
+        }
+
+        private List<ScriptAction> LoadScriptActions(ScriptLoader[] loaders, string fileName)
+        {
+            const long maxScriptSize = 4 * 1024 * 1024; //4 MB
+
+            if (!File.Exists(fileName)) return null;
+            if (new FileInfo(fileName).Length > maxScriptSize) return null;
+
+            List<ScriptAction> actions = null;
+
+            foreach (ScriptLoader loader in loaders)
+            {
+                try
+                {
+                    actions = loader.Load(fileName);
+                    if (actions == null)
+                        continue;
+                    if (actions.Count == 0)
+                        continue;
+
+                    Debug.WriteLine("Script with {0} actions successfully loaded with {1}", actions.Count, loader.GetType().Name);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Loader {0} failed to open {1}: {2}", loader.GetType().Name, Path.GetFileName(fileName), e.Message);
+                }
+            }
+
+            if (actions == null) return null;
+
+            return actions;
+        }
+
         private bool LoadScript(string scriptFileName, bool checkForVideo, bool isFallbackScript = false)
         {
             ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(scriptFileName);
@@ -4098,6 +4153,39 @@ namespace ScriptPlayer.ViewModels
             OnRequestShowGeneratorProgressDialog();
         }
 
+        private void GenerateHeatmaps(params string[] videos)
+        {
+            if (!CheckFfmpeg())
+                return;
+
+            HeatmapGeneratorSettings settings = _lastHeatmapSettings?.Duplicate();
+            settings = OnRequestHeatmapGeneratorSettings(settings);
+
+            if (settings == null)
+                return;
+
+            _lastHeatmapSettings = settings;
+
+            foreach (string video in videos)
+            {
+                if (string.IsNullOrEmpty(video))
+                    continue;
+
+                if (!File.Exists(video))
+                    continue;
+
+                HeatmapGeneratorSettings videoSettings = settings.Duplicate();
+                videoSettings.VideoFile = video;
+                videoSettings.OutputFile = Path.ChangeExtension(video, ".png");
+
+                HeatmapGenerator generator = new HeatmapGenerator(this, Settings.FfmpegPath);
+
+                WorkQueue.Enqueue(generator.CreateJob(videoSettings));
+            }
+
+            OnRequestShowGeneratorProgressDialog();
+        }
+
         private void GeneratePreviews(params string[] videos)
         {
             if (!CheckFfmpeg())
@@ -4152,6 +4240,17 @@ namespace ScriptPlayer.ViewModels
         {
             var eventArgs = new RequestEventArgs<PreviewGeneratorSettings>(initialSettings);
             RequestPreviewGeneratorSettings?.Invoke(this, eventArgs);
+
+            if (!eventArgs.Handled)
+                return null;
+
+            return eventArgs.Value;
+        }
+
+        protected virtual HeatmapGeneratorSettings OnRequestHeatmapGeneratorSettings(HeatmapGeneratorSettings initialSettings)
+        {
+            var eventArgs = new RequestEventArgs<HeatmapGeneratorSettings>(initialSettings);
+            RequestHeatmapGeneratorSettings?.Invoke(this, eventArgs);
 
             if (!eventArgs.Handled)
                 return null;

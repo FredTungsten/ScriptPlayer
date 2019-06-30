@@ -72,6 +72,7 @@ namespace ScriptPlayer
             ViewModel.RequestGenerateThumbnailBanner += ViewModelOnRequestGenerateThumbnailBanner;
             ViewModel.RequestThumbnailBannerGeneratorSettings += ViewModelOnRequestThumbnailBannerGeneratorSettings;
             ViewModel.RequestPreviewGeneratorSettings += ViewModelOnRequestPreviewGeneratorSettings;
+            ViewModel.RequestHeatmapGeneratorSettings += ViewModelOnRequestHeatmapGeneratorSettings;
 
             ViewModel.RequestShowGeneratorProgressDialog += ViewModelOnRequestShowGeneratorProgressDialog;
             ViewModel.RequestActivate += ViewModelOnRequestActivate;
@@ -93,6 +94,13 @@ namespace ScriptPlayer
                 WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
             }
+        }
+
+        private void ViewModelOnRequestHeatmapGeneratorSettings(object sender, RequestEventArgs<HeatmapGeneratorSettings> eventArgs)
+        {
+            //TODO
+            eventArgs.Handled = true;
+            eventArgs.Value = new HeatmapGeneratorSettings();
         }
 
         private void ViewModelOnRequestPreviewGeneratorSettings(object sender, RequestEventArgs<PreviewGeneratorSettings> eventArgs)
