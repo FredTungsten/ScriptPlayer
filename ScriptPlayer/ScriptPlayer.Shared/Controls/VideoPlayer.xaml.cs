@@ -169,6 +169,16 @@ namespace ScriptPlayer.Shared
             set => SetValue(DurationProperty, value);
         }
 
+        public double Zoom
+        {
+            get => _scale;
+            set
+            {
+                _scale = value;
+                ApplyTransform();
+            }
+        }
+
         protected Resolution ActualResolution { get; set; }
 
         protected Resolution ActualStandByResolution { get; set; }

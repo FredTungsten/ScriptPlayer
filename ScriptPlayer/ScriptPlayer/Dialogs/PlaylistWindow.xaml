@@ -19,7 +19,8 @@
         </ContextMenu>
         <ToolTip x:Key="EntryToolTip" Padding="0" Placement="Right"  Opened="ToolTip_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
             <StackPanel Width="300">
-                <shared:GifPlayer Background="Black" AutoPlay="True" Stretch="Uniform"/>
+                <shared:GifPlayer Background="Black" AutoPlay="True" Stretch="Uniform" Height="169"/>
+                <Image Name="heatMapNext" HorizontalAlignment="Stretch" Height="15" Stretch="Fill" />
                 <TextBlock Margin="2" Background="White" Foreground="Black" TextAlignment="Center" Height="Auto" TextWrapping="Wrap"/>
             </StackPanel>
         </ToolTip>

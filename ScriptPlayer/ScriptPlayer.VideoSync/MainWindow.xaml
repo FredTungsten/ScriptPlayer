@@ -12,7 +12,7 @@
         xmlns:scripts="clr-namespace:ScriptPlayer.Shared.Scripts;assembly=ScriptPlayer.Shared"
 
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="ScriptPlayer Video Sync" Height="767" Width="1127" Icon="ScriptPlayerEditorIcon.ico" PreviewKeyDown="Window_PreviewKeyDown">
+        Title="ScriptPlayer Video Sync" Height="767" Width="1127" Icon="ScriptPlayerEditorIcon.ico" PreviewKeyDown="Window_PreviewKeyDown" Loaded="Window_Loaded">
     <Window.Resources>
         <converters:TimeSpanToSecondsConverter x:Key="TimeSpanConverter"/>
         <converters1:ParameterToBooleanConverter x:Key="ParameterToBooleanConverter"/>

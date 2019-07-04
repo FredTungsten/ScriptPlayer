@@ -642,6 +642,7 @@
                     <ToolTip Padding="0" Placement="Top" Opened="ToolTipNext_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
                         <StackPanel Width="300">
                             <shared:GifPlayer Background="Black" AutoPlay="True" Name="playerNext" Stretch="Uniform"/>
+                            <Image Name="heatMapNext" HorizontalAlignment="Stretch" Height="15" Stretch="Fill" />
                             <TextBlock Margin="2" Background="White" Foreground="Black" Name="titleNext" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                     </ToolTip>
@@ -653,6 +654,7 @@
                     <ToolTip Padding="0" Placement="Top" Opened="ToolTipPrevious_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
                         <StackPanel Width="300">
                             <shared:GifPlayer Background="Black" AutoPlay="True" Name="playerPrevious" Stretch="Uniform"/>
+                            <Image Name="heatMapPrevious" HorizontalAlignment="Stretch" Height="15" Stretch="Fill" />
                             <TextBlock Margin="2" Background="White" Foreground="Black" Name="titlePrevious" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                     </ToolTip>

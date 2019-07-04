@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
 
@@ -68,6 +69,19 @@ namespace ScriptPlayer.Dialogs
 
             GifPlayer player = tooltip.GetChildOfType<GifPlayer>();
             TextBlock text = tooltip.GetChildOfType<TextBlock>();
+            Image heatMap = tooltip.GetChildOfType<Image>();
+
+            string heatmap = ViewModel.GetRelatedFile(entry.Fullname, new[] { "png" });
+            if (!string.IsNullOrEmpty(heatmap))
+            {
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.UriSource = new Uri(heatmap, UriKind.Absolute);
+                image.EndInit();
+
+                heatMap.Source = image;
+            }
 
             string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new[] { "gif" });
             if (!string.IsNullOrEmpty(gifFile))
@@ -83,6 +97,9 @@ namespace ScriptPlayer.Dialogs
             var tooltip = (ToolTip)sender;
             GifPlayer player = tooltip.GetChildOfType<GifPlayer>();
             player.Close();
+
+            Image heatMap = tooltip.GetChildOfType<Image>();
+            heatMap.Source = null;
         }
     }
 

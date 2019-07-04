@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
@@ -86,6 +87,8 @@ namespace ScriptPlayer
             ViewModel.RequestHideSkipButton += ViewModelOnRequestHideSkipButton;
             ViewModel.RequestHideNotification += ViewModelOnRequestHideNotification;
 
+            ViewModel.Beat += ViewModel_Beat;
+
             ViewModel.VideoPlayer = VideoPlayer;
             ViewModel.Load();
 
@@ -94,6 +97,11 @@ namespace ScriptPlayer
                 WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
             }
+        }
+
+        private void ViewModel_Beat(object sender, EventArgs e)
+        {
+            //VideoPlayer.Zoom = VideoPlayer.Zoom == 1 ? 1.1 : 1;
         }
 
         private void ViewModelOnRequestHeatmapGeneratorSettings(object sender, RequestEventArgs<HeatmapGeneratorSettings> eventArgs)
@@ -772,6 +780,18 @@ namespace ScriptPlayer
                 return;
             }
 
+            string heatmap = ViewModel.GetRelatedFile(entry.Fullname, new[] { "png" });
+            if (!string.IsNullOrEmpty(heatmap))
+            {
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.UriSource = new Uri(heatmap, UriKind.Absolute);
+                image.EndInit();
+
+                heatMapNext.Source = image;
+            }
+
             string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new[] { "gif" });
             if (!string.IsNullOrEmpty(gifFile))
             {
@@ -791,6 +811,18 @@ namespace ScriptPlayer
                 return;
             }
 
+            string heatmap = ViewModel.GetRelatedFile(entry.Fullname, new[]{"png"});
+            if (!string.IsNullOrEmpty(heatmap))
+            {
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.UriSource = new Uri(heatmap, UriKind.Absolute);
+                image.EndInit();
+
+                heatMapPrevious.Source = image;
+            }
+
             string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new[] { "gif" });
             if (!string.IsNullOrEmpty(gifFile))
             {
@@ -804,6 +836,9 @@ namespace ScriptPlayer
         {
             playerNext.Close();
             playerPrevious.Close();
+
+            heatMapNext.Source = null;
+            heatMapPrevious.Source = null;
         }
 
         private void MnuDownloadButtplug_Click(object sender, RoutedEventArgs e)

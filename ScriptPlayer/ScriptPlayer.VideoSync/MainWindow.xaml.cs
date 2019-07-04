@@ -235,7 +235,6 @@ namespace ScriptPlayer.VideoSync
             Beats.Sort();
         }
 
-
         private readonly string[] _supportedVideoExtensions = { "mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf" };
         private void mnuOpenVideo_Click(object sender, RoutedEventArgs e)
         {
@@ -1484,6 +1483,12 @@ namespace ScriptPlayer.VideoSync
                         EqualizeBeatLengths();
                         break;
                     }
+                case Key.S:
+                {
+                    //For the lack of a better term :)
+                    SuperNormalize(shift);
+                    break;
+                }
                 case Key.T:
                     {
                         FadeNormalize();
@@ -1582,6 +1587,75 @@ namespace ScriptPlayer.VideoSync
 
             if (handled)
                 e.Handled = true;
+        }
+
+        private void SuperNormalize(bool preview)
+        {
+            List<TimeSpan> selectedBeats = GetSelectedBeats();
+
+            if (selectedBeats.Count < 3)
+                return;
+
+            TimeSpan first = selectedBeats.First();
+            TimeSpan last = selectedBeats.Last();
+
+            List<TimeSpan> durations = new List<TimeSpan>();
+
+            for (int i = 1; i < selectedBeats.Count; i++)
+            {
+                durations.Add(selectedBeats[i] - selectedBeats[i-1]);
+            }
+
+            DoubleInputDialog dialog = new DoubleInputDialog(200);
+            if (dialog.ShowDialog() != true)
+                return;
+
+            int beatCount = 0;
+            TimeSpan baseDuration = TimeSpan.FromMilliseconds(dialog.Result);
+
+            List<TimeSpan> fractions = new List<TimeSpan>();
+
+            foreach (TimeSpan duration in durations)
+            {
+                int beats = (int) Math.Round(duration.Divide(baseDuration));
+                beatCount += beats;
+                fractions.Add(duration.Divide(beats));
+            }
+
+            TimeSpan averageBeatsDuration = (last - first).Divide(beatCount);
+
+            List<TimeSpan> newBeats = new List<TimeSpan>();
+
+            if (preview)
+            {
+                for (int i = 0; i <= beatCount; i++)
+                    newBeats.Add(first + averageBeatsDuration.Multiply(i));
+
+                BeatBar.PreviewBeats = new BeatCollection(newBeats);
+            }
+            else
+            {
+                foreach (TimeSpan beat in selectedBeats)
+                {
+                    int multiple = (int)Math.Round((beat - first).Divide(averageBeatsDuration));
+                    var roundedBeat = first + averageBeatsDuration.Multiply(multiple);
+
+                    if(!newBeats.Contains(roundedBeat))
+                        newBeats.Add(roundedBeat);
+                }
+
+                SetSelectedBeats(newBeats);
+            }
+        }
+
+        private void SetSelectedBeats(List<TimeSpan> newBeatsInSelection)
+        {
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+            otherBeats.AddRange(newBeatsInSelection);
+            SetAllBeats(otherBeats);
         }
 
         private void EnforceCommonBeatDuration()
@@ -2293,6 +2367,12 @@ namespace ScriptPlayer.VideoSync
         private void BtnHPlus_Click(object sender, RoutedEventArgs e)
         {
             SampleH++;
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            BeatBar.HighlightBeats = true;
+            BeatBar.SoundAfterBeat = true;
         }
     }
 }

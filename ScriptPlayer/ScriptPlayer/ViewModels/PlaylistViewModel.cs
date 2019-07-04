@@ -479,9 +479,6 @@ namespace ScriptPlayer.ViewModels
                 entry.HasScript = !string.IsNullOrWhiteSpace(scriptFile) && File.Exists(scriptFile);
 
                 entry.UpdateStatus();
-
-                //TODO Generate Preview
-                //Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.Zero, TimeSource.Duration);
             }
         }
 
@@ -509,7 +506,7 @@ namespace ScriptPlayer.ViewModels
                 return false;
 
             if (CurrentEntry == null)
-                return true;
+                return false;
 
             if (Shuffle)
                 return Entries.Count > 1;
