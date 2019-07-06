@@ -9,14 +9,59 @@
         xmlns:converters="clr-namespace:ScriptPlayer.Converters"
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         xmlns:dialogs="clr-namespace:ScriptPlayer.Dialogs"
+        xmlns:controls1="clr-namespace:ScriptPlayer.Controls"
+        xmlns:animation="clr-namespace:Windows.UI.Xaml.Media.Animation;assembly=Windows"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
         Title="Playlist" Height="423" Width="300" WindowStyle="ToolWindow">
     <Window.Resources>
+        <Style x:Key="ToolTipStyle1"
+        TargetType="ToolTip">
+            <Setter Property="Placement"
+            Value="Mouse" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Grid x:Name="LayoutRoot"
+                      MaxWidth="300"
+                      MinHeight="36"
+                      MaxHeight="300">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Polygon Fill="#FF1589EE"
+                             Width="10"
+                             Height="12"
+                             VerticalAlignment="Center"
+                             Points="0,6 10,0 10,12" />
+
+                            <Border Grid.Column="1"
+                            Background="#FF1589EE">
+                                <TextBlock Margin="20,5,5,5"
+                                   HorizontalAlignment="Left"
+                                   VerticalAlignment="Center"
+                                   Foreground="White"
+                                   FontSize="16"
+                                   TextWrapping="Wrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   Text="{TemplateBinding Content}" />
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <ContextMenu x:Key="ItemContextMenu">
             <MenuItem Header="Open in Explorer" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.OpenInExplorerCommand}"
                       CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext}"/>
         </ContextMenu>
+        <ToolTip x:Key="EntryToolTip" Opened="ToolTip_OnOpened"
+                 Padding="0" Placement="Right" BorderThickness="0">
+            <controls1:VideoDetailsPreview />
+        </ToolTip>
+        <!--
         <ToolTip x:Key="EntryToolTip" Padding="0" Placement="Right"  Opened="ToolTip_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
             <StackPanel Width="300">
                 <shared:GifPlayer Background="Black" AutoPlay="True" Stretch="Uniform" Height="169"/>
@@ -24,6 +69,7 @@
                 <TextBlock Margin="2" Background="White" Foreground="Black" TextAlignment="Center" Height="Auto" TextWrapping="Wrap"/>
             </StackPanel>
         </ToolTip>
+        -->
         <converters:DurationConverter x:Key="DurationConverter"/>
         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
             <Setter Property="Focusable" Value="False"/>

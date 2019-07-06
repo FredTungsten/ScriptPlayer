@@ -218,6 +218,7 @@ namespace ScriptPlayer.Shared
         }
 
         private int _index;
+        private Thread _loaderThread;
 
         protected override Size MeasureOverride(Size constraint)
         {
@@ -362,6 +363,7 @@ namespace ScriptPlayer.Shared
         public void Stop()
         {
             BeginAnimation(ProgressProperty, null);
+            Frames?.CancelLoad();
         }
 
         public void Close()
@@ -377,7 +379,8 @@ namespace ScriptPlayer.Shared
             GifFrameCollection collection = new GifFrameCollection();
             Frames = collection;
 
-            new Thread(() => { collection.Load(filename); }).Start();
+            _loaderThread = new Thread(() => { collection.Load(filename); });
+            _loaderThread.Start();
         }
 
         protected virtual void OnFramesReady()
@@ -447,7 +450,7 @@ namespace ScriptPlayer.Shared
 
         private static readonly object LoadLocker = new object();
 
-        private void Load(Stream stream)
+        private void Load(Stream stream, CancellationToken sourceToken)
         {
             DateTime start = DateTime.Now;
 
@@ -466,6 +469,9 @@ namespace ScriptPlayer.Shared
 
             for (int index = 0; index < decoder.Frames.Count; index++)
             {
+                if (sourceToken.IsCancellationRequested)
+                    return;
+
                 BitmapFrame frame = decoder.Frames[index];
                 BitmapMetadata metadata = frame.Metadata as BitmapMetadata;
                 int delay = (ushort)metadata.GetQuery("/grctlext/Delay") * 10;
@@ -512,14 +518,31 @@ namespace ScriptPlayer.Shared
             Debug.WriteLine($"All Decode done after {(DateTime.Now - start).TotalMilliseconds:f2}");
         }
 
+        private CancellationTokenSource _source = null;
+
+        public void CancelLoad()
+        {
+            if (_source == null)
+                return;
+
+            Debug.WriteLine("CANCEL LOAD");
+            _source.Cancel(false);
+            _source = null;
+        }
+
         public void Load(string filename)
         {
             lock (LoadLocker)
             {
+                CancelLoad();
+                _source = new CancellationTokenSource();
+
                 using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
                 {
-                    Load(stream);
+                    Load(stream, _source.Token);
                 }
+
+                _source = null;
             }
         }
 

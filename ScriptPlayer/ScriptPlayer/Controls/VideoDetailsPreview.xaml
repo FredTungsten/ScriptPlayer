@@ -1,0 +1,16 @@
+﻿<UserControl x:Class="ScriptPlayer.Controls.VideoDetailsPreview"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ScriptPlayer.Controls"
+             xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
+             mc:Ignorable="d" >
+    <StackPanel Width="300" Background="White">
+        <shared:GifPlayer Name="player" Background="Black" AutoPlay="True" Stretch="Uniform" Height="169"/>
+        <Grid Background="Black">
+            <Image Name="heatMap" HorizontalAlignment="Stretch" Height="15" Stretch="Fill" />
+        </Grid>
+        <TextBlock Name="text"  Margin="2" Background="White" Foreground="Black" TextAlignment="Center" Height="Auto" TextWrapping="Wrap"/>
+    </StackPanel>
+</UserControl>

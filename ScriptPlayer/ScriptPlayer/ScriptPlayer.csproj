@@ -82,6 +82,10 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="Windows, Version=255.255.255.255, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Windows Kits\8.1\References\CommonConfiguration\Neutral\Windows.winmd</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -91,6 +95,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\VideoDetailsPreview.xaml.cs">
+      <DependentUpon>VideoDetailsPreview.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Converters\AlternativeValueConverter.cs" />
     <Compile Include="Converters\InverterConverter.cs" />
     <Compile Include="Generators\GeneratorResult.cs" />
@@ -204,6 +211,10 @@
     <Compile Include="ViewModels\RequestEventArgs.cs" />
     <Compile Include="ViewModels\RequestFileEventArgs.cs" />
     <Compile Include="ViewModels\TestPatternDefinition.cs" />
+    <Page Include="Controls\VideoDetailsPreview.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\AttributionDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

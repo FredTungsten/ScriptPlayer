@@ -10,6 +10,7 @@
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
         xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
         xmlns:fa="clr-namespace:FontAwesome.Net;assembly=FontAwesome.Net"
+        xmlns:controls1="clr-namespace:ScriptPlayer.Controls"
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
@@ -639,25 +640,33 @@
             <Button Command="{Binding Playlist.PlayNextEntryCommand}" Content=":" DockPanel.Dock="Right"
                     ToolTipService.BetweenShowDelay="0" ToolTipService.ShowDuration="60000">
                 <Button.ToolTip>
-                    <ToolTip Padding="0" Placement="Top" Opened="ToolTipNext_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
+                    <ToolTip DataContext="{Binding RelativeSource={RelativeSource Self}, Path=PlacementTarget.DataContext}" 
+                             Padding="0" Placement="Top" BorderThickness="0">
+                        <controls1:VideoDetailsPreview ViewModel="{Binding .}" Entry="{Binding Playlist.NextEntry}"/>
+                    </ToolTip>
+                    <!--<ToolTip Padding="0" Placement="Top" Opened="ToolTipNext_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
                         <StackPanel Width="300">
                             <shared:GifPlayer Background="Black" AutoPlay="True" Name="playerNext" Stretch="Uniform"/>
                             <Image Name="heatMapNext" HorizontalAlignment="Stretch" Height="15" Stretch="Fill" />
                             <TextBlock Margin="2" Background="White" Foreground="Black" Name="titleNext" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
-                    </ToolTip>
+                    </ToolTip>-->
                 </Button.ToolTip>
             </Button>
             <Button Command="{Binding Playlist.PlayPreviousEntryCommand}" Content="9" DockPanel.Dock="Right"
                     ToolTipService.BetweenShowDelay="0" ToolTipService.ShowDuration="60000">
                 <Button.ToolTip>
-                    <ToolTip Padding="0" Placement="Top" Opened="ToolTipPrevious_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
+                    <ToolTip DataContext="{Binding RelativeSource={RelativeSource Self}, Path=PlacementTarget.DataContext}" 
+                             Padding="0" Placement="Top" BorderThickness="0">
+                        <controls1:VideoDetailsPreview ViewModel="{Binding .}" Entry="{Binding Playlist.PreviousEntry}"/>
+                    </ToolTip>
+                    <!--<ToolTip Padding="0" Placement="Top" Opened="ToolTipPrevious_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
                         <StackPanel Width="300">
                             <shared:GifPlayer Background="Black" AutoPlay="True" Name="playerPrevious" Stretch="Uniform"/>
                             <Image Name="heatMapPrevious" HorizontalAlignment="Stretch" Height="15" Stretch="Fill" />
                             <TextBlock Margin="2" Background="White" Foreground="Black" Name="titlePrevious" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
-                    </ToolTip>
+                    </ToolTip>-->
                 </Button.ToolTip>
             </Button>
             <shared:SeekBar HighlightRange="{Binding DisplayedRange}" SnapsToDevicePixels="True" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Thumbnails="{Binding Thumbnails}" Progress="{Binding Path=TimeSource.Progress}" Duration="{Binding Path=TimeSource.Duration}" Seek="SeekBar_OnSeek">
