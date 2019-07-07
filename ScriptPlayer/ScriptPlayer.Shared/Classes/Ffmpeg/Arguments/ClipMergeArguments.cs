@@ -12,7 +12,7 @@ namespace ScriptPlayer.Shared
         public override string BuildArguments()
         {
             string playlistFileName = Path.Combine(Path.GetTempPath(), Path.GetFileName(InputFile) + $"-playlist.txt");
-            File.WriteAllLines(playlistFileName, ClipFiles.Select(se => $"file '{se}'"));
+            File.WriteAllLines(playlistFileName, ClipFiles.Select(se => $"file '{se.Replace("'", "'\\''")}'")); //concat requires special escaping
             TempFiles.Add(playlistFileName);
             return $"-f concat -safe 0 -i \"{playlistFileName}\" -c copy \"{OutputFile}\"";
         }

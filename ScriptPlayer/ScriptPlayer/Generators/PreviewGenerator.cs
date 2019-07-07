@@ -82,7 +82,8 @@ namespace ScriptPlayer.Generators
                     entry.Update($"Generating GIF (1/4): Clipping Video Section {i + 1}/{settings.TimeFrames.Count}",
                         ((i / (double) settings.TimeFrames.Count)) / 4.0);
 
-                    _wrapper.Execute(clipArguments);
+                    if(!_wrapper.Execute(clipArguments))
+                        return GeneratorResult.Failed();
 
                     if (_canceled)
                         return GeneratorResult.Failed();
@@ -108,7 +109,8 @@ namespace ScriptPlayer.Generators
                     clipFileName = mergeArguments.OutputFile;
                     tempFiles.Add(clipFileName);
 
-                    _wrapper.Execute(mergeArguments);
+                    if(!_wrapper.Execute(mergeArguments))
+                        return GeneratorResult.Failed();
 
                     if (_canceled)
                         return GeneratorResult.Failed();
@@ -126,7 +128,8 @@ namespace ScriptPlayer.Generators
 
                 tempFiles.Add(paletteFile);
 
-                _wrapper.Execute(paletteArguments);
+                if(!_wrapper.Execute(paletteArguments))
+                    return GeneratorResult.Failed();
 
                 if (_canceled)
                     return GeneratorResult.Failed();
@@ -141,7 +144,8 @@ namespace ScriptPlayer.Generators
                 gifArguments.OutputFile = gifFileName;
                 gifArguments.Framerate = settings.Framerate;
 
-                _wrapper.Execute(gifArguments);
+                if(!_wrapper.Execute(gifArguments))
+                    return GeneratorResult.Failed();
 
                 if (_canceled)
                     return GeneratorResult.Failed();

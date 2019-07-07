@@ -58,10 +58,10 @@ namespace ScriptPlayer.Shared.Classes.Wrappers
             return result;
         }
 
-        public int Execute(FfmpegArguments arguments)
+        public bool Execute(FfmpegArguments arguments)
         {
             FfmpegConsoleWrapper wrapper = new FfmpegConsoleWrapper(arguments, FfmpegExePath);
-            return ExecuteWrapper(wrapper);
+            return ExecuteWrapper(wrapper) == 0;
         }
 
         public void Cancel()

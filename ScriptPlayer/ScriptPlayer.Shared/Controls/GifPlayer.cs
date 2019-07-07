@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,17 +19,17 @@ namespace ScriptPlayer.Shared
 
         public bool ShowProgress
         {
-            get { return (bool)GetValue(ShowProgressProperty); }
-            set { SetValue(ShowProgressProperty, value); }
+            get => (bool)GetValue(ShowProgressProperty);
+            set => SetValue(ShowProgressProperty, value);
         }
 
         public static readonly DependencyProperty ProgressHeightProperty = DependencyProperty.Register(
-            "ProgressHeight", typeof(double), typeof(GifPlayer), new FrameworkPropertyMetadata((double)4.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+            "ProgressHeight", typeof(double), typeof(GifPlayer), new FrameworkPropertyMetadata(4.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public double ProgressHeight
         {
-            get { return (double)GetValue(ProgressHeightProperty); }
-            set { SetValue(ProgressHeightProperty, value); }
+            get => (double)GetValue(ProgressHeightProperty);
+            set => SetValue(ProgressHeightProperty, value);
         }
 
         public static readonly DependencyProperty ProgressBackgroundProperty = DependencyProperty.Register(
@@ -39,8 +37,8 @@ namespace ScriptPlayer.Shared
 
         public Brush ProgressBackground
         {
-            get { return (Brush)GetValue(ProgressBackgroundProperty); }
-            set { SetValue(ProgressBackgroundProperty, value); }
+            get => (Brush)GetValue(ProgressBackgroundProperty);
+            set => SetValue(ProgressBackgroundProperty, value);
         }
 
         public static readonly DependencyProperty ProgressForegroundProperty = DependencyProperty.Register(
@@ -48,8 +46,8 @@ namespace ScriptPlayer.Shared
 
         public Brush ProgressForeground
         {
-            get { return (Brush)GetValue(ProgressForegroundProperty); }
-            set { SetValue(ProgressForegroundProperty, value); }
+            get => (Brush)GetValue(ProgressForegroundProperty);
+            set => SetValue(ProgressForegroundProperty, value);
         }
 
         public static readonly DependencyProperty AutoSizeProperty = DependencyProperty.Register(
@@ -57,8 +55,8 @@ namespace ScriptPlayer.Shared
 
         public bool AutoSize
         {
-            get { return (bool)GetValue(AutoSizeProperty); }
-            set { SetValue(AutoSizeProperty, value); }
+            get => (bool)GetValue(AutoSizeProperty);
+            set => SetValue(AutoSizeProperty, value);
         }
 
         public event EventHandler FramesReady;
@@ -448,7 +446,13 @@ namespace ScriptPlayer.Shared
             }
         }
 
-        private static readonly object LoadLocker = new object();
+
+        private CancellationTokenSource _source;
+
+        private readonly object _loadLocker = new object();
+
+        private readonly object _cancelLocker = new object();
+
 
         private void Load(Stream stream, CancellationToken sourceToken)
         {
@@ -518,31 +522,48 @@ namespace ScriptPlayer.Shared
             Debug.WriteLine($"All Decode done after {(DateTime.Now - start).TotalMilliseconds:f2}");
         }
 
-        private CancellationTokenSource _source = null;
-
         public void CancelLoad()
         {
-            if (_source == null)
-                return;
+            lock (_cancelLocker)
+            {
+                if (_source == null)
+                    return;
 
-            Debug.WriteLine("CANCEL LOAD");
-            _source.Cancel(false);
-            _source = null;
+                Debug.WriteLine("CANCEL LOAD");
+                _source.Cancel(false);
+                _source = null;
+            }
         }
 
         public void Load(string filename)
         {
-            lock (LoadLocker)
+            lock (_loadLocker)
             {
                 CancelLoad();
-                _source = new CancellationTokenSource();
 
-                using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                try
                 {
-                    Load(stream, _source.Token);
-                }
+                    CancellationToken token;
+                    lock (_cancelLocker)
+                    {
+                        _source = new CancellationTokenSource();
+                        token = _source.Token;
+                    }
 
-                _source = null;
+                    using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                    {
+                        Load(stream, token);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("GifPlayer.Load: " + ex.Message);
+                }
+                finally
+                {
+                    lock (_cancelLocker)
+                        _source = null;
+                }
             }
         }
 

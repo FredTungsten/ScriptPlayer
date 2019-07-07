@@ -49,6 +49,14 @@ namespace ScriptPlayer.Generators
                 string script = _viewModel.GetScriptFile(settings.VideoFile);
                 var actions = _viewModel.LoadScriptActions(script);
 
+                if(actions == null || actions.Count == 0)
+                {
+                    entry.State = JobStates.Done;
+                    entry.DoneType = JobDoneTypes.Failure;
+                    entry.Update("Failed", 1);
+                    return GeneratorResult.Failed();
+                }
+
                 List<TimeSpan> timeStamps = _viewModel.FilterDuplicates(actions.ToList()).Select(s => s.TimeStamp).ToList();
                 Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.FromSeconds(10), TimeSpan.Zero, duration);
 
