@@ -1403,6 +1403,8 @@ namespace ScriptPlayer.ViewModels
 
         public RelayCommand<bool> SetShowTimeLeftCommand { get; set; }
 
+        public ScriptplayerCommand SaveScriptAsCommand { get; set; }
+
 
         public PlaylistViewModel Playlist
         {
@@ -2018,6 +2020,12 @@ namespace ScriptPlayer.ViewModels
 
             SetShowTimeLeftCommand = new RelayCommand<bool>(SetShowTimeLeft);
 
+            SaveScriptAsCommand = new ScriptplayerCommand(SaveScriptAs, CanSaveScript)
+            {
+                CommandId = "SaveScriptAs",
+                DisplayText = "Save Script As"
+            };
+
             ShowSettingsCommand = new ScriptplayerCommand(ShowSettings)
             {
                 CommandId = "ShowSettings",
@@ -2183,6 +2191,23 @@ namespace ScriptPlayer.ViewModels
                 CommandId = "DecreaseScriptDelay",
                 DisplayText = "Decrease Script Delay"
             });
+        }
+
+        private bool CanSaveScript()
+        {
+            return _scriptHandler.IsScriptLoaded();
+        }
+
+        private void SaveScriptAs()
+        {
+            int filterId = 0;
+            string fileName = OnRequestFile("*.funscript|Funscript", ref filterId, true);
+            if (string.IsNullOrEmpty(fileName))
+                return;
+
+            FunScriptFile file = new FunScriptFile();
+            file.Actions = _scriptHandler.GetScript().ToList();
+            file.Save(fileName);
         }
 
         private void SetShowTimeLeft(bool showTimeLeft)

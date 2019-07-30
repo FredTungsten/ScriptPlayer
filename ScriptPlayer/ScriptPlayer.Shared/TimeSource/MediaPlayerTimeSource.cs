@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 //using System.Diagnostics;
 //using System.Threading;
 using System.Windows.Media;
@@ -9,6 +10,7 @@ namespace ScriptPlayer.Shared
     {
         private MediaPlayer _player;
         private readonly ISampleClock _clock;
+        private TimeSpan _timeWhenPaused;
 
         public MediaPlayerTimeSource(MediaPlayer player, ISampleClock clock)
         {
@@ -20,6 +22,8 @@ namespace ScriptPlayer.Shared
 
         public void SetPlayer(MediaPlayer player)
         {
+            _timeWhenPaused = TimeSpan.Zero;
+
             double playbackrate = 1.0;
 
             if (_player != null)
@@ -51,6 +55,8 @@ namespace ScriptPlayer.Shared
 
         private void PlayerOnMediaEnded(object sender, EventArgs eventArgs)
         {
+            _timeWhenPaused = TimeSpan.Zero;
+
             //Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: MediaPlayerTimeSource.PlayerOnMediaEnded, Setting IsPlaying to false");
             IsPlaying = false;
         }
@@ -62,6 +68,8 @@ namespace ScriptPlayer.Shared
 
         private void OnOpened()
         {
+            _timeWhenPaused = TimeSpan.Zero;
+
             if (_player.NaturalDuration.HasTimeSpan)
                 Duration = _player.NaturalDuration.TimeSpan;
 
@@ -72,7 +80,15 @@ namespace ScriptPlayer.Shared
 
         private void ClockOnTick(object sender, EventArgs eventArgs)
         {
-            Progress = _player.Position;
+            TimeSpan newPosition = _player.Position;
+
+            if (newPosition < _timeWhenPaused)
+            {
+                Debug.WriteLine($"Time went backwards after pausing!: Pause-{_timeWhenPaused:g} / Prog-{Progress:g} / Now:{newPosition:g}");
+                return;
+            }
+
+            Progress = newPosition;
         }
         
         public override void Play()
@@ -96,6 +112,7 @@ namespace ScriptPlayer.Shared
                 return;
             }
 
+            _timeWhenPaused = Progress;
             //Debug.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: MediaPlayerTimeSource.Pause, Setting IsPlaying to false");
             IsPlaying = false;
             _player.Pause();
@@ -104,6 +121,7 @@ namespace ScriptPlayer.Shared
         public override void SetPosition(TimeSpan position)
         {
             _player.Position = position;
+            _timeWhenPaused = position;
         }
 
         public void Dispose()

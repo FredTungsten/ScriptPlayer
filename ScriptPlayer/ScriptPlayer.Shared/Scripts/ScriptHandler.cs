@@ -178,10 +178,10 @@ namespace ScriptPlayer.Shared.Scripts
             IntermediateScriptActionRaised?.Invoke(this, e);
         }
 
-        public IEnumerable<ScriptAction> GetScript()
+        public IEnumerable<FunScriptAction> GetScript()
         {
             if (_filledActions == null)
-                return new List<ScriptAction>();
+                return new List<FunScriptAction>();
 
             return _filledActions.AsReadOnly();
         }
@@ -626,6 +626,11 @@ namespace ScriptPlayer.Shared.Scripts
         protected virtual void OnInstantUpdateRaised(IntermediateScriptActionEventArgs e)
         {
             InstantUpdateRaised?.Invoke(this, e);
+        }
+
+        public bool IsScriptLoaded()
+        {
+            return _originalActions.Count > 0;
         }
     }
 }

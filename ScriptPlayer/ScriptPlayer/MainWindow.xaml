@@ -467,6 +467,9 @@
                     <MenuItem Header="Zoom Player" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.ZoomPlayer}}"/>
                     <MenuItem Header="Kodi" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Kodi}}"/>
                 </MenuItem>
+                <MenuItem Header="Script">
+                    <MenuItem Header="Save As" Command="{Binding SaveScriptAsCommand}"/>
+                </MenuItem>
                 <MenuItem Header="Selection">
                     <MenuItem Header="Set A" Command="{Binding SetLoopACommand}"/>
                     <MenuItem Header="Set B" Command="{Binding SetLoopBCommand}"/>

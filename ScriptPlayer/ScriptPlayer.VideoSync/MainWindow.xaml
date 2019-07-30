@@ -33,6 +33,7 @@
             </MenuItem>
             <MenuItem Header="Sampler">
                 <MenuItem Header="Run" Click="mnuFrameSampler_Click"/>
+                <MenuItem Header="Run Audio" Click="mnuFrameSampler2_Click"/>
                 <MenuItem Header="Save Samples" Click="mnuSaveSamples_Click"/>
                 <MenuItem Header="Load Samples" Click="mnuLoadSamples_Click"/>
                 <Separator/>

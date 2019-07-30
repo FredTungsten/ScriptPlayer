@@ -44,6 +44,7 @@ namespace ScriptPlayer.Shared
         public void SetDuration(TimeSpan duration)
         {
             Duration = duration;
+            Debug.WriteLine($"Duration of ManualTimeSource set to {duration:g}");
         }
 
         public override void SetPosition(TimeSpan position)

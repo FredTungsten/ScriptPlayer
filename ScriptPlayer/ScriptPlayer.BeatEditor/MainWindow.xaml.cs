@@ -37,7 +37,7 @@ namespace LaunchControl.BeatEditor
 
         private void SeekBar_OnSeek(object sender, double relative, TimeSpan absolute, int downmoveup)
         {
-            VideoPlayer.SetPosition(absolute);
+            VideoPlayer.TimeSource.SetPosition(absolute);
         }
 
         private void btnAddBeat_Click(object sender, RoutedEventArgs e)

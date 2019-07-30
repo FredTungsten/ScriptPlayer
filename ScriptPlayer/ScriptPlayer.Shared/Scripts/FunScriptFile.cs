@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using Newtonsoft.Json;
 using ScriptPlayer.Shared.Converters;
 
@@ -49,6 +51,13 @@ namespace ScriptPlayer.Shared.Scripts
             Version = new Version(1,0);
             Range = 90;
             Actions = new List<FunScriptAction>();
+        }
+
+        public void Save(string filename)
+        {
+            string content = JsonConvert.SerializeObject(this);
+
+            File.WriteAllText(filename, content, new UTF8Encoding(false));
         }
     }
 }

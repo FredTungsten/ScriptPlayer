@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Windows;
@@ -114,6 +116,9 @@ namespace ScriptPlayer.Shared
 
         private void InterpretLine(string line)
         {
+            if(!line.StartsWith("S") && !line.StartsWith("P"))
+                Debug.WriteLine("Whirligig: " + line);
+
             if (_timeSource.CheckAccess())
             {
                 if (line.StartsWith("S"))
@@ -129,7 +134,7 @@ namespace ScriptPlayer.Shared
                 else if (line.StartsWith("P"))
                 {
                     string timeStamp = line.Substring(2).Trim();
-                    double seconds = double.Parse(timeStamp, CultureInfo.InvariantCulture);
+                    double seconds = ParseWhirligigTimestap(timeStamp);
                     TimeSpan position = TimeSpan.FromSeconds(seconds);
 
                     _timeSource.Play();
@@ -143,7 +148,7 @@ namespace ScriptPlayer.Shared
                 else if (line.StartsWith("duration"))
                 {
                     string timeStamp = line.Substring(10).Trim();
-                    double seconds = double.Parse(timeStamp, CultureInfo.InvariantCulture);
+                    double seconds = ParseWhirligigTimestap(timeStamp);
                     _timeSource.SetDuration(TimeSpan.FromSeconds(seconds));
                 }
                 else
@@ -158,6 +163,42 @@ namespace ScriptPlayer.Shared
             {
                 _timeSource.Dispatcher.Invoke(() => InterpretLine(line));
             }
+        }
+
+        private static readonly CultureInfo[] Cultures;
+
+        static WhirligigTimeSource()
+        {
+            Cultures = new[]
+            {
+                CultureInfo.InvariantCulture,
+                CultureInfo.InstalledUICulture,
+                CultureInfo.CurrentCulture,
+                CultureInfo.CurrentUICulture,
+                CultureInfo.DefaultThreadCurrentCulture,
+                CultureInfo.DefaultThreadCurrentUICulture,
+            }.Distinct().ToArray();
+        }
+
+        private static double ParseWhirligigTimestap(string timeStamp)
+        {
+            List<double> potentialValues = new List<double>();
+
+            foreach (CultureInfo culture in Cultures)
+            {
+                if (double.TryParse(timeStamp, NumberStyles.AllowDecimalPoint, culture, out double value))
+                {
+                    if(value > 0 && ! potentialValues.Contains(value))
+                        potentialValues.Add(value);
+                }
+            }
+
+            if (potentialValues.Count == 0)
+                return 0;
+            if (potentialValues.Count == 1)
+                return potentialValues[0];
+
+            return potentialValues.Min();
         }
 
         public override double PlaybackRate

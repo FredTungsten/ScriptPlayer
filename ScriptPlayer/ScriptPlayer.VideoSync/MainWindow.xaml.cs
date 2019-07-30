@@ -16,6 +16,8 @@ using System.Windows.Media.Imaging;
 using Accord.Audio;
 using Accord.Video.FFMPEG;
 using Microsoft.Win32;
+using NAudio.Dsp;
+using NAudio.Wave;
 using Newtonsoft.Json;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
@@ -248,20 +250,22 @@ namespace ScriptPlayer.VideoSync
 
         private void SeekBar_OnSeek(object sender, double relative, TimeSpan absolute, int downMoveUp)
         {
+            var timesource = videoPlayer.TimeSource;
+
             switch (downMoveUp)
             {
                 case 0:
-                    _wasplaying = videoPlayer.TimeSource.IsPlaying;
-                    videoPlayer.TimeSource.Pause();
-                    videoPlayer.SetPosition(absolute);
+                    _wasplaying = timesource.IsPlaying;
+                    timesource.Pause();
+                    timesource.SetPosition(absolute);
                     break;
                 case 1:
-                    videoPlayer.SetPosition(absolute);
+                    timesource.SetPosition(absolute);
                     break;
                 case 2:
-                    videoPlayer.SetPosition(absolute);
+                    timesource.SetPosition(absolute);
                     if (_wasplaying)
-                        videoPlayer.TimeSource.Play();
+                        timesource.Play();
                     break;
             }
         }
@@ -538,7 +542,7 @@ namespace ScriptPlayer.VideoSync
 
             TimeSpan position = (TimeSpan)item.DataContext;
 
-            videoPlayer.SetPosition(position);
+            videoPlayer.TimeSource.SetPosition(position);
         }
 
         private void mnuSetCondition_Click(object sender, RoutedEventArgs e)
@@ -577,7 +581,7 @@ namespace ScriptPlayer.VideoSync
 
         private void ShiftTime(TimeSpan timespan)
         {
-            videoPlayer.SetPosition(videoPlayer.GetPosition() + timespan);
+            videoPlayer.TimeSource.SetPosition(videoPlayer.GetPosition() + timespan);
         }
 
         private void btnBeatBarDurationBack_Click(object sender, RoutedEventArgs e)
@@ -662,7 +666,7 @@ namespace ScriptPlayer.VideoSync
             if (Beats == null) return;
             if (Beats.Count == 0) return;
             TimeSpan beat = Beats.First();
-            videoPlayer.SetPosition(beat);
+            videoPlayer.TimeSource.SetPosition(beat);
         }
 
         private void mnuFindShortestBeat_Click(object sender, RoutedEventArgs e)
@@ -688,7 +692,7 @@ namespace ScriptPlayer.VideoSync
                 }
             }
 
-            videoPlayer.SetPosition(position);
+            videoPlayer.TimeSource.SetPosition(position);
 
             Fadeout.SetText("Shortest beat: " + shortest.TotalMilliseconds + " ms", TimeSpan.FromSeconds(4));
         }
@@ -703,7 +707,7 @@ namespace ScriptPlayer.VideoSync
             if (Beats == null) return;
             if (Beats.Count == 0) return;
             TimeSpan beat = Beats.Last();
-            videoPlayer.SetPosition(beat);
+            videoPlayer.TimeSource.SetPosition(beat);
         }
 
         private void mnuSaveKiiroo_Click(object sender, RoutedEventArgs e)
@@ -787,9 +791,7 @@ namespace ScriptPlayer.VideoSync
                 }).ToList()
             };
 
-            string content = JsonConvert.SerializeObject(script);
-
-            File.WriteAllText(filename, content, new UTF8Encoding(false));
+            script.Save(filename);
         }
 
         private void btnResetSamples_Click(object sender, RoutedEventArgs e)
@@ -1885,7 +1887,7 @@ namespace ScriptPlayer.VideoSync
 
             _previouslyShortest = shortest;
 
-            videoPlayer.SetPosition(position);
+            videoPlayer.TimeSource.SetPosition(position);
             Fadeout.SetText(shortest.TotalMilliseconds.ToString("f0") + "ms", TimeSpan.FromSeconds(3));
         }
 
@@ -1904,7 +1906,7 @@ namespace ScriptPlayer.VideoSync
 
         private void SnapToClosestBeat()
         {
-            videoPlayer.SetPosition(GetClosestBeat(videoPlayer.GetPosition()));
+            videoPlayer.TimeSource.SetPosition(GetClosestBeat(videoPlayer.GetPosition()));
         }
 
         private void GotoNextBookMark()
@@ -1915,7 +1917,7 @@ namespace ScriptPlayer.VideoSync
 
             TimeSpan bookmark = Bookmarks.First(t => t > pos);
             lstBookmarks.SelectedItem = bookmark;
-            videoPlayer.SetPosition(bookmark);
+            videoPlayer.TimeSource.SetPosition(bookmark);
         }
 
         private void GotoPreviousBookMark()
@@ -1926,7 +1928,7 @@ namespace ScriptPlayer.VideoSync
 
             TimeSpan bookmark = Bookmarks.FindLast(t => t < pos);
             lstBookmarks.SelectedItem = bookmark;
-            videoPlayer.SetPosition(bookmark);
+            videoPlayer.TimeSource.SetPosition(bookmark);
         }
 
         public void SetTitle(string filePath)
@@ -2252,7 +2254,7 @@ namespace ScriptPlayer.VideoSync
 
         private void GotoSelectionBegin()
         {
-            videoPlayer.SetPosition(_marker1 < _marker2 ? _marker1 : _marker2);
+            videoPlayer.TimeSource.SetPosition(_marker1 < _marker2 ? _marker1 : _marker2);
         }
 
         private void btnSecondMarker_Click(object sender, RoutedEventArgs e)
@@ -2262,7 +2264,7 @@ namespace ScriptPlayer.VideoSync
 
         private void GotoSelectionEnd()
         {
-            videoPlayer.SetPosition(_marker1 > _marker2 ? _marker1 : _marker2);
+            videoPlayer.TimeSource.SetPosition(_marker1 > _marker2 ? _marker1 : _marker2);
         }
 
         private void DirectInputControl_OnBeat(object sender, EventArgs e)
@@ -2373,6 +2375,67 @@ namespace ScriptPlayer.VideoSync
         {
             BeatBar.HighlightBeats = true;
             BeatBar.SoundAfterBeat = true;
+        }
+
+        private int RATE = 44100; // sample rate of the sound card
+        private int BUFFERSIZE = (int)Math.Pow(2, 11); // must be a multiple of 2
+
+        private void mnuFrameSampler2_Click(object sender, RoutedEventArgs e)
+        {
+            MediaFoundationReader provider = new MediaFoundationReader(_videoFile);
+
+            int frameSize = BUFFERSIZE;
+            var audioBytes = new byte[frameSize];
+            provider.Read(audioBytes, 0, frameSize);
+
+            // return if there's nothing new to plot
+            if (audioBytes.Length == 0)
+                return;
+
+            if (audioBytes[frameSize - 2] == 0)
+                return;
+
+            // incoming data is 16-bit (2 bytes per audio point)
+            int BYTES_PER_POINT = 2;
+
+            // create a (32-bit) int array ready to fill with the 16-bit data
+            int graphPointCount = audioBytes.Length / BYTES_PER_POINT;
+
+            // create double arrays to hold the data we will graph
+            double[] pcm = new double[graphPointCount];
+            double[] fft = new double[graphPointCount];
+            double[] fftReal = new double[graphPointCount / 2];
+
+            // populate Xs and Ys with double data
+            for (int i = 0; i < graphPointCount; i++)
+            {
+                // read the int16 from the two bytes
+                Int16 val = BitConverter.ToInt16(audioBytes, i * 2);
+
+                // store the value in Ys as a percent (+/- 100% = 200%)
+                pcm[i] = (double)(val) / Math.Pow(2, 16) * 200.0;
+            }
+
+            // calculate the full FFT
+            fft = FFT(pcm);
+
+            // determine horizontal axis units for graphs
+            double pcmPointSpacingMs = RATE / 1000;
+            double fftMaxFreq = RATE / 2;
+            double fftPointSpacingHz = fftMaxFreq / graphPointCount;
+        }
+
+        public double[] FFT(double[] data)
+        {
+            double[] fft = new double[data.Length];
+            System.Numerics.Complex[] fftComplex = new System.Numerics.Complex[data.Length];
+            for (int i = 0; i < data.Length; i++)
+                fftComplex[i] = new System.Numerics.Complex(data[i], 0.0);
+
+            Accord.Math.FourierTransform.FFT(fftComplex, Accord.Math.FourierTransform.Direction.Forward);
+            for (int i = 0; i < data.Length; i++)
+                fft[i] = fftComplex[i].Magnitude;
+            return fft;
         }
     }
 }
