@@ -277,6 +277,7 @@ namespace ScriptPlayer.Dialogs
             {
                 MessageBox.Show("This directoy doesn't exist or is not accessible!", "Error", MessageBoxButton.OK,
                     MessageBoxImage.Error);
+                return;
             }
 
             Settings.AdditionalPaths.Add(AdditionalPath);
@@ -286,6 +287,9 @@ namespace ScriptPlayer.Dialogs
         {
             try
             {
+                if(path.EndsWith("*"))
+                    return Directory.Exists(path.Substring(0,path.Length-1));
+
                 return Directory.Exists(path);
             }
             catch (Exception e)

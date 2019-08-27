@@ -1814,7 +1814,47 @@ namespace ScriptPlayer.ViewModels
 
         private string[] GetAdditionalPaths()
         {
-            return Settings?.AdditionalPaths?.ToArray();
+            string[] paths = Settings?.AdditionalPaths?.ToArray();
+            if (paths == null)
+                return null;
+
+            List<string> result = new List<string>();
+
+            foreach (string path in paths)
+            {
+                if (path.EndsWith("*"))
+                {
+                    string actualPath = path.Substring(0, path.Length - 1);
+
+                    result.AddRange(GetSubPaths(actualPath));
+                }
+                else
+                {
+                    result.Add(path);
+                }
+            }
+
+            return result.ToArray();
+        }
+
+        private static IEnumerable<string> GetSubPaths(string path)
+        {
+            List<string> result = new List<string>();
+            try
+            {
+                if (Directory.Exists(path))
+                {
+                    result.Add(path);
+
+                    foreach (string directory in Directory.EnumerateDirectories(path))
+                    {
+                        result.AddRange(GetSubPaths(directory));
+                    }
+                }
+            }
+            catch { }
+
+            return result;
         }
 
         private void TryFindMatchingVideo(string scriptFileName)
