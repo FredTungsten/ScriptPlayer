@@ -10,6 +10,7 @@ namespace ScriptPlayer.Shared.Classes
         private string DebuggerDisplay => $"{Start:g} - {End:g} ({Duration:g})";
 
         public bool IsEmpty => Start == End;
+
         public TimeSpan Start { get; protected set; }
         public TimeSpan End { get; protected set; }
 
