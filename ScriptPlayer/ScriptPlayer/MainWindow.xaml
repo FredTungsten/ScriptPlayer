@@ -478,10 +478,11 @@
                     <MenuItem Header="Loop" IsChecked="{Binding LoopSelection}" IsCheckable="True"/>
                 </MenuItem>
                 <MenuItem Header="Generate">
-                    <MenuItem Header="Preview GIF" Command="{Binding GeneratePreviewForLoadedVideoCommand}"/>
-                    <!--<MenuItem Header="Generate Scenes" Click="MnuCreateScenes_OnClick"/>-->
                     <MenuItem Header="Thumbnails" Command="{Binding GenerateThumbnailsForLoadedVideoCommand}"/>
                     <MenuItem Header="Thumbnail Banner" Command="{Binding GenerateThumbnailBannerForLoadedVideoCommand}"/>
+                    <MenuItem Header="Preview GIF" Command="{Binding GeneratePreviewForLoadedVideoCommand}"/>
+                    <MenuItem Header="Heatmap" Command="{Binding GenerateHeatmapForLoadedVideoCommand}"/>
+                    <MenuItem Header="All" Command="{Binding GenerateAllForLoadedVideoCommand}"/>
                     <Separator/>
                     <MenuItem Header="Show Progress" Click="mnuShowGeneratorProgress_OnClick"/>
                 </MenuItem>

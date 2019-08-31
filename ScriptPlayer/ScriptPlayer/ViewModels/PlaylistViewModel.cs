@@ -70,6 +70,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<string[]> RequestGenerateThumbnailBanners;
         public event EventHandler<string[]> RequestGeneratePreviews;
         public event EventHandler<string[]> RequestGenerateHeatmaps;
+        public event EventHandler<string[]> RequestGenerateAll;
         public event EventHandler SelectedEntryMoved; 
 
         public ObservableCollection<PlaylistEntry> Entries
@@ -309,6 +310,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand GenerateThumbnailBannersForSelectedVideosCommand { get; set; }
         public RelayCommand GeneratePreviewsForSelectedVideosCommand { get; set; }
         public RelayCommand GenerateHeatmapsForSelectedVideosCommand { get; set; }
+        public RelayCommand GenerateAllForSelectedVideosCommand { get; set; }
         public RelayCommand RecheckAllCommand { get; set; }
         public int EntryCount => Entries.Count;
 
@@ -335,6 +337,7 @@ namespace ScriptPlayer.ViewModels
             GenerateThumbnailBannersForSelectedVideosCommand = new RelayCommand(ExecuteGenerateThumbnailBannersForSelectedVideos, AreEntriesSelected); 
             GeneratePreviewsForSelectedVideosCommand = new RelayCommand(ExecuteGeneratePreviewsForSelectedVideos, AreEntriesSelected);
             GenerateHeatmapsForSelectedVideosCommand = new RelayCommand(ExecuteGenerateHeatmapsForSelectedVideos, AreEntriesSelected);
+            GenerateAllForSelectedVideosCommand = new RelayCommand(ExecuteGenerateAllForSelectedVideos, AreEntriesSelected);
             RecheckAllCommand = new RelayCommand(ExecuteRecheckAll);
 
             _dispatcher = Dispatcher.CurrentDispatcher;
@@ -398,6 +401,15 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             OnRequestGenerateHeatmaps(videos);
+        }
+
+        private void ExecuteGenerateAllForSelectedVideos()
+        {
+            string[] videos = _selectedEntries.Select(e => OnRequestVideoFileName(e.Fullname)).Where(v => !string.IsNullOrEmpty(v)).ToArray();
+            if (videos.Length == 0)
+                return;
+
+            OnRequestGenerateAll(videos);
         }
 
         private bool CanSort()
@@ -1065,6 +1077,11 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnRequestGenerateHeatmaps(string[] e)
         {
             RequestGenerateHeatmaps?.Invoke(this, e);
+        }
+
+        protected virtual void OnRequestGenerateAll(string[] e)
+        {
+            RequestGenerateAll?.Invoke(this, e);
         }
     }
 }
