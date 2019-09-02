@@ -274,6 +274,7 @@ namespace ScriptPlayer.ViewModels
         private List<Section> _chapters;
         private TimeSpan _previousProgress = TimeSpan.MinValue;
         private bool _loopSelection;
+        private PlaybackMode _initialPlaybackMode = PlaybackMode.Local;
 
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
@@ -927,6 +928,8 @@ namespace ScriptPlayer.ViewModels
             if (Settings.CheckForNewVersionOnStartup)
                 Version.CheckIfYouHaventAlready();
 
+            PlaybackMode = _initialPlaybackMode;
+
             InstanceHandler.CommandLineReceived += InstanceHandlerOnCommandLineReceived;
             InstanceHandler.EnableEvents();
         }
@@ -962,7 +965,7 @@ namespace ScriptPlayer.ViewModels
                     Volume = (double)playerState.Volume;
 
                 if (playerState.PlaybackMode != null)
-                    PlaybackMode = (PlaybackMode)playerState.PlaybackMode;
+                    _initialPlaybackMode = (PlaybackMode)playerState.PlaybackMode;
 
                 if (playerState.WindowState != null)
                     if (playerState.WindowState.Width > 0 && playerState.WindowState.Height > 0)
