@@ -13,6 +13,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -45,6 +47,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<ThumbnailBannerGeneratorSettings>> RequestThumbnailBannerGeneratorSettings;
 
         public event EventHandler RequestActivate;
+        public event EventHandler RequestShowDeviceManager;
         public event EventHandler<string> RequestShowSettings;
         public event EventHandler<ThumbnailBannerGeneratorSettings> RequestGenerateThumbnailBanner;
         public event EventHandler<WindowStateModel> RequestSetWindowState;
@@ -930,8 +933,62 @@ namespace ScriptPlayer.ViewModels
 
             PlaybackMode = _initialPlaybackMode;
 
+            AutoStartButtplug();
+            AutoConnectButtplug();
+
             InstanceHandler.CommandLineReceived += InstanceHandlerOnCommandLineReceived;
             InstanceHandler.EnableEvents();
+        }
+
+        private void AutoConnectButtplug()
+        {
+            if (!Settings.AutoConnectToButtplug)
+                return;
+
+            ConnectButtplug();
+        }
+
+        private void AutoStartButtplug()
+        {
+            try
+            {
+                if (!Settings.AutoStartButtplug)
+                    return;
+
+                if (string.IsNullOrEmpty(Settings.ButtplugExePath))
+                {
+                    OnRequestOverlay("Can't autostart Buttplug - path not set", TimeSpan.FromSeconds(5), "Buttplug");
+                    return;
+                }
+
+                if (!File.Exists(Settings.ButtplugExePath))
+                {
+                    OnRequestOverlay("Can't autostart Buttplug - file not found (or inaccessible)", TimeSpan.FromSeconds(5), "Buttplug");
+                    return;
+                }
+
+                bool alreadyRunning = ProcessHelper.IsExecutableRunning(Settings.ButtplugExePath);
+
+                if (alreadyRunning)
+                {
+                    OnRequestOverlay("Buttplug is already running - no autostart needed", TimeSpan.FromSeconds(5),
+                        "Buttplug");
+                    return;
+                }
+
+                OnRequestOverlay("Starting Buttplug ...", TimeSpan.FromSeconds(5), "Buttplug");
+                Process pro = Process.Start(Settings.ButtplugExePath);
+                bool waitedForIt = pro.WaitForInputIdle(5000);
+
+                if(waitedForIt)
+                    OnRequestOverlay("Buttplug started", TimeSpan.FromSeconds(5), "Buttplug");
+                else
+                    OnRequestOverlay("Buttplug is not responding", TimeSpan.FromSeconds(5), "Buttplug");
+            }
+            catch(Exception ex)
+            {
+                OnRequestOverlay("Couldn't start Buttplug: " + ex.Message, TimeSpan.FromSeconds(5), "Buttplug");
+            }
         }
 
         private void InstanceHandlerOnCommandLineReceived(object sender, string commandLine)
@@ -1411,6 +1468,8 @@ namespace ScriptPlayer.ViewModels
         public ScriptplayerCommand GenerateAllForLoadedVideoCommand { get; set; }
 
         public ScriptplayerCommand ShowSettingsCommand { get; set; }
+
+        public ScriptplayerCommand ShowDeviceManagerCommand { get; set; }
 
         public RelayCommand<TimeDisplayMode> SetTimeDisplayModeCommand { get; set; }
 
@@ -2085,6 +2144,12 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Show Settings"
             };
 
+            ShowDeviceManagerCommand = new ScriptplayerCommand(ShowDeviceManager)
+            {
+                CommandId = "ShowDeviceManager",
+                DisplayText = "Show Device Manager"
+            };
+
             GenerateThumbnailsForLoadedVideoCommand = new ScriptplayerCommand(GenerateThumbnailsForLoadedVideo,
                 IsVideoLoaded)
             {
@@ -2256,6 +2321,11 @@ namespace ScriptPlayer.ViewModels
                 CommandId = "DecreaseScriptDelay",
                 DisplayText = "Decrease Script Delay"
             });
+        }
+
+        private void ShowDeviceManager()
+        {
+            OnRequestShowDeviceManager();
         }
 
         private bool CanSaveScript()
@@ -3933,6 +4003,12 @@ namespace ScriptPlayer.ViewModels
             {
                 if (Settings.NotifyDevices)
                     OnRequestOverlay("Connected to Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
+
+                if(Settings.AutoSearchForButtplugDevices)
+                    StartScanningButtplug();
+
+                if(Settings.AutoShowDeviceManager)
+                    ShowDeviceManager();
             }
             else
             {
@@ -4520,6 +4596,11 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnRequestShowGeneratorProgressDialog()
         {
             RequestShowGeneratorProgressDialog?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual void OnRequestShowDeviceManager()
+        {
+            RequestShowDeviceManager?.Invoke(this, EventArgs.Empty);
         }
     }
 

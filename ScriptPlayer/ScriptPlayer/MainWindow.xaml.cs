@@ -8,7 +8,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media.Imaging;
 using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
@@ -86,6 +85,7 @@ namespace ScriptPlayer
             ViewModel.RequestShowSkipNextButton += ViewModelOnRequestShowSkipNextButton;
             ViewModel.RequestHideSkipButton += ViewModelOnRequestHideSkipButton;
             ViewModel.RequestHideNotification += ViewModelOnRequestHideNotification;
+            ViewModel.RequestShowDeviceManager += ViewModelOnRequestShowDeviceManager;
 
             ViewModel.Beat += ViewModel_Beat;
 
@@ -97,6 +97,11 @@ namespace ScriptPlayer
                 WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
             }
+        }
+
+        private void ViewModelOnRequestShowDeviceManager(object sender, EventArgs eventArgs)
+        {
+            ShowDevices();
         }
 
         private void ViewModel_Beat(object sender, EventArgs e)
@@ -669,11 +674,6 @@ namespace ScriptPlayer
         private void mnuShowPlaylist_Click(object sender, RoutedEventArgs e)
         {
             ShowPlaylist();
-        }
-
-        private void mnuShowDevices_Click(object sender, RoutedEventArgs e)
-        {
-            ShowDevices();
         }
 
         private void ShowDevices()

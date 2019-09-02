@@ -71,7 +71,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Paths" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Buttplug" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -345,10 +345,21 @@
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <DockPanel>
-                                <TextBlock HorizontalAlignment="Left" Margin="4" TextWrapping="Wrap" Text="Web Socket URL" VerticalAlignment="Center"/>
-                                <TextBox Text="{Binding Settings.ButtplugUrl}" Height="23" Margin="0,4,4,4" VerticalAlignment="Top"/>
+                                <TextBlock HorizontalAlignment="Left" Margin="4" TextWrapping="Wrap" Text="Web Socket URL" VerticalAlignment="Center" Width="100"/>
+                                <Button Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnButtplugDefault_Click" DockPanel.Dock="Right"/>
+                                <TextBox Text="{Binding Settings.ButtplugUrl}" Height="23" Margin="0,4,4,4" VerticalAlignment="Top" />
                             </DockPanel>
-                            <Button Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnButtplugDefault_Click"/>
+                            <DockPanel>
+                                <TextBlock HorizontalAlignment="Left" Margin="4" TextWrapping="Wrap" Text="Path to exe" VerticalAlignment="Center" Width="100"/>
+                                <Button Content="Choose" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnButtplugExePath_Click" DockPanel.Dock="Right"/>
+                                <TextBox Text="{Binding Settings.ButtplugExePath}" Height="23" Margin="0,4,4,4" VerticalAlignment="Top" />
+                            </DockPanel>
+                            <TextBlock Text="After ScriptPlayer has started:" Margin="4"/>
+                            <CheckBox IsChecked="{Binding Settings.AutoStartButtplug}" Content="Start Buttplug (if it's not already running)" Margin="4"/>
+                            <CheckBox IsChecked="{Binding Settings.AutoConnectToButtplug}" Content="Connect to Buttplug" Margin="4"/>
+                            <TextBlock Text="After connecting to Buttplug:" Margin="4"/>
+                            <CheckBox IsChecked="{Binding Settings.AutoSearchForButtplugDevices}" Content="Search for Devices" Margin="4"/>
+                            <CheckBox IsChecked="{Binding Settings.AutoShowDeviceManager}" Content="Show Device Manager" Margin="4"/>
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Input">

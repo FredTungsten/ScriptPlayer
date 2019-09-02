@@ -440,6 +440,17 @@ namespace ScriptPlayer.Dialogs
 
             Settings.FfmpegPath = dialog.FileName;
         }
+
+        private void BtnButtplugExePath_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.Filter = "Executable|*.exe";
+
+            if (dialog.ShowDialog(this) != true)
+                return;
+
+            Settings.ButtplugExePath = dialog.FileName;
+        }
     }
 
     public class InputMappingViewModel : INotifyPropertyChanged

@@ -172,6 +172,11 @@ namespace ScriptPlayer.ViewModels
         private bool _autogenerateThumbnails;
         private string _scriptFormatPreference;
         private string _mediaFormatPreference;
+        private string _buttplugExePath;
+        private bool _autoStartButtplug;
+        private bool _autoConnectToButtplug;
+        private bool _autoSearchForButtplugDevices;
+        private bool _autoShowDeviceManager;
 
         public SettingsViewModel()
         {
@@ -485,6 +490,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _buttplugUrl) return;
                 _buttplugUrl = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ButtplugExePath
+        {
+            get => _buttplugExePath;
+            set
+            {
+                if (value == _buttplugExePath) return;
+                _buttplugExePath = value;
                 OnPropertyChanged();
             }
         }
@@ -1060,6 +1076,50 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _scriptFormatPreference) return;
                 _scriptFormatPreference = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AutoStartButtplug
+        {
+            get => _autoStartButtplug;
+            set
+            {
+                if (value == _autoStartButtplug) return;
+                _autoStartButtplug = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AutoConnectToButtplug
+        {
+            get => _autoConnectToButtplug;
+            set
+            {
+                if (value == _autoConnectToButtplug) return;
+                _autoConnectToButtplug = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AutoSearchForButtplugDevices
+        {
+            get => _autoSearchForButtplugDevices;
+            set
+            {
+                if (value == _autoSearchForButtplugDevices) return;
+                _autoSearchForButtplugDevices = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AutoShowDeviceManager
+        {
+            get => _autoShowDeviceManager;
+            set
+            {
+                if (value == _autoShowDeviceManager) return;
+                _autoShowDeviceManager = value;
                 OnPropertyChanged();
             }
         }

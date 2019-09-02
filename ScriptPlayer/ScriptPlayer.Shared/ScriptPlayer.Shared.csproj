@@ -252,6 +252,7 @@
     <Compile Include="Devices\Device.cs" />
     <Compile Include="Helpers\MediaHelper.cs" />
     <Compile Include="Helpers\OsInformation.cs" />
+    <Compile Include="Helpers\ProcessHelper.cs" />
     <Compile Include="Indexer\Indexer.cs" />
     <Compile Include="Devices\Launch.cs" />
     <Compile Include="Devices\LaunchBluetooth.cs" />

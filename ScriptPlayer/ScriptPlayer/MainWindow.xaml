@@ -415,7 +415,7 @@
                     <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
                 </MenuItem>
                 <MenuItem Header="Devices">
-                    <MenuItem Header="Show Devices" Click="mnuShowDevices_Click"/>
+                    <MenuItem Header="Show Devices" Command="{Binding ShowDeviceManagerCommand}"/>
                     <Separator/>
                     <MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" IsEnabled="{Binding CanDirectConnectLaunch}" ToolTipService.ShowOnDisabled="True">
                         <MenuItem.Header>
