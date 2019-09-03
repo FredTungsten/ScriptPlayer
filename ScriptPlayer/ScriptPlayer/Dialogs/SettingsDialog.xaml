@@ -357,6 +357,12 @@
                             <TextBlock Text="After ScriptPlayer has started:" Margin="4"/>
                             <CheckBox IsChecked="{Binding Settings.AutoStartButtplug}" Content="Start Buttplug (if it's not already running)" Margin="4"/>
                             <CheckBox IsChecked="{Binding Settings.AutoConnectToButtplug}" Content="Connect to Buttplug" Margin="4"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Text="{Binding Settings.ButtplugConnectionAttempts}" Width="30" Margin="20,0,4,0"/>
+                                <TextBlock Text="attempts with a"/>
+                                <TextBox Text="{Binding Settings.ButtplugConnectionDelay}" Width="30" Margin="4,0,4,0"/>
+                                <TextBlock Text="second delay"/>
+                            </StackPanel>
                             <TextBlock Text="After connecting to Buttplug:" Margin="4"/>
                             <CheckBox IsChecked="{Binding Settings.AutoSearchForButtplugDevices}" Content="Search for Devices" Margin="4"/>
                             <CheckBox IsChecked="{Binding Settings.AutoShowDeviceManager}" Content="Show Device Manager" Margin="4"/>

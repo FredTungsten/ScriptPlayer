@@ -177,6 +177,8 @@ namespace ScriptPlayer.ViewModels
         private bool _autoConnectToButtplug;
         private bool _autoSearchForButtplugDevices;
         private bool _autoShowDeviceManager;
+        private int _buttplugConnectionAttempts;
+        private int _buttplugConnectionDelay;
 
         public SettingsViewModel()
         {
@@ -194,6 +196,8 @@ namespace ScriptPlayer.ViewModels
             TimeDisplayMode = TimeDisplayMode.ContentOnly;
             AutogenerateThumbnails = true;
             ScriptFormatPreference = "funscript, txt";
+            ButtplugConnectionAttempts = 10;
+            ButtplugConnectionDelay = 5;
         }
 
         public SettingsViewModel Duplicate()
@@ -1120,6 +1124,28 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _autoShowDeviceManager) return;
                 _autoShowDeviceManager = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int ButtplugConnectionAttempts
+        {
+            get => _buttplugConnectionAttempts;
+            set
+            {
+                if (value == _buttplugConnectionAttempts) return;
+                _buttplugConnectionAttempts = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int ButtplugConnectionDelay
+        {
+            get => _buttplugConnectionDelay;
+            set
+            {
+                if (value == _buttplugConnectionDelay) return;
+                _buttplugConnectionDelay = value;
                 OnPropertyChanged();
             }
         }

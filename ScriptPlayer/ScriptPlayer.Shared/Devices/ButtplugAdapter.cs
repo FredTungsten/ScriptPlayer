@@ -42,38 +42,33 @@ namespace ScriptPlayer.Shared
             RemoveDevice(deviceEventArgs.Device);
         }
 
-        public async Task<bool> Connect(int tries, TimeSpan delayBetweenFailedAttempts)
+        public async Task<bool> Connect()
         {
-            for (int i = 0; i < tries; i++)
+            try
             {
-                try
-                {
-                    var client = new ButtplugClient("ScriptPlayer", new ButtplugWebsocketConnector(new Uri(_url)));
-                    client.DeviceAdded += Client_DeviceAdded;
-                    client.DeviceRemoved += Client_DeviceRemoved;
-                    client.ErrorReceived += Client_ErrorReceived;
-                    client.Log += Client_Log;
-                    client.PingTimeout += Client_PingTimeout;
-                    client.ScanningFinished += Client_ScanningFinished;
-                    client.ServerDisconnect += Client_ServerDisconnect;
+                var client = new ButtplugClient("ScriptPlayer", new ButtplugWebsocketConnector(new Uri(_url)));
+                client.DeviceAdded += Client_DeviceAdded;
+                client.DeviceRemoved += Client_DeviceRemoved;
+                client.ErrorReceived += Client_ErrorReceived;
+                client.Log += Client_Log;
+                client.PingTimeout += Client_PingTimeout;
+                client.ScanningFinished += Client_ScanningFinished;
+                client.ServerDisconnect += Client_ServerDisconnect;
 
-                    await client.ConnectAsync();
-                    _client = client;
+                await client.ConnectAsync();
+                _client = client;
 
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine(e.Message);
-                    File.AppendAllText(
-                        Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\ButtplugConnectionError.log"),
-                        ExceptionHelper.BuildException(e));
-                    _client = null;
-                    await Task.Delay(delayBetweenFailedAttempts);
-                }
+                return true;
             }
-
-            return false;
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                File.AppendAllText(
+                    Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\ButtplugConnectionError.log"),
+                    ExceptionHelper.BuildException(e));
+                _client = null;
+                return false;
+            }
         }
 
         private void Client_ServerDisconnect(object sender, EventArgs e)
@@ -132,33 +127,33 @@ namespace ScriptPlayer.Shared
                 switch (VibratorConversionMode)
                 {
                     case VibratorConversionMode.PositionToSpeed:
-                    {
-                        double speedFrom = CommandConverter.LaunchPositionToVibratorSpeed(information.DeviceInformation.PositionFromOriginal);
-                        double speedTo = CommandConverter.LaunchPositionToVibratorSpeed(information.DeviceInformation.PositionToOriginal);
+                        {
+                            double speedFrom = CommandConverter.LaunchPositionToVibratorSpeed(information.DeviceInformation.PositionFromOriginal);
+                            double speedTo = CommandConverter.LaunchPositionToVibratorSpeed(information.DeviceInformation.PositionToOriginal);
 
-                        speed = speedFrom * (1 - information.Progress) + speedTo * information.Progress * information.DeviceInformation.SpeedMultiplier;
-                        speed = information.DeviceInformation.TransformSpeed(speed);
+                            speed = speedFrom * (1 - information.Progress) + speedTo * information.Progress * information.DeviceInformation.SpeedMultiplier;
+                            speed = information.DeviceInformation.TransformSpeed(speed);
 
-                        break;
-                    }
+                            break;
+                        }
                     case VibratorConversionMode.SpeedHalfDuration:
-                    {
-                        if (information.Progress < 0.5)
+                        {
+                            if (information.Progress < 0.5)
+                            {
+                                speed = CommandConverter.LaunchSpeedToVibratorSpeed(information.DeviceInformation.SpeedTransformed);
+                            }
+                            else
+                            {
+                                speed = 0.0;
+                            }
+
+                            break;
+                        }
+                    case VibratorConversionMode.SpeedFullDuration:
                         {
                             speed = CommandConverter.LaunchSpeedToVibratorSpeed(information.DeviceInformation.SpeedTransformed);
+                            break;
                         }
-                        else
-                        {
-                            speed = 0.0;
-                        }
-
-                        break;
-                    }
-                    case VibratorConversionMode.SpeedFullDuration:
-                    {
-                        speed = CommandConverter.LaunchSpeedToVibratorSpeed(information.DeviceInformation.SpeedTransformed);
-                        break;
-                    }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -204,7 +199,7 @@ namespace ScriptPlayer.Shared
                 }*/
                 else if (device.AllowedMessages.ContainsKey(typeof(SingleMotorVibrateCmd)))
                 {
-                    switch(VibratorConversionMode)
+                    switch (VibratorConversionMode)
                     {
                         case VibratorConversionMode.PositionToSpeed:
                             message = new SingleMotorVibrateCmd(device.Index, information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed(information.PositionFromOriginal)));
@@ -269,7 +264,7 @@ namespace ScriptPlayer.Shared
             //await CheckResponse(response);
         }
 
-        
+
 
         public async Task Disconnect()
         {

@@ -3997,7 +3997,19 @@ namespace ScriptPlayer.ViewModels
 
             _controllers.Add(controller);
 
-            bool success = await controller.Connect(10, TimeSpan.FromSeconds(5));
+            bool success = false;
+
+            for (int i = 1; i <= Settings.ButtplugConnectionAttempts; i++)
+            {
+                if (Settings.NotifyDevices)
+                    OnRequestOverlay($"Connecting to Buttplug (Attempt {i}/{Settings.ButtplugConnectionAttempts})", TimeSpan.FromSeconds(6), "Buttplug Connection");
+
+                success = await controller.Connect();
+                if (success)
+                    break;
+
+                await Task.Delay(TimeSpan.FromSeconds(Settings.ButtplugConnectionDelay));
+            }
 
             if (success)
             {
@@ -4047,13 +4059,6 @@ namespace ScriptPlayer.ViewModels
             if (controller == null) return;
 
             await controller.Disconnect();
-
-            //controller.DeviceFound -= DeviceController_DeviceFound;
-
-            //controller.DeviceRemoved -= DeviceController_DeviceRemoved;
-            //controller.Disconnected -= DeviceController_Disconnected;
-
-            //_controllers.Remove(controller);
         }
 
         protected virtual WindowStateModel OnRequestWindowState()
