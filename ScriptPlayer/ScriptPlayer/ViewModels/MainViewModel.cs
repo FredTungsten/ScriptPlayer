@@ -3997,7 +3997,7 @@ namespace ScriptPlayer.ViewModels
 
             _controllers.Add(controller);
 
-            bool success = await controller.Connect();
+            bool success = await controller.Connect(10, TimeSpan.FromSeconds(5));
 
             if (success)
             {

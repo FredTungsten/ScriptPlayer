@@ -42,31 +42,38 @@ namespace ScriptPlayer.Shared
             RemoveDevice(deviceEventArgs.Device);
         }
 
-        public async Task<bool> Connect()
+        public async Task<bool> Connect(int tries, TimeSpan delayBetweenFailedAttempts)
         {
-            try
+            for (int i = 0; i < tries; i++)
             {
-                var client = new ButtplugClient("ScriptPlayer", new ButtplugWebsocketConnector(new Uri(_url)));
-                client.DeviceAdded += Client_DeviceAdded;
-                client.DeviceRemoved += Client_DeviceRemoved;
-                client.ErrorReceived += Client_ErrorReceived;
-                client.Log += Client_Log;
-                client.PingTimeout += Client_PingTimeout;
-                client.ScanningFinished += Client_ScanningFinished;
-                client.ServerDisconnect += Client_ServerDisconnect;
+                try
+                {
+                    var client = new ButtplugClient("ScriptPlayer", new ButtplugWebsocketConnector(new Uri(_url)));
+                    client.DeviceAdded += Client_DeviceAdded;
+                    client.DeviceRemoved += Client_DeviceRemoved;
+                    client.ErrorReceived += Client_ErrorReceived;
+                    client.Log += Client_Log;
+                    client.PingTimeout += Client_PingTimeout;
+                    client.ScanningFinished += Client_ScanningFinished;
+                    client.ServerDisconnect += Client_ServerDisconnect;
 
-                await client.ConnectAsync();
-                _client = client;
+                    await client.ConnectAsync();
+                    _client = client;
 
-                return true;
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.Message);
+                    File.AppendAllText(
+                        Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\ButtplugConnectionError.log"),
+                        ExceptionHelper.BuildException(e));
+                    _client = null;
+                    await Task.Delay(delayBetweenFailedAttempts);
+                }
             }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-                File.AppendAllText(Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\ButtplugConnectionError.log"), ExceptionHelper.BuildException(e));
-                _client = null;
-                return false;
-            }
+
+            return false;
         }
 
         private void Client_ServerDisconnect(object sender, EventArgs e)
