@@ -71,7 +71,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Buttplug" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Scripts" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -206,6 +206,7 @@
                                 <Button Content="..." DockPanel.Dock="Right" Width="20"  Margin="4,0,0,0" Click="BtnSelectFallBackScript_Click"/>
                                 <TextBox Text="{Binding Settings.FallbackScriptFile}" DockPanel.Dock="Left"/>
                             </DockPanel>
+                            <TextBlock TextWrapping="Wrap" Text="Select a script file to always use the same fallback script, specify a directory to select a random script or specify a directory and add a * to select a random script from that directory or any sub-directory in it." Margin="12,4,4,4"/>
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Notifications">

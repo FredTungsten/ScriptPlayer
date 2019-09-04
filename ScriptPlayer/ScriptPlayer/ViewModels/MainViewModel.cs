@@ -980,12 +980,12 @@ namespace ScriptPlayer.ViewModels
                 Process pro = Process.Start(Settings.ButtplugExePath);
                 bool waitedForIt = pro.WaitForInputIdle(5000);
 
-                if(waitedForIt)
+                if (waitedForIt)
                     OnRequestOverlay("Buttplug started", TimeSpan.FromSeconds(5), "Buttplug");
                 else
                     OnRequestOverlay("Buttplug is not responding", TimeSpan.FromSeconds(5), "Buttplug");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 OnRequestOverlay("Couldn't start Buttplug: " + ex.Message, TimeSpan.FromSeconds(5), "Buttplug");
             }
@@ -1894,19 +1894,28 @@ namespace ScriptPlayer.ViewModels
 
             foreach (string path in paths)
             {
-                if (path.EndsWith("*"))
-                {
-                    string actualPath = path.Substring(0, path.Length - 1);
-
-                    result.AddRange(GetSubPaths(actualPath));
-                }
-                else
-                {
-                    result.Add(path);
-                }
+                result.AddRange(ExpandPath(path));
             }
 
             return result.ToArray();
+        }
+
+        private List<string> ExpandPath(string path)
+        {
+            List<string> result = new List<string>();
+
+            if (path.EndsWith("*"))
+            {
+                string actualPath = path.Substring(0, path.Length - 1);
+
+                result.AddRange(GetSubPaths(actualPath));
+            }
+            else
+            {
+                result.Add(path);
+            }
+
+            return result;
         }
 
         private static IEnumerable<string> GetSubPaths(string path)
@@ -3463,7 +3472,7 @@ namespace ScriptPlayer.ViewModels
 
             if (duration < minDuration)
                 minDuration = duration.Multiply(0.9);
-            
+
             var chapters = GetChapters(minDuration, _gapDuration, true);
             Random r = new Random();
 
@@ -3487,7 +3496,7 @@ namespace ScriptPlayer.ViewModels
                         if (fastestChapter.Duration <= duration)
                             return fastestChapter;
 
-                        Section fastestSection = GetFastestSection(new List<CommandSection> {fastestChapter},
+                        Section fastestSection = GetFastestSection(new List<CommandSection> { fastestChapter },
                             duration.Multiply(0.8), duration);
 
                         if (!fastestSection.IsEmpty)
@@ -3866,11 +3875,31 @@ namespace ScriptPlayer.ViewModels
                     }
                 case NoScriptBehaviors.FallbackScript:
                     {
-                        return LoadScript(Settings.FallbackScriptFile, false, true);
+                        string scriptFile = Settings.FallbackScriptFile;
+
+                        if (Directory.Exists(scriptFile.TrimEnd('*')))
+                            scriptFile = PickRandomFile(scriptFile, _supportedScriptExtensions);
+
+                        if (!string.IsNullOrEmpty(scriptFile))
+                            return LoadScript(scriptFile, false, true);
+
+                        return false;
                     }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private string PickRandomFile(string directory, string[] extensions)
+        {
+            Random r = new Random();
+            List<string> paths = ExpandPath(directory);
+            List<string> files = paths.SelectMany(path => extensions.SelectMany(ext => Directory.EnumerateFiles(path, "*." + ext))).ToList();
+
+            if (files.Count == 0)
+                return null;
+
+            return files[r.Next(files.Count)];
         }
 
         private bool LoadScript(ScriptLoader[] loaders, string fileName)
@@ -4016,10 +4045,10 @@ namespace ScriptPlayer.ViewModels
                 if (Settings.NotifyDevices)
                     OnRequestOverlay("Connected to Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
 
-                if(Settings.AutoSearchForButtplugDevices)
+                if (Settings.AutoSearchForButtplugDevices)
                     StartScanningButtplug();
 
-                if(Settings.AutoShowDeviceManager)
+                if (Settings.AutoShowDeviceManager)
                     ShowDeviceManager();
             }
             else
@@ -4253,7 +4282,7 @@ namespace ScriptPlayer.ViewModels
 
             if (!Application.Current.CheckAccess())
             {
-                Application.Current.Dispatcher.BeginInvoke(new Action(()=>RecheckForAdditionalFiles(generateIfMissing)));
+                Application.Current.Dispatcher.BeginInvoke(new Action(() => RecheckForAdditionalFiles(generateIfMissing)));
                 return;
             }
 
@@ -4423,17 +4452,17 @@ namespace ScriptPlayer.ViewModels
 
         private PreviewGeneratorSettings GetDefaultPreviewGeneratorSettings()
         {
-            return new PreviewGeneratorSettings(){SkipIfExists = true};
+            return new PreviewGeneratorSettings() { SkipIfExists = true };
         }
 
         private ThumbnailGeneratorSettings GetDefaultThumbnailGeneratorSettings()
         {
-            return new ThumbnailGeneratorSettings(){SkipIfExists = true};
+            return new ThumbnailGeneratorSettings() { SkipIfExists = true };
         }
 
         private HeatmapGeneratorSettings GetDefaultHeatmapGeneratorSettings()
         {
-            return new HeatmapGeneratorSettings(){SkipIfExists = true};
+            return new HeatmapGeneratorSettings() { SkipIfExists = true };
         }
 
         private void GenerateHeatmaps(params string[] videos)
