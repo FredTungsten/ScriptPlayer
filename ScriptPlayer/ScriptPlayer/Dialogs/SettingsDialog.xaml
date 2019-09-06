@@ -207,6 +207,8 @@
                                 <TextBox Text="{Binding Settings.FallbackScriptFile}" DockPanel.Dock="Left"/>
                             </DockPanel>
                             <TextBlock TextWrapping="Wrap" Text="Select a script file to always use the same fallback script, specify a directory to select a random script or specify a directory and add a * to select a random script from that directory or any sub-directory in it." Margin="12,4,4,4"/>
+                            <CheckBox IsChecked="{Binding Settings.RemoveGapsFromFallbackScript}" Margin="12,4,4,4" Content="Remove Gaps" ToolTip="Will remove any gaps > 10s from the script"/>
+                            <CheckBox IsChecked="{Binding Settings.LoopFallbackScript}" Margin="12,4,4,4" Content="Loop for full duration" ToolTip="Will loop short scripts for the entire duration of the video"/>
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Notifications">

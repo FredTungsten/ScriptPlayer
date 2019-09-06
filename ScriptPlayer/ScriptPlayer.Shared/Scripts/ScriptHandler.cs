@@ -29,6 +29,9 @@ namespace ScriptPlayer.Shared.Scripts
         private TimeSpan _minGapDuration;
         private RepeatablePattern _fillGapPattern;
         private int _rangeExtender;
+        private bool _loopScriptToDuration = true;
+        private bool _squashScriptGaps;
+        private bool _isFallback;
         public event EventHandler<ScriptActionEventArgs> ScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> IntermediateScriptActionRaised;
         public event EventHandler<IntermediateScriptActionEventArgs> InstantUpdateRaised;
@@ -121,6 +124,26 @@ namespace ScriptPlayer.Shared.Scripts
             }
         }
 
+        public bool LoopScriptToDuration
+        {
+            get => _loopScriptToDuration;
+            set
+            {
+                _loopScriptToDuration = value;
+                ProcessScript();
+            } 
+        }
+
+        public bool SquashScriptGaps
+        {
+            get => _squashScriptGaps;
+            set
+            {
+                _squashScriptGaps = value; 
+                ProcessScript();
+            }
+        }
+
         public RepeatablePattern FillGapPattern
         {
             get => _fillGapPattern;
@@ -194,8 +217,10 @@ namespace ScriptPlayer.Shared.Scripts
             return _originalActions.AsReadOnly();
         }
 
-        public void SetScript(IEnumerable<ScriptAction> script)
+        public void SetScript(IEnumerable<ScriptAction> script, bool isFallback)
         {
+            _isFallback = isFallback;
+
             List<ScriptAction> actions = new List<ScriptAction>(script);
             actions.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
             _originalScript = actions;
@@ -225,11 +250,88 @@ namespace ScriptPlayer.Shared.Scripts
         private void ProcessScript()
         {
             ConvertScript();
+            SquashScript();
+            LoopToDuration();
             FillScriptGaps();
             ExtendRange();
             ResetCache();
 
             UpdatePositions();
+        }
+
+        private void SquashScript()
+        {
+            if (!SquashScriptGaps || !_isFallback)
+                return;
+
+            if (_originalActions.Count < 2)
+                return;
+
+            if (_originalActions.First().TimeStamp == _originalActions.Last().TimeStamp)
+                return;
+
+            TimeSpan previousAction = TimeSpan.Zero;
+            TimeSpan shift = TimeSpan.Zero;
+            TimeSpan sec = TimeSpan.FromSeconds(1);
+
+            List<FunScriptAction> actions = new List<FunScriptAction>();
+
+            foreach (var action in _originalActions)
+            {
+                if (actions.Count == 0) //First action
+                {
+                    if (_originalActions[0].TimeStamp > sec)
+                    {
+                        shift = _originalActions[0].TimeStamp - sec;
+                    }
+                }
+
+                var copy = action.Duplicate();
+                TimeSpan duration = action.TimeStamp - previousAction;
+                previousAction = action.TimeStamp;
+
+                if (duration >= TimeSpan.FromSeconds(10))
+                {
+                    shift += duration - sec;
+                }
+
+                copy.TimeStamp -= shift;
+                actions.Add(copy);
+            }
+
+            _originalActions = actions;
+        }
+
+        private void LoopToDuration()
+        {
+            if (!LoopScriptToDuration || !_isFallback)
+                return;
+
+            if (_originalActions.Count < 2)
+                return;
+
+            if (_originalActions.First().TimeStamp == _originalActions.Last().TimeStamp)
+                return;
+
+            var copy = _originalActions.ToList();
+
+            while (_originalActions.Last().TimeStamp < Duration)
+            {
+                TimeSpan firstBeat = _originalActions[1].TimeStamp - _originalActions[0].TimeStamp;
+                TimeSpan lastBeat = _originalActions[_originalActions.Count-1].TimeStamp - _originalActions[_originalActions.Count - 2].TimeStamp;
+                TimeSpan pause = (firstBeat + lastBeat).Divide(2);
+
+                TimeSpan shift = _originalActions.Last().TimeStamp + pause - _originalActions.First().TimeStamp;
+
+                foreach (var action in copy)
+                {
+                    var newAction = action.Duplicate();
+                    newAction.TimeStamp += shift;
+                    _originalActions.Add(newAction);
+                    if (newAction.TimeStamp > Duration)
+                        break;
+                }
+            }
         }
 
         private void ExtendRange()

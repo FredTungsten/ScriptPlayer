@@ -1241,6 +1241,7 @@ namespace ScriptPlayer.ViewModels
         {
             _chapters = GetChapters(TimeSpan.Zero, _gapDuration, false).Cast<Section>().ToList();
 
+            UpdateHeatMap();
             UpdateDisplayedDuration();
         }
 
@@ -1523,6 +1524,7 @@ namespace ScriptPlayer.ViewModels
             UpdatePlaylistRepeatSingleFile();
             UpdatePlaylistRandomChapter();
             UpdateFillGaps();
+            UpdateFallbackScriptModifiers();
             UpdateHeatMap();
             UpdatePatternSpeed();
         }
@@ -1616,6 +1618,12 @@ namespace ScriptPlayer.ViewModels
                         UpdateFillGaps();
                         break;
                     }
+                case nameof(SettingsViewModel.LoopFallbackScript):
+                case nameof(SettingsViewModel.RemoveGapsFromFallbackScript):
+                {
+                    UpdateFallbackScriptModifiers();
+                    break;
+                }
                 case nameof(SettingsViewModel.PatternSpeed):
                     {
                         UpdatePatternSpeed();
@@ -1646,6 +1654,14 @@ namespace ScriptPlayer.ViewModels
             _scriptHandler.FillFirstGap = Settings.FillFirstGap;
             _scriptHandler.FillLastGap = Settings.FillLastGap;
             _scriptHandler.FillGaps = Settings.FillGaps;
+
+            RefreshChapters();
+        }
+
+        private void UpdateFallbackScriptModifiers()
+        {
+            _scriptHandler.SquashScriptGaps = Settings.RemoveGapsFromFallbackScript;
+            _scriptHandler.LoopScriptToDuration = Settings.LoopFallbackScript;
 
             RefreshChapters();
         }
@@ -1859,7 +1875,7 @@ namespace ScriptPlayer.ViewModels
                 return;
             }
 
-            LoadScript(scriptFile, false);
+            LoadScriptOrFallback(scriptFile, false);
         }
 
         private string[] GetScriptExtensions()
@@ -2729,7 +2745,7 @@ namespace ScriptPlayer.ViewModels
             else if (_supportedMediaExtensions.Contains(extension))
                 LoadVideo(fileToLoad, true);
             else if (_supportedScriptExtensions.Contains(extension))
-                LoadScript(fileToLoad, true);
+                LoadScriptOrFallback(fileToLoad, true);
         }
 
         private void LoadPlaylist(string filename = null)
@@ -3770,14 +3786,14 @@ namespace ScriptPlayer.ViewModels
             if (scriptFileName == null)
                 return;
 
-            LoadScript(scriptFileName, true);
+            LoadScriptOrFallback(scriptFileName, true);
         }
 
 
         public void ReloadScript()
         {
             if (!String.IsNullOrEmpty(_loadedScript))
-                LoadScript(_loadedScript, false, false);
+                LoadScriptOrFallback(_loadedScript, false, false);
         }
 
         public List<ScriptAction> LoadScriptActions(string scriptFileName)
@@ -3827,16 +3843,16 @@ namespace ScriptPlayer.ViewModels
             return actions;
         }
 
-        private bool LoadScript(string scriptFileName, bool checkForVideo, bool isFallbackScript = false)
+        private bool LoadScriptOrFallback(string scriptFileName, bool checkForVideo, bool isFallbackScript = false)
         {
             ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(scriptFileName);
             if (loaders == null)
                 return false;
 
-            if (!LoadScript(loaders, scriptFileName))
+            if (!LoadScript(loaders, scriptFileName, isFallbackScript))
             {
                 ScriptLoader[] otherLoaders = ScriptLoaderManager.GetAllLoaders().Except(loaders).ToArray();
-                if (!LoadScript(otherLoaders, scriptFileName))
+                if (!LoadScript(otherLoaders, scriptFileName, isFallbackScript))
                 {
                     if (Settings.NotifyFileLoaded)
                         OnRequestOverlay($"The script file '{scriptFileName}' could not be loaded!", TimeSpan.FromSeconds(6));
@@ -3881,7 +3897,7 @@ namespace ScriptPlayer.ViewModels
                             scriptFile = PickRandomFile(scriptFile, _supportedScriptExtensions);
 
                         if (!string.IsNullOrEmpty(scriptFile))
-                            return LoadScript(scriptFile, false, true);
+                            return LoadScriptOrFallback(scriptFile, false, true);
 
                         return false;
                     }
@@ -3902,7 +3918,7 @@ namespace ScriptPlayer.ViewModels
             return files[r.Next(files.Count)];
         }
 
-        private bool LoadScript(ScriptLoader[] loaders, string fileName)
+        private bool LoadScript(ScriptLoader[] loaders, string fileName, bool isFallback)
         {
             const long maxScriptSize = 4 * 1024 * 1024; //4 MB
 
@@ -3933,7 +3949,7 @@ namespace ScriptPlayer.ViewModels
 
             if (actions == null) return false;
 
-            _scriptHandler.SetScript(actions);
+            _scriptHandler.SetScript(actions, isFallback);
 
             RefreshChapters();
             RefreshManualDuration();

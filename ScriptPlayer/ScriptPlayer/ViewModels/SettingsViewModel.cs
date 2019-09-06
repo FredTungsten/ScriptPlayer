@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared;
@@ -179,6 +180,8 @@ namespace ScriptPlayer.ViewModels
         private bool _autoShowDeviceManager;
         private int _buttplugConnectionAttempts;
         private int _buttplugConnectionDelay;
+        private bool _loopFallbackScript;
+        private bool _removeGapsFromFallbackScript;
 
         public SettingsViewModel()
         {
@@ -1146,6 +1149,28 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _buttplugConnectionDelay) return;
                 _buttplugConnectionDelay = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool LoopFallbackScript
+        {
+            get => _loopFallbackScript;
+            set
+            {
+                if (value == _loopFallbackScript) return;
+                _loopFallbackScript = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool RemoveGapsFromFallbackScript
+        {
+            get => _removeGapsFromFallbackScript;
+            set
+            {
+                if (value == _removeGapsFromFallbackScript) return;
+                _removeGapsFromFallbackScript = value;
                 OnPropertyChanged();
             }
         }
