@@ -1,0 +1,14 @@
+﻿<Window x:Class="ScriptPlayer.Dialogs.TimeShiftDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" Loaded="TimeShiftDialog_OnLoaded"
+        Title="Shift Script" Height="165.649" Width="246.73" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
+    <Grid>
+        <TextBlock Margin="10,10,10,67" TextWrapping="Wrap" Text="Enter the amount of seconds that the script will be shifted. Positive values mean the script will execute later."/>
+        <TextBox x:Name="txtValue" Margin="10,0,10,35" TextWrapping="Wrap" Text="+10.0" Height="23" VerticalAlignment="Bottom"/>
+        <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,91,10" VerticalAlignment="Bottom" Width="76" Click="btnOk_Click"/>
+        <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="76"/>
+    </Grid>
+</Window>

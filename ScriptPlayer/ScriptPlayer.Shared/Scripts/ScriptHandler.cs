@@ -164,6 +164,8 @@ namespace ScriptPlayer.Shared.Scripts
             }
         }
 
+
+
         public void Clear()
         {
             _originalActions?.Clear();
@@ -228,6 +230,41 @@ namespace ScriptPlayer.Shared.Scripts
             ProcessScript();
         }
 
+        /// <summary>
+        /// Timespan will be ADDED to the original
+        /// </summary>
+        /// <param name="shiftBy"></param>
+        public void ShiftScript(TimeSpan shiftBy)
+        {
+            foreach (ScriptAction action in _originalScript)
+            {
+                action.TimeStamp += shiftBy;
+            }
+
+            ProcessScript();
+        }
+
+        public void TrimScript(TimeSpan excludeBefore, TimeSpan excludeAfter)
+        {
+            _originalScript = _originalScript.Where(a => a.TimeStamp >= excludeBefore && a.TimeStamp <= excludeAfter).ToList();
+
+            ProcessScript();
+        }
+
+        public void SaveAs(string filename)
+        {
+            var sourceActions = _filledActions;
+
+            FunScriptFile file = new FunScriptFile
+            {
+                Inverted = false,
+                Actions = sourceActions,
+                Range = sourceActions.Max(o => o.Position) - sourceActions.Min(o => o.Position)
+            };
+
+            file.Save(filename);
+        }
+
         private void ConvertScript()
         {
             if (_originalScript.FirstOrDefault() is BeatScriptAction)
@@ -254,8 +291,8 @@ namespace ScriptPlayer.Shared.Scripts
             LoopToDuration();
             FillScriptGaps();
             ExtendRange();
-            ResetCache();
 
+            ResetCache();
             UpdatePositions();
         }
 

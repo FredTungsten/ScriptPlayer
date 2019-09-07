@@ -100,6 +100,12 @@
     </Compile>
     <Compile Include="Converters\AlternativeValueConverter.cs" />
     <Compile Include="Converters\InverterConverter.cs" />
+    <Compile Include="Dialogs\SectionDialog.xaml.cs">
+      <DependentUpon>SectionDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\TimeShiftDialog.xaml.cs">
+      <DependentUpon>TimeShiftDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Generators\GeneratorResult.cs" />
     <Compile Include="Generators\HeatmapGenerator.cs" />
     <Compile Include="Generators\HeatmapGeneratorSettings.cs" />
@@ -231,6 +237,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Dialogs\SectionDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\ThumbnailBannerGeneratorSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -260,6 +270,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\ThumbnailGeneratorSettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\TimeShiftDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

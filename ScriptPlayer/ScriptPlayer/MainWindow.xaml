@@ -468,6 +468,9 @@
                     <MenuItem Header="Kodi" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Kodi}}"/>
                 </MenuItem>
                 <MenuItem Header="Script">
+                    <MenuItem Header="Shift" Command="{Binding ShiftScriptCommand}"/>
+                    <MenuItem Header="Trim" Command="{Binding TrimScriptCommand}"/>
+                    <Separator/>
                     <MenuItem Header="Save As" Command="{Binding SaveScriptAsCommand}"/>
                 </MenuItem>
                 <MenuItem Header="Selection">

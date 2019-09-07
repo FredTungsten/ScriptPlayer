@@ -13,6 +13,7 @@ using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
 using Microsoft.Win32;
 using ScriptPlayer.Generators;
+using ScriptPlayer.Shared.Classes;
 using Point = System.Windows.Point;
 
 namespace ScriptPlayer
@@ -73,6 +74,8 @@ namespace ScriptPlayer
             ViewModel.RequestThumbnailBannerGeneratorSettings += ViewModelOnRequestThumbnailBannerGeneratorSettings;
             ViewModel.RequestPreviewGeneratorSettings += ViewModelOnRequestPreviewGeneratorSettings;
             ViewModel.RequestHeatmapGeneratorSettings += ViewModelOnRequestHeatmapGeneratorSettings;
+            ViewModel.RequestScriptShiftTimespan += ViewModelOnRequestScriptShiftTimespan;
+            ViewModel.RequestSection += ViewModelOnRequestSection;
 
             ViewModel.RequestShowGeneratorProgressDialog += ViewModelOnRequestShowGeneratorProgressDialog;
             ViewModel.RequestActivate += ViewModelOnRequestActivate;
@@ -97,6 +100,32 @@ namespace ScriptPlayer
                 WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
             }
+        }
+
+        private void ViewModelOnRequestSection(object sender, RequestEventArgs<Section> eventArgs)
+        {
+            SectionDialog dialog = new SectionDialog
+            {
+                Owner = this,
+                TimeFrom = eventArgs.Value.Start,
+                TimeTo = eventArgs.Value.End
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            eventArgs.Value = new Section(dialog.TimeFrom, dialog.TimeTo);
+            eventArgs.Handled = true;
+        }
+
+        private void ViewModelOnRequestScriptShiftTimespan(object sender, RequestEventArgs<TimeSpan> eventArgs)
+        {
+            TimeShiftDialog dialog = new TimeShiftDialog(eventArgs.Value){Owner = this};
+            if (dialog.ShowDialog() != true)
+                return;
+
+            eventArgs.Value = dialog.Result;
+            eventArgs.Handled = true;
         }
 
         private void ViewModelOnRequestShowDeviceManager(object sender, EventArgs eventArgs)

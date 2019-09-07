@@ -45,6 +45,8 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<PreviewGeneratorSettings>> RequestPreviewGeneratorSettings;
         public event EventHandler<RequestEventArgs<HeatmapGeneratorSettings>> RequestHeatmapGeneratorSettings;
         public event EventHandler<RequestEventArgs<ThumbnailBannerGeneratorSettings>> RequestThumbnailBannerGeneratorSettings;
+        public event EventHandler<RequestEventArgs<TimeSpan>> RequestScriptShiftTimespan;
+        public event EventHandler<RequestEventArgs<Section>> RequestSection;
 
         public event EventHandler RequestActivate;
         public event EventHandler RequestShowDeviceManager;
@@ -278,6 +280,7 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _previousProgress = TimeSpan.MinValue;
         private bool _loopSelection;
         private PlaybackMode _initialPlaybackMode = PlaybackMode.Local;
+        private TimeSpan _previousShiftTimeSpan = TimeSpan.FromSeconds(10);
 
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
@@ -1478,6 +1481,9 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand SaveScriptAsCommand { get; set; }
 
+        public ScriptplayerCommand ShiftScriptCommand { get; set; }
+
+        public ScriptplayerCommand TrimScriptCommand { get; set; }
 
         public PlaylistViewModel Playlist
         {
@@ -2157,7 +2163,11 @@ namespace ScriptPlayer.ViewModels
 
             SetShowTimeLeftCommand = new RelayCommand<bool>(SetShowTimeLeft);
 
-            SaveScriptAsCommand = new ScriptplayerCommand(SaveScriptAs, CanSaveScript)
+            ShiftScriptCommand = new ScriptplayerCommand(ShiftScript, IsScriptLoaded);
+
+            TrimScriptCommand = new ScriptplayerCommand(TrimScript, IsScriptLoaded);
+
+            SaveScriptAsCommand = new ScriptplayerCommand(SaveScriptAs, IsScriptLoaded)
             {
                 CommandId = "SaveScriptAs",
                 DisplayText = "Save Script As"
@@ -2348,12 +2358,41 @@ namespace ScriptPlayer.ViewModels
             });
         }
 
+        private void ShiftScript()
+        {
+            TimeSpan timeSpan = OnRequestScriptShiftTimespan(_previousShiftTimeSpan);
+            if (timeSpan == TimeSpan.Zero)
+                return;
+
+            _previousShiftTimeSpan = timeSpan;
+            _scriptHandler.ShiftScript(timeSpan);
+            RefreshChapters();
+        }
+
+        private void TrimScript()
+        {
+            Section initialValue = DisplayedRange;
+
+            if (initialValue == null)
+            {
+                initialValue = new Section(TimeSpan.Zero, TimeSource.Duration);
+            }
+
+            var section = OnRequestSection(initialValue);
+            if (section == null)
+                return;
+
+            _scriptHandler.TrimScript(section.Start, section.End);
+            RefreshChapters();
+        }
+
+
         private void ShowDeviceManager()
         {
             OnRequestShowDeviceManager();
         }
 
-        private bool CanSaveScript()
+        private bool IsScriptLoaded()
         {
             return _scriptHandler.IsScriptLoaded();
         }
@@ -2361,13 +2400,11 @@ namespace ScriptPlayer.ViewModels
         private void SaveScriptAs()
         {
             int filterId = 0;
-            string fileName = OnRequestFile("*.funscript|Funscript", ref filterId, true);
+            string fileName = OnRequestFile("Funscript|*.funscript", ref filterId, true);
             if (string.IsNullOrEmpty(fileName))
                 return;
 
-            FunScriptFile file = new FunScriptFile();
-            file.Actions = _scriptHandler.GetScript().ToList();
-            file.Save(fileName);
+            _scriptHandler.SaveAs(fileName);
         }
 
         private void SetShowTimeLeft(bool showTimeLeft)
@@ -4551,6 +4588,28 @@ namespace ScriptPlayer.ViewModels
         private bool IsVideoLoaded()
         {
             return !string.IsNullOrEmpty(LoadedVideo);
+        }
+
+        protected virtual TimeSpan OnRequestScriptShiftTimespan(TimeSpan initialValue)
+        {
+            var eventArgs = new RequestEventArgs<TimeSpan>(initialValue);
+            RequestScriptShiftTimespan?.Invoke(this, eventArgs);
+
+            if (!eventArgs.Handled)
+                return TimeSpan.Zero;
+
+            return eventArgs.Value;
+        }
+
+        protected virtual Section OnRequestSection(Section initialValue)
+        {
+            var eventArgs = new RequestEventArgs<Section>(initialValue);
+            RequestSection?.Invoke(this, eventArgs);
+
+            if (!eventArgs.Handled)
+                return null;
+
+            return eventArgs.Value;
         }
 
         protected virtual ThumbnailGeneratorSettings OnRequestThumbnailGeneratorSettings(ThumbnailGeneratorSettings initialSettings)
