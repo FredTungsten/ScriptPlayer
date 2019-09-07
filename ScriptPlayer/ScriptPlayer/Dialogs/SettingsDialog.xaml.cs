@@ -7,7 +7,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 using JetBrains.Annotations;
 using Microsoft.Win32;
 using ScriptPlayer.Shared;
@@ -22,6 +24,20 @@ namespace ScriptPlayer.Dialogs
     /// </summary>
     public partial class SettingsDialog : Window
     {
+        public static readonly DependencyProperty FilterProperty = DependencyProperty.Register(
+            "Filter", typeof(string), typeof(SettingsDialog), new PropertyMetadata(default(string), OnFilterPropertyChanged));
+
+        private static void OnFilterPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((SettingsDialog)d).UpdateFilter();
+        }
+
+        public string Filter
+        {
+            get { return (string) GetValue(FilterProperty); }
+            set { SetValue(FilterProperty, value); }
+        }
+
         public static readonly DependencyProperty InputMappingsProperty = DependencyProperty.Register(
             "InputMappings", typeof(List<InputMappingViewModel>), typeof(SettingsDialog), new PropertyMetadata(default(List<InputMappingViewModel>)));
 
@@ -38,6 +54,15 @@ namespace ScriptPlayer.Dialogs
         {
             get => (SettingsPageViewModelCollection) GetValue(PagesProperty);
             set => SetValue(PagesProperty, value);
+        }
+
+        public static readonly DependencyProperty FilteredPagesProperty = DependencyProperty.Register(
+            "FilteredPages", typeof(SettingsPageViewModelCollection), typeof(SettingsDialog), new PropertyMetadata(default(SettingsPageViewModelCollection)));
+
+        public SettingsPageViewModelCollection FilteredPages
+        {
+            get { return (SettingsPageViewModelCollection) GetValue(FilteredPagesProperty); }
+            set { SetValue(FilteredPagesProperty, value); }
         }
 
         public static readonly DependencyProperty SelectedAdditionalPathProperty = DependencyProperty.Register(
@@ -68,11 +93,27 @@ namespace ScriptPlayer.Dialogs
         }
 
         public static readonly DependencyProperty SelectedPageProperty = DependencyProperty.Register(
-            "SelectedPage", typeof(SettingsPageViewModel), typeof(SettingsDialog), new PropertyMetadata(default(SettingsPageViewModel), OnSelectedPageChanged));
+            "SelectedPage", typeof(SettingsPageViewModel), typeof(SettingsDialog), new PropertyMetadata(default(SettingsPageViewModel), OnSelectedPageChanged, CoerceSelectedPage));
+
+        private static object CoerceSelectedPage(DependencyObject d, object basevalue)
+        {
+            SettingsDialog dialog = (SettingsDialog) d;
+            SettingsPageViewModel page = (SettingsPageViewModel) basevalue;
+
+            if (page == null && dialog.FilteredPages.Count > 0)
+                return dialog.FilteredPages.First();
+
+            return basevalue;
+        }
 
         private static void OnSelectedPageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((SettingsDialog) d).UpdatePageTitle();
+            ((SettingsDialog) d).SelectedPageHasChanged();
+        }
+
+        private void SelectedPageHasChanged()
+        {
+            UpdatePageTitle();
         }
 
         private void UpdatePageTitle()
@@ -107,6 +148,7 @@ namespace ScriptPlayer.Dialogs
 
             Pages = BuildPages(PageSelector);
             SelectedPage = FindPage(selectedPage) ?? FindPage(_lastSelected) ?? Pages.FirstOrDefault();
+            UpdateFilter();
         }
 
         private void CreateInputMappings(List<InputMapping> inputMappings)
@@ -450,6 +492,86 @@ namespace ScriptPlayer.Dialogs
                 return;
 
             Settings.ButtplugExePath = dialog.FileName;
+        }
+
+        private void UpdateFilter()
+        {
+            string filter = Filter?.Trim() ?? "";
+
+            var filteredPages = new SettingsPageViewModelCollection();
+
+            if (string.IsNullOrEmpty(filter))
+            {
+                filteredPages.AddRange(Pages);
+            }
+            else
+            {
+                foreach (SettingsPageViewModel page in Pages)
+                {
+                    if (page.SettingsId.IndexOf(filter, StringComparison.InvariantCultureIgnoreCase) >= 0)
+                    {
+                        filteredPages.Add(page);
+                        continue;
+                    }
+
+                    UIElement root = PageSelector.GetContent(page.SettingsId);
+                    if (root == null)
+                        continue;
+
+                    if(ContainsText(root, filter))
+                        filteredPages.Add(page);
+                }
+            }
+
+            FilteredPages = filteredPages;
+        }
+
+        private bool ContainsText(UIElement root, string filter)
+        {
+            List<UIElement> children = FindVisualChildren<UIElement>(root).ToList();
+
+            foreach (UIElement child in children)
+            {
+                if (child is TextBlock text)
+                {
+                    if (text.Text.IndexOf(filter, StringComparison.InvariantCultureIgnoreCase) >= 0)
+                        return true;
+                }
+
+                if (child is CheckBox cck)
+                {
+                    if (cck.Content != null && cck.Content.ToString().IndexOf(filter, StringComparison.InvariantCultureIgnoreCase) >= 0)
+                        return true;
+                }
+
+                if (child is RadioButton rb)
+                {
+                    if (rb.Content != null && rb.Content.ToString().IndexOf(filter, StringComparison.InvariantCultureIgnoreCase) >= 0)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj != null)
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
+                    if (child != null && child is T)
+                    {
+                        yield return (T)child;
+                    }
+
+                    foreach (T childOfChild in FindVisualChildren<T>(child))
+                    {
+                        yield return childOfChild;
+                    }
+                }
+            }
         }
     }
 

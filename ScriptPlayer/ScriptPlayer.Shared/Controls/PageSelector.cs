@@ -111,15 +111,18 @@ namespace ScriptPlayer.Shared.Controls
                 ? DesignModeContentIdentifier
                 : ActiveContentIdentifier;
 
+            Content = GetContent(id);
+        }
+
+        public UIElement GetContent(string contentIdentifier)
+        {
             foreach (UIElement element in Elements)
             {
-                if (GetContentIdentifier(element) != id) continue;
-
-                Content = element;
-                return;
+                if (GetContentIdentifier(element) == contentIdentifier)
+                    return element;
             }
 
-            Content = null;
+            return null;
         }
     }
 }
