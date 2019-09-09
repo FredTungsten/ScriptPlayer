@@ -706,7 +706,7 @@
 
                         <StackPanel Margin="4" ToolTip="Timespan by which every script command will be delayed. Negative values will cause the commands to be executed ahead of time.">
                             <TextBlock TextAlignment="Center" Margin="0" Text="Script Delay"/>
-                            <Slider Value="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-500" Maximum="500" SmallChange="25" LargeChange="100" IsSnapToTickEnabled="True" TickFrequency="25"/>
+                            <Slider Value="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-2500" Maximum="2500" SmallChange="25" LargeChange="100" IsSnapToTickEnabled="True" TickFrequency="25"/>
                             <TextBlock TextAlignment="Center" Margin="0" Text="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
                         </StackPanel>
                         <Separator/>
