@@ -1,0 +1,132 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:ScriptPlayer.Converters" 
+        x:Class="ScriptPlayer.Dialogs.GeneratorSettingsDialog"
+        mc:Ignorable="d"
+        DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=Settings}"
+        Title="Generator Settings" Height="311.383" Width="375.881">
+    <Window.Resources>
+        <converters:InverterConverter x:Key="InverterConverter"/>
+        <converters:AlternativeValueConverter x:Key="AlternativeValueConverter"/>
+    </Window.Resources>
+    <Grid>
+        <TabControl Margin="0,0,0,43">
+            <TabItem Header="General" x:Name="tabGeneral">
+                <Grid>
+                    <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Save generated files" VerticalAlignment="Top"/>
+                    <RadioButton IsChecked="{Binding Path=General.SaveFilesToDifferentPath, Converter={StaticResource InverterConverter}}" x:Name="rbSaveFilesInSameDirectory" Content="In the same directory as the video" HorizontalAlignment="Left" Margin="28,30,0,0" VerticalAlignment="Top"/>
+                    <RadioButton IsChecked="{Binding Path=General.SaveFilesToDifferentPath}" x:Name="rbSaveFilesInThisDirectory" Content="In this directory" HorizontalAlignment="Left" Margin="28,50,0,0" VerticalAlignment="Top"/>
+                    <TextBox IsEnabled="{Binding Path=General.SaveFilesToDifferentPath}" x:Name="txtSaveFilesInThisDirectory" Height="23" Margin="28,71,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
+
+                    <TextBlock HorizontalAlignment="Left" Margin="10,99,0,0" TextWrapping="Wrap" Text="If the file already exists" VerticalAlignment="Top"/>
+                    <RadioButton x:Name="rbExistsSkip"  Content="Skip the generation of the new file" HorizontalAlignment="Left" Margin="28,119,0,0" VerticalAlignment="Top"/>
+                    <RadioButton x:Name="rbExistsReplace" Content="Replace the existing file" HorizontalAlignment="Left" Margin="28,139,0,0" VerticalAlignment="Top"/>
+                    <RadioButton x:Name="rbExistsRenameOld" Content="Rename the existing file" HorizontalAlignment="Left" Margin="28,159,0,0" VerticalAlignment="Top"/>
+                    <RadioButton x:Name="rbExistsRenameNew" Content="Rename the new file" HorizontalAlignment="Left" Margin="28,179,0,0" VerticalAlignment="Top"/>
+
+                </Grid>
+            </TabItem>
+            <TabItem Header="Thumbnails" x:Name="tabThumbnails">
+                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="White">
+
+                    <TextBlock VerticalAlignment="Top" Text="Width" TextWrapping="Wrap" Margin="10,11,0,0" HorizontalAlignment="Left"/>
+                    <TextBox Width="74" VerticalAlignment="Top" TextWrapping="Wrap" Margin="57,10,0,0" IsEnabled="{Binding Thumbnails.AutoWidth, Converter={StaticResource InverterConverter}, Mode=OneWay}" Height="19" HorizontalAlignment="Left">
+                        <MultiBinding Converter="{StaticResource AlternativeValueConverter}">
+                            <Binding Path="Thumbnails.Width"/>
+                            <Binding Path="Thumbnails.AutoWidth"/>
+                        </MultiBinding>
+                    </TextBox>
+                    <TextBlock VerticalAlignment="Top" Text="px" TextWrapping="Wrap" Margin="136,11,0,0" HorizontalAlignment="Left"/>
+                    <CheckBox VerticalAlignment="Top" Margin="163,12,0,0" IsChecked="{Binding Thumbnails.AutoWidth}" HorizontalAlignment="Left" Content="Automatic"/>
+                    <TextBlock VerticalAlignment="Top" Text="Height" TextWrapping="Wrap" Margin="10,35,0,0" HorizontalAlignment="Left"/>
+                    <TextBox Width="74" VerticalAlignment="Top" TextWrapping="Wrap" Margin="57,34,0,0" IsEnabled="{Binding Thumbnails.AutoHeight, Converter={StaticResource InverterConverter}, Mode=OneWay}" Height="19" HorizontalAlignment="Left">
+                        <MultiBinding Converter="{StaticResource AlternativeValueConverter}">
+                            <Binding Path="Thumbnails.Height"/>
+                            <Binding Path="Thumbnails.AutoHeight"/>
+                        </MultiBinding>
+                    </TextBox>
+                    <TextBlock VerticalAlignment="Top" Text="px" TextWrapping="Wrap" Margin="136,35,0,0" HorizontalAlignment="Left"/>
+                    <CheckBox VerticalAlignment="Top" Margin="163,36,0,0" IsChecked="{Binding Thumbnails.AutoHeight}" HorizontalAlignment="Left" Content="Automatic"/>
+                    <TextBlock VerticalAlignment="Top" Text="Intervall" TextWrapping="Wrap" Margin="10,59,0,0" HorizontalAlignment="Left"/>
+                    <TextBox Width="74" VerticalAlignment="Top" TextWrapping="Wrap" Margin="57,58,0,0" IsEnabled="{Binding Thumbnails.AutoIntervall, Converter={StaticResource InverterConverter}, Mode=OneWay}" Height="19" HorizontalAlignment="Left">
+                        <MultiBinding Converter="{StaticResource AlternativeValueConverter}">
+                            <Binding Path="Thumbnails.Intervall"/>
+                            <Binding Path="Thumbnails.AutoIntervall"/>
+                        </MultiBinding>
+                    </TextBox>
+                    <TextBlock VerticalAlignment="Top" Text="s" TextWrapping="Wrap" Margin="136,59,0,0" HorizontalAlignment="Left"/>
+                    <CheckBox VerticalAlignment="Top" Margin="163,59,0,0" IsChecked="{Binding Thumbnails.AutoIntervall}" HorizontalAlignment="Left" Content="Automatic"/>
+
+                </Grid>
+            </TabItem>
+            <TabItem Header="Thumbnail Banner" x:Name="tabThumbnailBanner">
+                <Grid Background="White">
+                    <TextBlock HorizontalAlignment="Left" Margin="10,11,0,0" TextWrapping="Wrap" Text="Columns" VerticalAlignment="Top"/>
+                    <TextBox Height="23" Margin="108,10,135,0" TextWrapping="Wrap" Text="{Binding Banner.Columns}" VerticalAlignment="Top"/>
+                    <TextBlock HorizontalAlignment="Left" Margin="10,39,0,0" TextWrapping="Wrap" Text="Rows" VerticalAlignment="Top"/>
+                    <TextBox Height="23" Margin="108,38,135,0" TextWrapping="Wrap" Text="{Binding Banner.Rows}" VerticalAlignment="Top"/>
+                    <TextBlock HorizontalAlignment="Left" Margin="10,67,0,0" TextWrapping="Wrap" Text="Total Width" VerticalAlignment="Top"/>
+                    <TextBox Height="23" Margin="108,66,135,0" TextWrapping="Wrap" Text="{Binding Banner.TotalWidth}" VerticalAlignment="Top"/>
+                    <Button Content="Preview" HorizontalAlignment="Left" Margin="10,0,0,10" Width="75" Click="btnPreview_Click" Height="20" VerticalAlignment="Bottom"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Preview" x:Name="tabPreview">
+                <Grid Background="White">
+                    <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Width" VerticalAlignment="Top"/>
+                    <TextBox IsEnabled="{Binding Preview.AutoWidth, Converter={StaticResource InverterConverter}, Mode=OneWay}" HorizontalAlignment="Left" Height="19" Margin="82,9,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="74">
+                        <MultiBinding Converter="{StaticResource AlternativeValueConverter}">
+                            <Binding Path="Preview.Width"/>
+                            <Binding Path="Preview.AutoWidth"/>
+                        </MultiBinding>
+                    </TextBox>
+                    <TextBlock HorizontalAlignment="Left" Margin="161,10,0,0" TextWrapping="Wrap" Text="px" VerticalAlignment="Top"/>
+                    <CheckBox Content="Automatic" IsChecked="{Binding Preview.AutoWidth}" HorizontalAlignment="Left" Margin="188,11,0,0" VerticalAlignment="Top"/>
+
+                    <TextBlock HorizontalAlignment="Left" Margin="10,34,0,0" TextWrapping="Wrap" Text="Height" VerticalAlignment="Top"/>
+                    <TextBox IsEnabled="{Binding Preview.AutoHeight, Converter={StaticResource InverterConverter}, Mode=OneWay}" HorizontalAlignment="Left" Height="19" Margin="82,33,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="74">
+                        <MultiBinding Converter="{StaticResource AlternativeValueConverter}">
+                            <Binding Path="Preview.Height"/>
+                            <Binding Path="Preview.AutoHeight"/>
+                        </MultiBinding>
+                    </TextBox>
+                    <TextBlock HorizontalAlignment="Left" Margin="161,34,0,0" TextWrapping="Wrap" Text="px" VerticalAlignment="Top"/>
+                    <CheckBox Content="Automatic" IsChecked="{Binding Preview.AutoHeight}" HorizontalAlignment="Left" Margin="188,35,0,0" VerticalAlignment="Top"/>
+
+                    <TextBlock HorizontalAlignment="Left" Margin="10,58,0,0" TextWrapping="Wrap" Text="Framerate" VerticalAlignment="Top"/>
+                    <TextBox HorizontalAlignment="Left" Height="19" Margin="82,57,0,0" TextWrapping="Wrap" Text="{Binding Preview.FrameRate}" VerticalAlignment="Top" Width="74"/>
+                    <TextBlock HorizontalAlignment="Left" Margin="161,58,0,0" TextWrapping="Wrap" Text="fps" VerticalAlignment="Top"/>
+
+                    <TextBlock HorizontalAlignment="Left" Margin="10,126,0,0" TextWrapping="Wrap" Text="Start" VerticalAlignment="Top"/>
+                    <TextBox HorizontalAlignment="Left" Height="19" Margin="82,125,0,0" TextWrapping="Wrap" Text="{Binding Preview.Start}" VerticalAlignment="Top" Width="74"/>
+                    <TextBlock HorizontalAlignment="Left" Margin="10,150,0,0" TextWrapping="Wrap" Text="Duration" VerticalAlignment="Top"/>
+                    <TextBox HorizontalAlignment="Left" Height="19" Margin="82,149,0,0" TextWrapping="Wrap" Text="{Binding Preview.Duration}" VerticalAlignment="Top" Width="74"/>
+                    <RadioButton IsChecked="{Binding Path=Preview.MulitpleSections, Converter={StaticResource InverterConverter}}" Content="Single Section" HorizontalAlignment="Left" Margin="10,102,0,0" VerticalAlignment="Top"/>
+                    <RadioButton IsChecked="{Binding Path=Preview.MulitpleSections}" x:Name="rbMultiSections"  Content="Multiple Sections" HorizontalAlignment="Left" Margin="188,102,0,0" VerticalAlignment="Top"/>
+
+                    <TextBlock HorizontalAlignment="Left" Margin="188,126,0,0" TextWrapping="Wrap" Text="Count" VerticalAlignment="Top"/>
+                    <TextBox HorizontalAlignment="Left" Height="19" Margin="260,125,0,0" TextWrapping="Wrap" Text="{Binding Preview.SectionCount}" VerticalAlignment="Top" Width="74"/>
+                    <TextBlock HorizontalAlignment="Left" Margin="188,150,0,0" TextWrapping="Wrap" Text="Duration" VerticalAlignment="Top"/>
+                    <TextBox HorizontalAlignment="Left" Height="19" Margin="260,149,0,0" TextWrapping="Wrap" Text="{Binding Preview.DurationEach}" VerticalAlignment="Top" Width="74"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Heatmap" x:Name="tabHeatmap">
+                <Grid Background="White">
+                    <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Width" VerticalAlignment="Top"/>
+                    <TextBox Text="{Binding Heatmap.Width}" HorizontalAlignment="Left" Height="19" Margin="82,9,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="74" />
+                    <TextBlock HorizontalAlignment="Left" Margin="161,10,0,0" TextWrapping="Wrap" Text="px" VerticalAlignment="Top"/>
+
+                    <TextBlock HorizontalAlignment="Left" Margin="10,34,0,0" TextWrapping="Wrap" Text="Height" VerticalAlignment="Top"/>
+                    <TextBox Text="{Binding Heatmap.Height}"  HorizontalAlignment="Left" Height="19" Margin="82,33,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="74"/>
+                    <TextBlock HorizontalAlignment="Left" Margin="161,34,0,0" TextWrapping="Wrap" Text="px" VerticalAlignment="Top"/>
+                    <CheckBox Content="Shadow" IsChecked="{Binding Heatmap.AddShadow}" HorizontalAlignment="Left" Margin="10,55,0,0" VerticalAlignment="Top"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+        <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75"/>
+        <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
+    </Grid>
+</Window>
+
