@@ -26,5 +26,15 @@ namespace ScriptPlayer.Generators
 
             StartTimeSpan = duration.Multiply(StartFactor);
         }
+
+        public TimeFrame Duplicate()
+        {
+            return new TimeFrame
+            {
+                Duration = Duration,
+                StartFactor = StartFactor,
+                StartTimeSpan = StartTimeSpan
+            };
+        }
     }
 }

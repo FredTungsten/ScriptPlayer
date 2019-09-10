@@ -139,5 +139,18 @@ namespace ScriptPlayer.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        public ThumbnailGeneratorSettingsViewModel Duplicate()
+        {
+            return new ThumbnailGeneratorSettingsViewModel
+            {
+                Width = Width,
+                Height = Height,
+                Intervall = Intervall,
+                AutoHeight = AutoHeight,
+                AutoIntervall = AutoIntervall,
+                AutoWidth = AutoWidth
+            };
+        }
     }
 }

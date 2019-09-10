@@ -488,6 +488,7 @@
                     <MenuItem Header="All" Command="{Binding GenerateAllForLoadedVideoCommand}"/>
                     <Separator/>
                     <MenuItem Header="Show Progress" Click="mnuShowGeneratorProgress_OnClick"/>
+                    <MenuItem Header="Settings" Command="{Binding ShowGeneratorSettingsCommand}"/>
                 </MenuItem>
                 <MenuItem Header="View">
                     <MenuItem Header="Toggle Fullscreen" Command="{Binding ToggleFullScreenCommand}"/>

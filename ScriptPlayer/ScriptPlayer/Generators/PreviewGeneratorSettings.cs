@@ -52,7 +52,8 @@ namespace ScriptPlayer.Generators
                 Framerate = Framerate,
                 Height = Height,
                 Width = Width,
-                SkipIfExists = SkipIfExists
+                SkipIfExists = SkipIfExists,
+                TimeFrames = TimeFrames.Select(t => t.Duplicate()).ToList()
             };
         }
     }

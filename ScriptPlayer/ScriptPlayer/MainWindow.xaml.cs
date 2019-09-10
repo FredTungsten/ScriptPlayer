@@ -76,6 +76,7 @@ namespace ScriptPlayer
             ViewModel.RequestHeatmapGeneratorSettings += ViewModelOnRequestHeatmapGeneratorSettings;
             ViewModel.RequestScriptShiftTimespan += ViewModelOnRequestScriptShiftTimespan;
             ViewModel.RequestSection += ViewModelOnRequestSection;
+            ViewModel.RequestGeneratorSettings += ViewModelOnRequestGeneratorSettings;
 
             ViewModel.RequestShowGeneratorProgressDialog += ViewModelOnRequestShowGeneratorProgressDialog;
             ViewModel.RequestActivate += ViewModelOnRequestActivate;
@@ -100,6 +101,19 @@ namespace ScriptPlayer
                 WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
             }
+        }
+
+        private void ViewModelOnRequestGeneratorSettings(object sender, RequestEventArgs<GeneratorSettingsViewModel> eventArgs)
+        {
+            GeneratorSettingsDialog dialog = new GeneratorSettingsDialog(ViewModel, eventArgs.Value, 
+                GeneratedElements.All, GeneratedElements.Thumbnails);
+            dialog.Owner = this;
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            eventArgs.Value = dialog.Settings;
+            eventArgs.Handled = true;
         }
 
         private void ViewModelOnRequestSection(object sender, RequestEventArgs<Section> eventArgs)

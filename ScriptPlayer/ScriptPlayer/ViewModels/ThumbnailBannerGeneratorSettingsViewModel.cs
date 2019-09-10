@@ -90,5 +90,15 @@ namespace ScriptPlayer.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        public ThumbnailBannerGeneratorSettingsViewModel Duplicate()
+        {
+            return new ThumbnailBannerGeneratorSettingsViewModel
+            {
+                Rows = Rows,
+                TotalWidth = TotalWidth,
+                Columns = Columns
+            };
+        }
     }
 }

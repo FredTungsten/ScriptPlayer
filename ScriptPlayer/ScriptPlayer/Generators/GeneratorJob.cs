@@ -9,7 +9,7 @@
         public abstract void Cancel();
     }
 
-    public class GeneratorJob<TSettings, TEntry> : GeneratorJob where TEntry : GeneratorEntry
+    public class GeneratorJob<TSettings, TEntry> : GeneratorJob where TEntry : GeneratorEntry where TSettings : FfmpegGeneratorSettings
     {
         private readonly TSettings _settings;
 
@@ -41,6 +41,12 @@
         {
             if (!_skip && !_cancelled)
             {
+                if (_settings.RenameBeforeExecute != null)
+                {
+                    if(!_settings.RenameBeforeExecute.RenameNow())
+                        return GeneratorResult.Failed();
+                }
+
                 return Generator.Process(_settings, _entry);
             }
 

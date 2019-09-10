@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
@@ -67,12 +69,54 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public GeneratorSettingsViewModel()
+        {
+            Banner = new ThumbnailBannerGeneratorSettingsViewModel();
+            Thumbnails = new ThumbnailGeneratorSettingsViewModel();   
+            Preview = new PreviewGeneratorSettingsViewModel();
+            Heatmap = new HeatmapGeneratorSettingsViewModel();
+            General = new GeneralGeneratorSettingsViewModel();
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public bool HasErrors(out string[] errorMessages)
+        {
+            List<string> errors = new List<string>();
+
+            this.Banner.GetSettings(out string[] errBanner);
+            errors.AddRange(errBanner.Select(err => "Thumbnail Banner: " + err));
+
+            this.Thumbnails.GetSettings(out string[] errThumbs);
+            errors.AddRange(errThumbs.Select(err => "Thumbnails: " + err));
+
+            this.Preview.GetSettings(out string[] errPreview);
+            errors.AddRange(errPreview.Select(err => "Preview: " + err));
+
+            this.Heatmap.GetSettings(out string[] errHeatmap);
+            errors.AddRange(errHeatmap.Select(err => "Heatmap: " + err));
+
+            errorMessages = errors.ToArray();
+
+            return errors.Count > 0;
+        }
+
+        public GeneratorSettingsViewModel Duplicate()
+        {
+            return new GeneratorSettingsViewModel
+            {
+                Banner = Banner.Duplicate(),
+                Thumbnails = Thumbnails.Duplicate(),
+                Heatmap = Heatmap.Duplicate(),
+                General = General.Duplicate(),
+                Preview = Preview.Duplicate(),
+            };
         }
     }
 }

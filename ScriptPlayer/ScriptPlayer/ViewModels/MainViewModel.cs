@@ -13,8 +13,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -47,6 +45,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<ThumbnailBannerGeneratorSettings>> RequestThumbnailBannerGeneratorSettings;
         public event EventHandler<RequestEventArgs<TimeSpan>> RequestScriptShiftTimespan;
         public event EventHandler<RequestEventArgs<Section>> RequestSection;
+        public event EventHandler<RequestEventArgs<GeneratorSettingsViewModel>> RequestGeneratorSettings;
 
         public event EventHandler RequestActivate;
         public event EventHandler RequestShowDeviceManager;
@@ -281,6 +280,7 @@ namespace ScriptPlayer.ViewModels
         private bool _loopSelection;
         private PlaybackMode _initialPlaybackMode = PlaybackMode.Local;
         private TimeSpan _previousShiftTimeSpan = TimeSpan.FromSeconds(10);
+        private GeneratorSettingsViewModel _previousGeneratorSettings;
 
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
@@ -1485,6 +1485,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand TrimScriptCommand { get; set; }
 
+        public ScriptplayerCommand ShowGeneratorSettingsCommand { get; set; }
+
         public PlaylistViewModel Playlist
         {
             get => _playlist;
@@ -2166,6 +2168,8 @@ namespace ScriptPlayer.ViewModels
             ShiftScriptCommand = new ScriptplayerCommand(ShiftScript, IsScriptLoaded);
 
             TrimScriptCommand = new ScriptplayerCommand(TrimScript, IsScriptLoaded);
+
+            ShowGeneratorSettingsCommand = new ScriptplayerCommand(ModifyGeneratorSettings);
 
             SaveScriptAsCommand = new ScriptplayerCommand(SaveScriptAs, IsScriptLoaded)
             {
@@ -4462,9 +4466,13 @@ namespace ScriptPlayer.ViewModels
             if (!CheckFfmpeg())
                 return;
 
-            HeatmapGeneratorSettings defaultHeatmapSettings = GetDefaultHeatmapGeneratorSettings();
-            PreviewGeneratorSettings defaultPreviewSettings = GetDefaultPreviewGeneratorSettings();
-            ThumbnailGeneratorSettings defaultThumbnailSettings = GetDefaultThumbnailGeneratorSettings();
+            var settings = GetDefaultGeneratorSettings();
+
+            GeneralGeneratorSettingsViewModel generalSettings = settings.General;
+            HeatmapGeneratorSettings defaultHeatmapSettings = settings.Heatmap.GetSettings(out string[] _);
+            PreviewGeneratorSettings defaultPreviewSettings = settings.Preview.GetSettings(out string[] _);
+            ThumbnailGeneratorSettings defaultThumbnailSettings = settings.Thumbnails.GetSettings(out string[] _);
+            ThumbnailBannerGeneratorSettings defaultThumbnailBannerSettings = settings.Banner.GetSettings(out string[] _);
 
             foreach (string video in videos)
             {
@@ -4474,48 +4482,60 @@ namespace ScriptPlayer.ViewModels
                 if (!File.Exists(video))
                     continue;
 
-                HeatmapGeneratorSettings heatmapSettings = defaultHeatmapSettings.Duplicate();
-                heatmapSettings.VideoFile = video;
-                heatmapSettings.OutputFile = Path.ChangeExtension(video, ".png");
+                if (generalSettings.GenerateHeatmap)
+                {
+                    HeatmapGeneratorSettings heatmapSettings = defaultHeatmapSettings.Duplicate();
+                    bool skipHeatmap = generalSettings.ApplyToOrSkip(video, heatmapSettings, "png");
+                    if (!skipHeatmap)
+                    {
+                        HeatmapGenerator heatmapGenerator = new HeatmapGenerator(this, Settings.FfmpegPath);
+                        WorkQueue.Enqueue(heatmapGenerator.CreateJob(heatmapSettings));
+                    }
+                }
 
-                HeatmapGenerator heatmapGenerator = new HeatmapGenerator(this, Settings.FfmpegPath);
+                if (generalSettings.GeneratePreview)
+                {
+                    PreviewGeneratorSettings previewSettings = defaultPreviewSettings.Duplicate();
+                    bool skipPreview = generalSettings.ApplyToOrSkip(video, previewSettings, "gif");
+                    if (!skipPreview)
+                    {
+                        PreviewGenerator previewGenerator = new PreviewGenerator(Settings.FfmpegPath);
+                        WorkQueue.Enqueue(previewGenerator.CreateJob(previewSettings));
+                    }
+                }
 
-                WorkQueue.Enqueue(heatmapGenerator.CreateJob(heatmapSettings));
+                if (generalSettings.GenerateThumbnails)
+                {
+                    ThumbnailGeneratorSettings thumbnailSettings = defaultThumbnailSettings.Duplicate();
+                    bool skipThumbnails = generalSettings.ApplyToOrSkip(video, thumbnailSettings, "thumbs");
+                    if (!skipThumbnails)
+                    {
+                        ThumbnailGenerator thumbnailGenerator = new ThumbnailGenerator(Settings.FfmpegPath);
+                        WorkQueue.Enqueue(thumbnailGenerator.CreateJob(thumbnailSettings));
+                    }
+                }
 
-                PreviewGeneratorSettings previewSettings = defaultPreviewSettings.Duplicate();
-                previewSettings.VideoFile = video;
-                previewSettings.OutputFile = Path.ChangeExtension(video, ".gif");
-                previewSettings.GenerateRelativeTimeFrames(12, TimeSpan.FromSeconds(0.8));
-
-                PreviewGenerator previewGenerator = new PreviewGenerator(Settings.FfmpegPath);
-
-                WorkQueue.Enqueue(previewGenerator.CreateJob(previewSettings));
-
-                var thumbnailSettings = defaultThumbnailSettings.Duplicate();
-                thumbnailSettings.VideoFile = video;
-                thumbnailSettings.OutputFile = Path.ChangeExtension(video, "thumbs");
-
-                ThumbnailGenerator thumbnailGenerator = new ThumbnailGenerator(Settings.FfmpegPath);
-
-                WorkQueue.Enqueue(thumbnailGenerator.CreateJob(thumbnailSettings));
+                if (generalSettings.GenerateThumbnailBanner)
+                {
+                    ThumbnailBannerGeneratorSettings bannerSettings = defaultThumbnailBannerSettings.Duplicate();
+                    bool skipBanner = generalSettings.ApplyToOrSkip(video, bannerSettings, "jpg");
+                    if (!skipBanner)
+                    {
+                        ThumbnailBannerGenerator bannerGenerator = new ThumbnailBannerGenerator(Settings.FfmpegPath);
+                        WorkQueue.Enqueue(bannerGenerator.CreateJob(bannerSettings));
+                    }
+                }
             }
 
             OnRequestShowGeneratorProgressDialog();
         }
 
-        private PreviewGeneratorSettings GetDefaultPreviewGeneratorSettings()
+        private GeneratorSettingsViewModel GetDefaultGeneratorSettings()
         {
-            return new PreviewGeneratorSettings() { SkipIfExists = true };
-        }
+            if(_previousGeneratorSettings == null)
+                _previousGeneratorSettings = new GeneratorSettingsViewModel();
 
-        private ThumbnailGeneratorSettings GetDefaultThumbnailGeneratorSettings()
-        {
-            return new ThumbnailGeneratorSettings() { SkipIfExists = true };
-        }
-
-        private HeatmapGeneratorSettings GetDefaultHeatmapGeneratorSettings()
-        {
-            return new HeatmapGeneratorSettings() { SkipIfExists = true };
+            return _previousGeneratorSettings;
         }
 
         private void GenerateHeatmaps(params string[] videos)
@@ -4583,6 +4603,15 @@ namespace ScriptPlayer.ViewModels
             }
 
             OnRequestShowGeneratorProgressDialog();
+        }
+
+        public void ModifyGeneratorSettings()
+        {
+            var generatorSettings = OnRequestGeneratorSettings(_previousGeneratorSettings);
+            if (generatorSettings == null)
+                return;
+
+            _previousGeneratorSettings = generatorSettings;
         }
 
         private bool IsVideoLoaded()
@@ -4710,6 +4739,17 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnRequestShowDeviceManager()
         {
             RequestShowDeviceManager?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual GeneratorSettingsViewModel OnRequestGeneratorSettings(GeneratorSettingsViewModel initialValue)
+        {
+            var e = new RequestEventArgs<GeneratorSettingsViewModel>(initialValue?.Duplicate());
+            RequestGeneratorSettings?.Invoke(this, e);
+
+            if (!e.Handled)
+                return null;
+
+            return e.Value;
         }
     }
 

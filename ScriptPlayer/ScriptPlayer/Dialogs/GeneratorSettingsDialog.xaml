@@ -3,29 +3,36 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:converters="clr-namespace:ScriptPlayer.Converters" 
+        xmlns:converters="clr-namespace:ScriptPlayer.Converters"
+        xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
         x:Class="ScriptPlayer.Dialogs.GeneratorSettingsDialog"
         mc:Ignorable="d"
         DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=Settings}"
-        Title="Generator Settings" Height="311.383" Width="375.881">
+        Title="Generator Settings" Height="311.383" Width="375.881" WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <converters:InverterConverter x:Key="InverterConverter"/>
         <converters:AlternativeValueConverter x:Key="AlternativeValueConverter"/>
+        <converters:DistinctValueToBooleanConverter x:Key="booleanConverter"/>
     </Window.Resources>
     <Grid>
-        <TabControl Margin="0,0,0,43">
+        <TabControl Margin="0,0,0,43" Name="tabControl">
             <TabItem Header="General" x:Name="tabGeneral">
-                <Grid>
+                <Grid Background="White">
                     <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Save generated files" VerticalAlignment="Top"/>
-                    <RadioButton IsChecked="{Binding Path=General.SaveFilesToDifferentPath, Converter={StaticResource InverterConverter}}" x:Name="rbSaveFilesInSameDirectory" Content="In the same directory as the video" HorizontalAlignment="Left" Margin="28,30,0,0" VerticalAlignment="Top"/>
-                    <RadioButton IsChecked="{Binding Path=General.SaveFilesToDifferentPath}" x:Name="rbSaveFilesInThisDirectory" Content="In this directory" HorizontalAlignment="Left" Margin="28,50,0,0" VerticalAlignment="Top"/>
-                    <TextBox IsEnabled="{Binding Path=General.SaveFilesToDifferentPath}" x:Name="txtSaveFilesInThisDirectory" Height="23" Margin="28,71,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
+                    <RadioButton GroupName="saveto" IsChecked="{Binding Path=General.SaveFilesToDifferentPath, Converter={StaticResource InverterConverter}}" x:Name="rbSaveFilesInSameDirectory" Content="In the same directory as the video" HorizontalAlignment="Left" Margin="28,30,0,0" VerticalAlignment="Top"/>
+                    <RadioButton GroupName="saveto" IsChecked="{Binding Path=General.SaveFilesToDifferentPath}" x:Name="rbSaveFilesInThisDirectory" Content="In this directory" HorizontalAlignment="Left" Margin="28,50,0,0" VerticalAlignment="Top"/>
+                    <TextBox Text="{Binding General.SaveFilesToThisPath}" IsEnabled="{Binding Path=General.SaveFilesToDifferentPath}" x:Name="txtSaveFilesInThisDirectory" Height="23" Margin="28,71,10,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
 
                     <TextBlock HorizontalAlignment="Left" Margin="10,99,0,0" TextWrapping="Wrap" Text="If the file already exists" VerticalAlignment="Top"/>
-                    <RadioButton x:Name="rbExistsSkip"  Content="Skip the generation of the new file" HorizontalAlignment="Left" Margin="28,119,0,0" VerticalAlignment="Top"/>
-                    <RadioButton x:Name="rbExistsReplace" Content="Replace the existing file" HorizontalAlignment="Left" Margin="28,139,0,0" VerticalAlignment="Top"/>
-                    <RadioButton x:Name="rbExistsRenameOld" Content="Rename the existing file" HorizontalAlignment="Left" Margin="28,159,0,0" VerticalAlignment="Top"/>
-                    <RadioButton x:Name="rbExistsRenameNew" Content="Rename the new file" HorizontalAlignment="Left" Margin="28,179,0,0" VerticalAlignment="Top"/>
+                    <RadioButton IsChecked="{Binding Path=General.ExistingFileStrategy, ConverterParameter={x:Static viewModels:ExistingFileStrategy.Skip}, Converter={StaticResource booleanConverter}}" GroupName="whenexists" x:Name="rbExistsSkip"  Content="Skip" HorizontalAlignment="Left" Margin="28,119,0,0" VerticalAlignment="Top"/>
+                    <RadioButton IsChecked="{Binding Path=General.ExistingFileStrategy, ConverterParameter={x:Static viewModels:ExistingFileStrategy.Replace}, Converter={StaticResource booleanConverter}}" GroupName="whenexists" x:Name="rbExistsReplace" Content="Replace the existing file" HorizontalAlignment="Left" Margin="28,139,0,0" VerticalAlignment="Top"/>
+                    <RadioButton IsChecked="{Binding Path=General.ExistingFileStrategy, ConverterParameter={x:Static viewModels:ExistingFileStrategy.RenameOld}, Converter={StaticResource booleanConverter}}" GroupName="whenexists" x:Name="rbExistsRenameOld" Content="Rename the existing file" HorizontalAlignment="Left" Margin="28,159,0,0" VerticalAlignment="Top"/>
+                    <RadioButton IsChecked="{Binding Path=General.ExistingFileStrategy, ConverterParameter={x:Static viewModels:ExistingFileStrategy.RenameNew}, Converter={StaticResource booleanConverter}}" GroupName="whenexists" x:Name="rbExistsRenameNew" Content="Rename the new file" HorizontalAlignment="Left" Margin="28,179,0,0" VerticalAlignment="Top"/>
+                    <TextBlock HorizontalAlignment="Left" Margin="201,99,0,0" TextWrapping="Wrap" Text="When generating &quot;all&quot;" VerticalAlignment="Top"/>
+                    <CheckBox Content="Thumbnails" IsChecked="{Binding General.GenerateThumbnails}" HorizontalAlignment="Left" Margin="201,119,0,0" VerticalAlignment="Top"/>
+                    <CheckBox Content="Thumbnail Banner" IsChecked="{Binding General.GenerateThumbnailBanner}" HorizontalAlignment="Left" Margin="201,139,0,0" VerticalAlignment="Top"/>
+                    <CheckBox Content="Preview" IsChecked="{Binding General.GeneratePreview}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="201,159,0,0"/>
+                    <CheckBox Content="Heatmap" IsChecked="{Binding General.GenerateHeatmap}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="201,179,0,0"/>
 
                 </Grid>
             </TabItem>
@@ -125,7 +132,7 @@
                 </Grid>
             </TabItem>
         </TabControl>
-        <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75"/>
+        <Button Content="Ok" Click="btnOk_Click" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75"/>
         <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
     </Grid>
 </Window>

@@ -206,5 +206,22 @@ namespace ScriptPlayer.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        public PreviewGeneratorSettingsViewModel Duplicate()
+        {
+            return new PreviewGeneratorSettingsViewModel
+            {
+                Width = Width,
+                Height = Height,
+                Duration = Duration,
+                Start = Start,
+                FrameRate = FrameRate,
+                AutoHeight = AutoHeight,
+                AutoWidth = AutoWidth,
+                DurationEach = DurationEach,
+                MulitpleSections = MulitpleSections,
+                SectionCount = SectionCount
+            };
+        }
     }
 }

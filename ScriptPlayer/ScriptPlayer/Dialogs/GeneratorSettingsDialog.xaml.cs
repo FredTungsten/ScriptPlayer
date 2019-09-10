@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
 using ScriptPlayer.Generators;
 using ScriptPlayer.ViewModels;
@@ -28,17 +29,35 @@ namespace ScriptPlayer.Dialogs
             set => SetValue(SettingsProperty, value);
         }
 
-        public GeneratorSettingsDialog(MainViewModel viewModel, GeneratorSettingsViewModel initialValues, GeneratedElements elements)
+        public GeneratorSettingsDialog(MainViewModel viewModel, GeneratorSettingsViewModel initialValues, GeneratedElements availableElements, GeneratedElements initialElement)
         {
             ViewModel = viewModel;
             Settings = initialValues ?? new GeneratorSettingsViewModel();
 
             InitializeComponent();
 
-            tabThumbnails.IsEnabled = elements.HasFlag(GeneratedElements.Thumbnails);
-            tabThumbnailBanner.IsEnabled = elements.HasFlag(GeneratedElements.ThumbnailBanner);
-            tabPreview.IsEnabled = elements.HasFlag(GeneratedElements.Preview);
-            tabHeatmap.IsEnabled = elements.HasFlag(GeneratedElements.Heatmap);
+            tabThumbnails.IsEnabled = availableElements.HasFlag(GeneratedElements.Thumbnails);
+            tabThumbnailBanner.IsEnabled = availableElements.HasFlag(GeneratedElements.ThumbnailBanner);
+            tabPreview.IsEnabled = availableElements.HasFlag(GeneratedElements.Preview);
+            tabHeatmap.IsEnabled = availableElements.HasFlag(GeneratedElements.Heatmap);
+
+            switch (initialElement)
+            {
+                case GeneratedElements.Thumbnails:
+                    tabControl.SelectedItem = tabThumbnails;
+                    break;
+                case GeneratedElements.ThumbnailBanner:
+                    tabControl.SelectedItem = tabThumbnailBanner;
+                    break;
+                case GeneratedElements.Preview:
+                    tabControl.SelectedItem = tabPreview;
+                    break;
+                case GeneratedElements.Heatmap:
+                    tabControl.SelectedItem = tabHeatmap;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(initialElement), initialElement, null);
+            }
         }
 
         private void btnPreview_Click(object sender, RoutedEventArgs e)
@@ -53,6 +72,17 @@ namespace ScriptPlayer.Dialogs
             var dialog = new ThumbnailBannerGeneratorSettingsPreviewDialog(settings) {Owner = this};
             dialog.ShowDialog();
         }
+
+        private void btnOk_Click(object sender, RoutedEventArgs e)
+        {
+            if (Settings.HasErrors(out string[] errors))
+            {
+                MessageBox.Show("Some of your settings are not ok:\n" + string.Join("\n", errors.Select(err => " - " + err)), "Invalid input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            DialogResult = true;
+        }
     }
 
     [Flags]
@@ -61,6 +91,8 @@ namespace ScriptPlayer.Dialogs
         Thumbnails = 1,
         ThumbnailBanner = 2,
         Preview = 4,
-        Heatmap = 8
+        Heatmap = 8,
+
+        All = Thumbnails | ThumbnailBanner | Preview | Heatmap
     }
 }

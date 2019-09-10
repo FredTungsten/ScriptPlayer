@@ -86,5 +86,16 @@ namespace ScriptPlayer.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        public HeatmapGeneratorSettingsViewModel Duplicate()
+        {
+            return new HeatmapGeneratorSettingsViewModel()
+            {
+                Width = Width,
+                Height = Height,
+                AddShadow = AddShadow
+
+            };
+        }
     }
 }
