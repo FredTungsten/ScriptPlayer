@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml.Serialization;
@@ -1114,6 +1115,56 @@ namespace ScriptPlayer.ViewModels
                     ToggleCommandSource();
                     break;
             }
+        }
+
+        public void SetMainWindow(Window window)
+        {
+            HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(window).Handle);
+            source.AddHook(new HwndSourceHook(WndProc));
+        }
+
+        const int WM_KEYDOWN = 0x100;
+        const int WM_KEYUP = 0x101;
+
+        private static IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            // The virtual-key code is in the message's wParam parameter
+
+            if (msg == WM_KEYDOWN)
+            {
+                ModifierKeys modifiers = ModifierKeys.None;
+
+                //0x00010000 = shift
+                //0x00020000 = control
+                //0x00040000 = alt
+
+                int virtualKeyCode = (int)wParam;
+
+                if ((virtualKeyCode & 0x00010000) > 0)
+                {
+                    modifiers |= ModifierKeys.Shift;
+                    virtualKeyCode &= ~0x00010000;
+                }
+
+                if ((virtualKeyCode & 0x00020000) > 0)
+                {
+                    modifiers |= ModifierKeys.Control;
+                    virtualKeyCode &= ~0x00020000;
+                }
+
+                if ((virtualKeyCode & 0x00040000) > 0)
+                {
+                    modifiers |= ModifierKeys.Alt;
+                    virtualKeyCode &= ~0x00040000;
+                }
+
+                Key key = KeyInterop.KeyFromVirtualKey(virtualKeyCode);
+                Debug.WriteLine("Received a WndProc WM_KEYDOWN Message: " + key + " (Modifiers = " + modifiers);
+
+                bool processed = GlobalCommandManager.ProcessInput(key, modifiers, KeySource.WndProc);
+                handled = processed;
+            }
+            return IntPtr.Zero;
         }
 
         public PositionCollection Positions

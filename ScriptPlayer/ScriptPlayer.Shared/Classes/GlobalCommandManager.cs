@@ -87,7 +87,7 @@ namespace ScriptPlayer.Shared
             return mappings;
         }
 
-        public static bool ProcessInput(Key key, ModifierKeys modifiers)
+        public static bool ProcessInput(Key key, ModifierKeys modifiers, KeySource source)
         {
             string shortcut = GetShortcut(key, modifiers);
 
@@ -134,5 +134,12 @@ namespace ScriptPlayer.Shared
 
             return activeMods;
         }
+    }
+
+    public enum KeySource
+    {
+        DirectInput,
+        WndProc,
+        Global
     }
 }

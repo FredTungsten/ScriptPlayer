@@ -101,6 +101,8 @@ namespace ScriptPlayer
                 WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
             }
+
+            ViewModel.SetMainWindow(this);
         }
 
         private void ViewModelOnRequestGeneratorSettings(object sender, RequestEventArgs<GeneratorSettingsViewModel> eventArgs)
@@ -593,8 +595,8 @@ namespace ScriptPlayer
                 return;
 
             ModifierKeys activeMods = GlobalCommandManager.GetActiveModifierKeys();
-
-            bool handled = GlobalCommandManager.ProcessInput(e.Key, activeMods);
+            
+            bool handled = GlobalCommandManager.ProcessInput(e.Key, activeMods, KeySource.DirectInput);
 
             if (handled)
             {
