@@ -8,13 +8,45 @@ using System.Xml.Serialization;
 
 namespace ScriptPlayer.Shared
 {
+    public class PreviewKeyEventArgs : EventArgs
+    {
+        public bool CancelProcessing { get; set; }
+
+        public Key Key { get; set; }
+
+        public ModifierKeys Modifiers { get; set; }
+
+        public string Shortcut => GlobalCommandManager.GetShortcut(Key, Modifiers);
+
+        public PreviewKeyEventArgs()
+        {
+            CancelProcessing = false;
+        }
+    }
+
     public static class GlobalCommandManager
     {
+        public static event EventHandler<PreviewKeyEventArgs> PreviewKeyReceived;
+
+        private static bool OnPreviewKeyReceived(Key key, ModifierKeys modifiers)
+        {
+            var e = new PreviewKeyEventArgs
+            {
+                Key = key,
+                Modifiers = modifiers
+            };
+
+            PreviewKeyReceived?.Invoke(null, e);
+            return e.CancelProcessing;
+        }
+
         static GlobalCommandManager()
         {
             CommandMappings = new List<InputMapping>();
             Commands = new Dictionary<string, ScriptplayerCommand>();
         }
+
+        public static bool IsEnabled { get; set; } = true;
 
         public static List<InputMapping> CommandMappings { get; set; }
 
@@ -89,11 +121,23 @@ namespace ScriptPlayer.Shared
 
         public static bool ProcessInput(Key key, ModifierKeys modifiers, KeySource source)
         {
-            string shortcut = GetShortcut(key, modifiers);
+            if (OnPreviewKeyReceived(key, modifiers))
+                return true;
 
-            InputMapping mapping = CommandMappings.FirstOrDefault(c => c.KeyboardShortcut == shortcut);
+            if (!IsEnabled)
+                return false;
+
+            bool isGlobal = source == KeySource.Global;
+            string shortcut = GetShortcut(key, modifiers);
+            
+            InputMapping mapping = CommandMappings.FirstOrDefault(
+                c => c.KeyboardShortcut == shortcut
+                     && c.IsGlobal == isGlobal);
+
             if (mapping == null)
                 return false;
+
+            Debug.WriteLine($"Processing '{shortcut}' from {source} => {mapping.CommandId}");
 
             if (!Commands.ContainsKey(mapping.CommandId))
                 return false;

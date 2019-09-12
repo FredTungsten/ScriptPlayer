@@ -34,8 +34,8 @@ namespace ScriptPlayer.Dialogs
 
         public string Filter
         {
-            get { return (string) GetValue(FilterProperty); }
-            set { SetValue(FilterProperty, value); }
+            get => (string) GetValue(FilterProperty);
+            set => SetValue(FilterProperty, value);
         }
 
         public static readonly DependencyProperty InputMappingsProperty = DependencyProperty.Register(
@@ -43,8 +43,8 @@ namespace ScriptPlayer.Dialogs
 
         public List<InputMappingViewModel> InputMappings
         {
-            get { return (List<InputMappingViewModel>) GetValue(InputMappingsProperty); }
-            set { SetValue(InputMappingsProperty, value); }
+            get => (List<InputMappingViewModel>) GetValue(InputMappingsProperty);
+            set => SetValue(InputMappingsProperty, value);
         }
 
         public static readonly DependencyProperty PagesProperty = DependencyProperty.Register(
@@ -61,8 +61,8 @@ namespace ScriptPlayer.Dialogs
 
         public SettingsPageViewModelCollection FilteredPages
         {
-            get { return (SettingsPageViewModelCollection) GetValue(FilteredPagesProperty); }
-            set { SetValue(FilteredPagesProperty, value); }
+            get => (SettingsPageViewModelCollection) GetValue(FilteredPagesProperty);
+            set => SetValue(FilteredPagesProperty, value);
         }
 
         public static readonly DependencyProperty SelectedAdditionalPathProperty = DependencyProperty.Register(
@@ -157,13 +157,18 @@ namespace ScriptPlayer.Dialogs
 
             foreach (ScriptplayerCommand scriptplayerCommand in GlobalCommandManager.Commands.Values)
             {
-                InputMappingViewModel mapping = new InputMappingViewModel();
-                mapping.CommandId = scriptplayerCommand.CommandId;
-                mapping.DisplayText = scriptplayerCommand.DisplayText;
+                InputMappingViewModel mapping = new InputMappingViewModel
+                {
+                    CommandId = scriptplayerCommand.CommandId,
+                    DisplayText = scriptplayerCommand.DisplayText
+                };
 
                 var shortcut = inputMappings.FirstOrDefault(c => c.CommandId == scriptplayerCommand.CommandId);
                 if (shortcut != null)
+                {
                     mapping.Shortcut = shortcut.KeyboardShortcut;
+                    mapping.IsGlobal = shortcut.IsGlobal;
+                }
                 else
                     mapping.Shortcut = "";
 
@@ -181,7 +186,8 @@ namespace ScriptPlayer.Dialogs
                 GlobalCommandManager.CommandMappings.Add(new InputMapping
                 {
                     CommandId = mapping.CommandId,
-                    KeyboardShortcut = mapping.Shortcut
+                    KeyboardShortcut = mapping.Shortcut,
+                    IsGlobal = mapping.IsGlobal
                 });
             }
         }
@@ -282,6 +288,8 @@ namespace ScriptPlayer.Dialogs
         {
             txtPasswordVlcPassword.Password = Settings.VlcPassword;
             txtPasswordKodiPassword.Password = Settings.KodiPassword;
+
+            GlobalCommandManager.IsEnabled = false;
         }
 
         private void BtnOk_OnClick(object sender, RoutedEventArgs e)
@@ -573,22 +581,40 @@ namespace ScriptPlayer.Dialogs
                 }
             }
         }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            GlobalCommandManager.IsEnabled = true;
+        }
     }
 
     public class InputMappingViewModel : INotifyPropertyChanged
     {
         private string _shortcut;
+        private bool _isGlobal;
+
         public string DisplayText { get; set; }
 
         public string CommandId { get; set; }
 
         public string Shortcut
         {
-            get { return _shortcut; }
+            get => _shortcut;
             set
             {
                 if (value == _shortcut) return;
                 _shortcut = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsGlobal
+        {
+            get => _isGlobal;
+            set
+            {
+                if (value == _isGlobal) return;
+                _isGlobal = value;
                 OnPropertyChanged();
             }
         }

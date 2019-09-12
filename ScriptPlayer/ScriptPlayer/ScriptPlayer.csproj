@@ -178,6 +178,7 @@
     </Compile>
     <Compile Include="ViewModels\CommandLineSplitter.cs" />
     <Compile Include="ViewModels\Constants.cs" />
+    <Compile Include="ViewModels\EventArgs.cs" />
     <Compile Include="ViewModels\ExistingFileStrategy.cs" />
     <Compile Include="ViewModels\GeneralGeneratorSettingsViewModel.cs" />
     <Compile Include="ViewModels\GeneratorSettingsViewModel.cs" />

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using ScriptPlayer.Shared;
@@ -21,6 +22,20 @@ namespace ScriptPlayer.Dialogs
         public ShortcutInputDialog()
         {
             InitializeComponent();
+
+            GlobalCommandManager.PreviewKeyReceived += GlobalCommandManagerOnPreviewKeyReceived;
+        }
+
+        private void GlobalCommandManagerOnPreviewKeyReceived(object sender, PreviewKeyEventArgs e)
+        {
+            if (e.Key == Key.None)
+                return;
+
+            string shortcut = GlobalCommandManager.GetShortcut(e.Key, e.Modifiers);
+            Shortcut = shortcut;
+
+            e.CancelProcessing = true;
+            DialogResult = true;
         }
 
         private void ShortcutInputDialog_OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -37,6 +52,11 @@ namespace ScriptPlayer.Dialogs
           
             e.Handled = true;
             DialogResult = true;
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            GlobalCommandManager.PreviewKeyReceived -= GlobalCommandManagerOnPreviewKeyReceived;
         }
     }
 }

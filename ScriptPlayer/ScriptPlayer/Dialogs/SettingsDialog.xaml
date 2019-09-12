@@ -13,7 +13,7 @@
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
         WindowStartupLocation="CenterOwner"
         WindowStyle="ToolWindow" Loaded="SettingsDialog_OnLoaded"
-        Title="Settings" Height="492.373" Width="670.797">
+        Title="Settings" Height="492.373" Width="670.797" Closed="Window_Closed">
     <Window.Resources>
         <converters:DistinctValueToBooleanConverter x:Key="BooleanConverter"/>
         <converters:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
@@ -71,7 +71,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Scripts" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Input Mappings" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Template>
                     <ControlTemplate TargetType="{x:Type controls:PageSelector}">
                         <ScrollViewer>
@@ -163,15 +163,23 @@
                         <controls:PageSelector.Header>
                             <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_keyboard_o}"/>
                         </controls:PageSelector.Header>
-                        <DataGrid ItemsSource="{Binding InputMappings}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" Margin="0,0,0,25">
+                        <DataGrid ItemsSource="{Binding InputMappings}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="False" Margin="0,0,0,25">
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow">
                                     <EventSetter Event="MouseDoubleClick" Handler="CommandMappingRow_DoubleClick"/>
                                 </Style>
                             </DataGrid.RowStyle>
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Command" Width="*" Binding="{Binding DisplayText}"/>
-                                <DataGridTemplateColumn Header="Shortcut" Width="*">
+                                <DataGridTextColumn Header="Command" Width="*" Binding="{Binding DisplayText}" IsReadOnly="True"/>
+                                <!--<DataGridCheckBoxColumn Header="Global" Binding="{Binding IsGlobal}"></DataGridCheckBoxColumn>-->
+                                <DataGridTemplateColumn Header="Global">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding Path=IsGlobal, UpdateSourceTrigger=PropertyChanged}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Shortcut" Width="*"  IsReadOnly="True">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate DataType="{x:Type dialogs:InputMappingViewModel}">
                                             <DockPanel LastChildFill="True">

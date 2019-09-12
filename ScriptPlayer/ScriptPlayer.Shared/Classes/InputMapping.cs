@@ -9,5 +9,8 @@ namespace ScriptPlayer.Shared
 
         [XmlAttribute("Shortcut")]
         public string KeyboardShortcut { get; set; }
+
+        [XmlAttribute("IsGlobal")]
+        public bool IsGlobal { get; set; }
     }
 }
