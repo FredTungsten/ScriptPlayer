@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ScriptPlayer.Shared
 {
@@ -6,7 +7,7 @@ namespace ScriptPlayer.Shared
     {
         public string CommandId { get; set; }
         public string DisplayText { get; set; }
-        public string DefaultShortCut { get; set; }
+        public List<string> DefaultShortCuts { get; set; } = new List<string>();
 
         public ScriptplayerCommand(Action execute, Func<bool> canExecute) : base(execute, canExecute)
         {

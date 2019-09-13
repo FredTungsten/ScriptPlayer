@@ -92,6 +92,19 @@ namespace ScriptPlayer.Shared.Controls
             return (object) element.GetValue(HeaderProperty);
         }
 
+        public static readonly DependencyProperty PreventScrollingProperty = DependencyProperty.RegisterAttached(
+            "PreventScrolling", typeof(bool), typeof(PageSelector), new PropertyMetadata(default(bool)));
+
+        public static void SetPreventScrolling(DependencyObject element, bool value)
+        {
+            element.SetValue(PreventScrollingProperty, value);
+        }
+
+        public static bool GetPreventScrolling(DependencyObject element)
+        {
+            return (bool) element.GetValue(PreventScrollingProperty);
+        }
+
         public PageSelector()
         {
             Elements = new ObservableCollection<UIElement>();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -34,16 +35,16 @@ namespace ScriptPlayer.Dialogs
 
         public string Filter
         {
-            get => (string) GetValue(FilterProperty);
+            get => (string)GetValue(FilterProperty);
             set => SetValue(FilterProperty, value);
         }
 
         public static readonly DependencyProperty InputMappingsProperty = DependencyProperty.Register(
-            "InputMappings", typeof(List<InputMappingViewModel>), typeof(SettingsDialog), new PropertyMetadata(default(List<InputMappingViewModel>)));
+            "InputMappings", typeof(ObservableCollection<InputMappingViewModel>), typeof(SettingsDialog), new PropertyMetadata(default(ObservableCollection<InputMappingViewModel>)));
 
-        public List<InputMappingViewModel> InputMappings
+        public ObservableCollection<InputMappingViewModel> InputMappings
         {
-            get => (List<InputMappingViewModel>) GetValue(InputMappingsProperty);
+            get => (ObservableCollection<InputMappingViewModel>)GetValue(InputMappingsProperty);
             set => SetValue(InputMappingsProperty, value);
         }
 
@@ -52,7 +53,7 @@ namespace ScriptPlayer.Dialogs
 
         public SettingsPageViewModelCollection Pages
         {
-            get => (SettingsPageViewModelCollection) GetValue(PagesProperty);
+            get => (SettingsPageViewModelCollection)GetValue(PagesProperty);
             set => SetValue(PagesProperty, value);
         }
 
@@ -61,7 +62,7 @@ namespace ScriptPlayer.Dialogs
 
         public SettingsPageViewModelCollection FilteredPages
         {
-            get => (SettingsPageViewModelCollection) GetValue(FilteredPagesProperty);
+            get => (SettingsPageViewModelCollection)GetValue(FilteredPagesProperty);
             set => SetValue(FilteredPagesProperty, value);
         }
 
@@ -70,7 +71,7 @@ namespace ScriptPlayer.Dialogs
 
         public string SelectedAdditionalPath
         {
-            get => (string) GetValue(SelectedAdditionalPathProperty);
+            get => (string)GetValue(SelectedAdditionalPathProperty);
             set => SetValue(SelectedAdditionalPathProperty, value);
         }
 
@@ -79,7 +80,7 @@ namespace ScriptPlayer.Dialogs
 
         public string AdditionalPath
         {
-            get => (string) GetValue(AdditionalPathProperty);
+            get => (string)GetValue(AdditionalPathProperty);
             set => SetValue(AdditionalPathProperty, value);
         }
 
@@ -88,7 +89,7 @@ namespace ScriptPlayer.Dialogs
 
         public SettingsViewModel Settings
         {
-            get => (SettingsViewModel) GetValue(SettingsProperty);
+            get => (SettingsViewModel)GetValue(SettingsProperty);
             set => SetValue(SettingsProperty, value);
         }
 
@@ -97,8 +98,8 @@ namespace ScriptPlayer.Dialogs
 
         private static object CoerceSelectedPage(DependencyObject d, object basevalue)
         {
-            SettingsDialog dialog = (SettingsDialog) d;
-            SettingsPageViewModel page = (SettingsPageViewModel) basevalue;
+            SettingsDialog dialog = (SettingsDialog)d;
+            SettingsPageViewModel page = (SettingsPageViewModel)basevalue;
 
             if (page == null && dialog.FilteredPages.Count > 0)
                 return dialog.FilteredPages.First();
@@ -108,7 +109,7 @@ namespace ScriptPlayer.Dialogs
 
         private static void OnSelectedPageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((SettingsDialog) d).SelectedPageHasChanged();
+            ((SettingsDialog)d).SelectedPageHasChanged();
         }
 
         private void SelectedPageHasChanged()
@@ -124,7 +125,7 @@ namespace ScriptPlayer.Dialogs
 
         public SettingsPageViewModel SelectedPage
         {
-            get => (SettingsPageViewModel) GetValue(SelectedPageProperty);
+            get => (SettingsPageViewModel)GetValue(SelectedPageProperty);
             set => SetValue(SelectedPageProperty, value);
         }
 
@@ -133,7 +134,7 @@ namespace ScriptPlayer.Dialogs
 
         public string SettingsTitle
         {
-            get => (string) GetValue(SettingsTitleProperty);
+            get => (string)GetValue(SettingsTitleProperty);
             set => SetValue(SettingsTitleProperty, value);
         }
 
@@ -153,26 +154,39 @@ namespace ScriptPlayer.Dialogs
 
         private void CreateInputMappings(List<InputMapping> inputMappings)
         {
-            List<InputMappingViewModel> mappings = new List<InputMappingViewModel>();
+            ObservableCollection<InputMappingViewModel> mappings = new ObservableCollection<InputMappingViewModel>();
 
             foreach (ScriptplayerCommand scriptplayerCommand in GlobalCommandManager.Commands.Values)
             {
-                InputMappingViewModel mapping = new InputMappingViewModel
-                {
-                    CommandId = scriptplayerCommand.CommandId,
-                    DisplayText = scriptplayerCommand.DisplayText
-                };
+                var shortcuts = inputMappings.Where(c => c.CommandId == scriptplayerCommand.CommandId).ToList();
 
-                var shortcut = inputMappings.FirstOrDefault(c => c.CommandId == scriptplayerCommand.CommandId);
-                if (shortcut != null)
+                if (shortcuts.Count == 0)
                 {
-                    mapping.Shortcut = shortcut.KeyboardShortcut;
-                    mapping.IsGlobal = shortcut.IsGlobal;
+                    InputMappingViewModel mapping = new InputMappingViewModel
+                    {
+                        CommandId = scriptplayerCommand.CommandId,
+                        DisplayText = scriptplayerCommand.DisplayText,
+                        Shortcut = "",
+                        IsGlobal = false
+                    };
+
+                    mappings.Add(mapping);
                 }
                 else
-                    mapping.Shortcut = "";
+                {
+                    foreach (var shortcut in shortcuts)
+                    {
+                        InputMappingViewModel mapping = new InputMappingViewModel
+                        {
+                            CommandId = scriptplayerCommand.CommandId,
+                            DisplayText = scriptplayerCommand.DisplayText,
+                            Shortcut = shortcut.KeyboardShortcut,
+                            IsGlobal = shortcut.IsGlobal
+                        };
 
-                mappings.Add(mapping);
+                        mappings.Add(mapping);
+                    }
+                }
             }
 
             InputMappings = mappings;
@@ -202,7 +216,7 @@ namespace ScriptPlayer.Dialogs
             SettingsPageViewModel page = Pages[sections[0]];
 
             for (int i = 1; i < sections.Length; i++)
-                page = page?.SubSettings[string.Join("/", sections.Take(i+1))];
+                page = page?.SubSettings[string.Join("/", sections.Take(i + 1))];
 
             return page;
         }
@@ -230,7 +244,7 @@ namespace ScriptPlayer.Dialogs
                 }
                 else
                 {
-                    pages.Add(new SettingsPageViewModel(id,id, header));
+                    pages.Add(new SettingsPageViewModel(id, id, header));
                 }
             }
 
@@ -243,7 +257,7 @@ namespace ScriptPlayer.Dialogs
         {
             if (pages == null) return;
 
-            pages.Sort((a,b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+            pages.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
 
             foreach (SettingsPageViewModel page in pages)
                 SortPages(page.SubSettings);
@@ -276,7 +290,7 @@ namespace ScriptPlayer.Dialogs
 
         private void TxtPasswordVlcPassword_OnPasswordChanged(object sender, RoutedEventArgs e)
         {
-            Settings.VlcPassword = ((PasswordBox) sender).Password;
+            Settings.VlcPassword = ((PasswordBox)sender).Password;
         }
 
         private void TxtPasswordKodiPassword_OnPasswordChanged(object sender, RoutedEventArgs e)
@@ -294,7 +308,7 @@ namespace ScriptPlayer.Dialogs
 
         private void BtnOk_OnClick(object sender, RoutedEventArgs e)
         {
-            ((Button) sender).Focus();
+            ((Button)sender).Focus();
             ApplyInputMappings();
             DialogResult = true;
         }
@@ -337,8 +351,8 @@ namespace ScriptPlayer.Dialogs
         {
             try
             {
-                if(path.EndsWith("*"))
-                    return Directory.Exists(path.Substring(0,path.Length-1));
+                if (path.EndsWith("*"))
+                    return Directory.Exists(path.Substring(0, path.Length - 1));
 
                 return Directory.Exists(path);
             }
@@ -426,7 +440,7 @@ namespace ScriptPlayer.Dialogs
 
         private void BtnEditShortCut_Click(object sender, RoutedEventArgs e)
         {
-            InputMappingViewModel inputMapping = ((FrameworkElement) sender).DataContext as InputMappingViewModel;
+            InputMappingViewModel inputMapping = ((FrameworkElement)sender).DataContext as InputMappingViewModel;
 
             ShortcutInputDialog dialog = new ShortcutInputDialog()
             {
@@ -444,7 +458,39 @@ namespace ScriptPlayer.Dialogs
         {
             InputMappingViewModel inputMapping = ((FrameworkElement)sender).DataContext as InputMappingViewModel;
 
-            inputMapping.Shortcut = "";
+            if (InputMappings.Count(i => i.CommandId == inputMapping.CommandId && i != inputMapping) > 0)
+            {
+                InputMappings.Remove(inputMapping);
+            }
+            else
+            {
+                inputMapping.Shortcut = "";
+            }
+        }
+
+        private void BtnAddShortCut_Click(object sender, RoutedEventArgs e)
+        {
+            InputMappingViewModel inputMapping = ((FrameworkElement)sender).DataContext as InputMappingViewModel;
+
+            ShortcutInputDialog dialog = new ShortcutInputDialog()
+            {
+                Owner = this,
+                Shortcut = inputMapping.Shortcut
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            InputMappingViewModel newShortcut = new InputMappingViewModel
+            {
+                CommandId = inputMapping.CommandId,
+                DisplayText = inputMapping.DisplayText,
+                IsGlobal = false,
+                Shortcut = dialog.Shortcut
+            };
+
+            int currentIndex = InputMappings.IndexOf(inputMapping);
+            InputMappings.Insert(currentIndex + 1, newShortcut);
         }
 
         private void BtnResetInputMappings_Click(object sender, RoutedEventArgs e)
@@ -526,7 +572,7 @@ namespace ScriptPlayer.Dialogs
                     if (root == null)
                         continue;
 
-                    if(ContainsText(root, filter))
+                    if (ContainsText(root, filter))
                         filteredPages.Add(page);
                 }
             }
@@ -652,7 +698,7 @@ namespace ScriptPlayer.Dialogs
         public SettingsPageViewModel Parent { get; set; }
         public void Add(SettingsPageViewModel subSetting)
         {
-            if(SubSettings == null)
+            if (SubSettings == null)
                 SubSettings = new SettingsPageViewModelCollection();
             subSetting.Parent = this;
             SubSettings.Add(subSetting);

@@ -60,6 +60,7 @@ namespace ScriptPlayer
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             ViewModel.RequestToggleFullscreen += ViewModelOnRequestToggleFullscreen;
+            ViewModel.RequestSetFullscreen += ViewModelOnRequestSetFullscreen;
             ViewModel.RequestOverlay += ViewModelOnRequestOverlay;
             ViewModel.RequestButtplugUrl += ViewModelOnRequestButtplugUrl;
             ViewModel.RequestVlcConnectionSettings += ViewModelOnRequestVlcConnectionSettings;
@@ -361,6 +362,11 @@ namespace ScriptPlayer
             ToggleFullscreen();
         }
 
+        private void ViewModelOnRequestSetFullscreen(object sender, bool fullscreen)
+        {
+            SetFullscreen(fullscreen);
+        }
+
         private void ViewModelOnRequestOverlay(object sender, string text, TimeSpan timeSpan, string designation)
         {
             Notifications.AddNotification(text, timeSpan, designation);
@@ -598,122 +604,8 @@ namespace ScriptPlayer
             
             bool handled = GlobalCommandManager.ProcessInput(e.Key, activeMods, KeySource.DirectInput);
 
-            if (handled)
-            {
+            if (!handled) return;
                 e.Handled = true;
-                return;
-            }
-
-            handled = true;
-
-            switch (e.Key)
-            {
-                case Key.Enter:
-                    {
-                        ToggleFullscreen();
-                        break;
-                    }
-                case Key.Escape:
-                    {
-                        SetFullscreen(false);
-                        break;
-                    }
-                case Key.Space:
-                    {
-                        ViewModel.TogglePlayback();
-                        break;
-                    }
-                case Key.Left:
-                    {
-                        ViewModel.ShiftPosition(TimeSpan.FromSeconds(-5));
-                        break;
-                    }
-                case Key.Right:
-                    {
-                        ViewModel.ShiftPosition(TimeSpan.FromSeconds(5));
-                        break;
-                    }
-                case Key.Up:
-                    {
-                        ViewModel.VolumeUp();
-                        break;
-                    }
-                case Key.Down:
-                    {
-                        ViewModel.VolumeDown();
-                        break;
-                    }
-                case Key.PageUp:
-                    {
-                        ViewModel.Playlist.PlayPreviousEntry();
-                        break;
-                    }
-                case Key.PageDown:
-                    {
-                        ViewModel.Playlist.PlayNextEntry();
-                        break;
-                    }
-                case Key.NumPad0:
-                    {
-                        break;
-                    }
-                case Key.NumPad1:
-                    {
-                        VideoPlayer.ChangeZoom(-0.02);
-                        break;
-                    }
-                case Key.NumPad2:
-                    {
-                        VideoPlayer.Move(new Point(0, 1));
-                        break;
-                    }
-                case Key.NumPad3:
-                    {
-                        break;
-                    }
-                case Key.NumPad4:
-                    {
-                        VideoPlayer.Move(new Point(-1, 0));
-                        break;
-                    }
-                case Key.NumPad5:
-                    {
-                        VideoPlayer.ResetTransform();
-                        break;
-                    }
-                case Key.NumPad6:
-                    {
-                        VideoPlayer.Move(new Point(1, 0));
-                        break;
-                    }
-                case Key.NumPad7:
-                    {
-                        VideoPlayer.SideBySide ^= true;
-                        break;
-                    }
-                case Key.NumPad8:
-                    {
-                        VideoPlayer.Move(new Point(0, -1));
-                        break;
-                    }
-                case Key.NumPad9:
-                    {
-                        VideoPlayer.ChangeZoom(0.02);
-                        break;
-                    }
-                case Key.S:
-                    {
-                        ViewModel.ToggleCommandSource();
-                        break;
-                    }
-                default:
-                    {
-                        handled = false;
-                        break;
-                    }
-            }
-
-            e.Handled = handled;
         }
 
         private void mnuShowPlaylist_Click(object sender, RoutedEventArgs e)

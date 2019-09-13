@@ -8,24 +8,10 @@ using System.Xml.Serialization;
 
 namespace ScriptPlayer.Shared
 {
-    public class PreviewKeyEventArgs : EventArgs
-    {
-        public bool CancelProcessing { get; set; }
-
-        public Key Key { get; set; }
-
-        public ModifierKeys Modifiers { get; set; }
-
-        public string Shortcut => GlobalCommandManager.GetShortcut(Key, Modifiers);
-
-        public PreviewKeyEventArgs()
-        {
-            CancelProcessing = false;
-        }
-    }
-
     public static class GlobalCommandManager
     {
+        public const string GlobalShortcutSuffix = " @";
+
         public static event EventHandler<PreviewKeyEventArgs> PreviewKeyReceived;
 
         private static bool OnPreviewKeyReceived(Key key, ModifierKeys modifiers)
@@ -106,14 +92,28 @@ namespace ScriptPlayer.Shared
 
             foreach (ScriptplayerCommand command in Commands.Values)
             {
-                if (string.IsNullOrWhiteSpace(command.DefaultShortCut))
+                if (command.DefaultShortCuts == null || command.DefaultShortCuts.Count == 0)
                     continue;
 
-                mappings.Add(new InputMapping
+                foreach (string shortcut in command.DefaultShortCuts)
                 {
-                    CommandId = command.CommandId,
-                    KeyboardShortcut = command.DefaultShortCut
-                });
+                    string keyboardShortcut = shortcut;
+                    bool isGlobal = false;
+
+                    if (keyboardShortcut.EndsWith(GlobalShortcutSuffix))
+                    {
+                        keyboardShortcut =
+                            keyboardShortcut.Substring(0, keyboardShortcut.Length - GlobalShortcutSuffix.Length);
+                        isGlobal = true;
+                    }
+
+                    mappings.Add(new InputMapping
+                    {
+                        CommandId = command.CommandId,
+                        KeyboardShortcut = keyboardShortcut,
+                        IsGlobal = isGlobal
+                    });
+                }
             }
 
             return mappings;
@@ -129,7 +129,7 @@ namespace ScriptPlayer.Shared
 
             bool isGlobal = source == KeySource.Global;
             string shortcut = GetShortcut(key, modifiers);
-            
+
             InputMapping mapping = CommandMappings.FirstOrDefault(
                 c => c.KeyboardShortcut == shortcut
                      && c.IsGlobal == isGlobal);
@@ -150,7 +150,7 @@ namespace ScriptPlayer.Shared
             return true;
         }
 
-        public static string GetShortcut(Key key, ModifierKeys modifiers)
+        public static string GetShortcut(Key key, ModifierKeys modifiers, bool global = false)
         {
             string shortcut = key.ToString();
 
@@ -162,6 +162,9 @@ namespace ScriptPlayer.Shared
 
             if (modifiers.HasFlag(ModifierKeys.Alt))
                 shortcut += " + Alt";
+
+            if (global)
+                shortcut += GlobalShortcutSuffix;
 
             return shortcut;
         }
@@ -178,12 +181,5 @@ namespace ScriptPlayer.Shared
 
             return activeMods;
         }
-    }
-
-    public enum KeySource
-    {
-        DirectInput,
-        WndProc,
-        Global
     }
 }

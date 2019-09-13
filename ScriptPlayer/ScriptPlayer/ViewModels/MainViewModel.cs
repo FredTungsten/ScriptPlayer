@@ -1044,82 +1044,6 @@ namespace ScriptPlayer.ViewModels
         {
             KeyAndModifiers keyAndModifiers = KeyAndModifiers.FromKeyboardHookEventArgs(e);
             GlobalCommandManager.ProcessInput(keyAndModifiers.Key, keyAndModifiers.Modifiers, KeySource.Global);
-            
-            /*
-            switch (e.Key)
-            {
-                case Keys.Play:
-                    Play();
-                    break;
-                case Keys.Pause:
-                    Pause();
-                    break;
-                case Keys.MediaPlayPause:
-                    TogglePlayback();
-                    break;
-                case Keys.MediaNextTrack:
-                    switch (PlaybackMode)
-                    {
-                        case PlaybackMode.Local:
-                            {
-                                PlayNextPlaylistEntry();
-                                break;
-                            }
-                        case PlaybackMode.Blind:
-                            {
-                                TimeSource.SetPosition(TimeSource.Progress + TimeSpan.FromMilliseconds(50));
-                                break;
-                            }
-                        case PlaybackMode.Whirligig:
-                            break;
-                        case PlaybackMode.Vlc:
-                            break;
-                        case PlaybackMode.MpcHc:
-                            break;
-                        case PlaybackMode.SamsungVr:
-                            break;
-                        case PlaybackMode.ZoomPlayer:
-                            break;
-                        case PlaybackMode.Kodi:
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                    break;
-                case Keys.MediaPreviousTrack:
-                    switch (PlaybackMode)
-                    {
-                        case PlaybackMode.Local:
-                            {
-                                PlayPreviousPlaylistEntry();
-                                break;
-                            }
-                        case PlaybackMode.Blind:
-                            {
-                                TimeSource.SetPosition(TimeSource.Progress - TimeSpan.FromMilliseconds(50));
-                                break;
-                            }
-                        case PlaybackMode.Whirligig:
-                            break;
-                        case PlaybackMode.Vlc:
-                            break;
-                        case PlaybackMode.MpcHc:
-                            break;
-                        case PlaybackMode.SamsungVr:
-                            break;
-                        case PlaybackMode.ZoomPlayer:
-                            break;
-                        case PlaybackMode.Kodi:
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                    break;
-                case Keys.MediaStop:
-                    ToggleCommandSource();
-                    break;
-            }
-            */
         }
 
         public void SetMainWindow(Window window)
@@ -1753,6 +1677,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<MessageBoxEventArgs> RequestMessageBox;
         public event EventHandler<ButtplugUrlRequestEventArgs> RequestButtplugUrl;
         public event EventHandler RequestToggleFullscreen;
+        public event EventHandler<bool> RequestSetFullscreen;
 
         private void HandleVideoPlayerEvents(VideoPlayer oldValue, VideoPlayer newValue)
         {
@@ -2310,21 +2235,25 @@ namespace ScriptPlayer.ViewModels
             {
                 CommandId = "TogglePlayback",
                 DisplayText = "Toggle Play / Pause",
-                DefaultShortCut = "Space"
+                DefaultShortCuts =
+                {
+                    GlobalCommandManager.GetShortcut(Key.Space, ModifierKeys.None),
+                    GlobalCommandManager.GetShortcut(Key.MediaPlayPause, ModifierKeys.None, true) 
+                }
             };
 
             VolumeUpCommand = new ScriptplayerCommand(VolumeUp)
             {
                 CommandId = "VolumeUp",
                 DisplayText = "Volume Up",
-                DefaultShortCut = "Up"
+                DefaultShortCuts = { GlobalCommandManager.GetShortcut(Key.Up, ModifierKeys.None) }
             };
 
             VolumeDownCommand = new ScriptplayerCommand(VolumeDown)
             {
                 CommandId = "VolumeDown",
                 DisplayText = "Volume Down",
-                DefaultShortCut = "Down"
+                DefaultShortCuts = { GlobalCommandManager.GetShortcut(Key.Down, ModifierKeys.None) }
             };
 
             ExecuteSelectedTestPatternCommand = new ScriptplayerCommand(ExecuteSelectedTestPattern, CanExecuteSelectedTestPattern);
@@ -2332,7 +2261,7 @@ namespace ScriptPlayer.ViewModels
             {
                 CommandId = "ToggleFullscreen",
                 DisplayText = "Toggle Fullscreen",
-                DefaultShortCut = Key.Enter.ToString() //Or Return?
+                DefaultShortCuts = { GlobalCommandManager.GetShortcut(Key.Enter, ModifierKeys.None) }
             };
 
             LoadPlaylistCommand = new ScriptplayerCommand(ExecuteLoadPlaylist);
@@ -2366,7 +2295,12 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(ToggleCommandSourceVideoNone)
             {
                 CommandId = "ToggleCommandSourceVideoNone",
-                DisplayText = "Toggle Source Video/None"
+                DisplayText = "Toggle Source Video/None",
+                DefaultShortCuts =
+                {
+                    GlobalCommandManager.GetShortcut(Key.S, ModifierKeys.None),
+                    GlobalCommandManager.GetShortcut(Key.MediaStop, ModifierKeys.None, true) 
+                }
             });
 
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreasePlaybackSpeed)
@@ -2384,13 +2318,107 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseScriptDelay)
             {
                 CommandId = "IncreaseScriptDelay",
-                DisplayText = "Increase Script Delay"
+                DisplayText = "Increase Script Delay",
+                DefaultShortCuts =
+                {
+                    GlobalCommandManager.GetShortcut(Key.OemPlus, ModifierKeys.None),
+                    GlobalCommandManager.GetShortcut(Key.Add, ModifierKeys.None)
+                }
             });
 
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreaseScriptDelay)
             {
                 CommandId = "DecreaseScriptDelay",
-                DisplayText = "Decrease Script Delay"
+                DisplayText = "Decrease Script Delay",
+                DefaultShortCuts =
+                {
+                    GlobalCommandManager.GetShortcut(Key.OemMinus, ModifierKeys.None),
+                    GlobalCommandManager.GetShortcut(Key.Subtract, ModifierKeys.None)
+                }
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(Play, CanTogglePlayback)
+            {
+                CommandId = "Play",
+                DisplayText = "Play",
+                DefaultShortCuts =
+                {
+                    GlobalCommandManager.GetShortcut(Key.Play, ModifierKeys.None, true)
+                }
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(Pause, CanTogglePlayback)
+            {
+                CommandId = "Pause",
+                DisplayText = "Pause",
+                DefaultShortCuts =
+                {
+                    GlobalCommandManager.GetShortcut(Key.Pause, ModifierKeys.None, true)
+                }
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(() => { OnRequestSetFullscreen(false); })
+            {
+                CommandId = "ExitFullscreen",
+                DisplayText = "Exit Fullscreen",
+                DefaultShortCuts =
+                {
+                    GlobalCommandManager.GetShortcut(Key.Escape, ModifierKeys.None),
+                }
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(() => { OnRequestSetFullscreen(true); })
+            {
+                CommandId = "EnterFullscreen",
+                DisplayText = "Enter Fullscreen",
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(() => { ShiftPosition(TimeSpan.FromSeconds(-5)); })
+            {
+                CommandId = "Seek[-5]",
+                DisplayText = "Go back 5 seconds",
+                DefaultShortCuts =
+                {
+                    GlobalCommandManager.GetShortcut(Key.Left, ModifierKeys.None),
+                }
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(() => { ShiftPosition(TimeSpan.FromSeconds(5)); })
+            {
+                CommandId = "Seek[5]",
+                DisplayText = "Go forwards 5 seconds",
+                DefaultShortCuts =
+                {
+                    GlobalCommandManager.GetShortcut(Key.Right, ModifierKeys.None),
+                }
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(Mute)
+            {
+                CommandId = "Mute",
+                DisplayText = "Mute",
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(() => { Playlist.PlayNextEntry(); })
+            {
+                CommandId = "PlayNextEntry",
+                DisplayText = "Play next playlist entry",
+                DefaultShortCuts =
+                {
+                    GlobalCommandManager.GetShortcut(Key.PageDown, ModifierKeys.None),
+                    GlobalCommandManager.GetShortcut(Key.MediaNextTrack, ModifierKeys.None, true)
+                }
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(() => { Playlist.PlayPreviousEntry(); })
+            {
+                CommandId = "PlayPreviousEntry",
+                DisplayText = "Play previous playlist entry",
+                DefaultShortCuts =
+                {
+                    GlobalCommandManager.GetShortcut(Key.PageUp, ModifierKeys.None),
+                    GlobalCommandManager.GetShortcut(Key.MediaPreviousTrack, ModifierKeys.None, true)
+                }
             });
         }
 
@@ -4071,6 +4099,11 @@ namespace ScriptPlayer.ViewModels
             Volume = newVolume;
         }
 
+        public void Mute()
+        {
+            Volume = 0;
+        }
+
         public void ShiftPosition(TimeSpan timeSpan)
         {
             TimeSource.SetPosition(TimeSource.Progress + timeSpan);
@@ -4221,6 +4254,11 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnRequestToggleFullscreen()
         {
             RequestToggleFullscreen?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual void OnRequestSetFullscreen(bool fullscreen)
+        {
+            RequestSetFullscreen?.Invoke(this, fullscreen);
         }
 
         public void FilesDropped(string[] files)

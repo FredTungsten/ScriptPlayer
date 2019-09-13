@@ -5,8 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}" WindowStartupLocation="CenterOwner"
-        Title="Set Shortcut" Height="95.339" Width="238.453" Focusable="True" PreviewKeyDown="ShortcutInputDialog_OnPreviewKeyDown" WindowStyle="ToolWindow" Closing="Window_Closing">
+        Title="Set Shortcut" Height="190.571" Width="246.827" Focusable="True" PreviewKeyDown="ShortcutInputDialog_OnPreviewKeyDown" WindowStyle="ToolWindow" Closing="Window_Closing">
     <Grid>
-        <TextBlock Margin="10" TextWrapping="Wrap" TextAlignment="Center" Text="Press key(s) to set new shortcut or close dialog to cancel"/>
+        <StackPanel>
+            <TextBlock Margin="10" TextWrapping="Wrap" TextAlignment="Center" FontWeight="Bold" Text="Press key(s) to set new shortcut or close dialog to cancel."/>
+            <TextBlock Margin="10" TextWrapping="Wrap" TextAlignment="Center" Text="You can press a single key on your keyboard, a shortcut containing shift, alt and/or control and a key, or send a shortcut via automation software that uses WM_SENDKEY." Foreground="Gray"/>
+        </StackPanel>
     </Grid>
 </Window>
