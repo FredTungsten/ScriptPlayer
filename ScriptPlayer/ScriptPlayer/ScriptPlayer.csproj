@@ -176,7 +176,9 @@
     <Compile Include="FlashOverlay.xaml.cs">
       <DependentUpon>FlashOverlay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\ChapterMode.cs" />
     <Compile Include="ViewModels\CommandLineSplitter.cs" />
+    <Compile Include="ViewModels\CommandSection.cs" />
     <Compile Include="ViewModels\Constants.cs" />
     <Compile Include="ViewModels\EventArgs.cs" />
     <Compile Include="ViewModels\ExistingFileStrategy.cs" />
@@ -184,10 +186,12 @@
     <Compile Include="ViewModels\GeneratorSettingsViewModel.cs" />
     <Compile Include="ViewModels\HeatmapGeneratorSettingsViewModel.cs" />
     <Compile Include="ViewModels\InstanceHandler.cs" />
+    <Compile Include="ViewModels\KeyAndModifiers.cs" />
     <Compile Include="ViewModels\PlaybackMode.cs" />
     <Compile Include="ViewModels\PlayerStateModel.cs" />
     <Compile Include="ViewModels\PreviewGeneratorSettingsViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
+    <Compile Include="ViewModels\SkipState.cs" />
     <Compile Include="ViewModels\ThumbnailBannerGeneratorSettingsViewModel.cs" />
     <Compile Include="ViewModels\ThumbnailGeneratorSettingsViewModel.cs" />
     <Compile Include="ViewModels\TimeDisplayMode.cs" />

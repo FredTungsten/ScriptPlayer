@@ -21,7 +21,7 @@ namespace ScriptPlayer
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IOnScreenDisplay
     {
         public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
             "ViewModel", typeof(MainViewModel), typeof(MainWindow), new PropertyMetadata(default(MainViewModel)));
@@ -61,7 +61,6 @@ namespace ScriptPlayer
         {
             ViewModel.RequestToggleFullscreen += ViewModelOnRequestToggleFullscreen;
             ViewModel.RequestSetFullscreen += ViewModelOnRequestSetFullscreen;
-            ViewModel.RequestOverlay += ViewModelOnRequestOverlay;
             ViewModel.RequestButtplugUrl += ViewModelOnRequestButtplugUrl;
             ViewModel.RequestVlcConnectionSettings += ViewModelOnRequestVlcConnectionSettings;
             ViewModel.RequestZoomPlayerConnectionSettings += ViewModelOnRequestZoomPlayerConnectionSettings;
@@ -86,10 +85,6 @@ namespace ScriptPlayer
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.RequestFolder += ViewModelOnRequestFolder;
-            ViewModel.RequestShowSkipButton += ViewModelOnRequestShowSkipButton;
-            ViewModel.RequestShowSkipNextButton += ViewModelOnRequestShowSkipNextButton;
-            ViewModel.RequestHideSkipButton += ViewModelOnRequestHideSkipButton;
-            ViewModel.RequestHideNotification += ViewModelOnRequestHideNotification;
             ViewModel.RequestShowDeviceManager += ViewModelOnRequestShowDeviceManager;
 
             ViewModel.Beat += ViewModel_Beat;
@@ -259,26 +254,6 @@ namespace ScriptPlayer
             e.Value = x.SelectedPath;
         }
 
-        private void ViewModelOnRequestHideNotification(object sender, string designation)
-        {
-            Notifications.RemoveNotification(designation);
-        }
-
-        private void ViewModelOnRequestHideSkipButton(object sender, EventArgs eventArgs)
-        {
-            Notifications.RemoveNotification("SkipButton");
-        }
-
-        private void ViewModelOnRequestShowSkipNextButton(object sender, EventArgs eventArgs)
-        {
-            Notifications.AddNotification(((DataTemplate)Resources["SkipNextButton"]).LoadContent(), TimeSpan.MaxValue, "SkipButton", ViewModel.SkipToNextEventCommand);
-        }
-
-        private void ViewModelOnRequestShowSkipButton(object sender, EventArgs eventArgs)
-        {
-            Notifications.AddNotification(((DataTemplate)Resources["SkipButton"]).LoadContent(), TimeSpan.MaxValue, "SkipButton", ViewModel.SkipToNextEventCommand);
-        }
-
 
         private void ViewModelOnRequestZoomPlayerConnectionSettings(object sender, RequestEventArgs<ZoomPlayerConnectionSettings> args)
         {
@@ -365,11 +340,6 @@ namespace ScriptPlayer
         private void ViewModelOnRequestSetFullscreen(object sender, bool fullscreen)
         {
             SetFullscreen(fullscreen);
-        }
-
-        private void ViewModelOnRequestOverlay(object sender, string text, TimeSpan timeSpan, string designation)
-        {
-            Notifications.AddNotification(text, timeSpan, designation);
         }
 
         private void SeekBar_OnSeek(object sender, double relative, TimeSpan absolute, int downmoveup)
@@ -792,5 +762,39 @@ namespace ScriptPlayer
         {
             ShowGeneratorProgress();
         }
+
+        #region IOnScreenDisplay
+
+        public void ShowMessage(string designation, string text, TimeSpan duration)
+        {
+            Notifications.AddNotification(text, duration, designation);
+        }
+
+        public void HideMessage(string designation)
+        {
+            Notifications.RemoveNotification(designation);
+        }
+
+        public void ShowSkipButton()
+        {
+            Notifications.AddNotification(((DataTemplate)Resources["SkipButton"]).LoadContent(), TimeSpan.MaxValue, "SkipButton", ViewModel.SkipToNextEventCommand);
+        }
+
+        public void ShowSkipNextButton()
+        {
+            Notifications.AddNotification(((DataTemplate)Resources["SkipNextButton"]).LoadContent(), TimeSpan.MaxValue, "SkipButton", ViewModel.SkipToNextEventCommand);
+        }
+
+        public void HideSkipButton()
+        {
+            Notifications.RemoveNotification("SkipButton");
+        }
+
+        private void Notifications_Loaded(object sender, RoutedEventArgs e)
+        {
+            ViewModel.SetMainWindowOsd(this);
+        }
+
+        #endregion
     }
 }

@@ -80,14 +80,20 @@ namespace ScriptPlayer.Shared
             protected set => SetValue(IsPlayingPropertyKey, value);
         }
 
+        public virtual IOnScreenDisplay OnScreenDisplay { get; } = null;
+
         public abstract double PlaybackRate { get; set; }
 
         public abstract bool CanPlayPause { get; }
+
         public abstract bool CanSeek { get; }
+
         public abstract bool CanOpenMedia { get; }
 
         public abstract void Play();
+
         public abstract void Pause();
+
         public virtual void TogglePlayback()
         { 
             if (IsPlaying)
@@ -95,6 +101,7 @@ namespace ScriptPlayer.Shared
             else
                 Play();
         }
+
         public abstract void SetPosition(TimeSpan position);
 
         protected virtual void OnDurationChanged(TimeSpan e)

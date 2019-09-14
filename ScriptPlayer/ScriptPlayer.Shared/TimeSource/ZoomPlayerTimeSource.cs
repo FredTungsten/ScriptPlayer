@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace ScriptPlayer.Shared
 {
-    public class ZoomPlayerTimeSource : TimeSource, IDisposable
+    public class ZoomPlayerTimeSource : TimeSource, IDisposable, IOnScreenDisplay
     {
         private ZoomPlayerConnectionSettings _connectionSettings;
 
@@ -22,6 +22,7 @@ namespace ScriptPlayer.Shared
         private bool _running = true;
         private TcpClient _client;
         private TimeSpan _lastReceivedTimestamp = TimeSpan.MaxValue;
+        private string _previousDesignation;
 
         public ZoomPlayerTimeSource(ISampleClock clock, ZoomPlayerConnectionSettings connectionSettings)
         {
@@ -247,6 +248,33 @@ namespace ScriptPlayer.Shared
             _clientLoop?.Interrupt();
             _clientLoop?.Abort();
         }
+
+        public override IOnScreenDisplay OnScreenDisplay => this;
+
+        public void ShowMessage(string designation, string text, TimeSpan duration)
+        {
+            _previousDesignation = designation;
+            SendCommand(ZoomPlayerCommandCodes.SetOsdDuration, Math.Round(duration.TotalSeconds).ToString());
+            SendCommand(ZoomPlayerCommandCodes.ShowOsd, text);
+        }
+
+        public void HideMessage(string designation)
+        {
+            if (_previousDesignation != designation)
+                return;
+
+            SendCommand(ZoomPlayerCommandCodes.SetOsdDuration, "0");
+            SendCommand(ZoomPlayerCommandCodes.ShowOsd, "");
+        }
+
+        public void ShowSkipButton()
+        { }
+
+        public void ShowSkipNextButton()
+        { }
+
+        public void HideSkipButton()
+        { }
     }
 
     public enum ZoomPlayerMessageCodes
@@ -256,12 +284,25 @@ namespace ScriptPlayer.Shared
         CurrentlyLoadedFile = 1800
     }
 
+    /*
+        1200 - Show a PopUp OSD Text         | Parameter is a UTF8 encoded text to be
+                                               shown as a PopUp OSD
+        1201 - Temp Disable PopUp OSD        | Temporarily Disables the PopUp OSD
+        1202 - Re-Enable PopUp OSD           | Re-Enables the PopUp OSD
+        1210 - Set OSD Visible Duration      | Value in Seconds
+     */
+
     public enum ZoomPlayerCommandCodes
     {
         SendTimelineUpdate = 1100, //0 = off, 1 = on, 2 = resend
         RequestPlayingFileName = 1800,
         SetCurrentPosition = 5000, // s.fff
         CallFunction = 5100, // fnPlay
+
+        ShowOsd = 1200,
+        DisableOsd = 1201,
+        EnableOsd = 1202,
+        SetOsdDuration = 1210
     }
 
     public enum ZoomPlayerPlaybackStates

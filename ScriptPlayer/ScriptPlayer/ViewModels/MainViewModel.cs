@@ -21,7 +21,6 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
-using System.Xml.Serialization;
 using ScriptPlayer.Generators;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
@@ -30,9 +29,6 @@ namespace ScriptPlayer.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged, IDisposable
     {
-        public delegate void RequestOverlayEventHandler(object sender, string text, TimeSpan duration,
-            string designation);
-
         public event EventHandler<RequestEventArgs<VlcConnectionSettings>> RequestVlcConnectionSettings;
         public event EventHandler<RequestEventArgs<WhirligigConnectionSettings>> RequestWhirligigConnectionSettings;
         public event EventHandler<RequestEventArgs<MpcConnectionSettings>> RequestMpcConnectionSettings;
@@ -53,10 +49,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<string> RequestShowSettings;
         public event EventHandler<ThumbnailBannerGeneratorSettings> RequestGenerateThumbnailBanner;
         public event EventHandler<WindowStateModel> RequestSetWindowState;
-        public event EventHandler RequestHideSkipButton;
-        public event EventHandler RequestShowSkipButton;
-        public event EventHandler RequestShowSkipNextButton;
-        public event EventHandler<string> RequestHideNotification;
+        
         public event EventHandler Beat;
         public event EventHandler<double> IntermediateBeat;
         public event EventHandler RequestShowGeneratorProgressDialog;
@@ -256,6 +249,7 @@ namespace ScriptPlayer.ViewModels
                 return _videoPlayer.IsSeeking;
             }
         }
+
         private bool _loading;
         private double _currentPosition;
         private RepeatablePattern _selectedPattern;
@@ -282,6 +276,8 @@ namespace ScriptPlayer.ViewModels
         private PlaybackMode _initialPlaybackMode = PlaybackMode.Local;
         private TimeSpan _previousShiftTimeSpan = TimeSpan.FromSeconds(10);
         private GeneratorSettingsViewModel _previousGeneratorSettings;
+        private IOnScreenDisplay _mainOsd;
+        private IOnScreenDisplay[] _usedOsds;
 
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
@@ -922,6 +918,7 @@ namespace ScriptPlayer.ViewModels
         {
             _scriptHandler.SetTimesource(TimeSource);
             TimeSourceDurationChanged();
+            RefreshOsds();
         }
 
         public void Load()
@@ -961,13 +958,13 @@ namespace ScriptPlayer.ViewModels
 
                 if (string.IsNullOrEmpty(Settings.ButtplugExePath))
                 {
-                    OnRequestOverlay("Can't autostart Buttplug - path not set", TimeSpan.FromSeconds(5), "Buttplug");
+                    OsdShowMessage("Can't autostart Buttplug - path not set", TimeSpan.FromSeconds(5), "Buttplug");
                     return;
                 }
 
                 if (!File.Exists(Settings.ButtplugExePath))
                 {
-                    OnRequestOverlay("Can't autostart Buttplug - file not found (or inaccessible)", TimeSpan.FromSeconds(5), "Buttplug");
+                    OsdShowMessage("Can't autostart Buttplug - file not found (or inaccessible)", TimeSpan.FromSeconds(5), "Buttplug");
                     return;
                 }
 
@@ -975,23 +972,23 @@ namespace ScriptPlayer.ViewModels
 
                 if (alreadyRunning)
                 {
-                    OnRequestOverlay("Buttplug is already running - no autostart needed", TimeSpan.FromSeconds(5),
+                    OsdShowMessage("Buttplug is already running - no autostart needed", TimeSpan.FromSeconds(5),
                         "Buttplug");
                     return;
                 }
 
-                OnRequestOverlay("Starting Buttplug ...", TimeSpan.FromSeconds(5), "Buttplug");
+                OsdShowMessage("Starting Buttplug ...", TimeSpan.FromSeconds(5), "Buttplug");
                 Process pro = Process.Start(Settings.ButtplugExePath);
                 bool waitedForIt = pro.WaitForInputIdle(5000);
 
                 if (waitedForIt)
-                    OnRequestOverlay("Buttplug started", TimeSpan.FromSeconds(5), "Buttplug");
+                    OsdShowMessage("Buttplug started", TimeSpan.FromSeconds(5), "Buttplug");
                 else
-                    OnRequestOverlay("Buttplug is not responding", TimeSpan.FromSeconds(5), "Buttplug");
+                    OsdShowMessage("Buttplug is not responding", TimeSpan.FromSeconds(5), "Buttplug");
             }
             catch (Exception ex)
             {
-                OnRequestOverlay("Couldn't start Buttplug: " + ex.Message, TimeSpan.FromSeconds(5), "Buttplug");
+                OsdShowMessage("Couldn't start Buttplug: " + ex.Message, TimeSpan.FromSeconds(5), "Buttplug");
             }
         }
 
@@ -1239,7 +1236,7 @@ namespace ScriptPlayer.ViewModels
                 if (value.Equals(_volume)) return;
                 _volume = value;
                 if (Settings.NotifyVolume)
-                    OnRequestOverlay($"Volume: {Volume:f0}%", TimeSpan.FromSeconds(4), "Volume");
+                    OsdShowMessage($"Volume: {Volume:f0}%", TimeSpan.FromSeconds(4), "Volume");
                 OnPropertyChanged();
             }
         }
@@ -1671,7 +1668,6 @@ namespace ScriptPlayer.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public event RequestOverlayEventHandler RequestOverlay;
         public event EventHandler<RequestEventArgs<string>> RequestFolder;
         public event EventHandler<RequestFileEventArgs> RequestFile;
         public event EventHandler<MessageBoxEventArgs> RequestMessageBox;
@@ -1748,7 +1744,7 @@ namespace ScriptPlayer.ViewModels
             {
                 TimeSource.Play();
                 if (Settings.NotifyPlayPause)
-                    OnRequestOverlay("Play", TimeSpan.FromSeconds(2), "Playback");
+                    OsdShowMessage("Play", TimeSpan.FromSeconds(2), "Playback");
             }
             else if (Playlist.EntryCount > 0)
             {
@@ -1782,7 +1778,7 @@ namespace ScriptPlayer.ViewModels
                 StopDevices();
                 TimeSource.Pause();
                 if (Settings.NotifyPlayPause)
-                    OnRequestOverlay("Pause", TimeSpan.FromSeconds(2), "Playback");
+                    OsdShowMessage("Pause", TimeSpan.FromSeconds(2), "Playback");
             }
         }
 
@@ -1826,7 +1822,7 @@ namespace ScriptPlayer.ViewModels
             if (IsMatchingScriptLoaded(videoFileName))
             {
                 if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
-                    OnRequestOverlay("Matching script alreadly loaded", TimeSpan.FromSeconds(6));
+                    OsdShowMessage("Matching script alreadly loaded", TimeSpan.FromSeconds(6));
                 return;
             }
 
@@ -1834,7 +1830,7 @@ namespace ScriptPlayer.ViewModels
             if (string.IsNullOrWhiteSpace(scriptFile))
             {
                 if (Settings.NotifyFileLoaded)
-                    OnRequestOverlay($"No script for '{Path.GetFileName(videoFileName)}' found!", TimeSpan.FromSeconds(6));
+                    OsdShowMessage($"No script for '{Path.GetFileName(videoFileName)}' found!", TimeSpan.FromSeconds(6));
 
                 ExecuteFallbackBehaviour();
                 return;
@@ -1924,7 +1920,7 @@ namespace ScriptPlayer.ViewModels
             if (IsMatchingVideoLoaded(scriptFileName))
             {
                 if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
-                    OnRequestOverlay("Matching media file alreadly loaded", TimeSpan.FromSeconds(6));
+                    OsdShowMessage("Matching media file alreadly loaded", TimeSpan.FromSeconds(6));
                 return;
             }
 
@@ -1932,7 +1928,7 @@ namespace ScriptPlayer.ViewModels
             if (string.IsNullOrWhiteSpace(videoFile))
             {
                 if (Settings.NotifyFileLoaded)
-                    OnRequestOverlay($"No media file for '{Path.GetFileName(scriptFileName)}' found!", TimeSpan.FromSeconds(6));
+                    OsdShowMessage($"No media file for '{Path.GetFileName(scriptFileName)}' found!", TimeSpan.FromSeconds(6));
                 return;
             }
 
@@ -2500,7 +2496,7 @@ namespace ScriptPlayer.ViewModels
             if (Settings.ScriptDelay > TimeSpan.FromMilliseconds(-500))
                 Settings.ScriptDelay -= TimeSpan.FromMilliseconds(25);
 
-            OnRequestOverlay("Script Delay: " + Settings.ScriptDelay.TotalMilliseconds.ToString("F0") + " ms", TimeSpan.FromSeconds(2), "ScriptDelay");
+            OsdShowMessage("Script Delay: " + Settings.ScriptDelay.TotalMilliseconds.ToString("F0") + " ms", TimeSpan.FromSeconds(2), "ScriptDelay");
         }
 
         private void IncreaseScriptDelay()
@@ -2508,7 +2504,7 @@ namespace ScriptPlayer.ViewModels
             if (Settings.ScriptDelay < TimeSpan.FromMilliseconds(500))
                 Settings.ScriptDelay += TimeSpan.FromMilliseconds(25);
 
-            OnRequestOverlay("Script Delay: " + Settings.ScriptDelay.TotalMilliseconds.ToString("F0") + " ms", TimeSpan.FromSeconds(2), "ScriptDelay");
+            OsdShowMessage("Script Delay: " + Settings.ScriptDelay.TotalMilliseconds.ToString("F0") + " ms", TimeSpan.FromSeconds(2), "ScriptDelay");
         }
 
         private void DecreasePlaybackSpeed()
@@ -2517,7 +2513,7 @@ namespace ScriptPlayer.ViewModels
             if (currentValue > 0.1)
                 TimeSource.PlaybackRate = currentValue - 0.1;
 
-            OnRequestOverlay("Playback Rate: " + TimeSource.PlaybackRate.ToString("F1", CultureInfo.InvariantCulture), TimeSpan.FromSeconds(2), "PlaybackRate");
+            OsdShowMessage("Playback Rate: " + TimeSource.PlaybackRate.ToString("F1", CultureInfo.InvariantCulture), TimeSpan.FromSeconds(2), "PlaybackRate");
         }
 
         private void IncreasePlaybackSpeed()
@@ -2526,7 +2522,7 @@ namespace ScriptPlayer.ViewModels
             if (currentValue < 2.0)
                 TimeSource.PlaybackRate = currentValue + 0.1;
 
-            OnRequestOverlay("Playback Rate: x" + TimeSource.PlaybackRate.ToString("F1"), TimeSpan.FromSeconds(2), "PlaybackRate");
+            OsdShowMessage("Playback Rate: x" + TimeSource.PlaybackRate.ToString("F1"), TimeSpan.FromSeconds(2), "PlaybackRate");
         }
 
         private void ToggleCommandSourceVideoPattern()
@@ -2725,7 +2721,7 @@ namespace ScriptPlayer.ViewModels
             _devices.Remove(device);
 
             if (Settings.NotifyDevices)
-                OnRequestOverlay("Device Removed: " + device.Name, TimeSpan.FromSeconds(8));
+                OsdShowMessage("Device Removed: " + device.Name, TimeSpan.FromSeconds(8));
         }
 
         private void DeviceController_DeviceFound(object sender, Device device)
@@ -2742,7 +2738,7 @@ namespace ScriptPlayer.ViewModels
             device.Disconnected += Device_Disconnected;
 
             if (Settings.NotifyDevices)
-                OnRequestOverlay("Device Connected: " + device.Name, TimeSpan.FromSeconds(8));
+                OsdShowMessage("Device Connected: " + device.Name, TimeSpan.FromSeconds(8));
         }
 
         private bool ShouldInvokeInstead(Action action)
@@ -2774,11 +2770,6 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected virtual void OnRequestOverlay(string text, TimeSpan duration, string designation = null)
-        {
-            RequestOverlay?.Invoke(this, text, duration, designation ?? "");
         }
 
         public void Seek(TimeSpan absolute, int downmoveup)
@@ -2901,7 +2892,7 @@ namespace ScriptPlayer.ViewModels
                 Title = Path.GetFileNameWithoutExtension(videoFileName);
 
                 if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
-                    OnRequestOverlay($"Loaded {Path.GetFileName(videoFileName)}", TimeSpan.FromSeconds(4),
+                    OsdShowMessage($"Loaded {Path.GetFileName(videoFileName)}", TimeSpan.FromSeconds(4),
                         "VideoLoaded");
 
                 //Play();
@@ -3223,7 +3214,7 @@ namespace ScriptPlayer.ViewModels
             {
                 case SkipState.Available:
                     {
-                        OnRequestHideSkipButton();
+                        OsdHideSkipButton();
                         break;
                     }
                 case SkipState.Gap:
@@ -3235,38 +3226,38 @@ namespace ScriptPlayer.ViewModels
                         else
                         {
                             if (Settings.NotifyGaps)
-                                OnRequestOverlay($"Next event in {timeToNextOriginalEvent.TotalSeconds:f0}s",
+                                OsdShowMessage($"Next event in {timeToNextOriginalEvent.TotalSeconds:f0}s",
                                     TimeSpan.FromSeconds(4), "Events");
                             if (Settings.ShowSkipButton)
-                                OnRequestShowSkipButton();
+                                OsdShowSkipButton();
                         }
                         break;
                     }
                 case SkipState.Filler:
                     {
-                        OnRequestHideSkipButton();
+                        OsdHideSkipButton();
                         break;
                     }
                 case SkipState.FillerGap:
                     {
                         if (Settings.NotifyGaps)
-                            OnRequestOverlay($"Next original event in {timeToNextOriginalEvent.TotalSeconds:f0}s", TimeSpan.FromSeconds(4), "Events");
+                            OsdShowMessage($"Next original event in {timeToNextOriginalEvent.TotalSeconds:f0}s", TimeSpan.FromSeconds(4), "Events");
                         if (Settings.ShowSkipButton)
-                            OnRequestShowSkipButton();
+                            OsdShowSkipButton();
                         break;
                     }
                 case SkipState.EndFillerNext:
                     {
                         if (Settings.NotifyGaps)
-                            OnRequestOverlay("No more original events available", TimeSpan.FromSeconds(4), "Events");
+                            OsdShowMessage("No more original events available", TimeSpan.FromSeconds(4), "Events");
                         if (Settings.ShowSkipButton)
-                            OnRequestShowSkipNextButton();
+                            OsdShowSkipNextButton();
                         break;
                     }
                 case SkipState.EndFiller:
                     {
                         if (Settings.NotifyGaps)
-                            OnRequestOverlay("No more original events available", TimeSpan.FromSeconds(4), "Events");
+                            OsdShowMessage("No more original events available", TimeSpan.FromSeconds(4), "Events");
                         break;
                     }
                 case SkipState.EndNext:
@@ -3278,16 +3269,16 @@ namespace ScriptPlayer.ViewModels
                         else
                         {
                             if (Settings.NotifyGaps)
-                                OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
+                                OsdShowMessage("No more events available", TimeSpan.FromSeconds(4), "Events");
                             if (Settings.ShowSkipButton)
-                                OnRequestShowSkipNextButton();
+                                OsdShowSkipNextButton();
                         }
                         break;
                     }
                 case SkipState.End:
                     {
                         if (Settings.NotifyGaps)
-                            OnRequestOverlay("No more events available", TimeSpan.FromSeconds(4), "Events");
+                            OsdShowMessage("No more events available", TimeSpan.FromSeconds(4), "Events");
                         break;
                     }
                 default:
@@ -3492,7 +3483,7 @@ namespace ScriptPlayer.ViewModels
                 string line = position.ToString("hh\\:mm\\:ss\\.fff");
                 File.AppendAllLines(logFile, new[] { line });
                 if (Settings.NotifyLogging)
-                    OnRequestOverlay("Logged marker at " + line, TimeSpan.FromSeconds(5), "Log");
+                    OsdShowMessage("Logged marker at " + line, TimeSpan.FromSeconds(5), "Log");
             }
             catch (Exception ex)
             {
@@ -3750,8 +3741,8 @@ namespace ScriptPlayer.ViewModels
 
         public void SkipToNextEventInternal()
         {
-            OnRequestHideSkipButton();
-            OnRequestHideNotification("Events");
+            OsdHideSkipButton();
+            OsdHideNotification("Events");
 
             if (IsSeeking)
                 return;
@@ -3956,7 +3947,7 @@ namespace ScriptPlayer.ViewModels
                 if (!LoadScript(otherLoaders, scriptFileName, isFallbackScript))
                 {
                     if (Settings.NotifyFileLoaded)
-                        OnRequestOverlay($"The script file '{scriptFileName}' could not be loaded!", TimeSpan.FromSeconds(6));
+                        OsdShowMessage($"The script file '{scriptFileName}' could not be loaded!", TimeSpan.FromSeconds(6));
 
                     if (isFallbackScript)
                         return false;
@@ -3967,7 +3958,7 @@ namespace ScriptPlayer.ViewModels
             }
 
             if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
-                OnRequestOverlay($"Loaded {Path.GetFileName(scriptFileName)}", TimeSpan.FromSeconds(4), "ScriptLoaded");
+                OsdShowMessage($"Loaded {Path.GetFileName(scriptFileName)}", TimeSpan.FromSeconds(4), "ScriptLoaded");
 
             Title = Path.GetFileNameWithoutExtension(scriptFileName);
 
@@ -4113,7 +4104,7 @@ namespace ScriptPlayer.ViewModels
         private void ShowPosition(string prefix = "")
         {
             if (Settings.NotifyPosition)
-                OnRequestOverlay($@"{prefix}{TimeSource.Progress:h\:mm\:ss} / {TimeSource.Duration:h\:mm\:ss}",
+                OsdShowMessage($@"{prefix}{TimeSource.Progress:h\:mm\:ss} / {TimeSource.Duration:h\:mm\:ss}",
                 TimeSpan.FromSeconds(3), "Position");
         }
 
@@ -4153,7 +4144,7 @@ namespace ScriptPlayer.ViewModels
             for (int i = 1; i <= Settings.ButtplugConnectionAttempts; i++)
             {
                 if (Settings.NotifyDevices)
-                    OnRequestOverlay($"Connecting to Buttplug (Attempt {i}/{Settings.ButtplugConnectionAttempts})", TimeSpan.FromSeconds(6), "Buttplug Connection");
+                    OsdShowMessage($"Connecting to Buttplug (Attempt {i}/{Settings.ButtplugConnectionAttempts})", TimeSpan.FromSeconds(6), "Buttplug Connection");
 
                 success = await controller.Connect();
                 if (success)
@@ -4165,7 +4156,7 @@ namespace ScriptPlayer.ViewModels
             if (success)
             {
                 if (Settings.NotifyDevices)
-                    OnRequestOverlay("Connected to Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
+                    OsdShowMessage("Connected to Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
 
                 if (Settings.AutoSearchForButtplugDevices)
                     StartScanningButtplug();
@@ -4179,7 +4170,7 @@ namespace ScriptPlayer.ViewModels
                 controller.DeviceFound -= DeviceController_DeviceFound;
                 controller.DeviceRemoved -= DeviceController_DeviceRemoved;
                 if (Settings.NotifyDevices)
-                    OnRequestOverlay("Could not connect to Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
+                    OsdShowMessage("Could not connect to Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
             }
         }
 
@@ -4195,7 +4186,7 @@ namespace ScriptPlayer.ViewModels
 
             _controllers.Remove(controller);
 
-            OnRequestOverlay("Disconnected from Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
+            OsdShowMessage("Disconnected from Buttplug", TimeSpan.FromSeconds(6), "Buttplug Connection");
         }
 
         private async void DisconnectButtplug()
@@ -4367,24 +4358,60 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        protected virtual void OnRequestShowSkipButton()
+        protected virtual void OsdShowMessage(string text, TimeSpan duration, string designation = null)
         {
-            RequestShowSkipButton?.Invoke(this, EventArgs.Empty);
+            if (_usedOsds == null || _usedOsds.Length == 0)
+                return;
+
+            foreach (IOnScreenDisplay osd in _usedOsds)
+            {
+                osd.ShowMessage(designation, text, duration);
+            }
         }
 
-        protected virtual void OnRequestShowSkipNextButton()
+        protected virtual void OsdShowSkipButton()
         {
-            RequestShowSkipNextButton?.Invoke(this, EventArgs.Empty);
+            if (_usedOsds == null || _usedOsds.Length == 0)
+                return;
+
+            foreach (IOnScreenDisplay osd in _usedOsds)
+            {
+                osd.ShowSkipButton();
+            }
         }
 
-        protected virtual void OnRequestHideSkipButton()
+        protected virtual void OsdShowSkipNextButton()
         {
-            RequestHideSkipButton?.Invoke(this, EventArgs.Empty);
+            if (_usedOsds == null || _usedOsds.Length == 0)
+                return;
+
+            foreach (IOnScreenDisplay osd in _usedOsds)
+            {
+                osd.ShowSkipNextButton();
+            }
         }
 
-        protected virtual void OnRequestHideNotification(string designation)
+        protected virtual void OsdHideSkipButton()
         {
-            RequestHideNotification?.Invoke(this, designation);
+            if (_usedOsds == null || _usedOsds.Length == 0)
+                return;
+
+            foreach (IOnScreenDisplay osd in _usedOsds)
+            {
+                osd.HideSkipButton();
+            }
+        }
+
+        protected virtual void OsdHideNotification(string designation)
+        {
+
+            if (_usedOsds == null || _usedOsds.Length == 0)
+                return;
+
+            foreach (IOnScreenDisplay osd in _usedOsds)
+            {
+                osd.HideMessage(designation);
+            }
         }
 
         protected virtual void OnBeat()
@@ -4821,155 +4848,23 @@ namespace ScriptPlayer.ViewModels
 
             return e.Value;
         }
-    }
 
-    public enum ChapterMode
-    {
-        [XmlEnum("RandomChapter")]
-        RandomChapter,
-
-        [XmlEnum("FastestChapter")]
-        FastestChapter,
-
-        [XmlEnum("RandomTimeSpan")]
-        RandomTimeSpan,
-
-        [XmlEnum("FastestTimeSpan")]
-        FastestTimeSpan,
-
-        [XmlEnum("RandomChapterLimitedDuration")]
-        RandomChapterLimitedDuration,
-
-        [XmlEnum("FastestChapterLimitedDuration")]
-        FastestChapterLimitedDuration
-    }
-    public enum SkipState
-    {
-        Unknown,
-        Available,
-        Gap,
-        Filler,
-        FillerGap,
-        EndFillerNext,
-        EndFiller,
-        EndNext,
-        End,
-    }
-
-    public class CommandSection : Section
-    {
-        public int CommandCount { get; }
-        public double CommandsPerSecond { get; }
-
-        public static new CommandSection Empty => new CommandSection(TimeSpan.Zero, TimeSpan.Zero, 1);
-
-        public List<TimeSpan> Positions { get; set; }
-
-        public CommandSection(List<TimedPosition> positions, bool savePositions)
+        public void SetMainWindowOsd(IOnScreenDisplay osd)
         {
-            Start = positions.First().TimeStamp;
-            End = positions.Last().TimeStamp;
-            Duration = End - Start;
-
-            CommandCount = positions.Count;
-            if (Duration <= TimeSpan.Zero)
-                CommandsPerSecond = 0.0;
-            else
-                CommandsPerSecond = (CommandCount - 1) / Duration.TotalSeconds;
-
-            if (savePositions)
-                Positions = positions.Select(p => p.TimeStamp).ToList();
+            _mainOsd = osd;
+            RefreshOsds();
         }
 
-        public CommandSection(List<TimeSpan> positions, bool savePositions)
+        private void RefreshOsds()
         {
-            Start = positions.First();
-            End = positions.Last();
-            Duration = End - Start;
+            List<IOnScreenDisplay> osds = new List<IOnScreenDisplay>();
 
-            CommandCount = positions.Count;
-            if (Duration <= TimeSpan.Zero)
-                CommandsPerSecond = 0.0;
-            else
-                CommandsPerSecond = (CommandCount - 1) / Duration.TotalSeconds;
+            osds.Add(_mainOsd);
 
-            if (savePositions)
-                Positions = positions.ToList();
-        }
+            if(TimeSource.OnScreenDisplay != null)
+                osds.Add(TimeSource.OnScreenDisplay);
 
-        public CommandSection(TimeSpan start, TimeSpan end, int commandCount)
-        {
-            Start = start;
-            End = end;
-            Duration = End - Start;
-
-            CommandCount = commandCount;
-            if (Duration <= TimeSpan.Zero)
-                CommandsPerSecond = 0.0;
-            else
-                CommandsPerSecond = (CommandCount - 1) / Duration.TotalSeconds;
-        }
-    }
-
-    public struct KeyAndModifiers
-    {
-        public Key Key { get; set; }
-        public ModifierKeys Modifiers { get; set; }
-
-        public KeyAndModifiers(Key key, ModifierKeys modifiers)
-        {
-            Key = key;
-            Modifiers = modifiers;
-        }
-
-        public static KeyAndModifiers FromKeyboardHookEventArgs(KeyboardHookEventArgs eventArgs)
-        {
-            Key key = KeyInterop.KeyFromVirtualKey((int)eventArgs.Key);
-            ModifierKeys modifiers = ModifierKeys.None;
-
-            if (eventArgs.isShiftPressed)
-                modifiers |= ModifierKeys.Shift;
-
-            if (eventArgs.isCtrlPressed)
-                modifiers |= ModifierKeys.Control;
-
-            if (eventArgs.isAltPressed)
-                modifiers |= ModifierKeys.Alt;
-
-            return new KeyAndModifiers(key, modifiers);
-        }
-
-        public static KeyAndModifiers FromWndProc(int wParam)
-        {
-            ModifierKeys modifiers = ModifierKeys.None;
-
-            //0x00010000 = shift
-            //0x00020000 = control
-            //0x00040000 = alt
-
-            int virtualKeyCode = (int)wParam;
-
-            if ((virtualKeyCode & 0x00010000) > 0)
-            {
-                modifiers |= ModifierKeys.Shift;
-                virtualKeyCode &= ~0x00010000;
-            }
-
-            if ((virtualKeyCode & 0x00020000) > 0)
-            {
-                modifiers |= ModifierKeys.Control;
-                virtualKeyCode &= ~0x00020000;
-            }
-
-            if ((virtualKeyCode & 0x00040000) > 0)
-            {
-                modifiers |= ModifierKeys.Alt;
-                virtualKeyCode &= ~0x00040000;
-            }
-
-            Key key = KeyInterop.KeyFromVirtualKey(virtualKeyCode);
-
-            return new KeyAndModifiers(key, modifiers);
+            _usedOsds = osds.ToArray();
         }
     }
 }

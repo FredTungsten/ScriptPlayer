@@ -372,7 +372,7 @@
             </Grid>
 
             <!-- NOTIFICATIONS -->
-            <shared:NotificationList x:Name="Notifications" Margin="10">
+            <shared:NotificationList x:Name="Notifications" Margin="10" Loaded="Notifications_Loaded">
                 <shared:NotificationList.Resources>
                     <DataTemplate DataType="{x:Type shared:NotificationCommand}">
                         <Button Command="{Binding Command}" Margin="0,0,0,8" Padding="8,0,8,4" SnapsToDevicePixels="True" Background="#FF3E4587" 
