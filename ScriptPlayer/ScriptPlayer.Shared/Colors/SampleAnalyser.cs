@@ -13,15 +13,19 @@ namespace ScriptPlayer.Shared
 
         public SampleAnalyser(SampleCondition condition, AnalysisParameters parameters)
         {
+            _previousSample = new byte[]{0,0,0};
             _condition = condition;
             _parameters = parameters;
         }
 
+        private byte[] _previousSample;
+
         public void AddSample(FrameCapture capture)
         {
-            bool samplePositive = _condition.CheckSample(capture.Capture);
+            bool samplePositive = _condition.CheckSample(capture.Capture, _previousSample);
             long frameIndex = capture.FrameIndex;
 
+            _previousSample = capture.Capture;
             _conditionFullfilled.Add(frameIndex, samplePositive);
         }
 

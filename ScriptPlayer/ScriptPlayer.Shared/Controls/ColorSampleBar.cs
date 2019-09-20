@@ -208,11 +208,16 @@ namespace ScriptPlayer.Shared
                 else
                 {
                     var samples = new Color[colors.Length];
+                    Color previousColor = Colors.Black;
 
                     for (int i = 0; i < samples.Length; i++)
                     {
-                        bool isOk = SampleCondition.CheckSample(new[] {colors[i].R, colors[i].G, colors[i].B});
+                        bool isOk = SampleCondition.CheckSample(
+                            new[] {colors[i].R, colors[i].G, colors[i].B},
+                            new[] { previousColor.R, previousColor.G, previousColor.B });
                         samples[i] = isOk ? Colors.Lime : Colors.Red;
+
+                        previousColor = colors[i];
                     }
 
                     var results = new LinearGradientBrush(HeatMapGenerator.GradientsSharpFromColors(samples),

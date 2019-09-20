@@ -194,7 +194,6 @@ namespace ScriptPlayer.VideoSync
         private void InitializeSampler()
         {
             Sampler = new ColorSampler();
-            Sampler.BeatDetected += SamplerOnBeatDetected;
             Sampler.Sample = _captureRect;
 
             RefreshSampler();
@@ -206,13 +205,6 @@ namespace ScriptPlayer.VideoSync
             Sampler.Source = videoPlayer.Player.VideoBrush;
             Sampler.TimeSource = videoPlayer.TimeSource;
             Sampler.Refresh();
-        }
-
-        private void SamplerOnBeatDetected(object sender, TimeSpan d)
-        {
-            if (cckRecord.IsChecked != true) return;
-            AddBeat(d);
-            BeatCount = Beats.Count;
         }
 
         private Int32Rect _captureRect = new Int32Rect(680, 700, 4, 4);
@@ -450,6 +442,11 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuAnalyseSelection_Click(object sender, RoutedEventArgs e)
         {
+            AnalyseSelection();
+        }
+
+        private void AnalyseSelection()
+        {
             if (_frameSamples == null)
             {
                 MessageBox.Show(this, "No samples to analyse!");
@@ -562,8 +559,20 @@ namespace ScriptPlayer.VideoSync
                 SetCondition(dialog.Result);
                 _parameters = dialog.Result2;
 
-                if (dialog.Reanalyse)
-                    AnalyseSamples();
+                switch (dialog.Reanalyse)
+                {
+                    case ReanalyseType.Everything:
+                        AnalyseSamples();
+                        break;
+                    case ReanalyseType.Selection:
+                        AnalyseSelection();
+                        break;
+                    case ReanalyseType.Nothing:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+                    
             }
 
         }

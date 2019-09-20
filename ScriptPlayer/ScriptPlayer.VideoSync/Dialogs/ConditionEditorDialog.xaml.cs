@@ -10,16 +10,16 @@ namespace ScriptPlayer.VideoSync
 {
     public partial class ConditionEditorDialog : Window
     {
-        public event EventHandler<PixelColorSampleCondition> LiveConditionUpdate;
-
         public static readonly DependencyProperty ReanalyseProperty = DependencyProperty.Register(
-            "Reanalyse", typeof(bool), typeof(ConditionEditorDialog), new PropertyMetadata(true));
+            "Reanalyse", typeof(ReanalyseType), typeof(ConditionEditorDialog), new PropertyMetadata(default(ReanalyseType)));
 
-        public bool Reanalyse
+        public ReanalyseType Reanalyse
         {
-            get { return (bool) GetValue(ReanalyseProperty); }
+            get { return (ReanalyseType) GetValue(ReanalyseProperty); }
             set { SetValue(ReanalyseProperty, value); }
         }
+
+        public event EventHandler<PixelColorSampleCondition> LiveConditionUpdate;       
 
         public static readonly DependencyProperty ResultProperty = DependencyProperty.Register(
             "Result", typeof(PixelColorSampleCondition), typeof(ConditionEditorDialog), new PropertyMetadata(default(PixelColorSampleCondition)));
@@ -63,13 +63,13 @@ namespace ScriptPlayer.VideoSync
 
             if (condition != null)
             {
-                switch (condition.Source)
+                switch (condition.Type)
                 {
-                    case ConditionSource.Average:
-                        rbAverage.IsChecked = true;
+                    case ConditionType.Absolute:
+                        rbAbsolute.IsChecked = true;
                         break;
-                    case ConditionSource.Majority:
-                        rbMajority.IsChecked = true;
+                    case ConditionType.Relative:
+                        rbRelative.IsChecked = true;
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -108,6 +108,14 @@ namespace ScriptPlayer.VideoSync
         {
             Result = GetCondition();
             Result2 = GetParameters();
+
+            if (rbEverything.IsChecked == true)
+                Reanalyse = ReanalyseType.Everything;
+            else if (rbSelection.IsChecked == true)
+                Reanalyse = ReanalyseType.Selection;
+            else
+                Reanalyse = ReanalyseType.Nothing;
+
             DialogResult = true;
         }
 
@@ -138,18 +146,9 @@ namespace ScriptPlayer.VideoSync
                 Hue = Conditions[3].ToParameter(),
                 Saturation = Conditions[4].ToParameter(),
                 Luminosity = Conditions[5].ToParameter(),
+                Type = rbAbsolute.IsChecked == true ? ConditionType.Absolute : ConditionType.Relative
             };
 
-            if (rbMajority.IsChecked == true)
-            {
-                result.Source = ConditionSource.Majority;
-                result.MatchedSamples = new SampleCondtionParameter { MaxValue = 100, MinValue = 50, State = ConditionState.Include };
-            }
-            else
-            {
-                result.Source = ConditionSource.Average;
-                result.MatchedSamples = new SampleCondtionParameter { MaxValue = 100, MinValue = 50, State = ConditionState.NotUsed };
-            }
             return result;
         }
 
@@ -157,6 +156,18 @@ namespace ScriptPlayer.VideoSync
         {
             LiveConditionUpdate?.Invoke(this, condition);
         }
+
+        private void rbType_Checked(object sender, RoutedEventArgs e)
+        {
+            OnLiveConditionUpdate(GetCondition());
+        }
+    }
+
+    public enum ReanalyseType
+    {
+        Everything,
+        Selection,
+        Nothing
     }
 
     public class ConditionViewModel : INotifyPropertyChanged

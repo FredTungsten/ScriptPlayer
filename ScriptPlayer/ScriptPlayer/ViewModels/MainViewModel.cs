@@ -4365,7 +4365,7 @@ namespace ScriptPlayer.ViewModels
 
             foreach (IOnScreenDisplay osd in _usedOsds)
             {
-                osd.ShowMessage(designation, text, duration);
+                osd?.ShowMessage(designation, text, duration);
             }
         }
 

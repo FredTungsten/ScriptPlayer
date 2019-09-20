@@ -17,8 +17,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <RadioButton GroupName="ColorMode" Grid.Row="0" Content="Average" x:Name="rbAverage" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <RadioButton GroupName="ColorMode" Grid.Row="0" Content="Majority" x:Name="rbMajority" HorizontalAlignment="Left" Margin="10,30,0,0" VerticalAlignment="Top"/>
+        <RadioButton GroupName="ValueMode" Grid.Row="0" Content="Absolute" x:Name="rbAbsolute" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Checked="rbType_Checked"/>
+        <RadioButton GroupName="ValueMode" Grid.Row="0" Content="Relative" x:Name="rbRelative" HorizontalAlignment="Left" Margin="10,30,0,0" VerticalAlignment="Top" Checked="rbType_Checked"/>
 
         <Button Grid.Row="3" IsDefault="True" Content="Ok" Height="23" Width="75" Margin="0,0,90,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="btnOk_Click"/>
         <Button Grid.Row="3" IsCancel="True" Content="Cancel" Height="23" Width="75" Margin="0,0,10,10" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
@@ -67,10 +67,20 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <CheckBox IsChecked="{Binding Reanalyse, Mode=TwoWay}" Content="Re-Analyse Samples" Margin="0,0,170,13" Grid.Row="3" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="126"/>
-        <RadioButton Name="rbFirst"  GroupName="Method" Content="First Occurence" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="2" VerticalAlignment="Top"/>
-        <RadioButton Name="rbCenter" GroupName="Method" Content="Center" HorizontalAlignment="Left" Margin="10,30,0,0" Grid.Row="2" VerticalAlignment="Top"/>
-        <RadioButton Name="rbLast" GroupName="Method" Content="Last Occurence" HorizontalAlignment="Left" Margin="10,50,0,10" Grid.Row="2" VerticalAlignment="Top"/>
+        <StackPanel Grid.Row="2">
+            <StackPanel>
+                <TextBlock Text="Put Marker at" Margin="10,0,0,0"></TextBlock>
+                <RadioButton Name="rbFirst"  GroupName="Method" Margin="16,2,2,2" Content="First Occurence" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <RadioButton Name="rbCenter" GroupName="Method" Margin="16,2,2,2" Content="Center" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <RadioButton Name="rbLast" GroupName="Method" Margin="16,2,2,2" Content="Last Occurence" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Reanalyse" Margin="10,0,0,0"></TextBlock>
+                <RadioButton Name="rbDont"  GroupName="Reanalyse" Margin="16,2,2,2" Content="Don't" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <RadioButton Name="rbEverything" GroupName="Method" Margin="16,2,2,2" Content="Everything" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <RadioButton Name="rbSelection" GroupName="Method" Margin="16,2,2,2" Content="Selection" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            </StackPanel>
+        </StackPanel>
     </Grid>
 </Window>
 

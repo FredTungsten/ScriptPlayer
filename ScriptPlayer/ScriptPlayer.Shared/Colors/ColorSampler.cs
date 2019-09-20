@@ -94,7 +94,7 @@ namespace ScriptPlayer.Shared
 
         public ColorSampler()
         {
-            _condition = new MajoityPixelCondition(Color.FromRgb(165, 90, 238), 51);
+            _condition = new PixelColorSampleCondition();
         }
 
         private void ValueOnProgressChanged(object sender, TimeSpan d)
@@ -109,6 +109,7 @@ namespace ScriptPlayer.Shared
 
         private TimeSpan lastTimestamp;
         private Int32Rect _sample;
+
         private SampleCondition _condition;
 
         private void TakeSample(TimeSpan timestamp)
@@ -138,14 +139,6 @@ namespace ScriptPlayer.Shared
                     _colorsByTime.RemoveAt(0);
             }
 
-            bool active = _condition.CheckSample(rgbPixels);
-
-            if (active && !_active)
-            {
-                OnBeatDetected(timestamp);
-            }
-            _active = active;
-
             PixelPreview = new SolidColorBrush(average);
         }
 
@@ -157,21 +150,16 @@ namespace ScriptPlayer.Shared
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        protected virtual void OnBeatDetected(TimeSpan e)
-        {
-            BeatDetected?.Invoke(this, e);
-        }
-
         public void Refresh()
         {
             RefreshSample();
         }
     }
 
-    public enum ConditionSource
+    public enum ConditionType
     {
-        Average,
-        Majority
+        Absolute,
+        Relative
     }
     public enum ConditionState
     {
@@ -218,37 +206,61 @@ namespace ScriptPlayer.Shared
 
     public class PixelColorSampleCondition : SampleCondition
     {
-        public ConditionSource Source { get; set; }
-        public SampleCondtionParameter MatchedSamples { get; set; }
+        public ConditionType Type { get; set; }
+        
         public SampleCondtionParameter Red { get; set; }
         public SampleCondtionParameter Green { get; set; }
         public SampleCondtionParameter Blue { get; set; }
         public SampleCondtionParameter Hue { get; set; }
         public SampleCondtionParameter Saturation { get; set; }
         public SampleCondtionParameter Luminosity { get; set; }
-        public override bool CheckSample(byte[] rgbPixels)
+
+        public override bool CheckSample(byte[] rgbPixels, byte[] previousPixels)
         {
-            switch (Source)
+            switch (Type)
             {
-                case ConditionSource.Average:
+                case ConditionType.Absolute:
+                {
                     Color averageColor = GetAverageColor(rgbPixels);
                     return CheckSample(averageColor.R, averageColor.G, averageColor.B);
-                case ConditionSource.Majority:
-                    int pixels = 0;
-                    int positiveSamples = 0;
-
-                    for (int i = 0; i < rgbPixels.Length - 3; i += 3)
-                    {
-                        pixels++;
-                        positiveSamples += CheckSample(rgbPixels[i + 0], rgbPixels[i + 1], rgbPixels[i + 2]) ? 1 : 0;
-                    }
-
-                    int acceptedPixels = (int) Math.Round(100.0 * (positiveSamples / (double) pixels));
-
-                    return MatchedSamples.IsAcceptableValue(acceptedPixels);
+                }
+                case ConditionType.Relative:
+                {
+                    Color color1 = GetAverageColor(rgbPixels);
+                    Color color2 = GetAverageColor(previousPixels);
+                    return CheckSample(color1.R, color1.G, color1.B, color2.R, color2.G, color2.B);
+                }
             }
 
             return false;
+        }
+
+        private bool CheckSample(byte r1, byte g1, byte b1, byte r2, byte g2, byte b2)
+        {
+            if (Red == null) return false;
+
+            if (!Red.IsAcceptableValue(Math.Abs(r1-r2))) return false;
+            if (!Green.IsAcceptableValue(Math.Abs(g1 - g2))) return false;
+            if (!Blue.IsAcceptableValue(Math.Abs(b1 - b2))) return false;
+
+            if (Hue.State != ConditionState.NotUsed || Saturation.State != ConditionState.NotUsed ||
+                Luminosity.State != ConditionState.NotUsed)
+            {
+                var hsl1 = HslConversion.FromRgb(r1, g1, b1);
+                var hsl2 = HslConversion.FromRgb(r2, g2, b2);
+
+                var hsl = new Tuple<double, double, double>(Math.Abs(hsl1.Item1 - hsl2.Item1),
+                    Math.Abs(hsl1.Item2 - hsl2.Item2), Math.Abs(hsl1.Item3 - hsl2.Item3));
+
+                if (hsl.Item3 > 180)
+                    hsl = new Tuple<double, double, double>(hsl.Item1, hsl.Item2, 360 - hsl.Item3);
+
+                if (!Hue.IsAcceptableValue((int)Math.Round(hsl.Item1))) return false;
+                if (!Saturation.IsAcceptableValue((int)Math.Round(hsl.Item2))) return false;
+                if (!Luminosity.IsAcceptableValue((int)Math.Round(hsl.Item3))) return false;
+            }
+
+            return true;
         }
 
         private bool CheckSample(byte r, byte g, byte b)
@@ -273,64 +285,9 @@ namespace ScriptPlayer.Shared
         }
     }
 
-    public class MinSaturationCondition : SampleCondition
-    {
-        public MinSaturationCondition(byte minSaturation)
-        {
-            MinSaturation = minSaturation;
-        }
-
-        public byte MinSaturation { get; set; }
-        public override bool CheckSample(byte[] rgbPixels)
-        {
-            return GetSampleScoreRaw(rgbPixels) >= MinSaturation;
-        }
-
-        public double GetSampleScoreRaw(byte[] rgbPixels)
-        {
-            Color c = GetAverageColor(rgbPixels);
-            var hsl = HslConversion.FromRgb(c.R, c.G, c.B);
-            return hsl.Item2;
-        }
-    }
-
-    public class MinBrightnessCondition : SampleCondition
-    {
-        public MinBrightnessCondition(byte minBrightness)
-        {
-            MinBrightness = minBrightness;
-        }
-
-        public byte MinBrightness { get; set; }
-        public override bool CheckSample(byte[] rgbPixels)
-        {
-            return GetSampleScoreRaw(rgbPixels) >= MinBrightness * 3;
-        }
-
-        public double GetSampleScoreRaw(byte[] rgbPixels)
-        {
-            Color c = GetAverageColor(rgbPixels);
-            return c.R + c.G + c.B;
-        }
-    }
-
     public abstract class SampleCondition
     {
-        public abstract bool CheckSample(byte[] rgbPixels);
-
-        public virtual bool CheckSample(System.Drawing.Color[] pixels)
-        {
-            byte[] sample = new byte[pixels.Length * 3];
-
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                sample[4 * i + 0] = pixels[i].R;
-                sample[4 * i + 1] = pixels[i].G;
-                sample[4 * i + 2] = pixels[i].B;
-            }
-
-            return CheckSample(sample);
-        }
+        public abstract bool CheckSample(byte[] rgbPixels, byte[] previousPixels);
 
         public static Color GetAverageColor(byte[] pixels)
         {
@@ -383,86 +340,6 @@ namespace ScriptPlayer.Shared
             }
 
             return rgbPixels;
-        }
-    }
-
-    public class MajoityPixelCondition : SampleCondition
-    {
-        private byte _r;
-        private double _factorMin;
-        private byte _g;
-        private byte _b;
-        private byte _offset;
-
-        public Color ReferenceColor => Color.FromRgb(_r, _g, _b);
-        public double PercentageMin => _factorMin * 100.0;
-        public byte MaxOffset => _offset;
-
-        public MajoityPixelCondition(Color referenceColor, double percentageMin, byte maxOffset = 10)
-        {
-            _r = referenceColor.R;
-            _g = referenceColor.G;
-            _b = referenceColor.B;
-            _offset = maxOffset;
-            _factorMin = percentageMin / 100.0;
-        }
-
-        public override bool CheckSample(byte[] pixels)
-        {
-            return GetSampleScoreRaw(pixels) >= _factorMin;
-        }
-
-        public double GetSampleScoreRaw(byte[] pixels)
-        {
-            int positive = 0;
-            int total = 0;
-
-            for (int i = 0; i < pixels.Length; i += 3)
-            {
-                if (IsSimilar(pixels[i + 0], pixels[i + 1], pixels[i + 2], _offset))
-                    positive++;
-                total++;
-            }
-
-            return (double)positive / total;
-        }
-
-        private bool IsSimilar(byte r, byte g, byte b, byte maxOffset)
-        {
-            if (Math.Abs(_r - r) > maxOffset) return false;
-            if (Math.Abs(_g - g) > maxOffset) return false;
-            return Math.Abs(_b - b) <= maxOffset;
-        }
-    }
-
-    public class AverageColorCondition : SampleCondition
-    {
-        private byte _r;
-        private byte _g;
-        private byte _b;
-        private byte _offset;
-
-        public Color ReferenceColor => Color.FromRgb(_r, _g, _b);
-        public byte MaxOffset => _offset;
-
-        public AverageColorCondition(Color referenceColor, byte maxOffset)
-        {
-            _r = referenceColor.R;
-            _g = referenceColor.G;
-            _b = referenceColor.B;
-            _offset = maxOffset;
-        }
-
-        public override bool CheckSample(byte[] pixels)
-        {
-            return GetSampleScoreRaw(pixels) <= _offset;
-        }
-
-        public double GetSampleScoreRaw(byte[] pixels)
-        {
-            Color average = GetAverageColor(pixels);
-            byte maxOffset = Similarity(average, _r, _g, _b);
-            return maxOffset;
         }
     }
 }
