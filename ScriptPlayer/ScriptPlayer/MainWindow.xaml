@@ -51,7 +51,7 @@
         </DataTemplate>
         <!-- ReSharper restore Xaml.RedundantResource -->
     </Window.Resources>
-    <Grid>
+    <Grid Background="Transparent">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="383*"/>
             <ColumnDefinition Width="Auto"/>

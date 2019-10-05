@@ -278,6 +278,7 @@ namespace ScriptPlayer.ViewModels
         private GeneratorSettingsViewModel _previousGeneratorSettings;
         private IOnScreenDisplay _mainOsd;
         private IOnScreenDisplay[] _usedOsds;
+        private string _previouslyOpenedVideoFile = "";
 
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
@@ -897,6 +898,11 @@ namespace ScriptPlayer.ViewModels
 
         private void OnVideoFileOpened(object sender, string videoFileName)
         {
+            if (_previouslyOpenedVideoFile == videoFileName)
+                return;
+
+            _previouslyOpenedVideoFile = videoFileName;
+
             TryFindMatchingScript(videoFileName);
             TryFindMatchingThumbnails(videoFileName, true);
         }
@@ -1488,6 +1494,7 @@ namespace ScriptPlayer.ViewModels
             UpdateFallbackScriptModifiers();
             UpdateHeatMap();
             UpdatePatternSpeed();
+            UpdateOsd();
         }
 
         private void UpdatePlaylistRandomChapter()
@@ -1597,7 +1604,17 @@ namespace ScriptPlayer.ViewModels
                         UpdateDisplayedDuration();
                         break;
                     }
+                case nameof(SettingsViewModel.UseExternalOsd):
+                {
+                    UpdateOsd();
+                        break;
+                }
             }
+        }
+
+        private void UpdateOsd()
+        {
+            RefreshOsds();
         }
 
         private void UpdatePatternSpeed()
@@ -1781,7 +1798,6 @@ namespace ScriptPlayer.ViewModels
                     OsdShowMessage("Pause", TimeSpan.FromSeconds(2), "Playback");
             }
         }
-
 
         private void TryFindMatchingThumbnails(string videoFileName, bool generateIfMissing)
         {
@@ -4363,6 +4379,8 @@ namespace ScriptPlayer.ViewModels
             if (_usedOsds == null || _usedOsds.Length == 0)
                 return;
 
+            Debug.WriteLine(text);
+
             foreach (IOnScreenDisplay osd in _usedOsds)
             {
                 osd?.ShowMessage(designation, text, duration);
@@ -4859,10 +4877,14 @@ namespace ScriptPlayer.ViewModels
         {
             List<IOnScreenDisplay> osds = new List<IOnScreenDisplay>();
 
-            osds.Add(_mainOsd);
+            if(_mainOsd != null)
+                osds.Add(_mainOsd);
 
-            if(TimeSource.OnScreenDisplay != null)
-                osds.Add(TimeSource.OnScreenDisplay);
+            if(Settings.UseExternalOsd)
+            {
+                if (TimeSource?.OnScreenDisplay != null)
+                    osds.Add(TimeSource.OnScreenDisplay);
+            }
 
             _usedOsds = osds.ToArray();
         }

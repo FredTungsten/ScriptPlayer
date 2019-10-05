@@ -729,13 +729,18 @@ namespace ScriptPlayer.ViewModels
             OnSelectedEntryMoved();
         }
 
-        public void AddEntry(PlaylistEntry entry)
+        public void AddEntry(PlaylistEntry entry, bool allowDuplicates = false)
         {
+            if (!allowDuplicates)
+            {
+                if (Entries.Any(e => e.Fullname == entry.Fullname))
+                    return;
+            }
+
             EnsureMediaInfo(entry);
             Entries.Add(entry);
 
             UpdateNextAndPreviousIfNull();
-
             CommandManager.InvalidateRequerySuggested();
         }
 

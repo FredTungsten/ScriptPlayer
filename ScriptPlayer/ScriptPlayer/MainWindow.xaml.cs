@@ -424,6 +424,8 @@ namespace ScriptPlayer
                 ResizeMode = ResizeMode.NoResize;
                 WindowState = WindowState.Normal;
 
+                //GridVideo.Visibility = Visibility.Hidden;
+
                 Width = screenBounds.Width;
                 Height = screenBounds.Height;
                 Left = screenBounds.Left;
@@ -437,6 +439,8 @@ namespace ScriptPlayer
             }
             else
             {
+                //GridVideo.Visibility = Visibility.Visible;
+
                 WindowStyle = WindowStyle.SingleBorderWindow;
                 ResizeMode = ResizeMode.CanResize;
 
@@ -668,85 +672,6 @@ namespace ScriptPlayer
         {
             ViewModel.ReloadScript();
         }
-
-        //private void MnuCreateScenes_OnClick(object sender, RoutedEventArgs e)
-        //{
-        //    if (!ViewModel.CheckFfmpeg())
-        //        return;
-
-        //    new SceneSelectorDialog(ViewModel, ViewModel.LoadedVideo).ShowDialog();
-        //}
-
-        //private void ToolTipNext_OnOpened(object sender, RoutedEventArgs e)
-        //{
-        //    //var entry = ViewModel.Playlist.NextEntry;
-        //    //if (entry == null)
-        //    //{
-        //    //    playerNext.Close();
-        //    //    titleNext.Text = "Unknown";
-        //    //    return;
-        //    //}
-
-        //    //string heatmap = ViewModel.GetRelatedFile(entry.Fullname, new[] { "png" });
-        //    //if (!string.IsNullOrEmpty(heatmap))
-        //    //{
-        //    //    var image = new BitmapImage();
-        //    //    image.BeginInit();
-        //    //    image.CacheOption = BitmapCacheOption.OnLoad;
-        //    //    image.UriSource = new Uri(heatmap, UriKind.Absolute);
-        //    //    image.EndInit();
-
-        //    //    heatMapNext.Source = image;
-        //    //}
-
-        //    //string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new[] { "gif" });
-        //    //if (!string.IsNullOrEmpty(gifFile))
-        //    //{
-        //    //    playerNext.Load(gifFile);
-        //    //}
-
-        //    //titleNext.Text = entry.Shortname + " [" + (entry.Duration?.ToString("hh\\:mm\\:ss") ?? "?") + "]";
-        //}
-
-        //private void ToolTipPrevious_OnOpened(object sender, RoutedEventArgs e)
-        //{
-        //    var entry = ViewModel.Playlist.PreviousEntry;
-        //    if (entry == null)
-        //    {
-        //        playerPrevious.Close();
-        //        titlePrevious.Text = "Unknown";
-        //        return;
-        //    }
-
-        //    string heatmap = ViewModel.GetRelatedFile(entry.Fullname, new[]{"png"});
-        //    if (!string.IsNullOrEmpty(heatmap))
-        //    {
-        //        var image = new BitmapImage();
-        //        image.BeginInit();
-        //        image.CacheOption = BitmapCacheOption.OnLoad;
-        //        image.UriSource = new Uri(heatmap, UriKind.Absolute);
-        //        image.EndInit();
-
-        //        heatMapPrevious.Source = image;
-        //    }
-
-        //    string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new[] { "gif" });
-        //    if (!string.IsNullOrEmpty(gifFile))
-        //    {
-        //        playerPrevious.Load(gifFile);
-        //    }
-
-        //    titlePrevious.Text = entry.Shortname + " [" + (entry.Duration?.ToString("hh\\:mm\\:ss") ?? "?") + "]";
-        //}
-
-        //private void ToolTip_OnClosed(object sender, RoutedEventArgs e)
-        //{
-        //    //playerNext.Close();
-        //    playerPrevious.Close();
-
-        //    //heatMapNext.Source = null;
-        //    heatMapPrevious.Source = null;
-        //}
 
         private void MnuDownloadButtplug_Click(object sender, RoutedEventArgs e)
         {

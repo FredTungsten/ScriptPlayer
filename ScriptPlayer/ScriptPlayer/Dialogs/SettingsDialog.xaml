@@ -254,6 +254,7 @@
                             <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrows_h}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
+                            <CheckBox Margin="4,4,4,12" IsChecked="{Binding Settings.UseExternalOsd}" Content="Use external OSD if available" ToolTip="Some external video players (e.g. Zoom Player) can be used to display ScriptPlayer's notifications on their internal OSD (On Screen Displays)"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyPlayPause}" Content="Play / Pause"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyPosition}" Content="Position"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.NotifyVolume}" Content="Volume"/>

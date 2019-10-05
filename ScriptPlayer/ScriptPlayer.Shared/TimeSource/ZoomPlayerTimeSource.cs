@@ -153,7 +153,7 @@ namespace ScriptPlayer.Shared
         {
             if (_timeSource.CheckAccess())
             {
-                Debug.WriteLine(line);
+                //Debug.WriteLine(line);
 
                 ZoomPlayerMessageCodes commandCode = (ZoomPlayerMessageCodes)int.Parse(line.Substring(0, 4));
                 string parameter = line.Substring(4).Trim();

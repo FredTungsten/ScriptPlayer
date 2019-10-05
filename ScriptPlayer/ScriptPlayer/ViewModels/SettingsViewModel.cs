@@ -182,6 +182,7 @@ namespace ScriptPlayer.ViewModels
         private int _buttplugConnectionDelay;
         private bool _loopFallbackScript;
         private bool _removeGapsFromFallbackScript;
+        private bool _useExternalOsd;
 
         public SettingsViewModel()
         {
@@ -213,6 +214,17 @@ namespace ScriptPlayer.ViewModels
             duplicate.AdditionalPaths = new ObservableCollection<string>(AdditionalPaths);
 
             return duplicate;
+        }
+
+        public bool UseExternalOsd
+        {
+            get => _useExternalOsd;
+            set
+            {
+                if (value == _useExternalOsd) return;
+                _useExternalOsd = value;
+                OnPropertyChanged();
+            }
         }
 
         public bool NotifyVolume
