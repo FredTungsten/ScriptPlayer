@@ -441,8 +441,12 @@
 
                             <DockPanel Margin="4" ToolTip="Inverts the input position before calculating the output position.">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Invert Positions"/>
-
                                 <CheckBox IsChecked="{Binding Settings.InvertPosition}"/>
+                            </DockPanel>
+
+                            <DockPanel Margin="4" ToolTip="Automatically resets the device position to 0 when playback is paused.">
+                                <TextBlock Style="{StaticResource SettingName}" Text="Enable Auto Homing"/>
+                                <CheckBox IsChecked="{Binding Settings.AutoHomingEnabled}"/>
                             </DockPanel>
 
                             <DockPanel>
