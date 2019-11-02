@@ -79,7 +79,7 @@ namespace ScriptPlayer.ViewModels
         private string _mpcHcEndpoint;
         private int _samsungVrUdpPort;
         private string _zoomPlayerEndpoint;
-        private bool _enableAutoHoming = false;
+        private bool _autoHomingEnabled = false;
 
         // kodi settings
         private string _kodiIp;
@@ -759,13 +759,13 @@ namespace ScriptPlayer.ViewModels
         }
 
 
-        public bool EnableAutoHoming
+        public bool AutoHomingEnabled
         {
-            get => _enableAutoHoming;
+            get => _autoHomingEnabled;
             set
             {
-                if (value == _enableAutoHoming) return;
-                _enableAutoHoming = value;
+                if (value == _autoHomingEnabled) return;
+                _autoHomingEnabled = value;
                 OnPropertyChanged();
             }
         }
