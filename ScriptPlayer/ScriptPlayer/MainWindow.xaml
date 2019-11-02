@@ -709,6 +709,7 @@
                             <TextBlock TextAlignment="Center" Margin="0" Text="Script Delay"/>
                             <Slider Value="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-2500" Maximum="2500" SmallChange="25" LargeChange="100" IsSnapToTickEnabled="True" TickFrequency="25"/>
                             <TextBlock TextAlignment="Center" Margin="0" Text="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
+                            <CheckBox Content="Enable Auto Homing" IsChecked="{Binding Settings.EnableAutoHoming}"/>
                         </StackPanel>
                         <Separator/>
                         <StackPanel Margin="4" ToolTip="Minimum and maximum position of the Launch. Values received from the script will be scaled accordingly.">
