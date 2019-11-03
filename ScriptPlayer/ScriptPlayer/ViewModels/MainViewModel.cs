@@ -1794,9 +1794,38 @@ namespace ScriptPlayer.ViewModels
             {
                 StopDevices();
                 TimeSource.Pause();
+                AutoHomeDevices();
                 if (Settings.NotifyPlayPause)
                     OsdShowMessage("Pause", TimeSpan.FromSeconds(2), "Playback");
             }
+        }
+
+        private void AutoHomeDevices()
+        {
+            if (!Settings.AutoHomingEnabled) return;
+
+            TimeSpan duration = TimeSpan.FromMilliseconds(500);
+            byte currentPos = ((byte)(CurrentPosition*100.0));
+            byte homePos = 0;
+            DeviceCommandInformation homeInfo = new DeviceCommandInformation
+            {
+                Duration = duration,
+                DurationStretched = duration.Divide(TimeSource.PlaybackRate),
+                PlaybackRate = TimeSource.PlaybackRate,
+                PositionFromOriginal = currentPos,
+                PositionToOriginal = homePos,
+                PositionFromTransformed = TransformPosition(currentPos, 0, 99, DateTime.Now.TimeOfDay.TotalSeconds),
+                PositionToTransformed = TransformPosition(homePos, 0, 99, DateTime.Now.TimeOfDay.TotalSeconds),
+                SpeedMultiplier = Settings.SpeedMultiplier,
+                SpeedMin = Settings.MinSpeed / 99.0,
+                SpeedMax = Settings.MaxSpeed / 99.0,
+            };
+
+            homeInfo.SpeedOriginal = SpeedPredictor.PredictSpeed2(homeInfo.PositionFromOriginal, homeInfo.PositionToOriginal, duration);
+            homeInfo.SpeedTransformed = ClampSpeed(SpeedPredictor.PredictSpeed2(homeInfo.PositionFromTransformed, homeInfo.PositionToTransformed, duration));
+
+
+            SetDevices(homeInfo, false);
         }
 
         private void TryFindMatchingThumbnails(string videoFileName, bool generateIfMissing)
