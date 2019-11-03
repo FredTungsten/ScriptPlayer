@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ScriptPlayer.Shared.Scripts;
 
 namespace ScriptPlayer.BeatFileChecker
 {
@@ -33,15 +34,16 @@ namespace ScriptPlayer.BeatFileChecker
         {
             string[] paths = txtPath.Text.Split(';');
 
-            string[] files = paths.SelectMany(path => Directory.EnumerateFiles(path, "*.txt", SearchOption.AllDirectories)).ToArray();
+            string[] files = paths.SelectMany(path => Directory.EnumerateFiles(path, "*.funscript", SearchOption.AllDirectories)).ToArray();
 
             List<ScriptStats> stats = new List<ScriptStats>();
+            FunScriptLoader loader = new FunScriptLoader();
 
             foreach (string textFile in files)
             {
                 try
                 {
-                    BeatCollection collection = BeatCollection.Load(textFile);
+                    var collection = new BeatCollection(loader.Load(textFile).Select(l => l.TimeStamp));
 
                     var chapters = GetChapters(collection);
                     if (chapters == null || chapters.Count < 1)
@@ -70,7 +72,7 @@ namespace ScriptPlayer.BeatFileChecker
             foreach (var stat in stats)
             {
                 pos++;
-                Debug.WriteLine($"{pos.ToString().PadRight(2)}.: {stat.Bpm:f0} BMP, {stat.ContentDuration:h\\:mm\\:ss}, {System.IO.Path.GetFileNameWithoutExtension(stat.File)}");
+                Debug.WriteLine($"[*] {stat.Bpm:f0} BMP, {stat.ContentDuration:h\\:mm\\:ss}, {System.IO.Path.GetFileNameWithoutExtension(stat.File)}");
             }
         }
 

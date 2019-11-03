@@ -13,8 +13,12 @@ namespace ScriptPlayer.Shared.Scripts
         UpDownFast,
         DownFast,
         DownCenter,
+        DownFastSlow,
+        DownSlowFast,
         UpFast,
-        UpCenter
+        UpCenter,
+        UpFastSlow,
+        UpSlowFast
     }
 
     public class ConversionSettings
@@ -40,6 +44,10 @@ namespace ScriptPlayer.Shared.Scripts
 
             byte positionDown;
             byte positionUp;
+            bool slowFirst = false;
+
+            TimeSpan fastLimit = TimeSpan.FromMilliseconds(180);
+            TimeSpan slowLimit = TimeSpan.FromMilliseconds(2000);
 
             switch (settings.Mode)
             {
@@ -54,22 +62,44 @@ namespace ScriptPlayer.Shared.Scripts
                     positionUp = settings.Max;
                     break;
                 case ConversionMode.DownFast:
-                    centerLimit = TimeSpan.FromMilliseconds(180);
+                    centerLimit = fastLimit;
                     positionDown = settings.Max;
                     positionUp = settings.Min;
                     break;
                 case ConversionMode.DownCenter:
-                    centerLimit = TimeSpan.FromMilliseconds(2000);
+                    centerLimit = slowLimit;
                     positionDown = settings.Max;
                     positionUp = settings.Min;
                     break;
+                case ConversionMode.DownFastSlow:
+                    centerLimit = fastLimit;
+                    positionDown = settings.Max;
+                    positionUp = settings.Min;
+                    break;
+                case ConversionMode.DownSlowFast:
+                    centerLimit = fastLimit;
+                    positionDown = settings.Max;
+                    positionUp = settings.Min;
+                    slowFirst = true;
+                    break;
                 case ConversionMode.UpFast:
-                    centerLimit = TimeSpan.FromMilliseconds(180);
+                    centerLimit = fastLimit;
                     positionDown = settings.Min;
                     positionUp = settings.Max;
                     break;
+                case ConversionMode.UpFastSlow:
+                    centerLimit = fastLimit;
+                    positionDown = settings.Min;
+                    positionUp = settings.Max;
+                    break;
+                case ConversionMode.UpSlowFast:
+                    centerLimit = fastLimit;
+                    positionDown = settings.Min;
+                    positionUp = settings.Max;
+                    slowFirst = true;
+                    break;
                 case ConversionMode.UpCenter:
-                    centerLimit = TimeSpan.FromMilliseconds(2000);
+                    centerLimit = slowLimit;
                     positionDown = settings.Min;
                     positionUp = settings.Max;
                     break;
@@ -146,7 +176,6 @@ namespace ScriptPlayer.Shared.Scripts
                                 });
                             }
                         }
-                    }
 
                         actions.Add(new FunScriptAction
                         {
@@ -155,6 +184,51 @@ namespace ScriptPlayer.Shared.Scripts
                         });
 
                         break;
+                    }
+                    case ConversionMode.UpFastSlow:
+                    case ConversionMode.DownFastSlow:
+                    case ConversionMode.UpSlowFast:
+                    case ConversionMode.DownSlowFast:
+                    {
+                        if (previousTimeStamp != TimeSpan.MinValue)
+                        {
+                            if (timestamp - previousTimeStamp >= centerLimit.Multiply(2))
+                            {
+                                if(slowFirst)
+                                {
+                                    actions.Add(new FunScriptAction
+                                    {
+                                        Position = positionDown,
+                                        TimeStamp = previousTimeStamp + centerLimit
+                                    });
+                                }
+                                else
+                                {
+                                    actions.Add(new FunScriptAction
+                                    {
+                                        Position = positionDown,
+                                        TimeStamp = timestamp - centerLimit
+                                    });
+                                }
+                            }
+                            else
+                            {
+                                actions.Add(new FunScriptAction
+                                {
+                                    Position = positionDown,
+                                    TimeStamp = (previousTimeStamp + timestamp).Divide(2)
+                                });
+                            }
+                        }
+
+                        actions.Add(new FunScriptAction
+                        {
+                            Position = positionUp,
+                            TimeStamp = timestamp
+                        });
+
+                        break;
+                        }
                 }
 
                 previousDuration = timestamp - previousTimeStamp;

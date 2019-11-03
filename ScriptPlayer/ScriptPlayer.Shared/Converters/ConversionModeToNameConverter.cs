@@ -27,6 +27,14 @@ namespace ScriptPlayer.Shared.Converters
                     return "Up (Fast)";
                 case ConversionMode.UpCenter:
                     return "Up (Centered)";
+                case ConversionMode.DownFastSlow:
+                    return "Down (Fast, Slow)";
+                case ConversionMode.DownSlowFast:
+                    return "Down (Slow, Fast)";
+                case ConversionMode.UpFastSlow:
+                    return "Up (Fast, Slow)";
+                case ConversionMode.UpSlowFast:
+                    return "Up (Slow, Fast)";
                 default:
                     throw new ArgumentOutOfRangeException(nameof(value), value, null);
             }
