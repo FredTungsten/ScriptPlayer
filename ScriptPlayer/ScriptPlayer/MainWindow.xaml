@@ -714,7 +714,8 @@
                         <StackPanel Margin="4" ToolTip="Minimum and maximum position of the Launch. Values received from the script will be scaled accordingly.">
                             <TextBlock Margin="0" HorizontalAlignment="Center" Text="Range"/>
                             <shared:RangeSlider Margin="0,4" Minimum="0" Maximum="99" LowerValue="{Binding Settings.MinPosition, Mode=TwoWay}" UpperValue="{Binding Settings.MaxPosition, Mode=TwoWay}"/>
-                            <CheckBox Content="Invert Positions" IsChecked="{Binding Settings.InvertPosition}"/>
+                            <CheckBox Margin="4" Content="Invert Positions" IsChecked="{Binding Settings.InvertPosition}"/>
+                            <CheckBox Margin="4" Content="Enable Auto Homing" IsChecked="{Binding Settings.AutoHomingEnabled}"/>
                             <DockPanel LastChildFill="False">
                                 <TextBlock Margin="4,0" Text="{Binding Settings.MinPosition}" DockPanel.Dock="Left"/>
                                 <TextBlock Margin="4,0" Text="{Binding Settings.MaxPosition}" DockPanel.Dock="Right"/>
