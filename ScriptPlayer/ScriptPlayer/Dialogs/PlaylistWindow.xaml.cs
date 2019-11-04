@@ -71,40 +71,31 @@ namespace ScriptPlayer.Dialogs
             VideoDetailsPreview preview = tooltip.GetChildOfType<VideoDetailsPreview>();
             preview.ViewModel = ViewModel;
             preview.Entry = entry;
-
-            //GifPlayer player = tooltip.GetChildOfType<GifPlayer>();
-            //TextBlock text = tooltip.GetChildOfType<TextBlock>();
-            //Image heatMap = tooltip.GetChildOfType<Image>();
-
-            //string heatmap = ViewModel.GetRelatedFile(entry.Fullname, new[] { "png" });
-            //if (!string.IsNullOrEmpty(heatmap))
-            //{
-            //    var image = new BitmapImage();
-            //    image.BeginInit();
-            //    image.CacheOption = BitmapCacheOption.OnLoad;
-            //    image.UriSource = new Uri(heatmap, UriKind.Absolute);
-            //    image.EndInit();
-
-            //    heatMap.Source = image;
-            //}
-
-            //string gifFile = ViewModel.GetRelatedFile(entry.Fullname, new[] { "gif" });
-            //if (!string.IsNullOrEmpty(gifFile))
-            //{
-            //    player.Load(gifFile);
-            //}
-
-            //text.Text = entry.Fullname;
         }
 
-        private void ToolTip_OnClosed(object sender, RoutedEventArgs e)
+        private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            //var tooltip = (ToolTip)sender;
-            //GifPlayer player = tooltip.GetChildOfType<GifPlayer>();
-            //player.Close();
+            if (e.Key == Key.Delete)
+            {
+                ViewModel.Playlist.RemoveSelectedEntryCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
 
-            //Image heatMap = tooltip.GetChildOfType<Image>();
-            //heatMap.Source = null;
+        private void MnuScrollToCurrent(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel.Playlist?.FilteredEntries == null || ViewModel.LoadedFiles == null)
+                return;
+
+            var entry = ViewModel.Playlist.FilteredEntries.FirstOrDefault(en =>
+                ViewModel.LoadedFiles.Contains(en.Fullname));
+
+            if (entry == null)
+                return;
+
+            ViewModel.Playlist.SelectedEntry = entry;
+            ViewModel.Playlist.SetSelectedItems(new []{entry});
+            lstEntries.ScrollIntoView(entry);
         }
     }
 

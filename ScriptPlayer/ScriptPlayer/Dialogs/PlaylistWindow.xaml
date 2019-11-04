@@ -13,7 +13,7 @@
         xmlns:animation="clr-namespace:Windows.UI.Xaml.Media.Animation;assembly=Windows"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
-        Title="Playlist" Height="423" Width="300" WindowStyle="ToolWindow">
+        Title="Playlist" Height="423" Width="300" WindowStyle="ToolWindow" KeyDown="Window_KeyDown">
     <Window.Resources>
         <Style x:Key="ToolTipStyle1"
         TargetType="ToolTip">
@@ -96,6 +96,8 @@
                 <MenuItem Header="Remove Missing Entries" Command="{Binding RemoveMissingEntriesFromPlaylistCommand}"/>
                 <MenuItem Header="Remove Incomplete Entries" Command="{Binding RemoveIncompleteEntriesFromPlaylistCommand}"/>
                 <MenuItem Header="Recheck All Entries" Command="{Binding Playlist.RecheckAllCommand}"/>
+                <Separator/>
+                <MenuItem Header="Scroll to current entry" Click="MnuScrollToCurrent"/>
                 <Separator/>
                 <MenuItem Header="Load Playlist" Command="{Binding LoadPlaylistCommand}"/>
                 <MenuItem Header="Save Playlist" Command="{Binding SavePlaylistCommand}"/>
