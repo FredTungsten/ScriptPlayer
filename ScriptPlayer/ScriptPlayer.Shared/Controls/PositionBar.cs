@@ -10,6 +10,24 @@ namespace ScriptPlayer.Shared
 {
     public class PositionBar : Control
     {
+        public static readonly DependencyProperty DrawLinesProperty = DependencyProperty.Register(
+            "DrawLines", typeof(bool), typeof(PositionBar), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public bool DrawLines
+        {
+            get => (bool) GetValue(DrawLinesProperty);
+            set => SetValue(DrawLinesProperty, value);
+        }
+
+        public static readonly DependencyProperty DrawCirclesProperty = DependencyProperty.Register(
+            "DrawCircles", typeof(bool), typeof(PositionBar), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public bool DrawCircles
+        {
+            get => (bool) GetValue(DrawCirclesProperty);
+            set => SetValue(DrawCirclesProperty, value);
+        }
+
         public static readonly DependencyProperty MinCommandDelayProperty = DependencyProperty.Register(
             "MinCommandDelay", typeof(TimeSpan), typeof(PositionBar), new PropertyMetadata(TimeSpan.FromMilliseconds(150), OnVisualPropertyChanged));
 
@@ -255,23 +273,28 @@ namespace ScriptPlayer.Shared
                 UpdateSelectedPosition(false);
             }
 
-            Pen redPen = new Pen(Brushes.Red, 1);
             Rect fullRect = new Rect(new Point(), new Size(ActualWidth, ActualHeight));
 
             drawingContext.PushClip(new RectangleGeometry(fullRect));
-
             drawingContext.DrawRectangle(Background, null, fullRect);
 
-            drawingContext.PushOpacity(0.3);
-            for (int i = 0; i <= 4; i++)
+            if (DrawLines)
             {
-                drawingContext.DrawLine(redPen, new Point(0, i * ActualHeight / 4.0), new Point(ActualWidth, i * ActualHeight / 4.0));
+                Pen redPen = new Pen(Brushes.Red, 1);
+
+                drawingContext.PushOpacity(0.3);
+                for (int i = 0; i <= 4; i++)
+                {
+                    drawingContext.DrawLine(redPen, new Point(0, i * ActualHeight / 4.0),
+                        new Point(ActualWidth, i * ActualHeight / 4.0));
+                }
+
+                drawingContext.Pop();
+
+                double midPointX = ActualWidth * Midpoint;
+
+                drawingContext.DrawLine(redPen, new Point(midPointX, 0), new Point(midPointX, ActualHeight));
             }
-            drawingContext.Pop();
-
-            double midPointX = ActualWidth * Midpoint;
-
-            drawingContext.DrawLine(redPen, new Point(midPointX, 0), new Point(midPointX, ActualHeight));
 
             if (Positions != null)
             {
@@ -279,23 +302,10 @@ namespace ScriptPlayer.Shared
                 TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
 
                 List<TimedPosition> absoluteBeatPositions = Positions.GetPositions(timeFrom, timeTo).ToList();
-                //double ToLocal(TimedPosition b) => (b.TimeStamp - timeFrom).Divide(timeTo - timeFrom) * ActualWidth;
-
                 List<Point> beatPoints = absoluteBeatPositions.Select(GetPointFromPosition).ToList();
 
                 if (beatPoints.Count > 0)
                 {
-                    /*
-                    PathFigure figure = new PathFigure {StartPoint = beatPoints[0]};
-
-                    for (int i = 1; i < beatPoints.Count; i++)
-                    {
-                        figure.Segments.Add(new LineSegment(beatPoints[i], true));
-                    }
-
-                    drawingContext.DrawGeometry(null, redPen, new PathGeometry(new[] {figure}));
-                    */
-
                     for (int i = 1; i < beatPoints.Count; i++)
                     {
                         TimeSpan duration = absoluteBeatPositions[i].TimeStamp - absoluteBeatPositions[i - 1].TimeStamp;
@@ -305,23 +315,28 @@ namespace ScriptPlayer.Shared
                         Color color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap, speed);
                         drawingContext.DrawLine(new Pen(new SolidColorBrush(color), 1), beatPoints[i-1], beatPoints[i] );
                     }
-                    
 
-                    for (int i = 0; i < beatPoints.Count; i++)
+                    if (DrawCircles)
                     {
-                        Color color;
-
-                        if (i == 0)
-                            color = Colors.Lime;
-                        else
+                        for (int i = 0; i < beatPoints.Count; i++)
                         {
-                            TimeSpan duration = absoluteBeatPositions[i].TimeStamp - absoluteBeatPositions[i - 1].TimeStamp;
-                            double durationFactor = MinCommandDelay.Divide(duration);
-                            color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap3, durationFactor);
-                        }
-                        Color fillColor = HeatMapGenerator.MixColors(color, Colors.Black, 0.5);
+                            Color color;
 
-                        drawingContext.DrawEllipse(new SolidColorBrush(fillColor), new Pen(new SolidColorBrush(color), 1), beatPoints[i], CircleRadius, CircleRadius);   
+                            if (i == 0)
+                                color = Colors.Lime;
+                            else
+                            {
+                                TimeSpan duration = absoluteBeatPositions[i].TimeStamp -
+                                                    absoluteBeatPositions[i - 1].TimeStamp;
+                                double durationFactor = MinCommandDelay.Divide(duration);
+                                color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap3, durationFactor);
+                            }
+
+                            Color fillColor = HeatMapGenerator.MixColors(color, Colors.Black, 0.5);
+
+                            drawingContext.DrawEllipse(new SolidColorBrush(fillColor),
+                                new Pen(new SolidColorBrush(color), 1), beatPoints[i], CircleRadius, CircleRadius);
+                        }
                     }
                 }
             }

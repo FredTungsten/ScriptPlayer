@@ -40,10 +40,19 @@ namespace ScriptPlayer.Shared
         public static readonly DependencyProperty HighlightRangeProperty = DependencyProperty.Register(
             "HighlightRange", typeof(Section), typeof(SeekBar), new FrameworkPropertyMetadata(default(Section), FrameworkPropertyMetadataOptions.AffectsRender));
 
+        public static readonly DependencyProperty PositionsProperty = DependencyProperty.Register(
+            "Positions", typeof(PositionCollection), typeof(SeekBar), new FrameworkPropertyMetadata(default(PositionCollection), FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public PositionCollection Positions
+        {
+            get => (PositionCollection) GetValue(PositionsProperty);
+            set => SetValue(PositionsProperty, value);
+        }
+
         public Section HighlightRange
         {
-            get { return (Section) GetValue(HighlightRangeProperty); }
-            set { SetValue(HighlightRangeProperty, value); }
+            get => (Section) GetValue(HighlightRangeProperty);
+            set => SetValue(HighlightRangeProperty, value);
         }
 
         public VideoThumbnailCollection Thumbnails
@@ -63,6 +72,7 @@ namespace ScriptPlayer.Shared
         private TextBlock _txt;
         private StackPanel _stack;
         private Image _img;
+        private PositionBar _pos;
 
         static SeekBar()
         {
@@ -125,9 +135,21 @@ namespace ScriptPlayer.Shared
                 HorizontalAlignment = HorizontalAlignment.Center
             };
 
+            _pos = new PositionBar
+            {
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Height = 20,
+                TotalDisplayedDuration = TimeSpan.FromSeconds(16),
+                DrawCircles = false,
+                DrawLines = false,
+                Background = Brushes.Black
+            };
+
+            BindPositions(_pos);
             BindText(_txt);
 
             _stack.Children.Add(_img);
+            _stack.Children.Add(_pos);
             _stack.Children.Add(_txt);
 
             Border border = new Border
@@ -146,6 +168,11 @@ namespace ScriptPlayer.Shared
             };
         }
 
+        private void BindPositions(PositionBar pos)
+        {
+            BindingOperations.SetBinding(pos, PositionBar.PositionsProperty, new Binding("Positions") {Source = this});
+        }
+
         private void BindText(TextBlock txt)
         {
             MultiBinding binding = new MultiBinding{ Converter = new SeekBarPositionConverter()};
@@ -154,14 +181,6 @@ namespace ScriptPlayer.Shared
             binding.Bindings.Add(new Binding { Source = this, Path = new PropertyPath(HoverPositionProperty) });
 
             BindingOperations.SetBinding(txt, TextBlock.TextProperty, binding);
-
-            //TimeSpan progress = (TimeSpan)values[0];
-            //TimeSpan duration = (TimeSpan)values[1];
-            //TimeSpan hoverposition = (TimeSpan)values[2];
-
-            /*_txt.Text = Duration >= TimeSpan.FromHours(1) ?
-                $"{absolutePosition.Hours:00}:{absolutePosition.Minutes:00}:{absolutePosition.Seconds:00}" :
-                $"{absolutePosition.Minutes:00}:{absolutePosition.Seconds:00}";*/
         }
 
         protected override void OnRender(DrawingContext dc)
@@ -281,6 +300,16 @@ namespace ScriptPlayer.Shared
             else
             {
                 _img.Visibility = Visibility.Collapsed;
+            }
+
+            if (Positions != null)
+            {
+                _pos.Progress = absolutePosition;
+                _pos.Visibility = Visibility.Visible;   
+            }
+            else
+            {
+                _pos.Visibility = Visibility.Collapsed;
             }
 
             _popup.IsOpen = true;

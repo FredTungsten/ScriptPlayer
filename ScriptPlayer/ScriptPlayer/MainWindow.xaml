@@ -677,7 +677,7 @@
                     </ToolTip>-->
                 </Button.ToolTip>
             </Button>
-            <shared:SeekBar HighlightRange="{Binding DisplayedRange}" SnapsToDevicePixels="True" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Thumbnails="{Binding Thumbnails}" Progress="{Binding Path=TimeSource.Progress}" Duration="{Binding Path=TimeSource.Duration}" Seek="SeekBar_OnSeek">
+            <shared:SeekBar Positions="{Binding Positions}" HighlightRange="{Binding DisplayedRange}" SnapsToDevicePixels="True" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Thumbnails="{Binding Thumbnails}" Progress="{Binding Path=TimeSource.Progress}" Duration="{Binding Path=TimeSource.Duration}" Seek="SeekBar_OnSeek">
                 <shared:SeekBar.OverlayOpacity>
                     <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
                         <GradientStop Offset="0" Color="#20000000"/>
