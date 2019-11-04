@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
 using JetBrains.Annotations;
 using ScriptPlayer.Generators;
 
@@ -27,6 +28,7 @@ namespace ScriptPlayer.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        [XmlElement("AutoWidth")]
         public bool AutoWidth
         {
             get => _autoWidth;
@@ -38,6 +40,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("Width")]
         public int Width
         {
             get => _width;
@@ -49,6 +52,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("AutoHeight")]
         public bool AutoHeight
         {
             get => _autoHeight;
@@ -60,6 +64,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("Height")]
         public int Height
         {
             get => _height;
@@ -71,6 +76,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("FrameRate")]
         public double FrameRate
         {
             get => _frameRate;
@@ -82,6 +88,14 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("Start")]
+        public long StartXmlWrapper
+        {
+            get => Start.Ticks;
+            set => Start = TimeSpan.FromTicks(value);
+        }
+
+        [XmlIgnore]
         public TimeSpan Start
         {
             get => _start;
@@ -93,6 +107,14 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("Duration")]
+        public long DurationXmlWrapper
+        {
+            get => Duration.Ticks;
+            set => Duration = TimeSpan.FromTicks(value);
+        }
+
+        [XmlIgnore]
         public TimeSpan Duration
         {
             get => _duration;
@@ -104,6 +126,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("SectionCount")]
         public int SectionCount
         {
             get => _sectionCount;
@@ -115,6 +138,14 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("DurationEach")]
+        public long DurationEachXmlWrapper
+        {
+            get => DurationEach.Ticks;
+            set => Duration = TimeSpan.FromTicks(value);
+        }
+
+        [XmlIgnore]
         public TimeSpan DurationEach
         {
             get => _durationEach;
@@ -126,6 +157,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("MultipleSection")]
         public bool MulitpleSections
         {
             get => _mulitpleSections;

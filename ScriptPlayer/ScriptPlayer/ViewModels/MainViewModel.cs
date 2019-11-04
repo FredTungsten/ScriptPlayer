@@ -16,7 +16,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -323,7 +322,7 @@ namespace ScriptPlayer.ViewModels
 
         public MainViewModel()
         {
-            // Can get rather intense even fow low values, keep it at 1 for now (Ffmpeg is multi-threaded anyways)
+            // Can get rather intense even for low values, keep it at 1 for now (Ffmpeg is multi-threaded anyways)
             int threadCount = 1; //Environment.ProcessorCount;
 
             WorkQueue = new GeneratorWorkQueue();
@@ -419,6 +418,8 @@ namespace ScriptPlayer.ViewModels
                 GlobalCommandManager.BuildDefaultShortcuts();
 
             UpdateRandomChapterTooltip();
+
+            LoadGeneratorSettings();
         }
 
         private void PlaylistOnRequestGenerateAll(object sender, string[] videos)
@@ -544,6 +545,11 @@ namespace ScriptPlayer.ViewModels
         private static string GetPlayerStateFilePath()
         {
             return GetAppDataFile("PlayerState.xml");
+        }
+
+        private static string GetGeneratorSettingsFilePath()
+        {
+            return GetAppDataFile("GeneratorSettings.xml");
         }
 
         private static string GetSettingsFilePath()
@@ -4756,6 +4762,24 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             _previousGeneratorSettings = generatorSettings;
+            SaveGeneratorSettings();
+        }
+
+        private void SaveGeneratorSettings()
+        {
+            if(_previousGeneratorSettings == null)
+                return;
+
+            _previousGeneratorSettings.Save(GetGeneratorSettingsFilePath());
+        }
+
+        private void LoadGeneratorSettings()
+        {
+            string file = GetGeneratorSettingsFilePath();
+            if (File.Exists(file))
+            {
+                _previousGeneratorSettings = GeneratorSettingsViewModel.Load(file);
+            }
         }
 
         private bool IsVideoLoaded()

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
 using JetBrains.Annotations;
 using ScriptPlayer.Generators;
 
@@ -15,6 +16,7 @@ namespace ScriptPlayer.ViewModels
         private bool _generateThumbnailBanner;
         private bool _generateThumbnails;
 
+        [XmlElement("GenerateThumbnails")]
         public bool GenerateThumbnails
         {
             get => _generateThumbnails;
@@ -26,6 +28,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("GenerateThumbnailBanner")]
         public bool GenerateThumbnailBanner
         {
             get => _generateThumbnailBanner;
@@ -37,6 +40,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("GeneratePreview")]
         public bool GeneratePreview
         {
             get => _generatePreview;
@@ -48,6 +52,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("GenerateHeatmap")]
         public bool GenerateHeatmap
         {
             get => _generateHeatmap;
@@ -63,6 +68,7 @@ namespace ScriptPlayer.ViewModels
         private string _saveFilesToThisPath;
         private bool _saveFilesToDifferentPath;
 
+        [XmlElement("SaveFilesToDifferentPath")]
         public bool SaveFilesToDifferentPath
         {
             get => _saveFilesToDifferentPath;
@@ -74,6 +80,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("SaveFilesToThisPath")]
         public string SaveFilesToThisPath
         {
             get => _saveFilesToThisPath;
@@ -85,6 +92,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("ExistingFileStrategy")]
         public ExistingFileStrategy ExistingFileStrategy
         {
             get => _existingFileStrategy;

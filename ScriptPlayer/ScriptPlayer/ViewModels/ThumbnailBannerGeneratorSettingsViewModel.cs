@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
 using JetBrains.Annotations;
 using ScriptPlayer.Generators;
 
@@ -14,6 +15,7 @@ namespace ScriptPlayer.ViewModels
         private int _totalWidth;
         public event PropertyChangedEventHandler PropertyChanged;
 
+        [XmlElement("Columns")]
         public int Columns
         {
             get => _columns;
@@ -25,6 +27,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("Rows")]
         public int Rows
         {
             get => _rows;
@@ -36,6 +39,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("TotalWidth")]
         public int TotalWidth
         {
             get => _totalWidth;

@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Xml;
+using System.Xml.Serialization;
 using JetBrains.Annotations;
 using ScriptPlayer.Generators;
 
@@ -24,6 +26,7 @@ namespace ScriptPlayer.ViewModels
             Intervall = settings.Intervall;
         }
 
+        [XmlElement("Intervall")]
         public int Intervall
         {
             get => _intervall;
@@ -35,6 +38,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("Width")]
         public int Width
         {
             get => _width;
@@ -46,6 +50,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("Height")]
         public int Height
         {
             get => _height;
@@ -57,6 +62,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("AutoWidth")]
         public bool AutoWidth
         {
             get => _autoWidth;
@@ -68,6 +74,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("AutoHeight")]
         public bool AutoHeight
         {
             get => _autoHeight;
@@ -79,6 +86,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("AutoIntervall")]
         public bool AutoIntervall
         {
             get => _autoIntervall;

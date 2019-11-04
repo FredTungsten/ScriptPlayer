@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
 using JetBrains.Annotations;
 using ScriptPlayer.Generators;
 
@@ -13,6 +14,7 @@ namespace ScriptPlayer.ViewModels
         private int _height;
         private bool _addShadow;
 
+        [XmlElement("Width")]
         public int Width
         {
             get => _width;
@@ -24,6 +26,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("Height")]
         public int Height
         {
             get => _height;
@@ -35,6 +38,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("AddShadow")]
         public bool AddShadow
         {
             get => _addShadow;

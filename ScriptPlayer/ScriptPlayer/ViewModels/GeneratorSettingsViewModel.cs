@@ -1,11 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Xml;
+using System.Xml.Serialization;
 using JetBrains.Annotations;
 
 namespace ScriptPlayer.ViewModels
 {
+    [XmlRoot("GeneratorSettings")]
     public class GeneratorSettingsViewModel : INotifyPropertyChanged
     {
         private ThumbnailGeneratorSettingsViewModel _thumbnails;
@@ -14,6 +20,7 @@ namespace ScriptPlayer.ViewModels
         private HeatmapGeneratorSettingsViewModel _heatmap;
         private GeneralGeneratorSettingsViewModel _general;
 
+        [XmlElement("Thumbnails")]
         public ThumbnailGeneratorSettingsViewModel Thumbnails
         {
             get => _thumbnails;
@@ -25,6 +32,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("ThumbnailBanner")]
         public ThumbnailBannerGeneratorSettingsViewModel Banner
         {
             get => _banner;
@@ -36,6 +44,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("Preview")]
         public PreviewGeneratorSettingsViewModel Preview
         {
             get => _preview;
@@ -47,6 +56,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("Heatmap")]
         public HeatmapGeneratorSettingsViewModel Heatmap
         {
             get => _heatmap;
@@ -58,6 +68,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("General")]
         public GeneralGeneratorSettingsViewModel General
         {
             get => _general;
@@ -117,6 +128,37 @@ namespace ScriptPlayer.ViewModels
                 General = General.Duplicate(),
                 Preview = Preview.Duplicate(),
             };
+        }
+
+        public void Save(string filename)
+        {
+            MemoryStream stream = new MemoryStream();
+            Save(stream);
+
+            File.WriteAllBytes(filename, stream.ToArray());
+        }
+
+        public void Save(Stream stream)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(GeneratorSettingsViewModel));
+            serializer.Serialize(stream, this);
+        }
+
+        public static GeneratorSettingsViewModel Load(string filename)
+        {
+            try
+            {
+                using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(GeneratorSettingsViewModel));
+                    return serializer.Deserialize(stream) as GeneratorSettingsViewModel;
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                return null;
+            }
         }
     }
 }
