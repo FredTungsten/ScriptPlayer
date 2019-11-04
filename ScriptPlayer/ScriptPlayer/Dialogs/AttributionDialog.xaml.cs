@@ -44,6 +44,9 @@ namespace ScriptPlayer.Dialogs
                 new ExtendedAttributionEntry("Funjack", "Formats and GFX", new Link("Github", "https://github.com/funjack/")),
                 new ExtendedAttributionEntry("RickNLX", "Samsung VR"),
                 new ExtendedAttributionEntry("Net005", "Zoom Player"),
+                new ExtendedAttributionEntry("Gagax1234", "Auto-Homing"),
+                new ExtendedAttributionEntry("Net005", "Zoom Player"),
+                new ExtendedAttributionEntry("Raser1", "Layout for docked-mode"),
                 new ExtendedAttributionEntry("Milovana", "Community", new Link("Homepage", "https://milovana.com/")),
                 new ExtendedAttributionEntry("RTS", "Community", new Link("Homepage", "http://realtouchscripts.com/")),
                 new AttributionEntry("And a whole lot of people who probably don't want anything to do with this smut :)")

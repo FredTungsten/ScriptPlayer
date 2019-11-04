@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
         mc:Ignorable="d"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Attributions" Height="322" Width="522" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
+        Title="Attributions" Height="392" Width="512" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <Style TargetType="Button" x:Key="LinkButton">
             <Setter Property="Foreground" Value="Black" />
