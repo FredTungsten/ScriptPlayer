@@ -24,12 +24,13 @@ Compression=lzma2
 SolidCompression=yes
 OutputBaseFilename=scriptplayer-installer
 OutputDir=.\installer
-;LicenseFile=LICENSE
+LicenseFile=Licenses\ScriptPlayer.txt
 
 [Files]
 Source: "ScriptPlayer\ScriptPlayer\bin\{#Configuration}\ScriptPlayer.exe"; DestDir: "{app}"
 Source: "ScriptPlayer\ScriptPlayer\bin\{#Configuration}\*.dll"; DestDir: "{app}"
 Source: "ScriptPlayer\ScriptPlayer\bin\{#Configuration}\*.config"; DestDir: "{app}"
+Source: "ScriptPlayer\ScriptPlayer\bin\{#Configuration}\Licenses\*.txt"; DestDir: "{app}\Licenses"
 ;Source: "Readme.md"; DestDir: "{app}"; DestName: "Readme.txt"; Flags: isreadme
 ;Source: "LICENSE"; DestDir: "{app}"; DestName: "License.txt"
 
