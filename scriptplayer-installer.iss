@@ -24,7 +24,7 @@ Compression=lzma2
 SolidCompression=yes
 OutputBaseFilename=scriptplayer-installer
 OutputDir=.\installer
-LicenseFile=Licenses\ScriptPlayer.txt
+LicenseFile=ScriptPlayer\ScriptPlayer\Licenses\ScriptPlayer.txt
 
 [Files]
 Source: "ScriptPlayer\ScriptPlayer\bin\{#Configuration}\ScriptPlayer.exe"; DestDir: "{app}"
