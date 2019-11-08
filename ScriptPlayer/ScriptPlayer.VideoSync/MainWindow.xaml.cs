@@ -962,6 +962,7 @@ namespace ScriptPlayer.VideoSync
             for (int i = 0; i < numberOfBeats; i++)
                 otherBeats.Add(tStart + intervall.Multiply(i));
 
+            _previousSuperNormalizeDuration = intervall.TotalMilliseconds;
             Fadeout.SetText(intervall.TotalMilliseconds.ToString("f0") + "ms", TimeSpan.FromSeconds(4));
 
             SetAllBeats(otherBeats);
@@ -1222,6 +1223,7 @@ namespace ScriptPlayer.VideoSync
                     otherBeats.Add(first + beatDuration.Multiply(i));
             }
 
+            _previousSuperNormalizeDuration = beatDuration.TotalMilliseconds;
             Fadeout.SetText(beatDuration.TotalMilliseconds.ToString("f0") + "ms", TimeSpan.FromSeconds(4));
 
             SetAllBeats(otherBeats);
@@ -1483,10 +1485,13 @@ namespace ScriptPlayer.VideoSync
                     }
                 case Key.C:
                 {
-                    if (shift)
-                        EnforceCommonBeatDuration();
-                    else
-                        FindCommonBeatDuration();
+                    //if (shift)
+                    //    EnforceCommonBeatDuration();
+                    //else
+                    //    FindCommonBeatDuration();
+                    //break;
+                    if (control)
+                        CopyBeats();
                     break;
                 }
                 case Key.E:
@@ -1505,6 +1510,12 @@ namespace ScriptPlayer.VideoSync
                         FadeNormalize();
                         break;
                     }
+                case Key.V:
+                {
+                    if (control)
+                        PasteBeats();
+                    break;
+                }
                 case Key.Delete:
                     {
                         DeleteBeatsWithinMarkers();
@@ -1600,6 +1611,42 @@ namespace ScriptPlayer.VideoSync
                 e.Handled = true;
         }
 
+        private void CopyBeats()
+        {
+            string text = string.Join(",", GetSelectedBeats().Select(b => b.Ticks));
+            Clipboard.SetText(text, TextDataFormat.CommaSeparatedValue);
+        }
+
+        private void PasteBeats()
+        {
+            if (!Clipboard.ContainsText(TextDataFormat.CommaSeparatedValue))
+                return;
+
+            string text = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
+
+            string[] values = text.Split(new []{','}, StringSplitOptions.RemoveEmptyEntries);
+            List<TimeSpan> timespans = new List<TimeSpan>();
+
+            foreach (string value in values)
+            {
+                if (!long.TryParse(value, out long ticks))
+                    return;
+
+                timespans.Add(TimeSpan.FromTicks(ticks));
+            }
+
+            if (timespans.Count < 2)
+                return;
+
+            var selection = GetSelectedBeats();
+            if (selection.Count == 0)
+                return;
+
+            TimeSpan offset = selection.First() - timespans.First();
+
+            SetSelectedBeats(timespans.Select(t => t + offset).ToList());
+        }
+
         private void SuperNormalize(bool preview)
         {
             List<TimeSpan> selectedBeats = GetSelectedBeats();
@@ -1617,12 +1664,14 @@ namespace ScriptPlayer.VideoSync
                 durations.Add(selectedBeats[i] - selectedBeats[i-1]);
             }
 
-            DoubleInputDialog dialog = new DoubleInputDialog(200);
+            DoubleInputDialog dialog = new DoubleInputDialog(_previousSuperNormalizeDuration){Owner = this};
             if (dialog.ShowDialog() != true)
                 return;
 
+            _previousSuperNormalizeDuration = dialog.Result;
+
             int beatCount = 0;
-            TimeSpan baseDuration = TimeSpan.FromMilliseconds(dialog.Result);
+            TimeSpan baseDuration = TimeSpan.FromMilliseconds(_previousSuperNormalizeDuration);
 
             List<TimeSpan> fractions = new List<TimeSpan>();
 
@@ -1642,20 +1691,45 @@ namespace ScriptPlayer.VideoSync
                 for (int i = 0; i <= beatCount; i++)
                     newBeats.Add(first + averageBeatsDuration.Multiply(i));
 
-                BeatBar.PreviewBeats = new BeatCollection(newBeats);
-            }
-            else
-            {
+                double maxDeviation = 0;
+
                 foreach (TimeSpan beat in selectedBeats)
                 {
                     int multiple = (int)Math.Round((beat - first).Divide(averageBeatsDuration));
                     var roundedBeat = first + averageBeatsDuration.Multiply(multiple);
 
-                    if(!newBeats.Contains(roundedBeat))
+                    double deviation = Math.Abs((beat - roundedBeat).TotalMilliseconds);
+                    if (deviation > maxDeviation)
+                        maxDeviation = deviation;
+                }
+
+                BeatBar.PreviewBeats = new BeatCollection(newBeats);
+
+
+
+                Fadeout.SetText(averageBeatsDuration.TotalMilliseconds.ToString("f0") + "ms, dev = " + maxDeviation.ToString("f1") + "ms", TimeSpan.FromSeconds(4));
+            }
+            else
+            {
+                double maxDeviation = 0;
+
+                foreach (TimeSpan beat in selectedBeats)
+                {
+                    int multiple = (int)Math.Round((beat - first).Divide(averageBeatsDuration));
+                    var roundedBeat = first + averageBeatsDuration.Multiply(multiple);
+
+                    double deviation = Math.Abs((beat - roundedBeat).TotalMilliseconds);
+                    if (deviation > maxDeviation)
+                        maxDeviation = deviation;
+
+                    if (!newBeats.Contains(roundedBeat))
                         newBeats.Add(roundedBeat);
                 }
 
                 SetSelectedBeats(newBeats);
+                BeatBar.PreviewBeats = null;
+
+                Fadeout.SetText(averageBeatsDuration.TotalMilliseconds.ToString("f0") + "ms, dev = " + maxDeviation.ToString("f1") + "ms", TimeSpan.FromSeconds(4));
             }
         }
 
@@ -2388,6 +2462,7 @@ namespace ScriptPlayer.VideoSync
 
         private int RATE = 44100; // sample rate of the sound card
         private int BUFFERSIZE = (int)Math.Pow(2, 11); // must be a multiple of 2
+        private double _previousSuperNormalizeDuration = 200;
 
         private void mnuFrameSampler2_Click(object sender, RoutedEventArgs e)
         {

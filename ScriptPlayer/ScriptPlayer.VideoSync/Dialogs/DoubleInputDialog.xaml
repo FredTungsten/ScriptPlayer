@@ -7,7 +7,7 @@
         Title="Double Input" Height="100.82" Width="220.697" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
     <Grid>
         <TextBox Name="txtInput" Height="23" Margin="10,10,10,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top"/>
-        <Button IsDefault="True" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
+        <Button IsDefault="True" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="btnOk_Click"/>
         <Button IsCancel="True" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
 
     </Grid>

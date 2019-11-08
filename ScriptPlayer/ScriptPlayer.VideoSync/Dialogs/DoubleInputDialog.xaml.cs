@@ -8,15 +8,15 @@ namespace ScriptPlayer.VideoSync
     /// </summary>
     public partial class DoubleInputDialog : Window
     {
-        public CultureInfo en_us = new CultureInfo("en-us");
+        public CultureInfo EnUs = new CultureInfo("en-us");
 
         public static readonly DependencyProperty ResultProperty = DependencyProperty.Register(
             "Result", typeof(double), typeof(DoubleInputDialog), new PropertyMetadata(default(double)));
 
         public double Result
         {
-            get { return (double) GetValue(ResultProperty); }
-            set { SetValue(ResultProperty, value); }
+            get => (double) GetValue(ResultProperty);
+            set => SetValue(ResultProperty, value);
         }
 
         private readonly double _defaultValue;
@@ -30,15 +30,14 @@ namespace ScriptPlayer.VideoSync
 
         private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
         {
-            txtInput.Text = _defaultValue.ToString();
+            txtInput.Text = _defaultValue.ToString(EnUs);
             txtInput.SelectAll();
             txtInput.Focus();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnOk_Click(object sender, RoutedEventArgs e)
         {
-            double result;
-            if (!double.TryParse(txtInput.Text, NumberStyles.Any, en_us, out result))
+            if (!double.TryParse(txtInput.Text, NumberStyles.Any, EnUs, out double result))
                 return;
 
             Result = result;

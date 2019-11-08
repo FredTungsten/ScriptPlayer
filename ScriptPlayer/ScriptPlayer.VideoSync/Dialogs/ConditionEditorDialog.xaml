@@ -77,8 +77,8 @@
             <StackPanel>
                 <TextBlock Text="Reanalyse" Margin="10,0,0,0"></TextBlock>
                 <RadioButton Name="rbDont"  GroupName="Reanalyse" Margin="16,2,2,2" Content="Don't" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                <RadioButton Name="rbEverything" GroupName="Method" Margin="16,2,2,2" Content="Everything" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                <RadioButton Name="rbSelection" GroupName="Method" Margin="16,2,2,2" Content="Selection" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <RadioButton Name="rbEverything" GroupName="Reanalyse" Margin="16,2,2,2" Content="Everything" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <RadioButton Name="rbSelection" GroupName="Reanalyse" Margin="16,2,2,2" Content="Selection" HorizontalAlignment="Left" VerticalAlignment="Top"/>
             </StackPanel>
         </StackPanel>
     </Grid>
