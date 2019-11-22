@@ -2350,6 +2350,30 @@ namespace ScriptPlayer.ViewModels
                 }
             });
 
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseUpperRange)
+            {
+                CommandId = "IncreaseUpperRange",
+                DisplayText = "Increase Upper Range"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreaseUpperRange)
+            {
+                CommandId = "DecreaseUpperRange",
+                DisplayText = "Decrease Upper Range"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseLowerRange)
+            {
+                CommandId = "IncreaseLowerRange",
+                DisplayText = "Increase Lower Range"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreaseLowerRange)
+            {
+                CommandId = "DecreaseLowerRange",
+                DisplayText = "Decrease Lower Range"
+            });
+
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreasePlaybackSpeed)
             {
                 CommandId = "IncreasePlaybackRate",
@@ -2467,6 +2491,35 @@ namespace ScriptPlayer.ViewModels
                     GlobalCommandManager.GetShortcut(Key.MediaPreviousTrack, ModifierKeys.None, true)
                 }
             });
+        }
+
+        private void PrintRange()
+        {
+            OsdShowMessage($"Range: {Settings.MinPosition} - {Settings.MaxPosition}", TimeSpan.FromSeconds(2), "Range");
+        }
+
+        private void DecreaseLowerRange()
+        {
+            Settings.MinPosition = (byte) Math.Max(0, Settings.MinPosition - 5);
+            PrintRange();
+        }
+
+        private void IncreaseLowerRange()
+        {
+            Settings.MinPosition = (byte)Math.Min(Settings.MaxPosition, Settings.MinPosition + 5);
+            PrintRange();
+        }
+
+        private void DecreaseUpperRange()
+        {
+            Settings.MaxPosition = (byte)Math.Max(Settings.MinPosition, Settings.MaxPosition - 5);
+            PrintRange();
+        }
+
+        private void IncreaseUpperRange()
+        {
+            Settings.MaxPosition = (byte)Math.Min(99, Settings.MaxPosition + 5);
+            PrintRange();
         }
 
         private void ShiftScript()
