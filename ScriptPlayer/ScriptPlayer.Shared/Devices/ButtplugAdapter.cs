@@ -136,6 +136,16 @@ namespace ScriptPlayer.Shared
 
                             break;
                         }
+                    case VibratorConversionMode.PositionToSpeedInverted:
+                        {
+                            double speedFrom = CommandConverter.LaunchPositionToVibratorSpeed((byte) (99 - information.DeviceInformation.PositionFromOriginal));
+                            double speedTo = CommandConverter.LaunchPositionToVibratorSpeed((byte) (99 - information.DeviceInformation.PositionToOriginal));
+
+                            speed = speedFrom * (1 - information.Progress) + speedTo * information.Progress * information.DeviceInformation.SpeedMultiplier;
+                            speed = information.DeviceInformation.TransformSpeed(speed);
+
+                            break;
+                        }
                     case VibratorConversionMode.SpeedHalfDuration:
                         {
                             if (information.Progress < 0.5)
@@ -203,6 +213,9 @@ namespace ScriptPlayer.Shared
                     {
                         case VibratorConversionMode.PositionToSpeed:
                             message = new SingleMotorVibrateCmd(device.Index, information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed(information.PositionFromOriginal)));
+                            break;
+                        case VibratorConversionMode.PositionToSpeedInverted:
+                            message = new SingleMotorVibrateCmd(device.Index, information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed((byte)(99 - information.PositionFromOriginal))));
                             break;
                         case VibratorConversionMode.SpeedHalfDuration:
                         case VibratorConversionMode.SpeedFullDuration:
@@ -335,6 +348,7 @@ namespace ScriptPlayer.Shared
     public enum VibratorConversionMode
     {
         PositionToSpeed,
+        PositionToSpeedInverted,
         SpeedHalfDuration,
         SpeedFullDuration
     }

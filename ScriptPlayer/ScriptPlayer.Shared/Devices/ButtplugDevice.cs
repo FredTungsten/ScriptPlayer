@@ -28,7 +28,7 @@ namespace ScriptPlayer.Shared
             await _buttplugAdapter.Set(_device, information);
         }
 
-        public override void Stop()
+        protected override void StopInternal()
         {
             _buttplugAdapter.Stop(_device);
         }

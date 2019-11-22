@@ -106,7 +106,19 @@ namespace ScriptPlayer.Shared
 
         public abstract Task Set(IntermediateCommandInformation information);
 
-        public abstract void Stop();
+        protected abstract void StopInternal();
+
+        public void Stop()
+        {
+            EmptyQueue();
+            StopInternal();
+        }
+
+        private void EmptyQueue()
+        {
+            _queue.Clear();
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]

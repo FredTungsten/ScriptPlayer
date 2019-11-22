@@ -110,7 +110,7 @@ namespace ScriptPlayer.Shared
             // Does not apply
         }
 
-        public override void Stop()
+        protected override void StopInternal()
         {
             // Not available
         }
