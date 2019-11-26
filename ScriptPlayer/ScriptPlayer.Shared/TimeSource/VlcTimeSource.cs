@@ -95,7 +95,8 @@ namespace ScriptPlayer.Shared
                 }
                 finally
                 {
-                    SetConnected(false);
+                    if(_running)
+                        SetConnected(false);
                 }
             }
         }
@@ -248,7 +249,8 @@ namespace ScriptPlayer.Shared
         {
             _running = false;
             _clientLoop?.Interrupt();
-            _clientLoop?.Abort();
+            if(!_clientLoop.Join(1000))
+                _clientLoop?.Abort();
         }
 
         public override double PlaybackRate

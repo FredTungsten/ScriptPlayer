@@ -101,7 +101,9 @@ namespace ScriptPlayer.Shared
                 {
                     _client.Dispose();
                     _client = null;
-                    SetConnected(false);
+
+                    if(_running)
+                        SetConnected(false);
                 }
             }
         }
@@ -239,9 +241,19 @@ namespace ScriptPlayer.Shared
         public void Dispose()
         {
             _running = false;
+            IsConnected = false;
             _client?.Dispose();
+
+            if (_clientLoop == null)
+                return;
+
             _clientLoop?.Interrupt();
-            _clientLoop?.Abort();
+            if (!_clientLoop.Join(500))
+            {
+                _clientLoop?.Abort();
+            }
+
+            _client = null;
         }
     }
 }
