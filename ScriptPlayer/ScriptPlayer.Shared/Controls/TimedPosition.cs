@@ -17,5 +17,14 @@ namespace ScriptPlayer.Shared
 
         [XmlAttribute("Position")]
         public byte Position;
+
+        public TimedPosition Duplicate()
+        {
+            return new TimedPosition
+            {
+                TimeStamp = TimeStamp,
+                Position = Position
+            };
+        }
     }
 }

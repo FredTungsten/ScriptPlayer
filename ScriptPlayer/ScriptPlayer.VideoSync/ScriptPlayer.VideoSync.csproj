@@ -182,6 +182,9 @@
     <Compile Include="Dialogs\PatternFillOptionsDialog.xaml.cs">
       <DependentUpon>PatternFillOptionsDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\RangeStretcherDialog.xaml.cs">
+      <DependentUpon>RangeStretcherDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\VisualTrackerDialog.xaml.cs">
       <DependentUpon>VisualTrackerDialog.xaml</DependentUpon>
     </Compile>
@@ -236,6 +239,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\PatternFillOptionsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\RangeStretcherDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

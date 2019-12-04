@@ -12,6 +12,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using Accord.Audio;
 using Accord.Video.FFMPEG;
@@ -397,7 +398,7 @@ namespace ScriptPlayer.VideoSync
             VideoThumbnailCollection collection = new VideoThumbnailCollection();
             if (thumbnails != null)
             {
-                foreach(var kvp in thumbnails)
+                foreach (var kvp in thumbnails)
                     collection.Add(frames.FrameIndexToTimeSpan(kvp.Key), kvp.Value);
             }
 
@@ -572,7 +573,7 @@ namespace ScriptPlayer.VideoSync
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-                    
+
             }
 
         }
@@ -1031,7 +1032,7 @@ namespace ScriptPlayer.VideoSync
             }
 
             BeatBar.PreviewBeats = result;
-            BeatBar.PreviewHighlightInterval = pattern.Count(p => p) -1;
+            BeatBar.PreviewHighlightInterval = pattern.Count(p => p) - 1;
         }
 
         private void Fade()
@@ -1478,44 +1479,49 @@ namespace ScriptPlayer.VideoSync
                         PatternFill();
                         break;
                     }
+                case Key.R:
+                    {
+                        ChangeRange();
+                        break;
+                    }
                 case Key.F:
                     {
                         Fade();
                         break;
                     }
                 case Key.C:
-                {
-                    //if (shift)
-                    //    EnforceCommonBeatDuration();
-                    //else
-                    //    FindCommonBeatDuration();
-                    //break;
-                    if (control)
-                        CopyBeats();
-                    break;
-                }
+                    {
+                        //if (shift)
+                        //    EnforceCommonBeatDuration();
+                        //else
+                        //    FindCommonBeatDuration();
+                        //break;
+                        if (control)
+                            CopyBeats();
+                        break;
+                    }
                 case Key.E:
                     {
                         EqualizeBeatLengths();
                         break;
                     }
                 case Key.S:
-                {
-                    //For the lack of a better term :)
-                    SuperNormalize(shift);
-                    break;
-                }
+                    {
+                        //For the lack of a better term :)
+                        SuperNormalize(shift);
+                        break;
+                    }
                 case Key.T:
                     {
                         FadeNormalize();
                         break;
                     }
                 case Key.V:
-                {
-                    if (control)
-                        PasteBeats();
-                    break;
-                }
+                    {
+                        if (control)
+                            PasteBeats();
+                        break;
+                    }
                 case Key.Delete:
                     {
                         DeleteBeatsWithinMarkers();
@@ -1611,6 +1617,65 @@ namespace ScriptPlayer.VideoSync
                 e.Handled = true;
         }
 
+        private void ChangeRange()
+        {
+            var positions = GetSelectedPositions();
+
+            RangeStretcherDialog dialog = new RangeStretcherDialog();
+
+            dialog.MinValueFrom = positions.Min(p => p.Position);
+            dialog.MinValueTo = dialog.MinValueFrom;
+
+            dialog.MaxValueFrom = positions.Max(p => p.Position);
+            dialog.MaxValueTo = dialog.MaxValueFrom;
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            var stretchedPositions = RangeStretcher.Stretch(positions, dialog.MinValueFrom, dialog.MaxValueFrom,
+                dialog.MinValueTo, dialog.MaxValueTo);
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            ReplacePositions(positions, stretchedPositions, tBegin, tEnd);
+
+        }
+
+        private void ReplacePositions(List<TimedPosition> positions, List<TimedPosition> newPositions, TimeSpan tBegin, TimeSpan tEnd)
+        {
+            List<TimedPosition> excluded =
+                Positions.Where(p => p.TimeStamp < tBegin || p.TimeStamp > tEnd).ToList();
+
+            excluded.AddRange(newPositions.Where(p => p.TimeStamp >= tBegin && p.TimeStamp <= tEnd));
+
+            Positions = new PositionCollection(excluded);
+        }
+
+        private byte StretchPosition(byte position, byte lowest, byte highest, int extension)
+        {
+            byte newHigh = ClampPosition(highest + extension);
+            byte newLow = ClampPosition(lowest - extension);
+
+            double relativePosition = (position - lowest) / (double)(highest - lowest);
+            double newposition = relativePosition * (newHigh - newLow) + newLow;
+
+            return ClampPosition(newposition);
+        }
+
+        private byte ClampPosition(double position)
+        {
+            return (byte)Math.Min(99, Math.Max(0, position));
+        }
+
+        private List<TimedPosition> GetSelectedPositions()
+        {
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            return Positions.GetPositions(tBegin, tEnd).ToList();
+        }
+
         private void CopyBeats()
         {
             string text = string.Join(",", GetSelectedBeats().Select(b => b.Ticks));
@@ -1624,7 +1689,7 @@ namespace ScriptPlayer.VideoSync
 
             string text = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
 
-            string[] values = text.Split(new []{','}, StringSplitOptions.RemoveEmptyEntries);
+            string[] values = text.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             List<TimeSpan> timespans = new List<TimeSpan>();
 
             foreach (string value in values)
@@ -1661,10 +1726,10 @@ namespace ScriptPlayer.VideoSync
 
             for (int i = 1; i < selectedBeats.Count; i++)
             {
-                durations.Add(selectedBeats[i] - selectedBeats[i-1]);
+                durations.Add(selectedBeats[i] - selectedBeats[i - 1]);
             }
 
-            DoubleInputDialog dialog = new DoubleInputDialog(_previousSuperNormalizeDuration){Owner = this};
+            DoubleInputDialog dialog = new DoubleInputDialog(_previousSuperNormalizeDuration) { Owner = this };
             if (dialog.ShowDialog() != true)
                 return;
 
@@ -1677,7 +1742,7 @@ namespace ScriptPlayer.VideoSync
 
             foreach (TimeSpan duration in durations)
             {
-                int beats = (int) Math.Round(duration.Divide(baseDuration));
+                int beats = (int)Math.Round(duration.Divide(baseDuration));
                 beatCount += beats;
                 fractions.Add(duration.Divide(beats));
             }
@@ -1811,7 +1876,7 @@ namespace ScriptPlayer.VideoSync
 
             foreach (TimeSpan span in relativeTimeSpans)
             {
-                int multiplier = (int) Math.Floor(span.TotalMilliseconds / newBeatDuration);
+                int multiplier = (int)Math.Floor(span.TotalMilliseconds / newBeatDuration);
                 double deviation = Remainer(span.TotalMilliseconds, newBeatDuration);
                 if (deviation > newBeatDuration / 2.0)
                 {
@@ -1869,7 +1934,7 @@ namespace ScriptPlayer.VideoSync
             List<TimeSpan> relativeTimeSpans = beatsToEvenOut.Select(b => b - first).ToList();
 
             int minBeats = beatsToEvenOut.Count - 1;
-            int maxBeats = (int) Math.Ceiling(duration.Divide(shortest)) * 4;
+            int maxBeats = (int)Math.Ceiling(duration.Divide(shortest)) * 4;
             double minTotalDeviation = double.MaxValue;
 
             int bestBeats = -1;
@@ -1880,7 +1945,7 @@ namespace ScriptPlayer.VideoSync
                 double totalDeviation = 0;
                 double beatDuration = duration.TotalMilliseconds / x;
                 double maxDeviation = 0;
-                
+
                 foreach (TimeSpan span in relativeTimeSpans)
                 {
                     double deviation = Remainer(span.TotalMilliseconds, beatDuration);
@@ -2282,7 +2347,7 @@ namespace ScriptPlayer.VideoSync
 
             _previousConversionSettings = dialog.Result;
 
-            List<TimeSpan> beatsToConvert = Beats.GetBeats(tBegin,tEnd).ToList();
+            List<TimeSpan> beatsToConvert = Beats.GetBeats(tBegin, tEnd).ToList();
 
             if (beatsToConvert.Count == 0)
                 return;
@@ -2396,7 +2461,7 @@ namespace ScriptPlayer.VideoSync
         private void MnuLoadThumbnails_Click(object sender, RoutedEventArgs e)
         {
             VideoThumbnailCollection thumbs = new VideoThumbnailCollection();
-            
+
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = "Video Thumbnails|*.thumbs";
 
@@ -2520,6 +2585,114 @@ namespace ScriptPlayer.VideoSync
             for (int i = 0; i < data.Length; i++)
                 fft[i] = fftComplex[i].Magnitude;
             return fft;
+        }
+    }
+
+    public enum PositionType
+    {
+        Undetermined,
+        LowValue,
+        HighValue,
+        Between,
+    }
+
+    public static class RangeStretcher
+    {
+        public static List<TimedPosition> Stretch(List<TimedPosition> positions, byte minValueFrom, byte maxValueFrom, byte minValueTo, byte maxValueTo, IEasingFunction easing = null)
+        {
+            List<TimedPosition> result = new List<TimedPosition>();
+
+            TimeSpan start = positions[0].TimeStamp;
+            TimeSpan duration = positions.Last().TimeStamp - start;
+
+            int lastExtremeIndex = -1;
+            byte lastValue = positions[0].Position;
+            byte lastExtremeValue = lastValue;
+
+            byte lowest = lastValue;
+            byte highest = lastValue;
+
+            bool? goingUp = null;
+
+            for (int index = 0; index < positions.Count; index++)
+            {
+                // Direction unknown
+                if (goingUp == null)
+                {
+                    if (positions[index].Position < lastExtremeValue)
+                        goingUp = false;
+                    else if (positions[index].Position > lastExtremeValue)
+                        goingUp = true;
+                }
+                else
+                {
+                    if ((positions[index].Position < lastValue && (bool)goingUp)     //previous was highpoint
+                        || (positions[index].Position > lastValue && (bool)!goingUp) //previous was lowpoint
+                        || (index == positions.Count - 1))                           //last action
+                    {
+                        for (int i = lastExtremeIndex + 1; i < index; i++)
+                        {
+                            double progressFirst = (positions[lastExtremeIndex + 1].TimeStamp - start).Divide(duration);
+                            double progressLast = (positions[index - 1].TimeStamp - start).Divide(duration);
+
+                            double progressLow, progressHigh;
+
+                            if ((bool)goingUp)
+                            {
+                                progressLow = progressFirst;
+                                progressHigh = progressLast;
+                            }
+                            else
+                            {
+                                progressLow = progressLast;
+                                progressHigh = progressFirst;
+                            }
+
+                            byte newLow = GetEasedValue(progressLow, minValueFrom, minValueTo, easing);
+                            byte newHigh = GetEasedValue(progressHigh, maxValueFrom, maxValueTo, easing);
+
+                            TimedPosition action = positions[i].Duplicate();
+                            
+                            if (positions[i].Position == lowest)
+                            {
+                                action.Position = newLow;
+                                result.Add(action);
+                            }
+                            else if (positions[i].Position == highest)
+                            {
+                                action.Position = newHigh;
+                                result.Add(action);
+                            }
+
+                            // Only extreme Values for now ...
+                        }
+
+                        lastExtremeValue = positions[index - 1].Position;
+                        lastExtremeIndex = index - 1;
+
+                        highest = lastExtremeValue;
+                        lowest = lastExtremeValue;
+
+                        goingUp ^= true;
+                    }
+                }
+
+                lastValue = positions[index].Position;
+                if (lastValue > highest)
+                    highest = lastValue;
+                if (lastValue < lowest)
+                    lowest = lastValue;
+            }
+
+            return result;
+        }
+
+        private static byte GetEasedValue(double progress, byte minValueFrom, byte minValueTo, IEasingFunction easing)
+        {
+            double easedProgress = easing?.Ease(progress) ?? progress;
+            double easedValue = easedProgress * minValueTo + (1 - easedProgress) * minValueFrom;
+
+            return (byte) Math.Min(99, Math.Max(0, Math.Round(easedValue)));
         }
     }
 }
