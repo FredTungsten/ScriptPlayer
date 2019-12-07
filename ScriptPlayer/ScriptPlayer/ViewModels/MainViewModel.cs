@@ -1800,8 +1800,9 @@ namespace ScriptPlayer.ViewModels
             {
                 StopDevices();
                 TimeSource.Pause();
-                AutoHomeDevices();
                 StopDevices();
+                AutoHomeDevices();
+                
                 if (Settings.NotifyPlayPause)
                     OsdShowMessage("Pause", TimeSpan.FromSeconds(2), "Playback");
             }
