@@ -64,7 +64,7 @@ namespace ScriptPlayer.Shared
 
         public MediaWrapper Player
         {
-            get { return (MediaWrapper) GetValue(PlayerProperty); }
+            get => (MediaWrapper) GetValue(PlayerProperty);
             set { SetValue(PlayerProperty, value); }
         }
 
@@ -73,7 +73,7 @@ namespace ScriptPlayer.Shared
 
         public MediaWrapper StandByPlayer
         {
-            get { return (MediaWrapper) GetValue(StandByPlayerProperty); }
+            get => (MediaWrapper) GetValue(StandByPlayerProperty);
             set { SetValue(StandByPlayerProperty, value); }
         }
 
@@ -105,7 +105,16 @@ namespace ScriptPlayer.Shared
         private ulong _seekPriority;
         private ulong _loadIteration;
 
-        public bool IsSeeking { get; set; }
+        public static readonly DependencyProperty IsSeekingProperty = DependencyProperty.Register(
+            "IsSeeking", typeof(bool), typeof(VideoPlayer), new PropertyMetadata(default(bool)));
+
+        public bool IsSeeking
+        {
+            get => (bool) GetValue(IsSeekingProperty);
+            set => SetValue(IsSeekingProperty, value);
+        }
+
+        //public bool IsSeeking { get; set; }
 
         public VideoPlayer()
         {
@@ -400,7 +409,7 @@ namespace ScriptPlayer.Shared
 
                 if (iteration != _loadIteration) return;
 
-                await CrossFade(seekEntry.Position, seekEntry.Duration);
+                await CrossFade(seekEntry.Position, seekEntry.Duration, seekEntry.Priority);
 
                 // This was to make sure the standbyplayer has the new video loaded (e.g. for seeking / gap-skipping
                 // Maybe we can do without
@@ -564,12 +573,15 @@ namespace ScriptPlayer.Shared
 
         private async Task CrossFade(TimeSpan position, TimeSpan duration, ulong priority = 0)
         {
+            if (duration > StandByPlayer.Duration.Divide(3))
+                duration = StandByPlayer.Duration.Divide(3);
+
             //await StandByPlayer.PlayAndSeek(position - duration.Divide(2.0));
             await StandByPlayer.PlayAndSeek(position - duration);
 
             SetPrimaryPlayer(StandByPlayer);
 
-            //This would be a good spot to disable IsSeeking
+            //This should be a good spot to disable IsSeeking
             // -----------
             if (priority == _seekPriority)
                 IsSeeking = false;

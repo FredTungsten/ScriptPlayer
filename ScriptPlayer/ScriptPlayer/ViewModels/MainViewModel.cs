@@ -1151,7 +1151,15 @@ namespace ScriptPlayer.ViewModels
 
             if (Settings.SoftSeekFiles)
             {
-                if (e + Settings.SoftSeekFilesDuration >= TimeSource.Duration)
+                //Don't Seek more than a third of the entire video 
+                // (workaround for very short videos combined with verly high soft seek values)
+                var softSeek = Settings.SoftSeekFilesDuration;
+                var thirdVideoDuration = TimeSource.Duration.Divide(2);
+
+                if (thirdVideoDuration < softSeek)
+                    softSeek = thirdVideoDuration;
+
+                if (e + softSeek >= TimeSource.Duration)
                 {
                     MediaCanBeConsideredEnded();
                 }
@@ -3691,7 +3699,9 @@ namespace ScriptPlayer.ViewModels
             Random r = new Random();
 
             if (chapters.Count == 0)
-                return Section.Empty;
+            {
+                chapters = GetChapters(TimeSpan.FromSeconds(1), _gapDuration, true);
+            }
 
             switch (mode)
             {

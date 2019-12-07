@@ -356,7 +356,18 @@
             </Grid>
 
             <!-- SCRIPT POSITIONS -->
-            <ProgressBar Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" Minimum="0" Maximum="1" Value="{Binding CurrentPosition}" Orientation="Vertical" HorizontalAlignment="Left" Margin="10,10,0,10" Width="32"/>
+            <ProgressBar Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" Minimum="0" Maximum="1" Value="{Binding CurrentPosition}" Orientation="Vertical" HorizontalAlignment="Left" Margin="10,10,0,10" Width="32">
+                <ProgressBar.Style>
+                    <Style TargetType="{x:Type ProgressBar}">
+                        <Setter Property="Foreground" Value="Lime"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ElementName=VideoPlayer, Path=IsSeeking}" Value="{x:Static viewModels:StaticBoolean.True}">
+                                <Setter Property="Foreground" Value="Red"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ProgressBar.Style>
+            </ProgressBar>
 
             <Grid Background="#E0000000" IsHitTestVisible="False" Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="65">
                 <!--<Grid.Background>
