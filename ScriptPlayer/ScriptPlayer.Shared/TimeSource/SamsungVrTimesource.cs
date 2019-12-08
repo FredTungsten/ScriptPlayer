@@ -89,7 +89,8 @@ namespace ScriptPlayer.Shared
                 }
                 finally
                 {
-                    SetConnected(false);
+                    if (_running)
+                        SetConnected(false);
                 }
             }
         }

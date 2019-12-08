@@ -110,7 +110,9 @@ namespace ScriptPlayer.Shared
                     DispatchPause();
                     _client.Dispose();
                     _client = null;
-                    SetConnected(false);
+
+                    if (_running)
+                        SetConnected(false);
                 }
             }
         }
