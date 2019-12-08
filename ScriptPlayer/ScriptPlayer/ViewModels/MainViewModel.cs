@@ -249,6 +249,15 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        private bool IsTransistioning
+        {
+            get
+            {
+                if (PlaybackMode != PlaybackMode.Local) return false;
+                return _videoPlayer.IsTransistioning;
+            }
+        }
+
         private bool _loading;
         private double _currentPosition;
         private RepeatablePattern _selectedPattern;
@@ -1131,7 +1140,7 @@ namespace ScriptPlayer.ViewModels
         {
             UpdateDisplayedProgress();
 
-            if (!TimeSource.IsPlaying || IsSeeking)
+            if (!TimeSource.IsPlaying || IsSeeking || IsTransistioning)
                 return;
 
             if (_loopSelection)
@@ -3317,7 +3326,8 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
-            if (!TimeSource.IsPlaying) return;
+            if (!TimeSource.IsPlaying || IsTransistioning)
+                return;
 
             if (skipState != SkipState.Available)
             {
@@ -3561,7 +3571,8 @@ namespace ScriptPlayer.ViewModels
 
         private void MediaCanBeConsideredEnded()
         {
-            if (IsSeeking) return;
+            if (IsSeeking || IsTransistioning)
+                return;
 
             StopDevices();
             PlayNextPlaylistEntry();
@@ -3860,7 +3871,7 @@ namespace ScriptPlayer.ViewModels
             OsdHideSkipButton();
             OsdHideNotification("Events");
 
-            if (IsSeeking)
+            if (IsSeeking || IsTransistioning)
                 return;
 
             //TODO Skip duplicates too!

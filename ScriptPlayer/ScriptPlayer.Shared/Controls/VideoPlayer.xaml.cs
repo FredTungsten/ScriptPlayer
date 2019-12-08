@@ -65,7 +65,7 @@ namespace ScriptPlayer.Shared
         public MediaWrapper Player
         {
             get => (MediaWrapper) GetValue(PlayerProperty);
-            set { SetValue(PlayerProperty, value); }
+            set => SetValue(PlayerProperty, value);
         }
 
         public static readonly DependencyProperty StandByPlayerProperty = DependencyProperty.Register(
@@ -74,7 +74,7 @@ namespace ScriptPlayer.Shared
         public MediaWrapper StandByPlayer
         {
             get => (MediaWrapper) GetValue(StandByPlayerProperty);
-            set { SetValue(StandByPlayerProperty, value); }
+            set => SetValue(StandByPlayerProperty, value);
         }
 
         private static void OnRotatePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -112,6 +112,15 @@ namespace ScriptPlayer.Shared
         {
             get => (bool) GetValue(IsSeekingProperty);
             set => SetValue(IsSeekingProperty, value);
+        }
+
+        public static readonly DependencyProperty IsTransistioningProperty = DependencyProperty.Register(
+            "IsTransistioning", typeof(bool), typeof(VideoPlayer), new PropertyMetadata(default(bool)));
+
+        public bool IsTransistioning
+        {
+            get => (bool) GetValue(IsTransistioningProperty);
+            set => SetValue(IsTransistioningProperty, value);
         }
 
         //public bool IsSeeking { get; set; }
@@ -335,6 +344,7 @@ namespace ScriptPlayer.Shared
             try
             {
                 await _seekSemaphore.WaitAsync();
+                IsTransistioning = true;
                 IsSeeking = true;
 
                 if (_seekPriority != seekEntry.Priority)
@@ -357,7 +367,10 @@ namespace ScriptPlayer.Shared
             finally
             {
                 if (seekEntry.Priority == _seekPriority)
+                {
                     IsSeeking = false;
+                    IsTransistioning = false;
+                }
 
                 _seekSemaphore.Release(1);
             }
