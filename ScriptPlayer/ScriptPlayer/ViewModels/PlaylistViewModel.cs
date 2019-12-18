@@ -311,6 +311,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand GeneratePreviewsForSelectedVideosCommand { get; set; }
         public RelayCommand GenerateHeatmapsForSelectedVideosCommand { get; set; }
         public RelayCommand GenerateAllForSelectedVideosCommand { get; set; }
+        public RelayCommand GenerateAllForAllVideosCommand { get; set; }
         public RelayCommand RecheckAllCommand { get; set; }
         public int EntryCount => Entries.Count;
 
@@ -329,15 +330,16 @@ namespace ScriptPlayer.ViewModels
             ClearPlaylistCommand = new RelayCommand(ExecuteClearPlaylist, CanClearPlaylist);
             PlayNextEntryCommand = new RelayCommand(ExecutePlayNextEntry, CanPlayNextEntry);
             PlayPreviousEntryCommand = new RelayCommand(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
-            SortByDurationCommand = new RelayCommand<bool>(ExecuteSortByDuration, CanSort);
-            SortByNameCommand = new RelayCommand<bool>(ExecuteSortByName, CanSort);
-            SortByPathCommand = new RelayCommand<bool>(ExecuteSortByPath, CanSort);
-            SortShuffleCommand = new RelayCommand(ExecuteSortShuffle, CanSort);
+            SortByDurationCommand = new RelayCommand<bool>(ExecuteSortByDuration, AreTheMultipleEntries);
+            SortByNameCommand = new RelayCommand<bool>(ExecuteSortByName, AreTheMultipleEntries);
+            SortByPathCommand = new RelayCommand<bool>(ExecuteSortByPath, AreTheMultipleEntries);
+            SortShuffleCommand = new RelayCommand(ExecuteSortShuffle, AreTheMultipleEntries);
             GenerateThumbnailsForSelectedVideosCommand = new RelayCommand(ExecuteGenerateThumbnailsForSelectedVideos, AreEntriesSelected); 
             GenerateThumbnailBannersForSelectedVideosCommand = new RelayCommand(ExecuteGenerateThumbnailBannersForSelectedVideos, AreEntriesSelected); 
             GeneratePreviewsForSelectedVideosCommand = new RelayCommand(ExecuteGeneratePreviewsForSelectedVideos, AreEntriesSelected);
             GenerateHeatmapsForSelectedVideosCommand = new RelayCommand(ExecuteGenerateHeatmapsForSelectedVideos, AreEntriesSelected);
             GenerateAllForSelectedVideosCommand = new RelayCommand(ExecuteGenerateAllForSelectedVideos, AreEntriesSelected);
+            GenerateAllForAllVideosCommand = new RelayCommand(ExecuteGenerateAllForAllVideos, AreThereAnyEntries);
             RecheckAllCommand = new RelayCommand(ExecuteRecheckAll);
 
             _dispatcher = Dispatcher.CurrentDispatcher;
@@ -403,6 +405,15 @@ namespace ScriptPlayer.ViewModels
             OnRequestGenerateHeatmaps(videos);
         }
 
+        private void ExecuteGenerateAllForAllVideos()
+        {
+            string[] videos = Entries.Select(e => OnRequestVideoFileName(e.Fullname)).Where(v => !string.IsNullOrEmpty(v)).ToArray();
+            if (videos.Length == 0)
+                return;
+
+            OnRequestGenerateAll(videos);   
+        }
+
         private void ExecuteGenerateAllForSelectedVideos()
         {
             string[] videos = _selectedEntries.Select(e => OnRequestVideoFileName(e.Fullname)).Where(v => !string.IsNullOrEmpty(v)).ToArray();
@@ -412,9 +423,14 @@ namespace ScriptPlayer.ViewModels
             OnRequestGenerateAll(videos);
         }
 
-        private bool CanSort()
+        private bool AreTheMultipleEntries()
         {
             return Entries.Count > 1;
+        }
+
+        private bool AreThereAnyEntries()
+        {
+            return Entries.Any();
         }
 
         private void ExecuteSortShuffle()
@@ -453,9 +469,9 @@ namespace ScriptPlayer.ViewModels
             Entries = new ObservableCollection<PlaylistEntry>(sortAscending ? entries : entries.Reverse());
         }
 
-        private bool CanSort(bool arg)
+        private bool AreTheMultipleEntries(bool arg)
         {
-            return CanSort();
+            return AreTheMultipleEntries();
         }
 
         private void MediaInfoLoop()
