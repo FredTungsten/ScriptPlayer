@@ -4139,15 +4139,18 @@ namespace ScriptPlayer.ViewModels
 
         private bool LoadScript(ScriptLoader[] loaders, string fileName, bool isFallback)
         {
-            const long maxScriptSize = 4 * 1024 * 1024; //4 MB
-
+            //const long maxScriptSize = 4 * 1024 * 1024; //4 MB
             if (!File.Exists(fileName)) return false;
-            if (new FileInfo(fileName).Length > maxScriptSize) return false;
 
+            long fileSize = new FileInfo(fileName).Length;
+            
             List<ScriptAction> actions = null;
 
             foreach (ScriptLoader loader in loaders)
             {
+                if (fileSize > loader.MaxFileSize)
+                    continue;
+
                 try
                 {
                     actions = loader.Load(fileName);

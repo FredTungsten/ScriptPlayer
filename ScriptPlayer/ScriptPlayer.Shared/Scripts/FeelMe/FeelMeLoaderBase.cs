@@ -7,6 +7,11 @@ namespace ScriptPlayer.Shared.Scripts
 {
     public abstract class FeelMeLoaderBase : ScriptLoader
     {
+        protected FeelMeLoaderBase()
+        {
+            MaxFileSize = 4 * 1024 * 1024;
+        }
+
         public override List<ScriptAction> Load(Stream stream)
         {
             using (StreamReader reader = new StreamReader(stream, new UTF8Encoding(false)))
