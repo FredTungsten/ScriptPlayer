@@ -488,7 +488,7 @@
                 </MenuItem>
             </Menu>
             <ToolBar Grid.Row="1" Background="#FFF0F0F0">
-                <Button Command="{Binding OpenScriptCommand}">
+                <Button Command="{Binding OpenVideoCommand}">
                     <Grid Width="16" Height="16">
                         <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_folder_open}"/>
                     </Grid>
