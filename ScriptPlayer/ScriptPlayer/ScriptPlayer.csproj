@@ -95,11 +95,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\HorizontalStretcher.cs" />
+    <Compile Include="Controls\PlaylistControl.xaml.cs">
+      <DependentUpon>PlaylistControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\VideoDetailsPreview.xaml.cs">
       <DependentUpon>VideoDetailsPreview.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converters\AlternativeValueConverter.cs" />
     <Compile Include="Converters\InverterConverter.cs" />
+    <Compile Include="ViewModels\DependecyObjectExtensions.cs" />
     <Compile Include="Dialogs\GeneratorSettingsDialog.xaml.cs">
       <DependentUpon>GeneratorSettingsDialog.xaml</DependentUpon>
     </Compile>
@@ -232,6 +237,10 @@
     <Compile Include="ViewModels\RequestEventArgs.cs" />
     <Compile Include="ViewModels\RequestFileEventArgs.cs" />
     <Compile Include="ViewModels\TestPatternDefinition.cs" />
+    <Page Include="Controls\PlaylistControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\VideoDetailsPreview.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

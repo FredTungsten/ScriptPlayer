@@ -1,0 +1,222 @@
+﻿<UserControl x:Class="ScriptPlayer.Controls.PlaylistControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ScriptPlayer.Controls"
+             xmlns:converters="clr-namespace:ScriptPlayer.Converters"
+             xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
+             xmlns:dialogs="clr-namespace:ScriptPlayer.Dialogs"
+             xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
+             xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
+             xmlns:fa="clr-namespace:FontAwesome.Net;assembly=FontAwesome.Net"
+             mc:Ignorable="d" Background="White" d:DesignHeight="435.699" d:DesignWidth="354.767" KeyDown="UserControl_KeyDown">
+    <UserControl.Resources>
+        <Style x:Key="ToolTipStyle1"
+        TargetType="ToolTip">
+            <Setter Property="Placement"
+            Value="Mouse" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Grid x:Name="LayoutRoot"
+                      MaxWidth="300"
+                      MinHeight="36"
+                      MaxHeight="300">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Polygon Fill="#FF1589EE"
+                             Width="10"
+                             Height="12"
+                             VerticalAlignment="Center"
+                             Points="0,6 10,0 10,12" />
+
+                            <Border Grid.Column="1"
+                            Background="#FF1589EE">
+                                <TextBlock Margin="20,5,5,5"
+                                   HorizontalAlignment="Left"
+                                   VerticalAlignment="Center"
+                                   Foreground="White"
+                                   FontSize="16"
+                                   TextWrapping="Wrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   Text="{TemplateBinding Content}" />
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <ContextMenu x:Key="ItemContextMenu">
+            <MenuItem Header="Open in Explorer" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.OpenInExplorerCommand}"
+                      CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext}"/>
+        </ContextMenu>
+        <ToolTip x:Key="EntryToolTip" Opened="ToolTip_OnOpened"
+                 Padding="0" Placement="Right" BorderThickness="0">
+            <local:VideoDetailsPreview />
+        </ToolTip>
+        <!--
+        <ToolTip x:Key="EntryToolTip" Padding="0" Placement="Right"  Opened="ToolTip_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
+            <StackPanel Width="300">
+                <shared:GifPlayer Background="Black" AutoPlay="True" Stretch="Uniform" Height="169"/>
+                <Image Name="heatMapNext" HorizontalAlignment="Stretch" Height="15" Stretch="Fill" />
+                <TextBlock Margin="2" Background="White" Foreground="Black" TextAlignment="Center" Height="Auto" TextWrapping="Wrap"/>
+            </StackPanel>
+        </ToolTip>
+        -->
+        <converters:DurationConverter x:Key="DurationConverter"/>
+        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+            <Setter Property="Focusable" Value="False"/>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.7"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}">
+            <Setter Property="Focusable" Value="False"/>
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="257*"/>
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0" Background="White">
+            <MenuItem Header="Playlist">
+                <MenuItem Header="Add Files" Command="{Binding AddScriptsToPlaylistCommand}"/>
+                <MenuItem Header="Add Folder" Command="{Binding AddFolderToPlaylistCommand}"/>
+                <Separator/>
+                <MenuItem Header="Remove Missing Entries" Command="{Binding RemoveMissingEntriesFromPlaylistCommand}"/>
+                <MenuItem Header="Remove Incomplete Entries" Command="{Binding RemoveIncompleteEntriesFromPlaylistCommand}"/>
+                <MenuItem Header="Recheck All Entries" Command="{Binding Playlist.RecheckAllCommand}"/>
+                <Separator/>
+                <MenuItem Header="Scroll to current entry" Click="MnuScrollToCurrent"/>
+                <Separator/>
+                <MenuItem Header="Load Playlist" Command="{Binding LoadPlaylistCommand}"/>
+                <MenuItem Header="Save Playlist" Command="{Binding SavePlaylistCommand}"/>
+                <MenuItem Header="Clear Playlist" Command="{Binding Playlist.ClearPlaylistCommand}"/>
+            </MenuItem>
+            <MenuItem Header="Generate">
+                <MenuItem Header ="(For selected files)" IsEnabled="False"/>
+                <MenuItem Header="Generate Thumbnails" Command="{Binding Playlist.GenerateThumbnailsForSelectedVideosCommand}"></MenuItem>
+                <MenuItem Header="Generate Thumbnail Banners" Command="{Binding Playlist.GenerateThumbnailBannersForSelectedVideosCommand}"></MenuItem>
+                <MenuItem Header="Generate Previews" Command="{Binding Playlist.GeneratePreviewsForSelectedVideosCommand}"></MenuItem>
+                <MenuItem Header="Generate Heatmaps" Command="{Binding Playlist.GenerateHeatmapsForSelectedVideosCommand}"></MenuItem>
+                <MenuItem Header="Generate all" Command="{Binding Playlist.GenerateAllForSelectedVideosCommand}"></MenuItem>
+                <Separator/>
+                <MenuItem Header="Generate all missing files" Command="{Binding Playlist.GenerateAllForAllVideosCommand}"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="Sort">
+                <MenuItem Header="Duration (ascending)"  Command="{Binding Playlist.SortByDurationCommand}" CommandParameter="{shared:Boolean true}"/>
+                <MenuItem Header="Duration (descending)"  Command="{Binding Playlist.SortByDurationCommand}" CommandParameter="{shared:Boolean false}"/>
+                <Separator/>
+                <MenuItem Header="Name (ascending)"  Command="{Binding Playlist.SortByNameCommand}" CommandParameter="{shared:Boolean true}"/>
+                <MenuItem Header="Name (descending)"  Command="{Binding Playlist.SortByNameCommand}" CommandParameter="{shared:Boolean false}"/>
+                <Separator/>
+                <MenuItem Header="Path (ascending)"  Command="{Binding Playlist.SortByPathCommand}" CommandParameter="{shared:Boolean true}"/>
+                <MenuItem Header="Path (descending)"  Command="{Binding Playlist.SortByPathCommand}" CommandParameter="{shared:Boolean false}"/>
+                <Separator/>
+                <MenuItem Header="Shuffle" Command="{Binding Playlist.SortShuffleCommand}"/>
+            </MenuItem>
+        </Menu>
+
+        <TextBox x:Name="txtSearch" Text="{Binding Path=Playlist.Filter, UpdateSourceTrigger=PropertyChanged}" Height="22" Margin="10,10,10,0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top"/>
+
+        <ListBox x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,41,10,77" ItemsSource="{Binding Path=Playlist.FilteredEntries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" SelectionChanged="LstEntries_OnSelectionChanged" AllowDrop="True" Drop="ListBox_Drop" SelectionMode="Extended">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
+                    <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
+                    <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                    <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"></Setter>
+                    <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=dialogs:PlaylistWindow}, Path=DataContext}"/>
+                    <Setter Property="ToolTip" Value="{StaticResource EntryToolTip}"/>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="viewModels:PlaylistEntry">
+                    <DockPanel HorizontalAlignment="Stretch">
+                        <DockPanel.Style>
+                            <Style TargetType="FrameworkElement">
+                                <Style.Setters>
+                                    <Setter Property="TextElement.Foreground" Value="DimGray"/>
+                                </Style.Setters>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.Loading}">
+                                        <Setter Property="TextElement.Foreground" Value="DimGray"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.FilesOk}">
+                                        <Setter Property="TextElement.Foreground" Value="Black"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.MissingFile}">
+                                        <Setter Property="TextElement.Foreground" Value="Red"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DockPanel.Style>
+                        <TextBlock Text="{Binding Path=Duration, Converter={StaticResource DurationConverter}}" DockPanel.Dock="Right" Margin="8,0,2,0" />
+                        <TextBlock Text="{Binding Shortname}" DockPanel.Dock="Left" TextTrimming="CharacterEllipsis" Margin="2,0,0,0"/>
+                    </DockPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Margin="10,0,10,37" Height="35" VerticalAlignment="Bottom">
+            <Run Text="Playlist: "/>
+            <Run Text="{Binding Mode=OneWay, Path=Playlist.Entries.Count}"/>
+            <Run Text="entries ["/>
+            <Run Text="{Binding Mode=OneWay, Path=Playlist.TotalDurationString}"/>
+            <Run Text="]"/>
+            <LineBreak/>
+            <Run Text="Selection: "/>
+            <Run Text="{Binding Mode=OneWay, Path=Playlist.SelectedEntries.Count}"/>
+            <Run Text="entries ["/>
+            <Run Text="{Binding Mode=OneWay, Path=Playlist.SelectedDurationString}"/>
+            <Run Text="]"/>
+        </TextBlock>
+
+        <UniformGrid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom" Grid.Row="1" Columns="9">
+            <Button ToolTip="Move First" Command="{Binding Playlist.MoveSelectedEntryFirstCommand}" 
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_circle_up}"/>
+            </Button>
+            <Button ToolTip="Move Up" Command="{Binding Playlist.MoveSelectedEntryUpCommand}" 
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_up}"/>
+            </Button>
+            <Button ToolTip="Move Down" Command="{Binding Playlist.MoveSelectedEntryDownCommand}"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_down}"/>
+            </Button>
+            <Button ToolTip="Move Last" Command="{Binding Playlist.MoveSelectedEntryLastCommand}"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_circle_down}"/>
+            </Button>
+            <Button ToolTip="Remove" Command="{Binding Playlist.RemoveSelectedEntryCommand}" 
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_times}"/>
+            </Button>
+            <CheckBox ToolTip="Shuffle" IsChecked="{Binding Playlist.Shuffle}"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_random}"/>
+            </CheckBox>
+            <CheckBox ToolTip="Repeat" IsChecked="{Binding Playlist.Repeat}" 
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_refresh}"/>
+            </CheckBox>
+            <CheckBox ToolTip="Repeat Single File" IsChecked="{Binding Playlist.RepeatSingleFile}" 
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_repeat}"/>
+            </CheckBox>
+            <CheckBox ToolTip="Random Chapters" IsChecked="{Binding Playlist.RandomChapters}" 
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_bookmark}"/>
+            </CheckBox>
+        </UniformGrid>
+    </Grid>
+</UserControl>

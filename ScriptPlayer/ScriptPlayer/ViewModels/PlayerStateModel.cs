@@ -20,6 +20,20 @@ namespace ScriptPlayer.ViewModels
 
         public double Y { get; set; }
 
+        public double SettingsWidth { get; set; }
+
+        public double PlaylistWidth { get; set; }
+
+        public bool HideSettings { get; set; }
+
+        public bool HidePlaylist { get; set; }
+
+        public WindowStateModel()
+        {
+            SettingsWidth = 200;
+            PlaylistWidth = 200;
+        }
+
         [XmlIgnore]
         public Rect WindowPosition
         {

@@ -6,15 +6,23 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
 using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
-using Microsoft.Win32;
 using ScriptPlayer.Generators;
 using ScriptPlayer.Shared.Classes;
+using Application = System.Windows.Application;
+using DataFormats = System.Windows.DataFormats;
+using DragEventArgs = System.Windows.DragEventArgs;
+using FileDialog = Microsoft.Win32.FileDialog;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using MessageBox = System.Windows.MessageBox;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Point = System.Windows.Point;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace ScriptPlayer
 {
@@ -33,8 +41,15 @@ namespace ScriptPlayer
         }
 
         private bool _fullscreen;
+
         private Rect _windowPosition;
         private WindowState _windowState;
+
+        private double _playlistWidth;
+        private double _settingWidth;
+        private bool _hidePlaylist;
+        private bool _hideSettings;
+
         private DateTime _doubleClickTimeStamp = DateTime.MinValue;
 
         public MainWindow()
@@ -48,6 +63,8 @@ namespace ScriptPlayer
         {
             if(!_fullscreen)
                 SaveCurrentWindowRect();
+
+            SaveSidePanels();
 
             ViewModel.Dispose();
         }
@@ -94,11 +111,35 @@ namespace ScriptPlayer
 
             if (ViewModel.InitialPlayerState != null)
             {
+                RestoreSidePanels(true);
                 WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
             }
 
             ViewModel.SetMainWindow(this);
+            
+            var hideonhoverDescriptor = DependencyPropertyDescriptor.FromProperty(HideOnHover.IsActiveProperty, typeof(Grid));
+            hideonhoverDescriptor.AddValueChanged(GridPlaylist, HideOnHoverChanged);
+            hideonhoverDescriptor.AddValueChanged(GridSettings, HideOnHoverChanged);
+
+            UpdateVideoColumns();
+        }
+
+        private void HideOnHoverChanged(object sender, EventArgs eventArgs)
+        {
+            UpdateVideoColumns();
+        }
+
+        private void UpdateVideoColumns()
+        {
+            bool hidePlaylist = HideOnHover.GetIsActive(GridPlaylist);
+            bool hideSettings = HideOnHover.GetIsActive(GridSettings);
+
+            int gridColumn = hidePlaylist ? 0 : 1;
+            int gridColumnSpan = 3 - (hidePlaylist ? 0 : 1) - (hideSettings ? 0 : 1);
+
+            Grid.SetColumn(GridVideo, gridColumn);
+            Grid.SetColumnSpan(GridVideo, gridColumnSpan);
         }
 
         private void ViewModelOnRequestGeneratorSettings(object sender, RequestEventArgs<GeneratorSettingsViewModel> eventArgs)
@@ -215,6 +256,20 @@ namespace ScriptPlayer
             RestoreWindowState(windowStateModel);
         }
 
+        private void SidePanel_FinishedDragging(object sender, EventArgs e)
+        {
+            SaveSidePanels();
+        }
+
+        private void SaveSidePanels()
+        {
+            _playlistWidth = GridPlaylist.Width;
+            _settingWidth = GridSettings.Width;
+
+            _hidePlaylist = HideOnHover.GetIsActive(GridPlaylist);
+            _hideSettings = HideOnHover.GetIsActive(GridSettings);
+        }
+
         private void RestoreWindowState(WindowStateModel windowStateModel)
         {
             if (windowStateModel == null)
@@ -222,11 +277,29 @@ namespace ScriptPlayer
 
             _windowPosition = windowStateModel.GetPosition();
             _windowState = windowStateModel.IsMaximized ? WindowState.Maximized : WindowState.Normal;
+
+            _settingWidth = windowStateModel.SettingsWidth;
+            _playlistWidth = windowStateModel.PlaylistWidth;
+            _hideSettings = windowStateModel.HideSettings;
+            _hidePlaylist = windowStateModel.HidePlaylist;
             
             RestoreWindowRect(IsInitialized);
+            RestoreSidePanels(IsInitialized);
 
             if (IsInitialized)
                 SetFullscreen(windowStateModel.IsFullscreen, false);
+        }
+
+        private void RestoreSidePanels(bool isInitialized)
+        {
+            if (!isInitialized)
+                return;
+
+            GridPlaylist.Width = _playlistWidth;
+            GridSettings.Width = _settingWidth;
+
+            HideOnHover.SetIsActive(GridPlaylist, _hidePlaylist);
+            HideOnHover.SetIsActive(GridSettings, _hideSettings);
         }
 
         private void ViewModelOnRequestGetWindowState(object sender, RequestEventArgs<WindowStateModel> e)
@@ -235,7 +308,11 @@ namespace ScriptPlayer
             {
                 IsMaximized = _windowState == WindowState.Maximized,
                 IsFullscreen = _fullscreen,
-                WindowPosition = _windowPosition
+                WindowPosition = _windowPosition,
+                SettingsWidth = _settingWidth,
+                PlaylistWidth = _playlistWidth,
+                HidePlaylist = _hidePlaylist,
+                HideSettings = _hideSettings
             };
             e.Handled = true;
         }

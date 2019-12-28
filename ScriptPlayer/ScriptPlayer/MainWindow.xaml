@@ -30,7 +30,6 @@
         <converters:ConversionModeToNameConverter x:Key="ConversionConverter"/>
         <converters1:DistinctValueToBooleanConverter x:Key="BooleanConverter"/>
         <converters1:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
-        <converters:BooleanToColumnSpanConverter x:Key="ColumnSpanConverter" OnFalse="1" OnTrue="2" />
         <converters:BooleanInverter x:Key="Inverter"/>
         <converters1:EqualsConverter x:Key="EqualsConverter"/>
         <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
@@ -53,7 +52,8 @@
     </Window.Resources>
     <Grid Background="Transparent">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="383*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -62,7 +62,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Name="GridVideo" Grid.Row="1" Grid.ColumnSpan="{Binding ElementName=GridSettings, Path=(shared:HideOnHover.IsActive), Mode=OneWay, Converter={StaticResource ColumnSpanConverter}}"
+        <Grid Name="GridVideo" Grid.Row="1" Grid.ColumnSpan="3"
               Background="Black" MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" AllowDrop="True" Drop="GridVideo_Drop">
             <!-- VIDEO PLAYER -->
             <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true" x:Name="VideoPlayer">
@@ -85,23 +85,6 @@
                 </shared:VideoPlayer.Style>
             </shared:VideoPlayer>
             <scriptPlayer:FlashOverlay HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="FlashOverlay"/>
-
-            <!-- Fade tests -->
-            <!--
-            <Grid>
-                <DockPanel LastChildFill="False">
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                        <ProgressBar Orientation="Vertical" Minimum="0" Maximum="100" Width="20" Value="{Binding ElementName=VideoPlayer, Path=Volume}"/>
-                        <ProgressBar Orientation="Vertical" Minimum="0" Maximum="100" Width="20" Value="{Binding ElementName=VideoPlayer, Path=StandByVolume}"/>
-                        <ProgressBar Orientation="Vertical" Minimum="0" Maximum="1" Width="20" Value="{Binding ElementName=VideoPlayer, Path=Border.Opacity}"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Vertical" DockPanel.Dock="Right">
-                        <Rectangle Width="300" Height="200" Fill="{Binding ElementName=VideoPlayer, Path=VideoBrush}"/>
-                        <Rectangle Width="300" Height="200" Fill="{Binding ElementName=VideoPlayer, Path=StandByBrush}"/>
-                    </StackPanel>
-                </DockPanel>
-            </Grid>
-            -->
 
             <!-- BLIND MODE -->
             <Grid IsHitTestVisible="False">
@@ -175,7 +158,6 @@
                     </TextBlock>
                 </StackPanel>
             </Grid>
-
 
             <!-- MPC-HC -->
             <Grid IsHitTestVisible="False">
@@ -292,7 +274,6 @@
                     </TextBlock>
                 </StackPanel>
             </Grid>
-            
 
             <!-- ICON AND VERSION -->
             <Grid IsHitTestVisible="False" Visibility="{Binding ShowBanner, Converter={StaticResource VisibilityConverter}}">
@@ -370,14 +351,6 @@
             </ProgressBar>
 
             <Grid Background="#E0000000" IsHitTestVisible="False" Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="65">
-                <!--<Grid.Background>
-                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                        <GradientStop Color="#00000000" Offset="0"/>
-                        <GradientStop Color="#C0000000" Offset="0.331"/>
-                        <GradientStop Color="#C0000000" Offset="1"/>
-                        
-                    </LinearGradientBrush>
-                </Grid.Background>-->
                 <shared:TimeLineHeader ClipToBounds="True" Background="Transparent" ViewPort="{Binding PositionsViewport, Mode=TwoWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Marker="{Binding Path=TimeSource.Progress, Mode=OneWay}"></shared:TimeLineHeader>
                 <shared:PositionBar ClipToBounds="True" TotalDisplayedDuration="{Binding PositionsViewport, Mode=OneWay}" MinCommandDelay="{Binding Settings.CommandDelay}" IsReadOnly="True" Positions="{Binding Positions}" Progress="{Binding Path=TimeSource.Progress}"/>
             </Grid>
@@ -408,10 +381,10 @@
                 </shared:NotificationList.Resources>
             </shared:NotificationList>
         </Grid>
-        
+
         <!-- MAIN MENU -->
 
-        <Grid Name="MnuMain" Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="0" Background="#FFF0F0F0">
+        <Grid Name="MnuMain" Grid.Row="0" Grid.ColumnSpan="3" Grid.Column="0" Background="#FFF0F0F0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -558,7 +531,7 @@
         </Grid>
 
         <DockPanel Background="White" LastChildFill="True" Name="PlayerControls" 
-                   Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                   Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
             <DockPanel.Resources>
                 <Style TargetType="Button" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Key="FlatButton">
                     <Setter Property="FontFamily" Value="Webdings"/>
@@ -710,12 +683,26 @@
             </shared:SeekBar>
         </DockPanel>
 
-        <Grid Name="GridSettings" shared:HideOnHover.IsActive="True" Width="180" Background="White" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1" VerticalAlignment="Stretch">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Name="GridPlaylist" MinWidth="150" MaxWidth="400" Width="180" shared:HideOnHover.IsActive="True" Background="White" Grid.Column="0" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1">
+            <controls1:PlaylistControl ViewModel="{Binding Path=.}" Margin="0,32,0,0" />
+            <TextBlock TextAlignment="Center" VerticalAlignment="Top" Text="Playlist" FontSize="20"/>
+            <CheckBox Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Top" Margin="3,0" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="24" Height="24" HorizontalAlignment="Right"
+                      IsChecked="{Binding ElementName=GridPlaylist, Path=(shared:HideOnHover.IsActive), Mode=TwoWay, Converter={StaticResource Inverter}}">
+                <TextBlock Text="🖈" Padding="0" Margin="0" FontSize="18"/>
+            </CheckBox>
+            <controls1:HorizontalStretcher HorizontalAlignment="Right" FinishedDragging="SidePanel_FinishedDragging"/>
+        </Grid>
+
+        <Grid Name="GridSettings" shared:HideOnHover.IsActive="True" Width="180" Background="White" Grid.Column="2" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1" VerticalAlignment="Stretch" MaxWidth="400" MinWidth="150">
+            <TextBlock TextAlignment="Center" VerticalAlignment="Top" Text="Settings" FontSize="20"/>
+            <CheckBox Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Top" Margin="3,0" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="24" Height="24" HorizontalAlignment="Left"
+                      IsChecked="{Binding ElementName=GridSettings, Path=(shared:HideOnHover.IsActive), Mode=TwoWay, Converter={StaticResource Inverter}}">
+                <TextBlock Text="🖈" Padding="0" Margin="0" FontSize="18"/>
+            </CheckBox>
+            <controls1:HorizontalStretcher HorizontalAlignment="Left" FinishedDragging="SidePanel_FinishedDragging"/>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="5,32,0,0">
                 <Grid>
                     <StackPanel>
-                        <TextBlock Margin="4" HorizontalAlignment="Center" Text="Settings" FontSize="20"/>
-
                         <StackPanel Margin="4" ToolTip="Timespan by which every script command will be delayed. Negative values will cause the commands to be executed ahead of time.">
                             <TextBlock TextAlignment="Center" Margin="0" Text="Script Delay"/>
                             <Slider Value="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-2500" Maximum="2500" SmallChange="25" LargeChange="100" IsSnapToTickEnabled="True" TickFrequency="25"/>
@@ -838,10 +825,6 @@
                         <CheckBox IsChecked="{Binding Settings.LogMarkers}" Margin="4" Content="Log Markers"/>
                         <CheckBox IsChecked="{Binding BlurVideo}" Margin="4" Content="Blur Video"/>
                     </StackPanel>
-                    <CheckBox Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Top" Margin="3" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="24" Height="24" HorizontalAlignment="Left"
-                              IsChecked="{Binding ElementName=GridSettings, Path=(shared:HideOnHover.IsActive), Mode=TwoWay, Converter={StaticResource Inverter}}">
-                        <TextBlock Text="🖈" Padding="0" Margin="0" FontSize="18"/>
-                    </CheckBox>
                 </Grid>
             </ScrollViewer>
         </Grid>
