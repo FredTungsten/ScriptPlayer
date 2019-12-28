@@ -35,13 +35,33 @@ namespace ScriptPlayer.Shared
 
         public static readonly DependencyProperty ThumbnailsProperty = DependencyProperty.Register(
             "Thumbnails", typeof(VideoThumbnailCollection), typeof(SeekBar), 
-            new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+            new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender, OnThumbnailsPropertyChanged));
+
+        private static void OnThumbnailsPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((SeekBar) d).ThumbnailsChanged();
+        }
+
+        private void ThumbnailsChanged()
+        {
+            if (_img != null)
+                _img.Thumbnails = Thumbnails;
+        }
 
         public static readonly DependencyProperty HighlightRangeProperty = DependencyProperty.Register(
             "HighlightRange", typeof(Section), typeof(SeekBar), new FrameworkPropertyMetadata(default(Section), FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty PositionsProperty = DependencyProperty.Register(
             "Positions", typeof(PositionCollection), typeof(SeekBar), new FrameworkPropertyMetadata(default(PositionCollection), FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty ThumbnailModesProperty = DependencyProperty.Register(
+            "ThumbnailModes", typeof(ThumbnailModes), typeof(SeekBar), new PropertyMetadata(ThumbnailModes.One));
+
+        public ThumbnailModes ThumbnailModes
+        {
+            get => (ThumbnailModes) GetValue(ThumbnailModesProperty);
+            set => SetValue(ThumbnailModesProperty, value);
+        }
 
         public PositionCollection Positions
         {
@@ -71,7 +91,7 @@ namespace ScriptPlayer.Shared
         private Popup _popup;
         private TextBlock _txt;
         private StackPanel _stack;
-        private Image _img;
+        private ThumbnailPreview _img;
         private PositionBar _pos;
 
         static SeekBar()
@@ -123,10 +143,10 @@ namespace ScriptPlayer.Shared
                 Orientation = Orientation.Vertical
             };
 
-            _img = new Image
+            _img = new ThumbnailPreview
             {
-                Stretch = Stretch.Uniform,
-                HorizontalAlignment = HorizontalAlignment.Center
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Thumbnails = Thumbnails
             };
 
             _txt = new TextBlock
@@ -142,6 +162,7 @@ namespace ScriptPlayer.Shared
                 TotalDisplayedDuration = TimeSpan.FromSeconds(16),
                 DrawCircles = false,
                 DrawLines = false,
+                DrawZero = true,
                 Background = Brushes.Black
             };
 
@@ -294,7 +315,7 @@ namespace ScriptPlayer.Shared
 
             if (Thumbnails != null)
             {
-                _img.Source = Thumbnails.Get(absolutePosition)?.Thumbnail;
+                _img.TimeStamp = absolutePosition;
                 _img.Visibility = Visibility.Visible;
             }
             else
@@ -344,5 +365,11 @@ namespace ScriptPlayer.Shared
         {
             Seek?.Invoke(this, relative, absolute, downMoveUp);
         }
+    }
+
+    public enum ThumbnailModes
+    {
+        One,
+        Many
     }
 }

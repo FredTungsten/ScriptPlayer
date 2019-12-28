@@ -36,6 +36,14 @@ namespace ScriptPlayer.Shared.Classes
             _thumbnails.Add(videoThumbnail);
         }
 
+        public VideoThumbnail Get(int index)
+        {
+            if (_thumbnails.Count <= index)
+                return null;
+
+            return _thumbnails[index];
+        }
+
         public VideoThumbnail Get(TimeSpan timestamp)
         {
             if (_thumbnails.Count == 0)

@@ -182,6 +182,7 @@
     <Compile Include="Controls\AwesomeTextBlock.cs" />
     <Compile Include="Controls\MediaWrapper.cs" />
     <Compile Include="Controls\PageSelector.cs" />
+    <Compile Include="Controls\ThumbnailPreview.cs" />
     <Compile Include="Converters\BooleanToColumnSpanConverter.cs" />
     <Compile Include="Converters\SeekBarPositionConverter.cs" />
     <Compile Include="Devices\ButtplugAdapter.cs" />

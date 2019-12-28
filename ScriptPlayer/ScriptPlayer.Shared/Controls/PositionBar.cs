@@ -19,6 +19,15 @@ namespace ScriptPlayer.Shared
             set => SetValue(DrawLinesProperty, value);
         }
 
+        public static readonly DependencyProperty DrawZeroProperty = DependencyProperty.Register(
+            "DrawZero", typeof(bool), typeof(PositionBar), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public bool DrawZero
+        {
+            get => (bool) GetValue(DrawZeroProperty);
+            set => SetValue(DrawZeroProperty, value);
+        }
+
         public static readonly DependencyProperty DrawCirclesProperty = DependencyProperty.Register(
             "DrawCircles", typeof(bool), typeof(PositionBar), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
@@ -278,10 +287,10 @@ namespace ScriptPlayer.Shared
             drawingContext.PushClip(new RectangleGeometry(fullRect));
             drawingContext.DrawRectangle(Background, null, fullRect);
 
+            Pen redPen = new Pen(Brushes.Red, 1);
+
             if (DrawLines)
             {
-                Pen redPen = new Pen(Brushes.Red, 1);
-
                 drawingContext.PushOpacity(0.3);
                 for (int i = 0; i <= 4; i++)
                 {
@@ -290,7 +299,10 @@ namespace ScriptPlayer.Shared
                 }
 
                 drawingContext.Pop();
+            }
 
+            if (DrawZero)
+            {
                 double midPointX = ActualWidth * Midpoint;
 
                 drawingContext.DrawLine(redPen, new Point(midPointX, 0), new Point(midPointX, ActualHeight));
