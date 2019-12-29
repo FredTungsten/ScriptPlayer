@@ -2,24 +2,18 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-using Accord.Audio;
-using Accord.Video.FFMPEG;
 using Microsoft.Win32;
-using NAudio.Dsp;
 using NAudio.Wave;
-using Newtonsoft.Json;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Scripts;
@@ -1519,7 +1513,7 @@ namespace ScriptPlayer.VideoSync
                 case Key.V:
                     {
                         if (control)
-                            PasteBeats();
+                            PasteBeats(shift);
                         break;
                     }
                 case Key.Delete:
@@ -1682,7 +1676,7 @@ namespace ScriptPlayer.VideoSync
             Clipboard.SetText(text, TextDataFormat.CommaSeparatedValue);
         }
 
-        private void PasteBeats()
+        private void PasteBeats(bool before)
         {
             if (!Clipboard.ContainsText(TextDataFormat.CommaSeparatedValue))
                 return;
@@ -1707,9 +1701,16 @@ namespace ScriptPlayer.VideoSync
             if (selection.Count == 0)
                 return;
 
-            TimeSpan offset = selection.First() - timespans.First();
-
-            SetSelectedBeats(timespans.Select(t => t + offset).ToList());
+            if (before)
+            {
+                TimeSpan offset = selection.Last() - timespans.Last();
+                SetSelectedBeats(timespans.Select(t => t + offset).ToList());
+            }
+            else
+            {
+                TimeSpan offset = selection.First() - timespans.First();
+                SetSelectedBeats(timespans.Select(t => t + offset).ToList());
+            }
         }
 
         private void SuperNormalize(bool preview)

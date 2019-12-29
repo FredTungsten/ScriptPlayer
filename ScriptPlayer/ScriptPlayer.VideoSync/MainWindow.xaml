@@ -75,12 +75,36 @@
                 <Separator/>
                 <MenuItem IsCheckable="true" Name="cckRecord" Header="Record from Live-Sampler"/>
             </MenuItem>
+            <MenuItem Header="Edit">
+                <MenuItem Header="Normalize" InputGestureText="N"/>
+                <MenuItem Header="Super normalize" InputGestureText="S"/>
+                <MenuItem Header="Preview super normalize" InputGestureText="Shift+S"/>
+                <Separator/>
+                <MenuItem Header="Normalize pattern" InputGestureText="O"/>
+                <MenuItem Header="Pattern fill" InputGestureText="P"/>
+                <MenuItem Header="Fade" InputGestureText="F"/>
+                <MenuItem Header="Fade normalize" InputGestureText="T"/>
+                <Separator/>
+                <MenuItem Header="Equalize beat lengths" InputGestureText="E"/>
+                <MenuItem Header="Change Range" InputGestureText="R"/>
+                <Separator/>
+                <MenuItem Header="Copy selected beats" InputGestureText="Ctrl+C"/>
+                <MenuItem Header="Paste beats after" InputGestureText="Ctrl+V"/>
+                <MenuItem Header="Paste beats before" InputGestureText="Ctrl+Shift+V"/>
+                <Separator/>
+                <MenuItem Header="Go to selection begin" InputGestureText="Home"/>
+                <MenuItem Header="Go to selection end" InputGestureText="End"/>
+                <MenuItem Header="Go to next bookmark" InputGestureText="Page Down"/>
+                <MenuItem Header="Go to previous bookmark" InputGestureText="Page Up"/>
+            </MenuItem>
+            <!--
             <MenuItem Header="Tracker">
                 <MenuItem Header="Track Blob" Click="mnuTrackBlob_OnClick"/>
             </MenuItem>
             <MenuItem Header="Misc">
                 <MenuItem Header="Launch Mockup" Click="mnuShowMock_Click"></MenuItem>
             </MenuItem>
+            -->
         </Menu>
 
 

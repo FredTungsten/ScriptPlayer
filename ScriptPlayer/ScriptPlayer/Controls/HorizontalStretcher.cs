@@ -59,7 +59,7 @@ namespace ScriptPlayer.Controls
                     break;
             }
 
-            newWidth = Math.Min(maxWidth, Math.Max(minWidth, newWidth));
+            newWidth = (int)Math.Min(maxWidth, Math.Max(minWidth, newWidth));
 
             ((FrameworkElement) Parent).Width = newWidth;
         }

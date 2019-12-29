@@ -6,50 +6,11 @@
              xmlns:local="clr-namespace:ScriptPlayer.Controls"
              xmlns:converters="clr-namespace:ScriptPlayer.Converters"
              xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
-             xmlns:dialogs="clr-namespace:ScriptPlayer.Dialogs"
              xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
              xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
              xmlns:fa="clr-namespace:FontAwesome.Net;assembly=FontAwesome.Net"
              mc:Ignorable="d" Background="White" d:DesignHeight="435.699" d:DesignWidth="354.767" KeyDown="UserControl_KeyDown">
     <UserControl.Resources>
-        <Style x:Key="ToolTipStyle1"
-        TargetType="ToolTip">
-            <Setter Property="Placement"
-            Value="Mouse" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToolTip">
-                        <Grid x:Name="LayoutRoot"
-                      MaxWidth="300"
-                      MinHeight="36"
-                      MaxHeight="300">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <Polygon Fill="#FF1589EE"
-                             Width="10"
-                             Height="12"
-                             VerticalAlignment="Center"
-                             Points="0,6 10,0 10,12" />
-
-                            <Border Grid.Column="1"
-                            Background="#FF1589EE">
-                                <TextBlock Margin="20,5,5,5"
-                                   HorizontalAlignment="Left"
-                                   VerticalAlignment="Center"
-                                   Foreground="White"
-                                   FontSize="16"
-                                   TextWrapping="Wrap"
-                                   TextTrimming="CharacterEllipsis"
-                                   Text="{TemplateBinding Content}" />
-                            </Border>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
         <ContextMenu x:Key="ItemContextMenu">
             <MenuItem Header="Open in Explorer" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.OpenInExplorerCommand}"
                       CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext}"/>
@@ -58,15 +19,6 @@
                  Padding="0" Placement="Right" BorderThickness="0">
             <local:VideoDetailsPreview />
         </ToolTip>
-        <!--
-        <ToolTip x:Key="EntryToolTip" Padding="0" Placement="Right"  Opened="ToolTip_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
-            <StackPanel Width="300">
-                <shared:GifPlayer Background="Black" AutoPlay="True" Stretch="Uniform" Height="169"/>
-                <Image Name="heatMapNext" HorizontalAlignment="Stretch" Height="15" Stretch="Fill" />
-                <TextBlock Margin="2" Background="White" Foreground="Black" TextAlignment="Center" Height="Auto" TextWrapping="Wrap"/>
-            </StackPanel>
-        </ToolTip>
-        -->
         <converters:DurationConverter x:Key="DurationConverter"/>
         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
             <Setter Property="Focusable" Value="False"/>
@@ -126,7 +78,14 @@
 
         <TextBox x:Name="txtSearch" Text="{Binding Path=Playlist.Filter, UpdateSourceTrigger=PropertyChanged}" Height="22" Margin="10,10,10,0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top"/>
 
-        <ListBox x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,41,10,77" ItemsSource="{Binding Path=Playlist.FilteredEntries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" SelectionChanged="LstEntries_OnSelectionChanged" AllowDrop="True" Drop="ListBox_Drop" SelectionMode="Extended">
+        <ListBox x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,41,10,77" 
+                 ItemsSource="{Binding Path=Playlist.FilteredEntries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" SelectionChanged="LstEntries_OnSelectionChanged" 
+                 AllowDrop="True" Drop="ListBox_Drop" SelectionMode="Extended">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
@@ -134,7 +93,7 @@
                     <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
                     <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
                     <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"></Setter>
-                    <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=dialogs:PlaylistWindow}, Path=DataContext}"/>
+                    <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:PlaylistControl}, Path=DataContext}"/>
                     <Setter Property="ToolTip" Value="{StaticResource EntryToolTip}"/>
                 </Style>
             </ListBox.ItemContainerStyle>
