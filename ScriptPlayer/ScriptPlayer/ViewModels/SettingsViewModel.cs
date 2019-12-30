@@ -184,6 +184,7 @@ namespace ScriptPlayer.ViewModels
         private bool _loopFallbackScript;
         private bool _removeGapsFromFallbackScript;
         private bool _useExternalOsd;
+        private bool _autoShowGeneratorProgress;
 
         public SettingsViewModel()
         {
@@ -203,6 +204,7 @@ namespace ScriptPlayer.ViewModels
             ScriptFormatPreference = "funscript, txt";
             ButtplugConnectionAttempts = 10;
             ButtplugConnectionDelay = 5;
+            AutoShowGeneratorProgress = true;
         }
 
         public SettingsViewModel Duplicate()
@@ -1196,6 +1198,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _removeGapsFromFallbackScript) return;
                 _removeGapsFromFallbackScript = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AutoShowGeneratorProgress
+        {
+            get => _autoShowGeneratorProgress;
+            set
+            {
+                if (value == _autoShowGeneratorProgress) return;
+                _autoShowGeneratorProgress = value;
                 OnPropertyChanged();
             }
         }

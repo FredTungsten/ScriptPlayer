@@ -758,11 +758,6 @@ namespace ScriptPlayer
             new AttributionDialog(){Owner = this}.Show();
         }
 
-        private void mnuShowGeneratorProgress_OnClick(object sender, RoutedEventArgs e)
-        {
-            ShowGeneratorProgress();
-        }
-
         #region IOnScreenDisplay
 
         public void ShowMessage(string designation, string text, TimeSpan duration)

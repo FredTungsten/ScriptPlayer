@@ -471,7 +471,7 @@
                     <MenuItem Header="Heatmap" Command="{Binding GenerateHeatmapForLoadedVideoCommand}"/>
                     <MenuItem Header="All" Command="{Binding GenerateAllForLoadedVideoCommand}"/>
                     <Separator/>
-                    <MenuItem Header="Show Progress" Click="mnuShowGeneratorProgress_OnClick"/>
+                    <MenuItem Header="Show Progress" Command="{Binding ShowGeneratorProgressCommand}"/>
                     <MenuItem Header="Settings" Command="{Binding ShowGeneratorSettingsCommand}"/>
                 </MenuItem>
                 <MenuItem Header="View">
@@ -488,45 +488,76 @@
                 </MenuItem>
             </Menu>
             <ToolBar Grid.Row="1" Background="#FFF0F0F0">
-                <Button Command="{Binding OpenVideoCommand}">
-                    <Grid Width="16" Height="16">
-                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_folder_open}"/>
-                    </Grid>
-                </Button>
-                <Button Command="{Binding AddScriptsToPlaylistCommand}">
-                    <Grid Width="16" Height="16">
-                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_plus}"/>
-                    </Grid>
-                </Button>
-                <Button Click="mnuShowPlaylist_Click">
-                    <Grid Width="16" Height="16">
-                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_list}"/>
-                    </Grid>
-                </Button>
-                <CheckBox ToolTip="Shuffle" IsChecked="{Binding Playlist.Shuffle}"
+                <DockPanel Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type ToolBarPanel}}}">
+                    <DockPanel.Resources>
+                        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"/>
+                        <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}"/>
+                    </DockPanel.Resources>
+
+                    <Button Command="{Binding OpenVideoCommand}">
+                        <Grid Width="30" Height="30">
+                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_folder_open}" FontSize="20"/>
+                        </Grid>
+                    </Button>
+                    <Button Command="{Binding AddScriptsToPlaylistCommand}">
+                        <Grid Width="30" Height="30">
+                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_plus}" FontSize="20"/>
+                        </Grid>
+                    </Button>
+                    <Button Click="mnuShowPlaylist_Click">
+                        <Grid Width="30" Height="30">
+                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_list}" FontSize="20"/>
+                        </Grid>
+                    </Button>
+                    <CheckBox ToolTip="Shuffle" IsChecked="{Binding Playlist.Shuffle}"
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                    <Grid Width="16" Height="16">
-                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_random}"/>
-                    </Grid>
-                </CheckBox>
-                <CheckBox ToolTip="Repeat" IsChecked="{Binding Playlist.Repeat}" 
+                        <Grid Width="30" Height="30">
+                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_random}" FontSize="20"/>
+                        </Grid>
+                    </CheckBox>
+                    <CheckBox ToolTip="Repeat" IsChecked="{Binding Playlist.Repeat}" 
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                    <Grid Width="16" Height="16">
-                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_refresh}"/>
-                    </Grid>
-                </CheckBox>
-                <CheckBox ToolTip="Repeat Single File" IsChecked="{Binding Playlist.RepeatSingleFile}" 
+                        <Grid Width="30" Height="30">
+                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_refresh}" FontSize="20"/>
+                        </Grid>
+                    </CheckBox>
+                    <CheckBox ToolTip="Repeat Single File" IsChecked="{Binding Playlist.RepeatSingleFile}" 
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                    <Grid Width="16" Height="16">
-                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_repeat}"/>
-                    </Grid>
-                </CheckBox>
-                <CheckBox ToolTip="{Binding RandomChapterToolTip}" IsChecked="{Binding Playlist.RandomChapters}" 
+                        <Grid Width="30" Height="30">
+                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_repeat}" FontSize="20"/>
+                        </Grid>
+                    </CheckBox>
+                    <CheckBox ToolTip="{Binding RandomChapterToolTip}" IsChecked="{Binding Playlist.RandomChapters}" 
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                    <Grid Width="16" Height="16">
-                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_bookmark}"/>
-                    </Grid>
-                </CheckBox>
+                        <Grid Width="30" Height="30">
+                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_bookmark}" FontSize="20"/>
+                        </Grid>
+                    </CheckBox>
+
+                    <Button DockPanel.Dock="Right" Command="{Binding ShowGeneratorProgressCommand}" 
+                        HorizontalAlignment="Right" VerticalAlignment="Stretch">
+                        <Button.Style>
+                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                                <Setter Property="Foreground" Value="LimeGreen"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding WorkQueue.IsDone}" Value="True">
+                                        <Setter Property="Foreground" Value="DodgerBlue"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WorkQueue.IsEmpty}" Value="True">
+                                        <Setter Property="Foreground" Value="Gray"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <Grid Width="30" Height="30">
+                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static fa:FontAwesome.fa_file_video_o}" FontSize="20"/>
+
+                            <ProgressBar Minimum="0" Maximum="1" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
+                                         Value="{Binding WorkQueue.TotalProgress}" BorderThickness="0" Foreground="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Foreground}">
+                            </ProgressBar>
+                        </Grid>
+                    </Button>
+                </DockPanel>
             </ToolBar>
         </Grid>
 

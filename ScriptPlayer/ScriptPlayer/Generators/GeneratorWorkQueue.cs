@@ -3,28 +3,43 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
-using JetBrains.Annotations;
+using System.Windows;
 using ScriptPlayer.Shared;
 
 namespace ScriptPlayer.Generators
 {
-    public class GeneratorWorkQueue : IDisposable, INotifyPropertyChanged
+    public class GeneratorWorkQueue : DependencyObject, IDisposable
     {
         public event EventHandler<GeneratorJobEventArgs> JobFinished;
 
         public event EventHandler<GeneratorJobEventArgs> JobStarted;
 
+        public static readonly DependencyProperty TotalProgressProperty = DependencyProperty.Register(
+            "TotalProgress", typeof(double), typeof(GeneratorWorkQueue), new PropertyMetadata(default(double)));
+
         public double TotalProgress
         {
-            get => _totalProgress;
-            set
-            {
-                if (value.Equals(_totalProgress)) return;
-                _totalProgress = value;
-                OnPropertyChanged();
-            }
+            get => (double) GetValue(TotalProgressProperty);
+            set => SetValue(TotalProgressProperty, value);
+        }
+
+        public static readonly DependencyProperty IsEmptyProperty = DependencyProperty.Register(
+            "IsEmpty", typeof(bool), typeof(GeneratorWorkQueue), new PropertyMetadata(true));
+
+        public bool IsEmpty
+        {
+            get => (bool) GetValue(IsEmptyProperty);
+            set => SetValue(IsEmptyProperty, value);
+        }
+
+        public static readonly DependencyProperty IsDoneProperty = DependencyProperty.Register(
+            "IsDone", typeof(bool), typeof(GeneratorWorkQueue), new PropertyMetadata(default(bool)));
+
+        public bool IsDone
+        {
+            get => (bool) GetValue(IsDoneProperty);
+            set => SetValue(IsDoneProperty, value);
         }
         
         private readonly BlockingQueue<GeneratorJob> _unprocessedJobs = new BlockingQueue<GeneratorJob>();
@@ -33,8 +48,7 @@ namespace ScriptPlayer.Generators
         private GeneratorJob[] _activeJobs;
 
         private bool _running;
-        private double _totalProgress;
-
+        
         public ObservableCollection<GeneratorEntry> Entries { get; }
 
         public GeneratorWorkQueue()
@@ -58,6 +72,8 @@ namespace ScriptPlayer.Generators
                 foreach (GeneratorEntry entry in eventArgs.NewItems)
                     AddEvents(entry);
             }
+
+            UpdateProgress();
         }
 
         private void RemoveEvents(GeneratorEntry entry)
@@ -72,18 +88,29 @@ namespace ScriptPlayer.Generators
 
         private void EntryOnPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
         {
-            double progress = Math.Round(GetProgress(), 3);
-            TotalProgress = Math.Min(Math.Max(0, progress), 1);
+            UpdateProgress();
         }
         
-        public double GetProgress()
+        public void UpdateProgress()
         {
             var entries = Entries.ToList();
 
-            if (entries.Count == 0)
-                return 0;
+            double prog = 0;
+            if (entries.Count > 0)
+            {
+                prog = entries.Sum(e => e.Progress) / entries.Count;
+                IsEmpty = false;
+                IsDone = entries.All(e => e.DoneType != JobDoneTypes.NotDone);
+            }
+            else
+            {
+                IsDone = false;
+                IsEmpty = true;
+            }
 
-            return entries.Sum(e => e.Progress) / entries.Count;
+            double progress = Math.Round(prog, 3);
+
+            TotalProgress = Math.Min(Math.Max(0, progress), 1);
         }
         
         public void Enqueue(GeneratorJob job)
@@ -153,14 +180,6 @@ namespace ScriptPlayer.Generators
 
             foreach (var entry in toRemove)
                 Entries.Remove(entry);
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         protected virtual void OnJobFinished(GeneratorJob job, GeneratorResult result)

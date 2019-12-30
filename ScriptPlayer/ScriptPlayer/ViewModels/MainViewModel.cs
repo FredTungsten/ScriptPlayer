@@ -1469,6 +1469,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand ShowGeneratorSettingsCommand { get; set; }
 
+        public ScriptplayerCommand ShowGeneratorProgressCommand { get; set; }
+
         public PlaylistViewModel Playlist
         {
             get => _playlist;
@@ -2194,6 +2196,8 @@ namespace ScriptPlayer.ViewModels
 
             ShowGeneratorSettingsCommand = new ScriptplayerCommand(ModifyGeneratorSettings);
 
+            ShowGeneratorProgressCommand = new ScriptplayerCommand(ShowGeneratorProgress);
+
             SaveScriptAsCommand = new ScriptplayerCommand(SaveScriptAs, IsScriptLoaded)
             {
                 CommandId = "SaveScriptAs",
@@ -2510,6 +2514,11 @@ namespace ScriptPlayer.ViewModels
                     GlobalCommandManager.GetShortcut(Key.MediaPreviousTrack, ModifierKeys.None, true)
                 }
             });
+        }
+
+        private void ShowGeneratorProgress()
+        {
+            OnRequestShowGeneratorProgressDialog();
         }
 
         private void PrintRange()
@@ -4654,7 +4663,7 @@ namespace ScriptPlayer.ViewModels
             }
 
             if (showProgressDialog)
-                OnRequestShowGeneratorProgressDialog();
+                AutoShowGeneratorProgress();
         }
 
         private void GenerateThumbnailBanners(params string[] videos)
@@ -4687,7 +4696,7 @@ namespace ScriptPlayer.ViewModels
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
 
-            OnRequestShowGeneratorProgressDialog();
+            AutoShowGeneratorProgress();
         }
 
         private void GenerateAll(params string[] videos)
@@ -4756,7 +4765,7 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
-            OnRequestShowGeneratorProgressDialog();
+            AutoShowGeneratorProgress();
         }
 
         private GeneratorSettingsViewModel GetDefaultGeneratorSettings()
@@ -4797,7 +4806,7 @@ namespace ScriptPlayer.ViewModels
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
 
-            OnRequestShowGeneratorProgressDialog();
+            AutoShowGeneratorProgress();
         }
 
         private void GeneratePreviews(params string[] videos)
@@ -4831,7 +4840,7 @@ namespace ScriptPlayer.ViewModels
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
 
-            OnRequestShowGeneratorProgressDialog();
+            AutoShowGeneratorProgress();
         }
 
         public void ModifyGeneratorSettings()
@@ -4976,6 +4985,12 @@ namespace ScriptPlayer.ViewModels
         protected virtual void OnRequestActivate()
         {
             RequestActivate?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected void AutoShowGeneratorProgress()
+        {
+            if(Settings.AutoShowGeneratorProgress)
+                OnRequestShowGeneratorProgressDialog();
         }
 
         protected virtual void OnRequestShowGeneratorProgressDialog()
