@@ -24,6 +24,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer.BeatFileChecker", "ScriptPlayer.BeatFileChecker\ScriptPlayer.BeatFileChecker.csproj", "{C23A6B8F-4D6A-4D87-8E3A-4D131AB36445}"
 EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_Ubuntu|Any CPU = Debug_Ubuntu|Any CPU
 		Debug_Ubuntu|ARM = Debug_Ubuntu|ARM
