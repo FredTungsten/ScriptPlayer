@@ -42,9 +42,6 @@
     <Reference Include="deniszykov.WebSocketListener, Version=4.2.4.0, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
       <HintPath>..\packages\deniszykov.WebSocketListener.4.2.4\lib\net45\deniszykov.WebSocketListener.dll</HintPath>
     </Reference>
-    <Reference Include="FontAwesome.Net, Version=1.1.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\FontAwesomeDotNet.1.1.1\lib\FontAwesome.Net.dll</HintPath>
-    </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.8.5.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.8.5\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
@@ -179,6 +176,7 @@
     <Compile Include="Colors\AnalysisParameters.cs" />
     <Compile Include="Beats\BeatCollection.cs" />
     <Compile Include="Classes\BlockingQueue.cs" />
+    <Compile Include="Controls\AwesomeIcons.cs" />
     <Compile Include="Controls\AwesomeTextBlock.cs" />
     <Compile Include="Controls\MediaWrapper.cs" />
     <Compile Include="Controls\PageSelector.cs" />
@@ -391,6 +389,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Resource Include="Fonts\Font Awesome 5 Brands-Regular-400.otf" />
+    <Resource Include="Fonts\Font Awesome 5 Free-Regular-400.otf" />
+    <Resource Include="Fonts\Font Awesome 5 Free-Solid-900.otf" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

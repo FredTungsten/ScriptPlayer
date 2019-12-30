@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
@@ -10,7 +9,25 @@ namespace ScriptPlayer.Shared.Controls
 {
     public class AwesomeTextBlock : TextBlock
     {
-        public static readonly Uri AwesomeUri = new Uri("pack://application:,,,/FontAwesome.Net;component/Fonts/#FontAwesome", UriKind.RelativeOrAbsolute);
+        //public static readonly Uri AwesomeUri = new Uri("pack://application:,,,/FontAwesome.Net;component/Fonts/#FontAwesome", UriKind.RelativeOrAbsolute);
+
+        public static readonly Uri AwesomeUri = new Uri("pack://application:,,,/ScriptPlayer.Shared;component/Fonts/#Font Awesome 5 Free Regular", UriKind.RelativeOrAbsolute);
+        private static FontFamily _awesomeFont;
+
+        public static FontFamily AwesomeFont
+        {
+            get
+            {
+                if (_awesomeFont == null)
+                {
+                    var families = Fonts.GetFontFamilies(AwesomeUri);
+                    _awesomeFont = families.FirstOrDefault();
+                }
+
+                return _awesomeFont;
+            }
+        }
+
         public AwesomeTextBlock()
         {
             Loaded += OnLoaded;
@@ -19,11 +36,12 @@ namespace ScriptPlayer.Shared.Controls
         private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
         {
             if (DesignerProperties.GetIsInDesignMode(this))
-                FontFamily = new FontFamily("FontAwesome");
+            {
+                FontFamily = new FontFamily("Font Awesome 5 Free Regular");
+            }
             else
             {
-                var families = Fonts.GetFontFamilies(AwesomeUri);
-                FontFamily = families.FirstOrDefault();
+                FontFamily = AwesomeFont;
             }
         }
     }

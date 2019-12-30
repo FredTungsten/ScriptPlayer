@@ -38,8 +38,6 @@ namespace ScriptPlayer
             set => SetValue(ViewModelProperty, value);
         }
 
-        private bool _fullscreen;
-
         private Rect _windowPosition;
         private WindowState _windowState;
 
@@ -59,7 +57,7 @@ namespace ScriptPlayer
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
         {
-            if(!_fullscreen)
+            if(!ViewModel.IsFullscreen)
                 SaveCurrentWindowRect();
 
             SaveSidePanels();
@@ -305,7 +303,7 @@ namespace ScriptPlayer
             e.Value = new WindowStateModel
             {
                 IsMaximized = _windowState == WindowState.Maximized,
-                IsFullscreen = _fullscreen,
+                IsFullscreen = ViewModel.IsFullscreen,
                 WindowPosition = _windowPosition,
                 SettingsWidth = _settingWidth,
                 PlaylistWidth = _playlistWidth,
@@ -476,19 +474,19 @@ namespace ScriptPlayer
 
         private void ToggleFullscreen()
         {
-            SetFullscreen(!_fullscreen);
+            SetFullscreen(!ViewModel.IsFullscreen);
         }
 
         private void SetFullscreen(bool isFullscreen, bool updateRestorePosition = true)
         {
-            if (_fullscreen == isFullscreen)
+            if (ViewModel.IsFullscreen == isFullscreen)
                 return;
 
-            bool currentlyFullScreen = _fullscreen;
+            bool currentlyFullScreen = ViewModel.IsFullscreen;
 
-            _fullscreen = isFullscreen;
+            ViewModel.IsFullscreen = isFullscreen;
 
-            if (_fullscreen)
+            if (ViewModel.IsFullscreen)
             {
                 if(updateRestorePosition && !currentlyFullScreen)
                     SaveCurrentWindowRect();
@@ -528,7 +526,7 @@ namespace ScriptPlayer
                 Grid.SetRowSpan(GridVideo, 1);
             }
 
-            _fullscreen = isFullscreen;
+            ViewModel.IsFullscreen = isFullscreen;
         }
 
         public Rectangle GetWindowRectangle()

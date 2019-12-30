@@ -85,6 +85,17 @@ namespace ScriptPlayer.ViewModels
 
         public WindowStateModel InitialPlayerState { get; private set; }
 
+        public bool IsFullscreen
+        {
+            get => _isFullscreen;
+            set
+            {
+                if (value == _isFullscreen) return;
+                _isFullscreen = value;
+                OnPropertyChanged();
+            }
+        }
+
         public ObservableCollection<RepeatablePattern> Patterns
         {
             get => _patterns;
@@ -287,6 +298,7 @@ namespace ScriptPlayer.ViewModels
         private IOnScreenDisplay _mainOsd;
         private IOnScreenDisplay[] _usedOsds;
         private string _previouslyOpenedVideoFile = "";
+        private bool _isFullscreen;
 
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport

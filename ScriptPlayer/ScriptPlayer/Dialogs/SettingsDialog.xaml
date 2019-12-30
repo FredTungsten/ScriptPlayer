@@ -8,7 +8,6 @@
         xmlns:converters1="clr-namespace:ScriptPlayer.Shared.Converters;assembly=ScriptPlayer.Shared"
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
-        xmlns:fa="clr-namespace:FontAwesome.Net;assembly=FontAwesome.Net"
         xmlns:dialogs="clr-namespace:ScriptPlayer.Dialogs"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
         WindowStartupLocation="CenterOwner"
@@ -18,7 +17,6 @@
         <converters:DistinctValueToBooleanConverter x:Key="BooleanConverter"/>
         <converters:TimeSpanToMillisecondsConverter x:Key="MillisecondsConverter"/>
         <converters:TimeSpanToSecondsConverter x:Key="SecondsConverter"/>
-        <converters1:BooleanInverter x:Key="Inverter"/>
         <Style TargetType="TextBlock" x:Key="SettingName">
             <Setter Property="Margin" Value="0"/>
             <Setter Property="DockPanel.Dock" Value="Left"/>
@@ -101,7 +99,7 @@
                 <controls:PageSelector.Elements>
                     <Grid controls:PageSelector.ContentIdentifier="Format Preference">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_star}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Star}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <TextBlock Margin="4" TextWrapping="Wrap" Text="Here you can set the prefered order in which scripts and media files are selected if there are multiple files with the same name but different extensions. Separate multiple extensions with a colon or semi-colon. Extension that are not explicitly listed will be prioritized alphabetically"/>
@@ -115,7 +113,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Devices">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_heartbeat}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Heartbeat}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <TextBlock Text="Vibration Conversion Mode:"/>
@@ -131,7 +129,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="FFmpeg">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_file_video_o}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Video_File}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <StackPanel>
@@ -155,7 +153,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Chapter Settings">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_bookmark}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Bookmark}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <TextBlock Text="Chapter Mode:"/>
@@ -187,7 +185,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_keyboard_o}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Keyboard}"/>
                         </controls:PageSelector.Header>
                         <DataGrid ItemsSource="{Binding InputMappings}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="False" Margin="0,0,0,10">
                             <DataGrid.RowStyle>
@@ -232,7 +230,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Scripts">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_file_text}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.File}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <TextBlock Text="Behavior when scripts can't be loaded:"/>
@@ -253,7 +251,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Notifications">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrows_h}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Alternate_Arrows_Horizontal}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4,4,4,12" IsChecked="{Binding Settings.UseExternalOsd}" Content="Use external OSD if available" ToolTip="Some external video players (e.g. Zoom Player) can be used to display ScriptPlayer's notifications on their internal OSD (On Screen Displays)"/>
@@ -268,7 +266,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Displayed Time">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_clock_o}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Clock}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ShowTimeLeft}" Content="Show time left instead of elapsed"/>
@@ -283,7 +281,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Debug">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_bug}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Bug}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ShowHeatMap}" Content="Show Heat Map"/>
@@ -293,7 +291,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="General">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_cog}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Cog}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.CheckForNewVersionOnStartup}" Content="Check for new version on startup"/>
@@ -302,7 +300,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Players">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_external_link_square}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Alternate_External_Link_Square}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <StackPanel>
@@ -385,7 +383,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Buttplug">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_plug}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Plug}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <DockPanel>
@@ -414,7 +412,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Input">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_keyboard_o}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Keyboard}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ClickToPlayPause}" Content="Toggle playback when clicking video"/>
@@ -424,7 +422,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Range">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_sliders}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Horizontal_Sliders}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <DockPanel Margin="4" ToolTip="Minimum and maximum position of the Launch. Values received from the script will be scaled accordingly.">
@@ -485,7 +483,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Speed">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_exchange}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Alternate_Exchange}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <DockPanel Margin="4" ToolTip="Minimum and maximum speed of the Launch.">
@@ -510,7 +508,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="SoftSeek">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_forward}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Forward}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <TextBlock>"Soft Seek" blends two videos slowly into each other to smooth transistions</TextBlock>
@@ -539,7 +537,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Gaps">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_forward}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Forward}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <TextBlock>A "gap" is whenever two script actions are more than 10 seconds appart.</TextBlock>
@@ -565,7 +563,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Timings">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_clock_o}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Clock}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <DockPanel Margin="4" ToolTip="Timespan by which every script command will be delayed. Negative values will cause the commands to be executed ahead of time.">
@@ -583,7 +581,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Paths">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_folder_o}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Folder}"/>
                         </controls:PageSelector.Header>
 
                         <TextBlock Margin="10,10,10,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="If you don't want to keep all your files (e.g. scripts and videos) in the same directory, you can specify additional paths for ScriptPlayer to search matching files in.&#x0a;Add a * to the end of a path to include all subdirectories too."></TextBlock>
@@ -595,7 +593,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Playlist">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_list}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.List}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" Content="Remember" IsChecked="{Binding Settings.RememberPlaylist}"/>
@@ -605,7 +603,7 @@
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Remember">
                         <controls:PageSelector.Header>
-                            <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_question}"/>
+                            <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Question}"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <CheckBox Margin="4" Content="Playlist" IsChecked="{Binding Settings.RememberPlaylist}"/>

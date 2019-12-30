@@ -8,7 +8,6 @@
              xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
              xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
              xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
-             xmlns:fa="clr-namespace:FontAwesome.Net;assembly=FontAwesome.Net"
              mc:Ignorable="d" Background="White" d:DesignHeight="435.699" d:DesignWidth="354.767" KeyDown="UserControl_KeyDown">
     <UserControl.Resources>
         <ContextMenu x:Key="ItemContextMenu">
@@ -138,39 +137,39 @@
         <UniformGrid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom" Grid.Row="1" Columns="9">
             <Button ToolTip="Move First" Command="{Binding Playlist.MoveSelectedEntryFirstCommand}" 
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_circle_up}"/>
+                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Arrow_Circle_Up}"/>
             </Button>
             <Button ToolTip="Move Up" Command="{Binding Playlist.MoveSelectedEntryUpCommand}" 
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_up}"/>
+                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Arrowup}"/>
             </Button>
             <Button ToolTip="Move Down" Command="{Binding Playlist.MoveSelectedEntryDownCommand}"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_down}"/>
+                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Arrowdown}"/>
             </Button>
             <Button ToolTip="Move Last" Command="{Binding Playlist.MoveSelectedEntryLastCommand}"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_arrow_circle_down}"/>
+                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Arrow_Circle_Down}"/>
             </Button>
             <Button ToolTip="Remove" Command="{Binding Playlist.RemoveSelectedEntryCommand}" 
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_times}"/>
+                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Times}"/>
             </Button>
             <CheckBox ToolTip="Shuffle" IsChecked="{Binding Playlist.Shuffle}"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_random}"/>
+                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Random}"/>
             </CheckBox>
             <CheckBox ToolTip="Repeat" IsChecked="{Binding Playlist.Repeat}" 
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_refresh}"/>
+                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Redo}"/>
             </CheckBox>
             <CheckBox ToolTip="Repeat Single File" IsChecked="{Binding Playlist.RepeatSingleFile}" 
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_repeat}"/>
+                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Redo}"/>
             </CheckBox>
             <CheckBox ToolTip="Random Chapters" IsChecked="{Binding Playlist.RandomChapters}" 
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static fa:FontAwesome.fa_bookmark}"/>
+                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Bookmark}"/>
             </CheckBox>
         </UniformGrid>
     </Grid>
