@@ -486,14 +486,18 @@
                     <MenuItem Header="About / Check for new Version" Click="mnuVersion_Click"/>
                 </MenuItem>
             </Menu>
-            <ToolBar Grid.Row="1" Background="#FFF0F0F0">
-                <DockPanel Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type ToolBarPanel}}}">
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+            <ToolBar Grid.Column="0" Background="#FFF0F0F0">
+                <!--<DockPanel Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type ToolBarPanel}}}">
                     <DockPanel.Resources>
                         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"/>
                         <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}"/>
-                    </DockPanel.Resources>
-
-                    <Button Command="{Binding OpenVideoCommand}">
+                    </DockPanel.Resources>-->
+                <Button Command="{Binding OpenVideoCommand}">
                         <Grid Width="30" Height="30">
                             <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Folder_Open}" FontSize="20"/>
                         </Grid>
@@ -526,38 +530,40 @@
                             <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Redo}" FontSize="20"/>
                         </Grid>
                     </CheckBox>
-                    <CheckBox ToolTip="{Binding RandomChapterToolTip}" IsChecked="{Binding Playlist.RandomChapters}" 
+                <CheckBox ToolTip="{Binding RandomChapterToolTip}" IsChecked="{Binding Playlist.RandomChapters}" 
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        <Grid Width="30" Height="30">
-                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Bookmark}" FontSize="20"/>
-                        </Grid>
-                    </CheckBox>
+                    <Grid Width="30" Height="30">
+                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Bookmark}" FontSize="20"/>
+                    </Grid>
+                </CheckBox>
 
-                    <Button DockPanel.Dock="Right" Command="{Binding ShowGeneratorProgressCommand}" 
-                        HorizontalAlignment="Right" VerticalAlignment="Stretch">
-                        <Button.Style>
-                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                                <Setter Property="Foreground" Value="LimeGreen"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding WorkQueue.IsDone}" Value="True">
-                                        <Setter Property="Foreground" Value="DodgerBlue"/>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding WorkQueue.IsEmpty}" Value="True">
-                                        <Setter Property="Foreground" Value="Gray"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                        <Grid Width="30" Height="30">
-                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Video_File}" FontSize="20"/>
-
-                            <ProgressBar Minimum="0" Maximum="1" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
-                                         Value="{Binding WorkQueue.TotalProgress}" BorderThickness="0" Foreground="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Foreground}">
-                            </ProgressBar>
-                        </Grid>
-                    </Button>
-                </DockPanel>
+                
+                <!--</DockPanel>-->
             </ToolBar>
+                <Button Grid.Column="1" DockPanel.Dock="Right" Command="{Binding ShowGeneratorProgressCommand}" 
+                        HorizontalAlignment="Right" VerticalAlignment="Stretch">
+                    <Button.Style>
+                        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <Setter Property="Foreground" Value="LimeGreen"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding WorkQueue.IsDone}" Value="True">
+                                    <Setter Property="Foreground" Value="DodgerBlue"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding WorkQueue.IsEmpty}" Value="True">
+                                    <Setter Property="Foreground" Value="Gray"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <Grid Width="30" Height="30">
+                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Video_File}" FontSize="20"/>
+
+                        <ProgressBar Minimum="0" Maximum="1" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
+                                     Value="{Binding WorkQueue.TotalProgress}" BorderThickness="0" Foreground="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Foreground}">
+                        </ProgressBar>
+                    </Grid>
+                </Button>
+            </Grid>
         </Grid>
 
         <DockPanel Background="White" LastChildFill="True" Name="PlayerControls" 
@@ -598,7 +604,7 @@
                             <Setter Property="Text" Value="{x:Static shared:AwesomeIcons.Expand}"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsFullscreen}" Value="True">
-                                    <Setter Property="Text" Value="{x:Static shared:AwesomeIcons.File_Contract}"/>
+                                    <Setter Property="Text" Value="{x:Static shared:AwesomeIcons.Expand}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
