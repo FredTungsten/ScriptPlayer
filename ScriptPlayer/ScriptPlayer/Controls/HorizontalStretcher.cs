@@ -8,9 +8,23 @@ namespace ScriptPlayer.Controls
 {
     public class HorizontalStretcher : Control
     {
+        public static readonly DependencyProperty StretchedParentProperty = DependencyProperty.Register(
+            "StretchedParent", typeof(FrameworkElement), typeof(HorizontalStretcher), new PropertyMetadata(default(FrameworkElement)));
+
+        public FrameworkElement StretchedParent
+        {
+            get => (FrameworkElement) GetValue(StretchedParentProperty);
+            set => SetValue(StretchedParentProperty, value);
+        }
+
+        private FrameworkElement GetParent()
+        {
+            return StretchedParent ?? (FrameworkElement) Parent;
+        }
+
         static HorizontalStretcher()
         {
-            WidthProperty.OverrideMetadata(typeof(HorizontalStretcher), new FrameworkPropertyMetadata(5.0));
+            WidthProperty.OverrideMetadata(typeof(HorizontalStretcher), new FrameworkPropertyMetadata(3.0));
             BackgroundProperty.OverrideMetadata(typeof(HorizontalStretcher), new FrameworkPropertyMetadata(Brushes.LightGray));
             HorizontalAlignmentProperty.OverrideMetadata(typeof(HorizontalStretcher), new FrameworkPropertyMetadata(HorizontalAlignment.Right));
             VerticalAlignmentProperty.OverrideMetadata(typeof(HorizontalStretcher), new FrameworkPropertyMetadata(VerticalAlignment.Stretch));
@@ -29,7 +43,7 @@ namespace ScriptPlayer.Controls
 
             _down = true;
             _downPos = e.GetPosition(Window.GetWindow(this));
-            _downWidth = ((FrameworkElement) Parent).ActualWidth;
+            _downWidth = GetParent().ActualWidth;
 
             CaptureMouse();
         }
@@ -41,12 +55,14 @@ namespace ScriptPlayer.Controls
             if (!_down)
                 return;
 
+            var parent = GetParent();
+
             Point pos = e.GetPosition(Window.GetWindow(this));
 
             double diff = pos.X - _downPos.X;
 
             double minWidth = Width;
-            double maxWidth = ((FrameworkElement) Parent).MaxWidth;
+            double maxWidth = parent.MaxWidth;
             double newWidth = _downWidth;
 
             switch (HorizontalAlignment)
@@ -61,7 +77,7 @@ namespace ScriptPlayer.Controls
 
             newWidth = (int)Math.Min(maxWidth, Math.Max(minWidth, newWidth));
 
-            ((FrameworkElement) Parent).Width = newWidth;
+            parent.Width = newWidth;
         }
 
         protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)

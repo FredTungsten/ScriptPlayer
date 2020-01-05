@@ -2093,7 +2093,7 @@ namespace ScriptPlayer.ViewModels
             if (string.IsNullOrWhiteSpace(videoFile))
                 return null;
 
-            return fileName;
+            return videoFile;
         }
 
         public string GetRelatedFile(string filename, string[] supportedOutput, string[] supportedInput = null)

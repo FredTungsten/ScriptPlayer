@@ -491,13 +491,13 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-            <ToolBar Grid.Column="0" Background="#FFF0F0F0">
-                <!--<DockPanel Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type ToolBarPanel}}}">
+                <ToolBar Grid.Column="0" Background="#FFF0F0F0">
+                    <!--<DockPanel Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type ToolBarPanel}}}">
                     <DockPanel.Resources>
                         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"/>
                         <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}"/>
                     </DockPanel.Resources>-->
-                <Button Command="{Binding OpenVideoCommand}">
+                    <Button Command="{Binding OpenVideoCommand}">
                         <Grid Width="30" Height="30">
                             <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Folder_Open}" FontSize="20"/>
                         </Grid>
@@ -530,16 +530,16 @@
                             <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Redo}" FontSize="20"/>
                         </Grid>
                     </CheckBox>
-                <CheckBox ToolTip="{Binding RandomChapterToolTip}" IsChecked="{Binding Playlist.RandomChapters}" 
+                    <CheckBox ToolTip="{Binding RandomChapterToolTip}" IsChecked="{Binding Playlist.RandomChapters}" 
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                    <Grid Width="30" Height="30">
-                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Bookmark}" FontSize="20"/>
-                    </Grid>
-                </CheckBox>
+                        <Grid Width="30" Height="30">
+                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Bookmark}" FontSize="20"/>
+                        </Grid>
+                    </CheckBox>
 
-                
-                <!--</DockPanel>-->
-            </ToolBar>
+
+                    <!--</DockPanel>-->
+                </ToolBar>
                 <Button Grid.Column="1" DockPanel.Dock="Right" Command="{Binding ShowGeneratorProgressCommand}" 
                         HorizontalAlignment="Right" VerticalAlignment="Stretch">
                     <Button.Style>
@@ -730,150 +730,179 @@
             </shared:SeekBar>
         </DockPanel>
 
-        <Grid Name="GridPlaylist" MinWidth="150" MaxWidth="400" Width="180" shared:HideOnHover.IsActive="True" Background="White" Grid.Column="0" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1">
-            <controls1:PlaylistControl ViewModel="{Binding Path=.}" Margin="0,32,0,0" />
-            <TextBlock TextAlignment="Center" VerticalAlignment="Top" Text="Playlist" FontSize="20"/>
-            <CheckBox Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Top" Margin="3,0" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="24" Height="24" HorizontalAlignment="Right"
-                      IsChecked="{Binding ElementName=GridPlaylist, Path=(shared:HideOnHover.IsActive), Mode=TwoWay, Converter={StaticResource Inverter}}">
-                <TextBlock Text="🖈" Padding="0" Margin="0" FontSize="18"/>
-            </CheckBox>
-            <controls1:HorizontalStretcher HorizontalAlignment="Right" FinishedDragging="SidePanel_FinishedDragging"/>
+        <Grid Name="GridPlaylist" Width="Auto" shared:HideOnHover.IsActive="True" Background="White" Grid.Column="0" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1">
+            <Expander ExpandDirection="Right">
+                <Expander.Header>
+                    <StackPanel Orientation="Vertical">
+                        <CheckBox Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Top" Margin="0,3" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="24" Height="24" HorizontalAlignment="Center"
+                              IsChecked="{Binding ElementName=GridPlaylist, Path=(shared:HideOnHover.IsActive), Mode=TwoWay, Converter={StaticResource Inverter}}">
+                            <TextBlock Text="🖈" Padding="0" Margin="0" FontSize="18"/>
+                        </CheckBox>
+                        <TextBlock TextAlignment="Center" VerticalAlignment="Top" Text="Playlist" FontSize="20" Margin="0,3">
+                            <TextBlock.LayoutTransform>
+                                <RotateTransform Angle="-90"/>
+                            </TextBlock.LayoutTransform>
+                        </TextBlock>
+                    </StackPanel>
+                </Expander.Header>
+                <Grid Name="GirdPlaylistInner" MinWidth="150" MaxWidth="400">
+                    <DockPanel LastChildFill="True">
+                        <controls1:HorizontalStretcher StretchedParent="{Binding ElementName=GirdPlaylistInner}" DockPanel.Dock="Right" HorizontalAlignment="Right" FinishedDragging="SidePanel_FinishedDragging"/>
+                        <controls1:PlaylistControl ViewModel="{Binding Path=.}" Margin="0" />
+                    </DockPanel>
+                </Grid>
+            </Expander>
         </Grid>
 
-        <Grid Name="GridSettings" shared:HideOnHover.IsActive="True" Width="180" Background="White" Grid.Column="2" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1" VerticalAlignment="Stretch" MaxWidth="400" MinWidth="150">
-            <TextBlock TextAlignment="Center" VerticalAlignment="Top" Text="Settings" FontSize="20"/>
-            <CheckBox Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Top" Margin="3,0" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="24" Height="24" HorizontalAlignment="Left"
-                      IsChecked="{Binding ElementName=GridSettings, Path=(shared:HideOnHover.IsActive), Mode=TwoWay, Converter={StaticResource Inverter}}">
-                <TextBlock Text="🖈" Padding="0" Margin="0" FontSize="18"/>
-            </CheckBox>
-            <controls1:HorizontalStretcher HorizontalAlignment="Left" FinishedDragging="SidePanel_FinishedDragging"/>
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="5,32,0,0">
-                <Grid>
-                    <StackPanel>
-                        <StackPanel Margin="4" ToolTip="Timespan by which every script command will be delayed. Negative values will cause the commands to be executed ahead of time.">
-                            <TextBlock TextAlignment="Center" Margin="0" Text="Script Delay"/>
-                            <Slider Value="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-2500" Maximum="2500" SmallChange="25" LargeChange="100" IsSnapToTickEnabled="True" TickFrequency="25"/>
-                            <TextBlock TextAlignment="Center" Margin="0" Text="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
-                        </StackPanel>
-                        <Separator/>
-                        <StackPanel Margin="4" ToolTip="Minimum and maximum position of the Launch. Values received from the script will be scaled accordingly.">
-                            <TextBlock Margin="0" HorizontalAlignment="Center" Text="Range"/>
-                            <shared:RangeSlider Margin="0,4" Minimum="0" Maximum="99" LowerValue="{Binding Settings.MinPosition, Mode=TwoWay}" UpperValue="{Binding Settings.MaxPosition, Mode=TwoWay}"/>
-                            <CheckBox Margin="4" Content="Invert Positions" IsChecked="{Binding Settings.InvertPosition}"/>
-                            <CheckBox Margin="4" Content="Enable Auto Homing" IsChecked="{Binding Settings.AutoHomingEnabled}"/>
-                            <DockPanel LastChildFill="False">
-                                <TextBlock Margin="4,0" Text="{Binding Settings.MinPosition}" DockPanel.Dock="Left"/>
-                                <TextBlock Margin="4,0" Text="{Binding Settings.MaxPosition}" DockPanel.Dock="Right"/>
-                            </DockPanel>
-
-                            <TextBlock Margin="0" HorizontalAlignment="Center" Text="Range Extender"/>
-                            <Slider Margin="0,4" Minimum="0" Maximum="99" Value="{Binding Settings.RangeExtender}"/>
-                            <TextBlock TextAlignment="Center" Margin="0" Text="{Binding Path=Settings.RangeExtender}"/>
-                            <Grid>
-                                <Grid.Resources>
-                                    <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}">
-                                        <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
-                                    </Style>
-                                </Grid.Resources>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <RadioButton Grid.Column="0" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.FullRange}}" Content="F" ToolTip="Full Range" />
-                                <RadioButton Grid.Column="1" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.Top}}" Content="T" ToolTip="Top" />
-                                <RadioButton Grid.Column="2" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.Middle}}" Content="M" ToolTip="Middle" />
-                                <RadioButton Grid.Column="3" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.Bottom}}" Content="B" ToolTip="Bottom" />
-                                <RadioButton Grid.Column="4" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.SineWave}}" Content="S" ToolTip="Sine Wave" />
-                                <RadioButton Grid.Column="5" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.TopBottom}}" Content="TB" ToolTip="Top / Bottom" />
-                            </Grid>
-                            <Slider Margin="0,4" Minimum="0.1" Maximum="0.9" Value="{Binding Settings.FilterRange}" ToolTip="Filter Range"/>
-                            <TextBlock Margin="4,0" Text="{Binding Settings.FilterRange, StringFormat={}{0:p0}}" HorizontalAlignment="Stretch" TextAlignment="Center"/>
-                            <shared:RangePreview Ranges="{Binding FilterRanges}" HorizontalAlignment="Stretch" Height="80"/>
-                        </StackPanel>
-                        <Separator/>
-                        <StackPanel Margin="4" ToolTip="Minimum and maximum speed of the Launch.">
-                            <TextBlock Margin="0" HorizontalAlignment="Center" Text="Speed"/>
-                            <shared:RangeSlider Margin="0,4" Minimum="0" Maximum="99" LowerValue="{Binding Settings.MinSpeed, Mode=TwoWay}" UpperValue="{Binding Settings.MaxSpeed, Mode=TwoWay}"/>
-                            <DockPanel LastChildFill="False">
-                                <TextBlock Margin="4,0" Text="{Binding Settings.MinSpeed}" DockPanel.Dock="Left"/>
-                                <TextBlock Margin="4,0" Text="{Binding Settings.MaxSpeed}" DockPanel.Dock="Right"/>
-                            </DockPanel>
-                        </StackPanel>
-
-                        <StackPanel Margin="4" ToolTip="Static multiplier that is applied after the automatic speed detection.">
-                            <TextBlock Margin="0" Text="Speed Multiplier" TextAlignment="Center"/>
-                            <Slider Margin="0,4" Minimum="0.1" Maximum="5.0" Value="{Binding Settings.SpeedMultiplier}"  IsSnapToTickEnabled="True" TickFrequency="0.1"/>
-                            <TextBlock Margin="0" Text="{Binding Settings.SpeedMultiplier, StringFormat={}x{0:f1}}" TextAlignment="Center"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="4" ToolTip="Playback Rate">
-                            <TextBlock Margin="0" Text="Playback Rate" TextAlignment="Center"/>
-                            <Slider Margin="0,4" Minimum="0.1" Maximum="2.0" Value="{Binding TimeSource.PlaybackRate}" IsSnapToTickEnabled="True" TickFrequency="0.1"/>
-                            <TextBlock Margin="0" Text="{Binding TimeSource.PlaybackRate, StringFormat={}x{0:f1}}" TextAlignment="Center"/>
-                        </StackPanel>
-
-                        <Separator/>
-
-                        <StackPanel Margin="4" ToolTip="Minimal delay between two script commands">
-                            <TextBlock Margin="0" Text="Min Command Delay" TextAlignment="Center"/>
-                            <Slider LargeChange="1" Margin="0,4" Minimum="10" Maximum="300"  Value="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"  IsSnapToTickEnabled="True" TickFrequency="1"/>
-                            <TextBlock Margin="0" Text="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}" TextAlignment="Center"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="4" ToolTip="Will automatically skip command gaps of more than 10s.">
-                            <CheckBox IsChecked="{Binding Settings.AutoSkip}" Content="Auto-Skip Gaps"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="4" ToolTip="Determines how beat files are converted to movements">
-                            <TextBlock Margin="0" Text="Beat Conversion Mode" TextAlignment="Center"/>
-                            <ComboBox ItemsSource="{Binding ConversionModes}" SelectedItem="{Binding Settings.ConversionMode}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Converter={StaticResource ConversionConverter}}"/>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
-
-                        <Separator/>
-
-                        <StackPanel ToolTip="Defines the command source">
-                            <StackPanel.Resources>
-                                <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}">
-                                    <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
-                                </Style>
-                            </StackPanel.Resources>
-                            <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Source" FontSize="20"/>
-
-                            <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.Video}}" Content="Video" />
-                            <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.None}}" Content="None" />
-                            <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.Random}}" Content="Random" />
-                            <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.Pattern}}" Content="Pattern" />
-
-                            <ComboBox ItemsSource="{Binding Patterns}" SelectedItem="{Binding SelectedPattern}" DisplayMemberPath="Name" Margin="4" />
-                            <TextBlock Margin="0" Text="Pattern Speed" TextAlignment="Center"/>
-                            <Slider LargeChange="10" Margin="0,4" Minimum="100" Maximum="1000"  Value="{Binding Path=Settings.PatternSpeed, Converter={StaticResource MillisecondsConverter}}"  SmallChange="10"  IsSnapToTickEnabled="True" TickFrequency="10"/>
-                            <TextBlock Margin="0" Text="{Binding Path=Settings.PatternSpeed, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}" TextAlignment="Center"/>
-                        </StackPanel>
-
-                        <Separator/>
-
-                        <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Debug" FontSize="20"/>
-                        <Button Click="btnReloadScript_Click">Reload Script</Button>
-                        <CheckBox Margin="4" IsChecked="{Binding Settings.ShowHeatMap}">Show Heat Map</CheckBox>
-                        <CheckBox Margin="4" IsChecked="{Binding Settings.ShowScriptPositions}">Show Script Positions</CheckBox>
-                        <TextBlock Margin="4" Text="Test Patterns"/>
-                        <ComboBox ItemsSource="{Binding TestPatterns}" SelectedItem="{Binding SelectedTestPattern}" DisplayMemberPath="Name" Margin="4" />
-                        <Button Command="{Binding ExecuteSelectedTestPatternCommand}" Margin="4,0,4,4" Content="Execute Pattern" VerticalAlignment="Top"/>
-                        <CheckBox IsChecked="{Binding Settings.LogMarkers}" Margin="4" Content="Log Markers"/>
-                        <CheckBox IsChecked="{Binding BlurVideo}" Margin="4" Content="Blur Video"/>
+        <Grid Name="GridSettings" shared:HideOnHover.IsActive="True" Background="White" Grid.Column="2" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1" VerticalAlignment="Stretch" >
+            <Expander ExpandDirection="Left" Width="Auto">
+                <Expander.Header>
+                    <StackPanel Orientation="Vertical">
+                        <CheckBox Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Top" Margin="0,3" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="24" Height="24" HorizontalAlignment="Center"
+                                  IsChecked="{Binding ElementName=GridSettings, Path=(shared:HideOnHover.IsActive), Mode=TwoWay, Converter={StaticResource Inverter}}">
+                            <TextBlock Text="🖈" Padding="0" Margin="0" FontSize="18"/>
+                        </CheckBox>
+                        <TextBlock TextAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Center" Text="Settings" FontSize="20" Margin="0,3">
+                            <TextBlock.LayoutTransform>
+                                <RotateTransform Angle="-90"/>
+                            </TextBlock.LayoutTransform>
+                        </TextBlock>
                     </StackPanel>
+                </Expander.Header>
+
+                <Grid Name="GridSettingsInner" Width="180" MaxWidth="400" MinWidth="150">
+                    <DockPanel LastChildFill="True">
+                        <controls1:HorizontalStretcher StretchedParent="{Binding ElementName=GridSettingsInner}" DockPanel.Dock="Left" HorizontalAlignment="Left" FinishedDragging="SidePanel_FinishedDragging"/>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="5,32,0,0">
+                            <Grid>
+                                <StackPanel>
+                                    <StackPanel Margin="4" ToolTip="Timespan by which every script command will be delayed. Negative values will cause the commands to be executed ahead of time.">
+                                        <TextBlock TextAlignment="Center" Margin="0" Text="Script Delay"/>
+                                        <Slider Value="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-2500" Maximum="2500" SmallChange="25" LargeChange="100" IsSnapToTickEnabled="True" TickFrequency="25"/>
+                                        <TextBlock TextAlignment="Center" Margin="0" Text="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
+                                    </StackPanel>
+                                    <Separator/>
+                                    <StackPanel Margin="4" ToolTip="Minimum and maximum position of the Launch. Values received from the script will be scaled accordingly.">
+                                        <TextBlock Margin="0" HorizontalAlignment="Center" Text="Range"/>
+                                        <shared:RangeSlider Margin="0,4" Minimum="0" Maximum="99" LowerValue="{Binding Settings.MinPosition, Mode=TwoWay}" UpperValue="{Binding Settings.MaxPosition, Mode=TwoWay}"/>
+                                        <CheckBox Margin="4" Content="Invert Positions" IsChecked="{Binding Settings.InvertPosition}"/>
+                                        <CheckBox Margin="4" Content="Enable Auto Homing" IsChecked="{Binding Settings.AutoHomingEnabled}"/>
+                                        <DockPanel LastChildFill="False">
+                                            <TextBlock Margin="4,0" Text="{Binding Settings.MinPosition}" DockPanel.Dock="Left"/>
+                                            <TextBlock Margin="4,0" Text="{Binding Settings.MaxPosition}" DockPanel.Dock="Right"/>
+                                        </DockPanel>
+
+                                        <TextBlock Margin="0" HorizontalAlignment="Center" Text="Range Extender"/>
+                                        <Slider Margin="0,4" Minimum="0" Maximum="99" Value="{Binding Settings.RangeExtender}"/>
+                                        <TextBlock TextAlignment="Center" Margin="0" Text="{Binding Path=Settings.RangeExtender}"/>
+                                        <Grid>
+                                            <Grid.Resources>
+                                                <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}">
+                                                    <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
+                                                </Style>
+                                            </Grid.Resources>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <RadioButton Grid.Column="0" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.FullRange}}" Content="F" ToolTip="Full Range" />
+                                            <RadioButton Grid.Column="1" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.Top}}" Content="T" ToolTip="Top" />
+                                            <RadioButton Grid.Column="2" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.Middle}}" Content="M" ToolTip="Middle" />
+                                            <RadioButton Grid.Column="3" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.Bottom}}" Content="B" ToolTip="Bottom" />
+                                            <RadioButton Grid.Column="4" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.SineWave}}" Content="S" ToolTip="Sine Wave" />
+                                            <RadioButton Grid.Column="5" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.FilterMode, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PositionFilterMode.TopBottom}}" Content="TB" ToolTip="Top / Bottom" />
+                                        </Grid>
+                                        <Slider Margin="0,4" Minimum="0.1" Maximum="0.9" Value="{Binding Settings.FilterRange}" ToolTip="Filter Range"/>
+                                        <TextBlock Margin="4,0" Text="{Binding Settings.FilterRange, StringFormat={}{0:p0}}" HorizontalAlignment="Stretch" TextAlignment="Center"/>
+                                        <shared:RangePreview Ranges="{Binding FilterRanges}" HorizontalAlignment="Stretch" Height="80"/>
+                                    </StackPanel>
+                                    <Separator/>
+                                    <StackPanel Margin="4" ToolTip="Minimum and maximum speed of the Launch.">
+                                        <TextBlock Margin="0" HorizontalAlignment="Center" Text="Speed"/>
+                                        <shared:RangeSlider Margin="0,4" Minimum="0" Maximum="99" LowerValue="{Binding Settings.MinSpeed, Mode=TwoWay}" UpperValue="{Binding Settings.MaxSpeed, Mode=TwoWay}"/>
+                                        <DockPanel LastChildFill="False">
+                                            <TextBlock Margin="4,0" Text="{Binding Settings.MinSpeed}" DockPanel.Dock="Left"/>
+                                            <TextBlock Margin="4,0" Text="{Binding Settings.MaxSpeed}" DockPanel.Dock="Right"/>
+                                        </DockPanel>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="4" ToolTip="Static multiplier that is applied after the automatic speed detection.">
+                                        <TextBlock Margin="0" Text="Speed Multiplier" TextAlignment="Center"/>
+                                        <Slider Margin="0,4" Minimum="0.1" Maximum="5.0" Value="{Binding Settings.SpeedMultiplier}"  IsSnapToTickEnabled="True" TickFrequency="0.1"/>
+                                        <TextBlock Margin="0" Text="{Binding Settings.SpeedMultiplier, StringFormat={}x{0:f1}}" TextAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="4" ToolTip="Playback Rate">
+                                        <TextBlock Margin="0" Text="Playback Rate" TextAlignment="Center"/>
+                                        <Slider Margin="0,4" Minimum="0.1" Maximum="2.0" Value="{Binding TimeSource.PlaybackRate}" IsSnapToTickEnabled="True" TickFrequency="0.1"/>
+                                        <TextBlock Margin="0" Text="{Binding TimeSource.PlaybackRate, StringFormat={}x{0:f1}}" TextAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <Separator/>
+
+                                    <StackPanel Margin="4" ToolTip="Minimal delay between two script commands">
+                                        <TextBlock Margin="0" Text="Min Command Delay" TextAlignment="Center"/>
+                                        <Slider LargeChange="1" Margin="0,4" Minimum="10" Maximum="300"  Value="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"  IsSnapToTickEnabled="True" TickFrequency="1"/>
+                                        <TextBlock Margin="0" Text="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}" TextAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="4" ToolTip="Will automatically skip command gaps of more than 10s.">
+                                        <CheckBox IsChecked="{Binding Settings.AutoSkip}" Content="Auto-Skip Gaps"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="4" ToolTip="Determines how beat files are converted to movements">
+                                        <TextBlock Margin="0" Text="Beat Conversion Mode" TextAlignment="Center"/>
+                                        <ComboBox ItemsSource="{Binding ConversionModes}" SelectedItem="{Binding Settings.ConversionMode}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Converter={StaticResource ConversionConverter}}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <Separator/>
+
+                                    <StackPanel ToolTip="Defines the command source">
+                                        <StackPanel.Resources>
+                                            <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}">
+                                                <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
+                                            </Style>
+                                        </StackPanel.Resources>
+                                        <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Source" FontSize="20"/>
+
+                                        <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.Video}}" Content="Video" />
+                                        <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.None}}" Content="None" />
+                                        <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.Random}}" Content="Random" />
+                                        <RadioButton IsChecked="{Binding Path=CommandSource, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static scriptPlayer:CommandSource.Pattern}}" Content="Pattern" />
+
+                                        <ComboBox ItemsSource="{Binding Patterns}" SelectedItem="{Binding SelectedPattern}" DisplayMemberPath="Name" Margin="4" />
+                                        <TextBlock Margin="0" Text="Pattern Speed" TextAlignment="Center"/>
+                                        <Slider LargeChange="10" Margin="0,4" Minimum="100" Maximum="1000"  Value="{Binding Path=Settings.PatternSpeed, Converter={StaticResource MillisecondsConverter}}"  SmallChange="10"  IsSnapToTickEnabled="True" TickFrequency="10"/>
+                                        <TextBlock Margin="0" Text="{Binding Path=Settings.PatternSpeed, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}" TextAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <Separator/>
+
+                                    <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Debug" FontSize="20"/>
+                                    <Button Click="btnReloadScript_Click">Reload Script</Button>
+                                    <CheckBox Margin="4" IsChecked="{Binding Settings.ShowHeatMap}">Show Heat Map</CheckBox>
+                                    <CheckBox Margin="4" IsChecked="{Binding Settings.ShowScriptPositions}">Show Script Positions</CheckBox>
+                                    <TextBlock Margin="4" Text="Test Patterns"/>
+                                    <ComboBox ItemsSource="{Binding TestPatterns}" SelectedItem="{Binding SelectedTestPattern}" DisplayMemberPath="Name" Margin="4" />
+                                    <Button Command="{Binding ExecuteSelectedTestPatternCommand}" Margin="4,0,4,4" Content="Execute Pattern" VerticalAlignment="Top"/>
+                                    <CheckBox IsChecked="{Binding Settings.LogMarkers}" Margin="4" Content="Log Markers"/>
+                                    <CheckBox IsChecked="{Binding BlurVideo}" Margin="4" Content="Blur Video"/>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+                    </DockPanel>
                 </Grid>
-            </ScrollViewer>
+            </Expander>
         </Grid>
     </Grid>
 </Window>

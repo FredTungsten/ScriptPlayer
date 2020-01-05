@@ -259,8 +259,8 @@ namespace ScriptPlayer
 
         private void SaveSidePanels()
         {
-            _playlistWidth = GridPlaylist.Width;
-            _settingWidth = GridSettings.Width;
+            _playlistWidth = GirdPlaylistInner.Width;
+            _settingWidth = GridSettingsInner.Width;
 
             _hidePlaylist = HideOnHover.GetIsActive(GridPlaylist);
             _hideSettings = HideOnHover.GetIsActive(GridSettings);
@@ -291,8 +291,8 @@ namespace ScriptPlayer
             if (!isInitialized)
                 return;
 
-            GridPlaylist.Width = _playlistWidth;
-            GridSettings.Width = _settingWidth;
+            GirdPlaylistInner.Width = _playlistWidth;
+            GridSettingsInner.Width = _settingWidth;
 
             HideOnHover.SetIsActive(GridPlaylist, _hidePlaylist);
             HideOnHover.SetIsActive(GridSettings, _hideSettings);
