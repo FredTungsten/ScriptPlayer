@@ -4,11 +4,17 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AwesomeReader"
+        xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d"
         Title="Awesome Reader" Height="450" Width="800">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
         <Button Content="Load FontAwesome Json" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="178" Click="btnLoad_Click"/>
         <TextBox Name="txtOut" AcceptsReturn="True" Margin="10,35,10,10" TextWrapping="Wrap" Text=""/>
+        <TextBox Name="txtChars"  Grid.Column="1" Margin="10,35,10,10" TextWrapping="Wrap" Text="" FontFamily="{x:Static controls:AwesomeTextBlock.AwesomeFont}" FontSize="48"/>
 
     </Grid>
 </Window>

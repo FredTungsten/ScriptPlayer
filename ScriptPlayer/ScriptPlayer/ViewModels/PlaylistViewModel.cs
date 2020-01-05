@@ -21,8 +21,7 @@ namespace ScriptPlayer.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler<PlaylistEntry> PlayEntry;
 
-        private List<PlaylistEntry> _previousEntries = new List<PlaylistEntry>();
-
+        private readonly List<PlaylistEntry> _previousEntries = new List<PlaylistEntry>();
         private readonly BlockingQueue<PlaylistEntry> _uncheckedPlaylistEntries = new BlockingQueue<PlaylistEntry>();
 
         private readonly Dispatcher _dispatcher;
@@ -35,6 +34,9 @@ namespace ScriptPlayer.ViewModels
         private bool _repeatSingleFile;
         private bool _shuffle;
         private bool _repeat;
+
+        private bool _addedDuringDefer;
+        private bool _deferLoading;
 
         private ObservableCollection<PlaylistEntry> _entries;
         private List<PlaylistEntry> _selectedEntries;
@@ -49,7 +51,8 @@ namespace ScriptPlayer.ViewModels
         private PlaylistEntry _currentEntry;
         private PlaylistEntry _previousEntry;
         private PlaylistEntry _nextEntry;
-
+        private bool _allowDuplicates = false;
+        
         public TimeSpan SelectedDuration
         {
             get => _selectedDuration;
@@ -70,8 +73,10 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<string[]> RequestGenerateThumbnailBanners;
         public event EventHandler<string[]> RequestGeneratePreviews;
         public event EventHandler<string[]> RequestGenerateHeatmaps;
-        public event EventHandler<string[]> RequestGenerateAll;
-        public event EventHandler SelectedEntryMoved; 
+        public event EventHandler<Tuple<string[], bool>> RequestGenerateAll;
+        public event EventHandler SelectedEntryMoved;
+        public event EventHandler<bool> EntriesChanged;
+        public event EventHandler NextOrPreviousChanged;
 
         public ObservableCollection<PlaylistEntry> Entries
         {
@@ -81,10 +86,24 @@ namespace ScriptPlayer.ViewModels
                 if (Equals(value, _entries)) return;
                 UpdateEntryEvents(_entries, value);
                 _entries = value;
-                UpdateFilter();
-                CommandManager.InvalidateRequerySuggested();
+
+                bool added = _entries != null && _entries.Count > 0;
+
+                PlaylistEntriesHaveChanged(added);
                 OnPropertyChanged();
             }
+        }
+
+        private void PlaylistEntriesHaveChanged(bool filesAdded)
+        {
+            if (_dispatcher == null || DeferLoading)
+                return;
+
+            UpdateFilter();
+            CommandManager.InvalidateRequerySuggested();
+            UpdateTotalDuration();
+            UpdateNextAndPreviousIfNull();
+            OnEntriesChanged(filesAdded);
         }
 
         public List<PlaylistEntry> FilteredEntries
@@ -102,21 +121,20 @@ namespace ScriptPlayer.ViewModels
         {
             if (oldValue != null)
             {
-                oldValue.CollectionChanged -= EntriesChanged;
+                oldValue.CollectionChanged -= Entries_CollectionChanged;
             }
 
             if (newValue != null)
             {
-                newValue.CollectionChanged += EntriesChanged;
+                newValue.CollectionChanged += Entries_CollectionChanged;
             }
         }
 
-        private void EntriesChanged(object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
+        private void Entries_CollectionChanged(object sender, NotifyCollectionChangedEventArgs eventArgs)
         {
-            UpdateFilter();
-            CommandManager.InvalidateRequerySuggested();
-            UpdateTotalDuration();
-            UpdateNextAndPrevious();
+            bool added = eventArgs.NewItems != null && eventArgs.NewItems.Count > 0;
+
+            PlaylistEntriesHaveChanged(added);
         }
 
         private void UpdateTotalDuration()
@@ -405,13 +423,18 @@ namespace ScriptPlayer.ViewModels
             OnRequestGenerateHeatmaps(videos);
         }
 
-        private void ExecuteGenerateAllForAllVideos()
+        public void GenerateAllForAll(bool visible)
         {
             string[] videos = Entries.Select(e => OnRequestVideoFileName(e.Fullname)).Where(v => !string.IsNullOrEmpty(v)).ToArray();
             if (videos.Length == 0)
                 return;
 
-            OnRequestGenerateAll(videos);   
+            OnRequestGenerateAll(videos, visible);   
+        }
+
+        private void ExecuteGenerateAllForAllVideos()
+        {
+            GenerateAllForAll(true);
         }
 
         private void ExecuteGenerateAllForSelectedVideos()
@@ -420,7 +443,7 @@ namespace ScriptPlayer.ViewModels
             if (videos.Length == 0)
                 return;
 
-            OnRequestGenerateAll(videos);
+            OnRequestGenerateAll(videos, true);
         }
 
         private bool AreTheMultipleEntries()
@@ -613,33 +636,39 @@ namespace ScriptPlayer.ViewModels
             if (!CanRemoveSelectedEntry())
                 return;
 
-            var itemsToRemove = _selectedEntries.OrderBy(i => Entries.IndexOf(i)).ToList();
-            int currentIndex = Entries.IndexOf(_selectedEntries.First());
-
-            foreach (var item in itemsToRemove)
+            try
             {
-                item.Removed = true;
-                Entries.Remove(item);
+                DeferLoading = true;
+                
+                var itemsToRemove = _selectedEntries.OrderBy(i => Entries.IndexOf(i)).ToList();
+                int currentIndex = Entries.IndexOf(_selectedEntries.First());
 
-                if (NextEntry == item)
-                    NextEntry = null;
+                foreach (var item in itemsToRemove)
+                {
+                    item.Removed = true;
+                    Entries.Remove(item);
 
-                if (PreviousEntry == item)
-                    PreviousEntry = null;
+                    if (NextEntry == item)
+                        NextEntry = null;
 
-                _previousEntries.Remove(item);
+                    if (PreviousEntry == item)
+                        PreviousEntry = null;
+
+                    _previousEntries.Remove(item);
+                }
+
+                if (currentIndex < Entries.Count)
+                    SelectedEntry = Entries[currentIndex];
+                else if (Entries.Count > 0)
+                    SelectedEntry = Entries[Entries.Count - 1];
+                else
+                    SelectedEntry = null;
+
             }
-
-            if (currentIndex < Entries.Count)
-                SelectedEntry = Entries[currentIndex];
-            else if (Entries.Count > 0)
-                SelectedEntry = Entries[Entries.Count - 1];
-            else
-                SelectedEntry = null;
-
-            UpdateNextAndPreviousIfNull();
-
-            CommandManager.InvalidateRequerySuggested();
+            finally
+            {
+                DeferLoading = false;
+            }
         }
         
         private bool SelectionHasGap()
@@ -702,62 +731,57 @@ namespace ScriptPlayer.ViewModels
             if (up && !CanMoveSelectedEntryUp()) return;
             if (!up && !CanMoveSelectedEntryDown()) return;
 
-            bool hasGap = SelectionHasGap();
-            int indexShift = hasGap ? 0 : 1;
-
-            var orderedSelection = _selectedEntries.OrderBy(i => Entries.IndexOf(i)).ToList();
-            
-            if (up)
+            try
             {
-                int firstIndex;
+                DeferLoading = true;
 
-                if (allTheWay)
-                    firstIndex = 0;
-                else
-                    firstIndex = Entries.IndexOf(orderedSelection.First()) - indexShift;
 
-                for (int i = 0; i < orderedSelection.Count; i++)
+                bool hasGap = SelectionHasGap();
+                int indexShift = hasGap ? 0 : 1;
+
+                var orderedSelection = _selectedEntries.OrderBy(i => Entries.IndexOf(i)).ToList();
+
+                if (up)
                 {
-                    int currentIndex = Entries.IndexOf(orderedSelection[i]);
-                    if (currentIndex != firstIndex + i)
-                        Entries.Move(currentIndex, firstIndex + i);
-                }
-            }
-            else
-            {
-                int lastIndex;
+                    int firstIndex;
 
-                if (allTheWay)
-                    lastIndex = Entries.Count - 1;
+                    if (allTheWay)
+                        firstIndex = 0;
+                    else
+                        firstIndex = Entries.IndexOf(orderedSelection.First()) - indexShift;
+
+                    for (int i = 0; i < orderedSelection.Count; i++)
+                    {
+                        int currentIndex = Entries.IndexOf(orderedSelection[i]);
+                        if (currentIndex != firstIndex + i)
+                            Entries.Move(currentIndex, firstIndex + i);
+                    }
+                }
                 else
-                    lastIndex = Entries.IndexOf(orderedSelection.Last()) + indexShift;
-
-                orderedSelection.Reverse();
-
-                for (int i = 0; i < orderedSelection.Count; i++)
                 {
-                    int currentIndex = Entries.IndexOf(orderedSelection[i]);
-                    if (currentIndex != lastIndex - i)
-                        Entries.Move(currentIndex, lastIndex - i);
+                    int lastIndex;
+
+                    if (allTheWay)
+                        lastIndex = Entries.Count - 1;
+                    else
+                        lastIndex = Entries.IndexOf(orderedSelection.Last()) + indexShift;
+
+                    orderedSelection.Reverse();
+
+                    for (int i = 0; i < orderedSelection.Count; i++)
+                    {
+                        int currentIndex = Entries.IndexOf(orderedSelection[i]);
+                        if (currentIndex != lastIndex - i)
+                            Entries.Move(currentIndex, lastIndex - i);
+                    }
                 }
+
+                OnSelectedEntryMoved();
             }
-
-            OnSelectedEntryMoved();
-        }
-
-        public void AddEntry(PlaylistEntry entry, bool allowDuplicates = false)
-        {
-            if (!allowDuplicates)
+            finally
             {
-                if (Entries.Any(e => e.Fullname == entry.Fullname))
-                    return;
+                DeferLoading = false;
             }
-
-            EnsureMediaInfo(entry);
-            Entries.Add(entry);
-
-            UpdateNextAndPreviousIfNull();
-            CommandManager.InvalidateRequerySuggested();
         }
 
         private void RecheckAllEntries()
@@ -779,19 +803,9 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-
         public void AddEntries(string[] filenames)
         {
-            foreach (string filename in filenames)
-            {
-                var entry = new PlaylistEntry(filename);
-                EnsureMediaInfo(entry);
-                Entries.Add(entry);
-            }
-
-            UpdateNextAndPreviousIfNull();
-
-            CommandManager.InvalidateRequerySuggested();
+            AddEntries(filenames.Select(fn => new PlaylistEntry(fn)));
         }
 
         private void UpdateNextAndPreviousIfNull()
@@ -805,15 +819,26 @@ namespace ScriptPlayer.ViewModels
 
         public void AddEntries(IEnumerable<PlaylistEntry> entries)
         {
-            foreach (PlaylistEntry entry in entries)
+            try
             {
-                EnsureMediaInfo(entry);
-                Entries.Add(entry);
+                DeferLoading = true;
+                foreach (PlaylistEntry entry in entries)
+                {
+                    if (!_allowDuplicates)
+                    {
+                        if (Entries.Any(e => e.Fullname == entry.Fullname))
+                            continue;
+                    }
+
+                    _addedDuringDefer = true;
+                    EnsureMediaInfo(entry);
+                    Entries.Add(entry);
+                }
             }
-
-            UpdateNextAndPreviousIfNull();
-
-            CommandManager.InvalidateRequerySuggested();
+            finally
+            {
+                DeferLoading = false;
+            }
         }
 
         public void Clear()
@@ -866,6 +891,7 @@ namespace ScriptPlayer.ViewModels
                 if (Equals(value, _previousEntry)) return;
                 _previousEntry = value;
                 OnPropertyChanged();
+                OnNextOrPreviousChanged();
             }
         }
 
@@ -877,6 +903,7 @@ namespace ScriptPlayer.ViewModels
                 if (Equals(value, _nextEntry)) return;
                 _nextEntry = value;
                 OnPropertyChanged();
+                OnNextOrPreviousChanged();
             }
         }
 
@@ -1049,7 +1076,10 @@ namespace ScriptPlayer.ViewModels
                 if (!_mediaInfoThread.Join(TimeSpan.FromSeconds(1)))
                     _mediaInfoThread.Abort();
             }
-            catch { }
+            catch
+            {
+                //noop
+            }
         }
 
         protected virtual void OnSelectedEntryMoved()
@@ -1074,6 +1104,27 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public bool DeferLoading
+        {
+            get => _deferLoading;
+            set
+            {
+                if (_deferLoading == value)
+                    return;
+
+                _deferLoading = value;
+
+                if (_deferLoading)
+                {
+                    _addedDuringDefer = false;
+                }
+                else
+                {
+                    PlaylistEntriesHaveChanged(_addedDuringDefer);
+                }
+            }
+        }
+
         protected virtual void OnRequestGenerateThumbnails(string[] videos)
         {
             RequestGenerateThumbnails?.Invoke(this, videos);
@@ -1095,14 +1146,24 @@ namespace ScriptPlayer.ViewModels
             Process.Start(info);
         }
 
-        protected virtual void OnRequestGenerateHeatmaps(string[] e)
+        protected virtual void OnRequestGenerateHeatmaps(string[] videos)
         {
-            RequestGenerateHeatmaps?.Invoke(this, e);
+            RequestGenerateHeatmaps?.Invoke(this, videos);
         }
 
-        protected virtual void OnRequestGenerateAll(string[] e)
+        protected virtual void OnRequestGenerateAll(string[] videos, bool visible)
         {
-            RequestGenerateAll?.Invoke(this, e);
+            RequestGenerateAll?.Invoke(this, new Tuple<string[], bool>(videos, visible));
+        }
+
+        protected virtual void OnEntriesChanged(bool entriesAdded)
+        {
+            EntriesChanged?.Invoke(this, entriesAdded);
+        }
+
+        protected virtual void OnNextOrPreviousChanged()
+        {
+            NextOrPreviousChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

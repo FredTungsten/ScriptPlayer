@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -19,18 +19,18 @@ namespace ScriptPlayer.VideoSync.Dialogs
         public event EventHandler<PatternEventArgs> PatternChanged; 
 
         public static readonly DependencyProperty RecentlyUsedPatternsProperty = DependencyProperty.Register(
-            "RecentlyUsedPatterns", typeof(List<bool[]>), typeof(PatternFillOptionsDialog), new PropertyMetadata(default(List<bool[]>)));
+            "RecentlyUsedPatterns", typeof(ObservableCollection<bool[]>), typeof(PatternFillOptionsDialog), new PropertyMetadata(default(ObservableCollection<bool[]>)));
 
-        public List<bool[]> RecentlyUsedPatterns
+        public ObservableCollection<bool[]> RecentlyUsedPatterns
         {
-            get { return (List<bool[]>)GetValue(RecentlyUsedPatternsProperty); }
-            set { SetValue(RecentlyUsedPatternsProperty, value); }
+            get => (ObservableCollection<bool[]>)GetValue(RecentlyUsedPatternsProperty);
+            set => SetValue(RecentlyUsedPatternsProperty, value);
         }
 
         public static readonly DependencyProperty TicksInPatternProperty = DependencyProperty.Register(
-            "TicksInPattern", typeof(int), typeof(PatternFillOptionsDialog), new PropertyMetadata(9, PropertyChangedCallback));
+            "TicksInPattern", typeof(int), typeof(PatternFillOptionsDialog), new PropertyMetadata(9, TicksInPatternPropertyChanged));
 
-        private static void PropertyChangedCallback(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
+        private static void TicksInPatternPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
         {
             ((PatternFillOptionsDialog)dependencyObject).UpdateBeatCount();
         }
@@ -43,8 +43,8 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         public int TicksInPattern
         {
-            get { return (int)GetValue(TicksInPatternProperty); }
-            set { SetValue(TicksInPatternProperty, value); }
+            get => (int)GetValue(TicksInPatternProperty);
+            set => SetValue(TicksInPatternProperty, value);
         }
 
         public static readonly DependencyProperty ResultProperty = DependencyProperty.Register(
@@ -52,19 +52,86 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         public bool[] Result
         {
-            get { return (bool[])GetValue(ResultProperty); }
-            set { SetValue(ResultProperty, value); }
+            get => (bool[])GetValue(ResultProperty);
+            set => SetValue(ResultProperty, value);
         }
 
         public static readonly DependencyProperty BeatsProperty = DependencyProperty.Register(
-            "Beats", typeof(ObservableCollection<IndexedBoolean>), typeof(PatternFillOptionsDialog), new PropertyMetadata(default(ObservableCollection<IndexedBoolean>)));
+            "Beats", typeof(ObservableCollection<IndexedBoolean>), typeof(PatternFillOptionsDialog), new PropertyMetadata(default(ObservableCollection<IndexedBoolean>), OnBeatsPropertyChanged));
 
-        private static List<bool[]> _recentlyUsed = new List<bool[]>();
+        private static void OnBeatsPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((PatternFillOptionsDialog) d).BeatsPropertyChanged(
+                e.OldValue as ObservableCollection<IndexedBoolean>,
+                e.NewValue as ObservableCollection<IndexedBoolean>);
+        }
+
+        private void BeatsPropertyChanged(ObservableCollection<IndexedBoolean> oldValue, ObservableCollection<IndexedBoolean> newValue)
+        {
+            if (oldValue != null)
+            {
+                newValue.CollectionChanged -= Beats_CollectionChanged;
+
+                foreach (IndexedBoolean indexedBoolean in newValue)
+                {
+                    indexedBoolean.PropertyChanged -= Beat_Changed;
+                }
+            }
+
+            if (newValue != null)
+            {
+                newValue.CollectionChanged += Beats_CollectionChanged;
+
+                foreach (IndexedBoolean indexedBoolean in newValue)
+                {
+                    indexedBoolean.PropertyChanged += Beat_Changed;
+                }
+            }
+
+            BeatHasChanged();
+        }
+
+        private void Beat_Changed(object sender, PropertyChangedEventArgs e)
+        {
+            BeatHasChanged();
+        }
+
+        private void BeatHasChanged()
+        {
+            OnPatternChanged(GetResult());
+            UpdateActiveBeatCount();
+        }
+
+        private void Beats_CollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
+        {
+            if (args.OldItems != null)
+            {
+                foreach (IndexedBoolean indexedBoolean in args.OldItems)
+                    indexedBoolean.PropertyChanged -= Beat_Changed;
+            }
+
+            if (args.NewItems != null)
+            {
+                foreach (IndexedBoolean indexedBoolean in args.NewItems)
+                    indexedBoolean.PropertyChanged += Beat_Changed;
+            }
+
+            if (args.Action == NotifyCollectionChangedAction.Reset)
+            {
+                foreach (IndexedBoolean indexedBoolean in Beats)
+                {
+                    indexedBoolean.PropertyChanged -= Beat_Changed;
+                    indexedBoolean.PropertyChanged += Beat_Changed;
+                }
+            }
+        }
+
+        private static readonly ObservableCollection<bool[]> RecentlyUsed = new ObservableCollection<bool[]>();
 
         public ObservableCollection<IndexedBoolean> Beats
         {
-            get { return (ObservableCollection<IndexedBoolean>)GetValue(BeatsProperty); }
-            set { SetValue(BeatsProperty, value); }
+            get => (ObservableCollection<IndexedBoolean>)GetValue(BeatsProperty);
+            set => SetValue(BeatsProperty, value);
         }
 
         public PatternFillOptionsDialog(bool[] initialValues = null)
@@ -76,7 +143,7 @@ namespace ScriptPlayer.VideoSync.Dialogs
                 SetPattern(initialValues);
             }
 
-            RecentlyUsedPatterns = _recentlyUsed;
+            RecentlyUsedPatterns = RecentlyUsed;
 
             Initialized += OnInitialized;
             InitializeComponent();
@@ -99,7 +166,6 @@ namespace ScriptPlayer.VideoSync.Dialogs
         {
             while (Beats.Count > ticksInPattern)
             {
-                Beats[Beats.Count - 1].PropertyChanged -= BeatChanged;
                 Beats.RemoveAt(Beats.Count - 1);
             }
 
@@ -111,7 +177,6 @@ namespace ScriptPlayer.VideoSync.Dialogs
                     Caption = ((Beats.Count % (ticksInPattern + 1)) + 1).ToString(),
                     Value = true
                 };
-                beat.PropertyChanged += BeatChanged;
                 Beats.Add(beat);
             }
 
@@ -129,11 +194,7 @@ namespace ScriptPlayer.VideoSync.Dialogs
             }
 
             OnPatternChanged(GetResult());
-        }
-
-        private void BeatChanged(object sender, PropertyChangedEventArgs e)
-        {
-            OnPatternChanged(GetResult());
+            UpdateActiveBeatCount();
         }
 
         private void btnOk_Click(object sender, RoutedEventArgs e)
@@ -156,24 +217,24 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         private void SavePatternToMRU(bool[] result)
         {
-            for (int i = 0; i < _recentlyUsed.Count; i++)
+            for (int i = 0; i < RecentlyUsed.Count; i++)
             {
-                if (_recentlyUsed[i].SequenceEqual(result))
+                if (RecentlyUsed[i].SequenceEqual(result))
                 {
-                    _recentlyUsed.RemoveAt(i);
+                    RecentlyUsed.RemoveAt(i);
                     break;
                 }
             }
 
-            _recentlyUsed.Insert(0, result);
+            RecentlyUsed.Insert(0, result);
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnPlus_Click(object sender, RoutedEventArgs e)
         {
             TicksInPattern++;
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void btnMinus_Click(object sender, RoutedEventArgs e)
         {
             if (TicksInPattern > 2)
                 TicksInPattern--;
@@ -195,7 +256,6 @@ namespace ScriptPlayer.VideoSync.Dialogs
         private void Remove(bool[] selection)
         {
             RecentlyUsedPatterns.Remove(selection);
-            RecentlyUsedPatterns = new List<bool[]>(RecentlyUsedPatterns);
         }
 
         private void btnRemove_Click(object sender, RoutedEventArgs e)
@@ -212,6 +272,64 @@ namespace ScriptPlayer.VideoSync.Dialogs
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             OnPatternChanged(GetResult());
+            UpdateActiveBeatCount();
+        }
+
+        private void btnTimes2_Click(object sender, RoutedEventArgs e)
+        {
+            ObservableCollection<IndexedBoolean> newBeats = new ObservableCollection<IndexedBoolean>();
+
+            for (int i = 0; i < Beats.Count; i++)
+            {
+                newBeats.Add(new IndexedBoolean
+                {
+                    Value = Beats[i].Value,
+                    CanEdit = (i != 0 && i != Beats.Count - 1),
+                    Caption = (newBeats.Count + 1).ToString()
+                });
+
+                if (i != Beats.Count - 1)
+                    newBeats.Add(new IndexedBoolean
+                    {
+                        Value = false,
+                        CanEdit = true,
+                        Caption = (newBeats.Count + 1).ToString()
+                    });
+            }
+
+            Beats = newBeats;
+        }
+
+        private void UpdateActiveBeatCount()
+        {
+            if (!IsInitialized)
+                return;
+
+            int beats = Beats.Count(b => b.Value) - 1;
+            txtBeats.Text = $"{beats} beats / measure";
+        }
+
+        private void btnBy2_Click(object sender, RoutedEventArgs e)
+        {
+            if (Beats.Count < 4)
+                return;
+
+            ObservableCollection<IndexedBoolean> newBeats = new ObservableCollection<IndexedBoolean>();
+
+            for (int i = 0; i < Beats.Count; i++)
+            {
+                if (i % 2 > 0)
+                    continue;
+
+                newBeats.Add(new IndexedBoolean
+                {
+                    Value = Beats[i].Value,
+                    CanEdit = (i != 0 && i != Beats.Count - 1),
+                    Caption = (newBeats.Count + 1).ToString()
+                });
+            }
+
+            Beats = newBeats;
         }
     }
 
@@ -228,7 +346,7 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         public string Caption
         {
-            get { return _caption; }
+            get => _caption;
             set
             {
                 if (value == _caption) return;
@@ -239,7 +357,7 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         public bool Value
         {
-            get { return _value; }
+            get => _value;
             set
             {
                 if (value == _value) return;
@@ -250,7 +368,7 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         public bool CanEdit
         {
-            get { return _canEdit; }
+            get => _canEdit;
             set
             {
                 if (value == _canEdit) return;

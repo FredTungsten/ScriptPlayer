@@ -39,6 +39,7 @@ namespace AwesomeReader
             JObject root = JObject.Parse(File.ReadAllText(dialog.FileName));
 
             StringBuilder builder = new StringBuilder();
+            StringBuilder builder2 = new StringBuilder();
 
             HashSet<string> usedNames = new HashSet<string>();
 
@@ -68,9 +69,14 @@ namespace AwesomeReader
                 string line = $"public const string {name} = \"{charSeq}\"; // {label}";
 
                 builder.AppendLine(line);
+
+                string actualChar = char.ConvertFromUtf32(Convert.ToInt32(unicode, 16));
+
+                builder2.AppendLine($"{actualChar} = {name}");
             }
 
             txtOut.Text = builder.ToString();
+            txtChars.Text = builder2.ToString();
         }
 
         private string TransformLabelToName(string label, int index)

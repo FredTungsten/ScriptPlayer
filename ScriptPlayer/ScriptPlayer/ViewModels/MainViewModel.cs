@@ -426,6 +426,8 @@ namespace ScriptPlayer.ViewModels
                 Playlist.RequestGeneratePreviews += PlaylistOnRequestGeneratePreviews;
                 Playlist.RequestGenerateHeatmaps += PlaylistOnRequestGenerateHeatmaps;
                 Playlist.RequestGenerateAll += PlaylistOnRequestGenerateAll;
+                Playlist.EntriesChanged += PlaylistOnEntriesChanged;
+                Playlist.NextOrPreviousChanged += PlaylistOnNextOrPreviousChanged;
             }
 
             if (Settings.RememberPlaylist)
@@ -443,9 +445,29 @@ namespace ScriptPlayer.ViewModels
             LoadGeneratorSettings();
         }
 
-        private void PlaylistOnRequestGenerateAll(object sender, string[] videos)
+        private void PlaylistOnNextOrPreviousChanged(object sender, EventArgs eventArgs1)
         {
-            GenerateAll(videos);
+            UpdateGeneratorPriority();
+        }
+
+        private void PlaylistOnEntriesChanged(object sender, bool entriesAdded)
+        {
+            if(entriesAdded)
+                CheckAutoGenerateAll();
+        }
+
+        private void CheckAutoGenerateAll()
+        {
+            if (Settings.AutogenerateAllForPlaylist)
+                Playlist.GenerateAllForAll(false);
+        }
+
+        private void PlaylistOnRequestGenerateAll(object sender, Tuple<string[], bool> tuple)
+        {
+            bool visible = tuple.Item2;
+            string[] videos = tuple.Item1;
+
+            GenerateAll(visible, videos);
         }
 
         private void PlaylistOnRequestGenerateHeatmaps(object sender, string[] videos)
@@ -932,6 +954,32 @@ namespace ScriptPlayer.ViewModels
 
             TryFindMatchingScript(videoFileName);
             TryFindMatchingThumbnails(videoFileName, true);
+
+            UpdateGeneratorPriority();
+        }
+
+        private void UpdateGeneratorPriority()
+        {
+            List<string> prioritizedVideos = new List<string>();
+
+            if(!string.IsNullOrEmpty(LoadedVideo))
+                prioritizedVideos.Add(LoadedVideo);
+
+            if (Playlist.NextEntry != null)
+            {
+                string mediaFile = GetMediaFile(Playlist.NextEntry.Fullname);
+                if(!string.IsNullOrEmpty(mediaFile))
+                    prioritizedVideos.Add(mediaFile);
+            }
+
+            if (Playlist.PreviousEntry != null)
+            {
+                string mediaFile = GetMediaFile(Playlist.PreviousEntry.Fullname);
+                if(!string.IsNullOrEmpty(mediaFile))
+                    prioritizedVideos.Add(mediaFile);
+            }
+
+            WorkQueue.Prioritize(prioritizedVideos.ToArray());
         }
 
 
@@ -1645,6 +1693,11 @@ namespace ScriptPlayer.ViewModels
                 {
                     UpdateOsd();
                         break;
+                }
+                case nameof(SettingsViewModel.AutogenerateAllForPlaylist):
+                {
+                    CheckAutoGenerateAll();
+                    break;
                 }
             }
         }
@@ -3973,12 +4026,15 @@ namespace ScriptPlayer.ViewModels
             _lastFolder = folder;
 
             string[] files = Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories);
+            List<PlaylistEntry> entries = new List<PlaylistEntry>();
 
             foreach (string file in files)
             {
                 if (_supportedMediaExtensions.Contains(Path.GetExtension(file).TrimStart('.').ToLower()))
-                    Playlist.AddEntry(new PlaylistEntry(file));
+                    entries.Add(new PlaylistEntry(file));
             }
+
+            Playlist.AddEntries(entries);
         }
 
         public string GetVideoFileOpenDialog()
@@ -4014,8 +4070,7 @@ namespace ScriptPlayer.ViewModels
             if (files == null)
                 return;
 
-            foreach (string filename in files)
-                Playlist.AddEntry(new PlaylistEntry(filename));
+            Playlist.AddEntries(files);
         }
 
         public void OpenScript()
@@ -4633,7 +4688,7 @@ namespace ScriptPlayer.ViewModels
             if (!IsVideoLoaded())
                 return;
 
-            GenerateAll(LoadedVideo);
+            GenerateAll(true, LoadedVideo);
         }
 
         private void GenerateThumbnails(bool askUserForSettings, bool showProgressDialog, params string[] videos)
@@ -4711,7 +4766,7 @@ namespace ScriptPlayer.ViewModels
             AutoShowGeneratorProgress();
         }
 
-        private void GenerateAll(params string[] videos)
+        private void GenerateAll(bool visible, params string[] videos)
         {
             if (!CheckFfmpeg())
                 return;
@@ -4777,7 +4832,8 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
-            AutoShowGeneratorProgress();
+            if(visible)
+                AutoShowGeneratorProgress();
         }
 
         private GeneratorSettingsViewModel GetDefaultGeneratorSettings()

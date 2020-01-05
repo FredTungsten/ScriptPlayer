@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 
 namespace ScriptPlayer.Shared
@@ -48,6 +49,27 @@ namespace ScriptPlayer.Shared
             {
                 _queue.Enqueue(item);
                 Monitor.Pulse(_queueLock);
+            }
+        }
+
+        public void Prioritize(Comparison<T> comparison, Predicate<T> condition)
+        {
+            lock (_queueLock)
+            {
+                var allEntries = _queue.ToList();
+
+                var toSort = allEntries.Where(e => condition(e)).ToList();
+
+                foreach (T entry in toSort)
+                {
+                    allEntries.Remove(entry);
+                }
+                
+                toSort.Sort(comparison);
+
+                allEntries.InsertRange(0, toSort);
+
+                _queue = new ConcurrentQueue<T>(allEntries);
             }
         }
 

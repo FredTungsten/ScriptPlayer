@@ -56,5 +56,20 @@ namespace ScriptPlayer.Generators
                 TimeFrames = TimeFrames.Select(t => t.Duplicate()).ToList()
             };
         }
+
+        public override bool IsIdenticalTo(FfmpegGeneratorSettings settings)
+        {
+            if (!(settings is PreviewGeneratorSettings previewSettings))
+                return false;
+
+            if (!base.IsIdenticalTo(settings))
+                return false;
+
+            if (previewSettings.Width != Width) return false;
+            if (previewSettings.Height != Height) return false;
+            if (Math.Abs(previewSettings.Framerate - Framerate) > 0.01) return false;
+
+            return true;
+        }
     }
 }

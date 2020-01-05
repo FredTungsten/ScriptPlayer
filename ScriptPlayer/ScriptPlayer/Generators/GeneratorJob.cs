@@ -1,15 +1,27 @@
 ﻿namespace ScriptPlayer.Generators
 {
-    public abstract class GeneratorJob
+    public abstract class GeneratorJob : IGeneratorJobWithFfmpegSettings
     {
         public abstract GeneratorEntry Entry { get; }
         public abstract void CheckSkip();
         public abstract GeneratorResult Process();
         public abstract GeneratorEntry CreateEntry();
         public abstract void Cancel();
+
+        public abstract bool HasIdenticalSettings(GeneratorJob job);
+        public abstract bool HasIdenticalSettings(FfmpegGeneratorSettings settings);
+
+        public abstract string VideoFileName { get; }
+        public abstract FfmpegGeneratorSettings GetSettings();
     }
 
-    public class GeneratorJob<TSettings, TEntry> : GeneratorJob where TEntry : GeneratorEntry where TSettings : FfmpegGeneratorSettings
+    public interface IGeneratorJobWithFfmpegSettings
+    {
+        string VideoFileName { get; }
+        FfmpegGeneratorSettings GetSettings();
+    }
+
+    public class GeneratorJob<TSettings, TEntry> : GeneratorJob, IGeneratorJobWithFfmpegSettings where TEntry : GeneratorEntry where TSettings : FfmpegGeneratorSettings
     {
         private readonly TSettings _settings;
 
@@ -71,6 +83,32 @@
 
             _cancelled = true;
             Generator.Cancel();
+        }
+
+        public override bool HasIdenticalSettings(GeneratorJob job)
+        {
+            if (!(job is IGeneratorJobWithFfmpegSettings jobWithSettings))
+                return false;
+
+            return _settings.IsIdenticalTo(jobWithSettings.GetSettings());
+        }
+
+        public override bool HasIdenticalSettings(FfmpegGeneratorSettings settings)
+        {
+            if ((_settings == null) != (settings == null))
+                return false;
+
+            if (_settings == null)
+                return true;
+
+            return _settings.IsIdenticalTo(settings);
+        }
+
+        public override string VideoFileName => _settings.VideoFile;
+
+        public override FfmpegGeneratorSettings GetSettings()
+        {
+            return _settings;
         }
     }
 }

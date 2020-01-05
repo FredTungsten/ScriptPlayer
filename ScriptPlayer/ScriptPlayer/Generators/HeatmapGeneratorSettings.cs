@@ -26,5 +26,20 @@
             AddShadow = true;
             SkipIfExists = false;
         }
+
+        public override bool IsIdenticalTo(FfmpegGeneratorSettings settings)
+        {
+            if (!(settings is HeatmapGeneratorSettings heatmapSettings))
+                return false;
+
+            if (!base.IsIdenticalTo(settings))
+                return false;
+
+            if (heatmapSettings.Width != Width) return false;
+            if (heatmapSettings.Height != Height) return false;
+            if (heatmapSettings.AddShadow != AddShadow) return false;
+
+            return true;
+        }
     }
 }

@@ -57,6 +57,13 @@ namespace ScriptPlayer.Generators
             Entries.CollectionChanged += EntriesOnCollectionChanged;
         }
 
+        public void Prioritize(string[] videoFiles)
+        {
+            _unprocessedJobs.Prioritize(
+                (a,b) => Array.IndexOf(videoFiles, a.VideoFileName).CompareTo(Array.IndexOf(videoFiles, b.VideoFileName)), 
+                p => videoFiles.Contains(p.VideoFileName));
+        }
+
         public int UnprocessedJobCount => _unprocessedJobs.Count + _activeJobs.Count(job => job != null);
 
         private void EntriesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs eventArgs)
@@ -115,11 +122,21 @@ namespace ScriptPlayer.Generators
         
         public void Enqueue(GeneratorJob job)
         {
-            Entries.Add(job.CreateEntry());
+            GeneratorEntry newEntry = job.CreateEntry();
+
+            if (UnfinishedEntryExists(newEntry.Job))
+                return;
+
+            Entries.Add(newEntry);
 
             job.CheckSkip();
 
             _unprocessedJobs.Enqueue(job);
+        }
+
+        private bool UnfinishedEntryExists(GeneratorJob job)
+        {
+            return Entries.Any(e => e.DoneType == JobDoneTypes.NotDone && e.Job.HasIdenticalSettings(job));
         }
 
         public void Start(int threadCount = 1)

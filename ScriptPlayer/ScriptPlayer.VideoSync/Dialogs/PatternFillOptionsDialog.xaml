@@ -7,30 +7,26 @@
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         xmlns:controls="clr-namespace:ScriptPlayer.VideoSync.Controls"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Pattern Fill Options" Height="374.979" Width="401.553" Loaded="Window_Loaded">
+        Title="Pattern Fill Options" Height="374.979" Width="446.22" Loaded="Window_Loaded">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="2*"/>
-        </Grid.ColumnDefinitions>
-        <ItemsControl Margin="10,10,10,35" ItemsSource="{Binding Beats}">
+        <ItemsControl Margin="10,247,10,35" ItemsSource="{Binding Beats}" Background="LightGray">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <WrapPanel Orientation="Vertical" Margin="0,0,-13,0"/>
+                    <StackPanel Orientation="Horizontal"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type local:IndexedBoolean}">
-                    <CheckBox IsChecked="{Binding Value}" Content="{Binding Caption}" IsEnabled="{Binding CanEdit}"/>
+                    <CheckBox VerticalAlignment="Bottom" IsChecked="{Binding Value}" Content="{Binding Caption}" IsEnabled="{Binding CanEdit}">
+                        <CheckBox.LayoutTransform>
+                            <RotateTransform Angle="-90"></RotateTransform>
+                        </CheckBox.LayoutTransform>
+                    </CheckBox>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <Button IsDefault="True" Click="btnOk_Click" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Grid.Column="1"/>
-        <Button IsCancel="True" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Grid.Column="1"/>
-        <Button Content="+" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="21" Click="Button_Click"/>
-        <Button Content="-" HorizontalAlignment="Left" Margin="36,0,0,10" Width="21" Height="20" VerticalAlignment="Bottom" Click="Button_Click_1"/>
-        <TextBlock Grid.Column="1" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Recently used:" VerticalAlignment="Top" RenderTransformOrigin="0.641,0.578" Width="195"/>
-        <ListBox x:Name="lstPatterns" Grid.Column="1" Margin="10,31,10,35" ItemsSource="{Binding RecentlyUsedPatterns}" SelectionChanged="ListBox_SelectionChanged">
+        <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Recently used:" VerticalAlignment="Top" RenderTransformOrigin="0.641,0.578" Width="195"/>
+        <ListBox x:Name="lstPatterns" Margin="10,31,10,102" ItemsSource="{Binding RecentlyUsedPatterns}" SelectionChanged="ListBox_SelectionChanged">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="{x:Type ListBoxItem}">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -47,6 +43,14 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        
+
+        <Button Content="+" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="21" Click="btnPlus_Click"/>
+        <Button Content="-" HorizontalAlignment="Left" Margin="36,0,0,10" Width="21" Height="20" VerticalAlignment="Bottom" Click="btnMinus_Click"/>
+        <Button Content="x2" HorizontalAlignment="Left" Margin="62,0,0,10" VerticalAlignment="Bottom" Width="21" Click="btnTimes2_Click"/>
+
+        <Button IsDefault="True" Click="btnOk_Click" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75"/>
+        <Button IsCancel="True" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
+        <Button Content="/2" HorizontalAlignment="Left" Margin="88,0,0,10" VerticalAlignment="Bottom" Width="21" Click="btnBy2_Click"/>
+        <TextBlock Name="txtBeats" Text ="0 beats / measure"  Margin="114,0,170,12" VerticalAlignment="Bottom"/>
     </Grid>
 </Window>

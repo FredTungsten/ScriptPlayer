@@ -150,7 +150,7 @@ namespace ScriptPlayer.Generators
                 if (_canceled)
                     return GeneratorResult.Failed();
 
-                entry.Update("Done!", 4 / 4.0);
+                entry.Update("Done", 4 / 4.0);
                 bool success = File.Exists(gifFileName);
 
                 if(success)

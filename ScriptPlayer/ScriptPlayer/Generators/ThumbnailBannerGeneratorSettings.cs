@@ -25,5 +25,20 @@
                 TotalWidth = TotalWidth
             };
         }
+
+        public override bool IsIdenticalTo(FfmpegGeneratorSettings settings)
+        {
+            if (!(settings is ThumbnailBannerGeneratorSettings bannerSettings))
+                return false;
+
+            if (!base.IsIdenticalTo(settings))
+                return false;
+
+            if (bannerSettings.Rows != Rows) return false;
+            if (bannerSettings.Columns != Columns) return false;
+            if (bannerSettings.TotalWidth != TotalWidth) return false;
+
+            return true;
+        }
     }
 }

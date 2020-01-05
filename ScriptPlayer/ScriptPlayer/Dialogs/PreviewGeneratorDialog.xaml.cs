@@ -69,7 +69,7 @@ namespace ScriptPlayer.Dialogs
 
                 if (_success)
                 {
-                    SetStatus("Done!", 3 / 3.0);
+                    SetStatus("Done", 3 / 3.0);
                     gifPlayer.Load(gifFileName);
                 }
                 else

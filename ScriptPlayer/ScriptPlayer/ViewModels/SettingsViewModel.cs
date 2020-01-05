@@ -185,6 +185,7 @@ namespace ScriptPlayer.ViewModels
         private bool _removeGapsFromFallbackScript;
         private bool _useExternalOsd;
         private bool _autoShowGeneratorProgress;
+        private bool _autogenerateAllForPlaylist;
 
         public SettingsViewModel()
         {
@@ -201,6 +202,7 @@ namespace ScriptPlayer.ViewModels
             KodiHttpPort = 0;
             TimeDisplayMode = TimeDisplayMode.ContentOnly;
             AutogenerateThumbnails = true;
+            AutogenerateAllForPlaylist = true;
             ScriptFormatPreference = "funscript, txt";
             ButtplugConnectionAttempts = 10;
             ButtplugConnectionDelay = 5;
@@ -1088,6 +1090,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _autogenerateThumbnails) return;
                 _autogenerateThumbnails = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AutogenerateAllForPlaylist
+        {
+            get => _autogenerateAllForPlaylist;
+            set
+            {
+                if (value == _autogenerateAllForPlaylist) return;
+                _autogenerateAllForPlaylist = value;
                 OnPropertyChanged();
             }
         }

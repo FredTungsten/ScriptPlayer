@@ -556,7 +556,7 @@
                         </Style>
                     </Button.Style>
                     <Grid Width="30" Height="30">
-                        <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Video_File}" FontSize="20"/>
+                        <controls:AwesomeTextBlock Focusable="False"  HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Video_File}" FontSize="20"/>
 
                         <ProgressBar Minimum="0" Maximum="1" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                                      Value="{Binding WorkQueue.TotalProgress}" BorderThickness="0" Foreground="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Foreground}">
@@ -604,7 +604,7 @@
                             <Setter Property="Text" Value="{x:Static shared:AwesomeIcons.Expand}"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsFullscreen}" Value="True">
-                                    <Setter Property="Text" Value="{x:Static shared:AwesomeIcons.Expand}"/>
+                                    <Setter Property="Text" Value="{x:Static shared:AwesomeIcons.Compress}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -616,25 +616,25 @@
                     <ContextMenu>
                         <ContextMenu.Resources>
                             <Style x:Key="DisplayModeCommand" TargetType="MenuItem">
-                                <Setter Property="Command" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.SetTimeDisplayModeCommand}"/>
+                                <Setter Property="Command" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget.(FrameworkElement.DataContext).(viewModels:MainViewModel.SetTimeDisplayModeCommand)}"/>
                                 <Setter Property="CommandParameter" Value="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"></Setter>
                                 <Setter Property="IsChecked">
                                     <Setter.Value>
                                         <MultiBinding Converter="{StaticResource EqualsConverter}">
                                             <Binding RelativeSource="{RelativeSource Self}" Path="Tag"/>
-                                            <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}" Path="PlacementTarget.DataContext.Settings.TimeDisplayMode"/>
+                                            <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}" Path="PlacementTarget.(FrameworkElement.DataContext).(viewModels:MainViewModel.Settings).TimeDisplayMode"/>
                                         </MultiBinding>
                                     </Setter.Value>
                                 </Setter>
                             </Style>
                             <Style x:Key="TimeLeftCommand" TargetType="MenuItem">
-                                <Setter Property="Command" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.SetShowTimeLeftCommand}"/>
+                                <Setter Property="Command" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget.(FrameworkElement.DataContext).(viewModels:MainViewModel.SetShowTimeLeftCommand)}"/>
                                 <Setter Property="CommandParameter" Value="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"></Setter>
                                 <Setter Property="IsChecked">
                                     <Setter.Value>
                                         <MultiBinding Converter="{StaticResource EqualsConverter}">
                                             <Binding RelativeSource="{RelativeSource Self}" Path="Tag"/>
-                                            <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}" Path="PlacementTarget.DataContext.Settings.ShowTimeLeft"/>
+                                            <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}" Path="PlacementTarget.(FrameworkElement.DataContext).(viewModels:MainViewModel.Settings).ShowTimeLeft"/>
                                         </MultiBinding>
                                     </Setter.Value>
                                 </Setter>
@@ -647,7 +647,7 @@
                         <MenuItem Header="Time elapsed" Tag="{x:Static viewModels:StaticBoolean.False}" Style="{StaticResource TimeLeftCommand}"/>
                         <MenuItem Header="Time remaining" Tag="{x:Static viewModels:StaticBoolean.True}" Style="{StaticResource TimeLeftCommand}"/>
                         <Separator/>
-                        <MenuItem Header="Limit to selection" IsCheckable="True" IsChecked="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget.DataContext.Settings.LimitDisplayedTimeToSelection}"/>
+                        <MenuItem Header="Limit to selection" IsCheckable="True" IsChecked="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget.(FrameworkElement.DataContext).(viewModels:MainViewModel.Settings).LimitDisplayedTimeToSelection}"/>
                     </ContextMenu>
                 </TextBlock.ContextMenu>
                 <TextBlock.Style>
@@ -679,9 +679,9 @@
             <Button Command="{Binding Playlist.PlayNextEntryCommand}" Content=":" DockPanel.Dock="Right"
                     ToolTipService.BetweenShowDelay="0" ToolTipService.ShowDuration="60000">
                 <Button.ToolTip>
-                    <ToolTip DataContext="{Binding RelativeSource={RelativeSource Self}, Path=PlacementTarget.DataContext}" 
+                    <ToolTip DataContext="{Binding RelativeSource={RelativeSource Self}, Path=PlacementTarget.(FrameworkElement.DataContext)}" 
                              Padding="0" Placement="Top" BorderThickness="0">
-                        <controls1:VideoDetailsPreview ViewModel="{Binding .}" Entry="{Binding Playlist.NextEntry}"/>
+                        <controls1:VideoDetailsPreview ViewModel="{Binding .}" Entry="{Binding Path=(viewModels:MainViewModel.Playlist).NextEntry}"/>
                     </ToolTip>
                     <!--<ToolTip Padding="0" Placement="Top" Opened="ToolTipNext_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
                         <StackPanel Width="300">
@@ -695,9 +695,9 @@
             <Button Command="{Binding Playlist.PlayPreviousEntryCommand}" Content="9" DockPanel.Dock="Right"
                     ToolTipService.BetweenShowDelay="0" ToolTipService.ShowDuration="60000">
                 <Button.ToolTip>
-                    <ToolTip DataContext="{Binding RelativeSource={RelativeSource Self}, Path=PlacementTarget.DataContext}" 
+                    <ToolTip DataContext="{Binding RelativeSource={RelativeSource Self}, Path=PlacementTarget.(FrameworkElement.DataContext)}" 
                              Padding="0" Placement="Top" BorderThickness="0">
-                        <controls1:VideoDetailsPreview ViewModel="{Binding .}" Entry="{Binding Playlist.PreviousEntry}"/>
+                        <controls1:VideoDetailsPreview ViewModel="{Binding .}" Entry="{Binding Path=(viewModels:MainViewModel.Playlist).PreviousEntry}"/>
                     </ToolTip>
                     <!--<ToolTip Padding="0" Placement="Top" Opened="ToolTipPrevious_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
                         <StackPanel Width="300">

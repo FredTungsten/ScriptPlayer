@@ -25,5 +25,20 @@
                 SkipIfExists = SkipIfExists
             };
         }
+
+        public override bool IsIdenticalTo(FfmpegGeneratorSettings settings)
+        {
+            if (!(settings is ThumbnailGeneratorSettings thumbnailSettings))
+                return false;
+
+            if (!base.IsIdenticalTo(settings))
+                return false;
+
+            if (thumbnailSettings.Width != Width) return false;
+            if (thumbnailSettings.Height != Height) return false;
+            if (thumbnailSettings.Intervall != Intervall) return false;
+
+            return true;
+        }
     }
 }

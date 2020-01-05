@@ -11,7 +11,7 @@ namespace ScriptPlayer.Shared.Controls
     {
         //public static readonly Uri AwesomeUri = new Uri("pack://application:,,,/FontAwesome.Net;component/Fonts/#FontAwesome", UriKind.RelativeOrAbsolute);
 
-        public static readonly Uri AwesomeUri = new Uri("pack://application:,,,/ScriptPlayer.Shared;component/Fonts/#Font Awesome 5 Free Regular", UriKind.RelativeOrAbsolute);
+        public static readonly Uri AwesomeUri = new Uri("pack://application:,,,/ScriptPlayer.Shared;component/Fonts/#Font Awesome 5 Free", UriKind.RelativeOrAbsolute);
         private static FontFamily _awesomeFont;
 
         public static FontFamily AwesomeFont
@@ -37,7 +37,7 @@ namespace ScriptPlayer.Shared.Controls
         {
             if (DesignerProperties.GetIsInDesignMode(this))
             {
-                FontFamily = new FontFamily("Font Awesome 5 Free Regular");
+                FontFamily = new FontFamily("FontAwesome");
             }
             else
             {

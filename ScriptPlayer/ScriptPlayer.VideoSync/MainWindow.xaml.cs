@@ -2587,6 +2587,14 @@ namespace ScriptPlayer.VideoSync
                 fft[i] = fftComplex[i].Magnitude;
             return fft;
         }
+
+        private void mnuTrimBeats_Click(object sender, RoutedEventArgs e)
+        {
+            TimeSpan duration = videoPlayer.Duration;
+
+            Beats = new BeatCollection(Beats.Where(b => b >= TimeSpan.Zero && b <= duration));
+            Positions = new PositionCollection(Positions.Where(p => p.TimeStamp >= TimeSpan.Zero && p.TimeStamp <= duration));
+        }
     }
 
     public enum PositionType

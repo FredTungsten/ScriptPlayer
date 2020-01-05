@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,7 +19,7 @@ namespace ScriptPlayer.Shared.Scripts
                 if (file.Inverted)
                     file.Actions.ForEach(a => a.Position = (byte) (99- a.Position));
 
-                var actions = file.Actions.Cast<ScriptAction>().ToList();
+                var actions = file.Actions.Cast<ScriptAction>().Where(a => a.TimeStamp >= TimeSpan.Zero).ToList();
                 return actions;
             }
         }
