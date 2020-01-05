@@ -13,6 +13,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -951,6 +952,23 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             _previouslyOpenedVideoFile = videoFileName;
+
+            if (Settings.FuzzyMatchingEnabled)
+            {
+                try
+                {
+                    Regex regex = new Regex(Settings.FuzzyMatchingPattern);
+
+                    if (regex.IsMatch(videoFileName))
+                    {
+                        videoFileName = regex.Replace(videoFileName, Settings.FuzzyMatchingReplacement);
+                    }
+                }
+                catch
+                {
+                    //
+                }
+            }
 
             TryFindMatchingScript(videoFileName);
             TryFindMatchingThumbnails(videoFileName, true);

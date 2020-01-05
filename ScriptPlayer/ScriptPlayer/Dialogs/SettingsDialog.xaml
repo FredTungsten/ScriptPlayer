@@ -69,7 +69,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="FFmpeg" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Players" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Style>
                     <Style TargetType="{x:Type controls:PageSelector}">
                         <Setter Property="Template">
@@ -305,9 +305,22 @@
                         </controls:PageSelector.Header>
                         <StackPanel>
                             <StackPanel>
+                                <TextBlock Text="Fuzzy Name Matching" FontWeight="Bold" Margin="0,5,0,0"/>
+                                <TextBlock Text="Some players change the name of the opened video file (e.g. add the year this video was made) which can make finding a matching script impossible. Fuzzy name matching can be used to transform the name of the video back but requires a certain level of knowledge of regular expressions to use." TextWrapping="Wrap" Margin="0,10,0,0"/>
+                                <CheckBox IsChecked="{Binding Settings.FuzzyMatchingEnabled}" Margin="20,10,4,4">Enable Fuzzy Name Matching</CheckBox>
+                                <DockPanel>
+                                    <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="Pattern" VerticalAlignment="Center"/>
+                                    <TextBox Text="{Binding Settings.FuzzyMatchingPattern}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                                </DockPanel>
+                                <DockPanel>
+                                    <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="Replacement" VerticalAlignment="Center"/>
+                                    <TextBox Text="{Binding Settings.FuzzyMatchingReplacement}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </StackPanel>
+                            <StackPanel>
                                 <TextBlock Text="MPC-HC" FontWeight="Bold" Margin="0,10,0,0"/>
                                 <DockPanel>
-                                    <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
+                                    <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
                                     <Button DockPanel.Dock="Right"  Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnMpcHcDefault_Click"/>
                                     <TextBox Text="{Binding Settings.MpcHcEndpoint}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                 </DockPanel>
@@ -315,7 +328,7 @@
                             <StackPanel>
                                 <TextBlock Text="Samsung VR" FontWeight="Bold" Margin="0,10,0,0"/>
                                 <DockPanel>
-                                    <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="UDP Port" VerticalAlignment="Center"/>
+                                    <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="UDP Port" VerticalAlignment="Center"/>
                                     <Button DockPanel.Dock="Right"  Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnSamsungDefault_Click"/>
                                     <TextBox Text="{Binding Settings.SamsungVrUdpPort}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                 </DockPanel>
@@ -324,12 +337,12 @@
                                 <TextBlock Text="VLC" FontWeight="Bold" Margin="0,10,0,0"/>
                                 <StackPanel>
                                     <DockPanel>
-                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
+                                        <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
                                         <Button DockPanel.Dock="Right" Margin="4" Width="75" Height="23" HorizontalAlignment="Left" Content="Use Default" Click="BtnVlcDefault_Click"/>
                                         <TextBox Text="{Binding Settings.VlcEndpoint}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                     </DockPanel>
                                     <DockPanel>
-                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="Password" VerticalAlignment="Center"/>
+                                        <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="Password" VerticalAlignment="Center"/>
                                         <PasswordBox x:Name="txtPasswordVlcPassword" PasswordChanged="TxtPasswordVlcPassword_OnPasswordChanged" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                     </DockPanel>
                                 </StackPanel>
@@ -337,7 +350,7 @@
                             <StackPanel>
                                 <TextBlock Text="Whirligig" FontWeight="Bold" Margin="0,10,0,0"/>
                                 <DockPanel>
-                                    <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
+                                    <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
                                     <Button DockPanel.Dock="Right" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnWhirligigDefault_Click"/>
                                     <TextBox Text="{Binding Settings.WhirligigEndpoint}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                 </DockPanel>
@@ -345,7 +358,7 @@
                             <StackPanel>
                                 <TextBlock Text="Zoom Player" FontWeight="Bold" Margin="0,10,0,0"/>
                                 <DockPanel>
-                                    <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
+                                    <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
                                     <Button DockPanel.Dock="Right" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnZoomDefault_Click"/>
                                     <TextBox Text="{Binding Settings.ZoomPlayerEndpoint}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                 </DockPanel>
@@ -354,27 +367,27 @@
                                 <TextBlock Text="Kodi" FontWeight="Bold" Margin="0,10,0,0"/>
                                 <StackPanel>
                                     <DockPanel>
-                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP" VerticalAlignment="Center"/>
+                                        <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP" VerticalAlignment="Center"/>
                                         <Button DockPanel.Dock="Right" Tag="IpDefault" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnKodiDefault_Click"/>
                                         <TextBox Text="{Binding Settings.KodiIp}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                     </DockPanel>
                                     <DockPanel>
-                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="HTTP Port" VerticalAlignment="Center"/>
+                                        <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="HTTP Port" VerticalAlignment="Center"/>
                                         <Button DockPanel.Dock="Right" Tag="HttpPortDefault" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnKodiDefault_Click"/>
                                         <TextBox Text="{Binding Settings.KodiHttpPort}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                     </DockPanel>
                                     <DockPanel>
-                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="TCP Port" VerticalAlignment="Center"/>
+                                        <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="TCP Port" VerticalAlignment="Center"/>
                                         <Button DockPanel.Dock="Right" Tag="TcpPortDefault" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnKodiDefault_Click"/>
                                         <TextBox Text="{Binding Settings.KodiTcpPort}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                     </DockPanel>
                                     <DockPanel>
-                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="User" VerticalAlignment="Center"/>
+                                        <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="User" VerticalAlignment="Center"/>
                                         <Button DockPanel.Dock="Right" Tag="UserDefault" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnKodiDefault_Click"/>
                                         <TextBox Text="{Binding Settings.KodiUser}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                     </DockPanel>
                                     <DockPanel>
-                                        <TextBlock Width="60" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="Password" VerticalAlignment="Center"/>
+                                        <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="Password" VerticalAlignment="Center"/>
                                         <Button DockPanel.Dock="Right" Tag="PasswordDefault" Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="23" Click="BtnKodiDefault_Click"/>
                                         <PasswordBox x:Name="txtPasswordKodiPassword" PasswordChanged="TxtPasswordKodiPassword_OnPasswordChanged" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                     </DockPanel>

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
@@ -186,6 +187,9 @@ namespace ScriptPlayer.ViewModels
         private bool _useExternalOsd;
         private bool _autoShowGeneratorProgress;
         private bool _autogenerateAllForPlaylist;
+        private bool _fuzzyMatchingEnabled;
+        private string _fuzzyMatchingPattern;
+        private string _fuzzyMatchingReplacement;
 
         public SettingsViewModel()
         {
@@ -207,6 +211,9 @@ namespace ScriptPlayer.ViewModels
             ButtplugConnectionAttempts = 10;
             ButtplugConnectionDelay = 5;
             AutoShowGeneratorProgress = true;
+
+            FuzzyMatchingPattern = @"^(?<Title>.+?)\s?\(\d{4}\)$";
+            FuzzyMatchingReplacement = @"${Title}";
         }
 
         public SettingsViewModel Duplicate()
@@ -1222,6 +1229,40 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _autoShowGeneratorProgress) return;
                 _autoShowGeneratorProgress = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool FuzzyMatchingEnabled
+        {
+            get => _fuzzyMatchingEnabled;
+            set
+            {
+                if (value == _fuzzyMatchingEnabled) return;
+                _fuzzyMatchingEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string FuzzyMatchingPattern
+        {
+            get => _fuzzyMatchingPattern;
+            set
+            {
+                if (value == _fuzzyMatchingPattern) return;
+                _fuzzyMatchingPattern = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string FuzzyMatchingReplacement
+
+        {
+            get => _fuzzyMatchingReplacement;
+            set
+            {
+                if (value == _fuzzyMatchingReplacement) return;
+                _fuzzyMatchingReplacement = value;
                 OnPropertyChanged();
             }
         }
