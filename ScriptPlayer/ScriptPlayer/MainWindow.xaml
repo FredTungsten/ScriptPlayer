@@ -25,6 +25,42 @@
         </Style>
     </Window.Style>
     <Window.Resources>
+        <Style x:Key="LeftScrollViewer" TargetType="{x:Type ScrollViewer}">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollViewer}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <ScrollContentPresenter Grid.Column="1"/>
+
+                            <ScrollBar Name="PART_VerticalScrollBar"
+                                       Value="{TemplateBinding VerticalOffset}"
+                                       Maximum="{TemplateBinding ScrollableHeight}"
+                                       ViewportSize="{TemplateBinding ViewportHeight}"
+                                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
+                            <ScrollBar Name="PART_HorizontalScrollBar"
+                                       Orientation="Horizontal"
+                                       Grid.Row="1"
+                                       Grid.Column="1"
+                                       Value="{TemplateBinding HorizontalOffset}"
+                                       Maximum="{TemplateBinding ScrollableWidth}"
+                                       ViewportSize="{TemplateBinding ViewportWidth}"
+                                       Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
+
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <converters1:TimeLeftConverter x:Key="TimeLeftConverter"/>
         <converters:ConversionModeToNameConverter x:Key="ConversionConverter"/>
         <converters1:DistinctValueToBooleanConverter x:Key="BooleanConverter"/>
@@ -773,7 +809,7 @@
                 <Grid Name="GridSettingsInner" Width="180" MaxWidth="400" MinWidth="150">
                     <DockPanel LastChildFill="True">
                         <controls1:HorizontalStretcher StretchedParent="{Binding ElementName=GridSettingsInner}" DockPanel.Dock="Left" HorizontalAlignment="Left" FinishedDragging="SidePanel_FinishedDragging"/>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="5,32,0,0">
+                        <ScrollViewer Style="{StaticResource LeftScrollViewer}"  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0">
                             <Grid>
                                 <StackPanel>
                                     <StackPanel Margin="4" ToolTip="Timespan by which every script command will be delayed. Negative values will cause the commands to be executed ahead of time.">
