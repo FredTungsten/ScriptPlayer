@@ -1,48 +1,25 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace ScriptPlayer.Shared.Controls
+namespace ScriptPlayer.Shared
 {
     public class AwesomeTextBlock : TextBlock
     {
-        //public static readonly Uri AwesomeUri = new Uri("pack://application:,,,/FontAwesome.Net;component/Fonts/#FontAwesome", UriKind.RelativeOrAbsolute);
-
-        public static readonly Uri AwesomeUri = new Uri("pack://application:,,,/ScriptPlayer.Shared;component/Fonts/#Font Awesome 5 Free", UriKind.RelativeOrAbsolute);
-        private static FontFamily _awesomeFont;
-
-        public static FontFamily AwesomeFont
+        static AwesomeTextBlock()
         {
-            get
-            {
-                if (_awesomeFont == null)
-                {
-                    var families = Fonts.GetFontFamilies(AwesomeUri);
-                    _awesomeFont = families.FirstOrDefault();
-                }
-
-                return _awesomeFont;
-            }
+            FontFamilyProperty.OverrideMetadata(typeof(AwesomeTextBlock), new FrameworkPropertyMetadata(GetFontAwesome()));
         }
 
-        public AwesomeTextBlock()
+        private static FontFamily GetFontAwesome()
         {
-            Loaded += OnLoaded;
+            return new FontFamily(FontsUri, FontNames);
         }
 
-        private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
-        {
-            if (DesignerProperties.GetIsInDesignMode(this))
-            {
-                FontFamily = new FontFamily("FontAwesome");
-            }
-            else
-            {
-                FontFamily = AwesomeFont;
-            }
-        }
+        public static readonly Uri FontsUri = new Uri("pack://application:,,,/ScriptPlayer.Shared;component/Fonts/", UriKind.RelativeOrAbsolute);
+        public static readonly string FontNames = "Font Awesome 5 Free, ./#Font Awesome 5 Free, ./#Font Awesome 5 Brands";
+        
+        public static FontFamily AwesomeFont => GetFontAwesome();
     }
 }

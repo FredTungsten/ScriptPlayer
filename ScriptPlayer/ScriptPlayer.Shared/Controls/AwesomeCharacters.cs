@@ -1,7 +1,7 @@
 ﻿// ReSharper disable InconsistentNaming
 namespace ScriptPlayer.Shared
 {
-    public static class AwesomeIcons
+    public static class AwesomeCharacters
     {
         public const string x500px = "\xf26e"; // 500px
         public const string Accessible_Icon = "\xf368"; // Accessible Icon

@@ -4569,11 +4569,13 @@ namespace ScriptPlayer.ViewModels
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            RandomChapterToolTip += "\nRight-click to modify";
         }
 
         public string RandomChapterToolTip
         {
-            get { return _randomChapterToolTip; }
+            get => _randomChapterToolTip;
             set
             {
                 if (value == _randomChapterToolTip) return;

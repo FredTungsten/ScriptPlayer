@@ -1,0 +1,17 @@
+﻿<UserControl x:Class="ScriptPlayer.Shared.Controls.AwesomeIcon"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ScriptPlayer.Shared.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="50" d:DesignWidth="50">
+    <UserControl.Resources>
+        <local:AwesomePathToStringConverter x:Key="PathConverter"/>
+    </UserControl.Resources>
+    <Viewbox>
+        <Path Fill="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:AwesomeIcon}, 
+            Path=Foreground}" Name="path" Data="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:AwesomeIcon}, 
+            Path=Icon, Converter={StaticResource PathConverter}}"></Path>
+    </Viewbox>
+</UserControl>

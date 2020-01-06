@@ -13,6 +13,7 @@
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
+        viewModels:SettingsPage.Handler="SettingsPage_Handler"
         d:DesignHeight="591" d:DesignWidth="954" Loaded="Window_Loaded" Icon="ScriptPlayerIcon.ico" Closed="MainWindow_OnClosed">
     <Window.Style>
         <Style TargetType="Window">
@@ -535,45 +536,44 @@
                     </DockPanel.Resources>-->
                     <Button Command="{Binding OpenVideoCommand}">
                         <Grid Width="30" Height="30">
-                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Folder_Open}" FontSize="20"/>
+                            <controls:AwesomeIcon Padding="3" Icon="Folder_Open_Regular"/>
                         </Grid>
                     </Button>
                     <Button Command="{Binding AddScriptsToPlaylistCommand}">
                         <Grid Width="30" Height="30">
-                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Plus}" FontSize="20"/>
+                            <controls:AwesomeIcon Padding="3" Icon="Plus_Solid"/>
                         </Grid>
                     </Button>
                     <Button Click="mnuShowPlaylist_Click">
                         <Grid Width="30" Height="30">
-                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.List}" FontSize="20"/>
+                            <controls:AwesomeIcon Padding="3" Icon="List_Solid"/>
                         </Grid>
                     </Button>
                     <CheckBox ToolTip="Shuffle" IsChecked="{Binding Playlist.Shuffle}"
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                         <Grid Width="30" Height="30">
-                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Random}" FontSize="20"/>
+                            <controls:AwesomeIcon Padding="3" Icon="Random_Solid"/>
                         </Grid>
                     </CheckBox>
                     <CheckBox ToolTip="Repeat" IsChecked="{Binding Playlist.Repeat}" 
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                         <Grid Width="30" Height="30">
-                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Redo}" FontSize="20"/>
+                            <controls:AwesomeIcon Padding="3" Icon="Redo_Solid"/>
                         </Grid>
                     </CheckBox>
                     <CheckBox ToolTip="Repeat Single File" IsChecked="{Binding Playlist.RepeatSingleFile}" 
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                         <Grid Width="30" Height="30">
-                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Redo}" FontSize="20"/>
+                            <controls:AwesomeIcon Padding="3" Icon="Redo_Solid"/>
                         </Grid>
                     </CheckBox>
                     <CheckBox ToolTip="{Binding RandomChapterToolTip}" IsChecked="{Binding Playlist.RandomChapters}" 
+                              viewModels:SettingsPage.PageName="Chapter Settings"
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                         <Grid Width="30" Height="30">
-                            <controls:AwesomeTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Bookmark}" FontSize="20"/>
+                            <controls:AwesomeIcon Padding="3" Icon="Bookmark_Solid"/>
                         </Grid>
                     </CheckBox>
-
-
                     <!--</DockPanel>-->
                 </ToolBar>
                 <Button Grid.Column="1" DockPanel.Dock="Right" Command="{Binding ShowGeneratorProgressCommand}" 
@@ -592,8 +592,8 @@
                         </Style>
                     </Button.Style>
                     <Grid Width="30" Height="30">
-                        <controls:AwesomeTextBlock Focusable="False"  HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Static shared:AwesomeIcons.Video_File}" FontSize="20"/>
-
+                        <controls:AwesomeIcon Icon="Video_File_Regular" Focusable="False" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        
                         <ProgressBar Minimum="0" Maximum="1" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                                      Value="{Binding WorkQueue.TotalProgress}" BorderThickness="0" Foreground="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Foreground}">
                         </ProgressBar>
@@ -631,21 +631,21 @@
                     </Style>
                 </Button.Style>
             </Button>
-            <Button Command="{Binding SkipToNextEventCommand}" ToolTip="Skip close to next event" Content="8"/>
+            <Button Command="{Binding SkipToNextEventCommand}" ToolTip="Skip close to next event" viewModels:SettingsPage.PageName="Gaps" Content="8"/>
 
             <Button Command="{Binding ToggleFullScreenCommand}" ToolTip="Toggle Fullscreen" DockPanel.Dock="Right">
-                <controls:AwesomeTextBlock>
-                    <controls:AwesomeTextBlock.Style>
-                        <Style TargetType="{x:Type controls:AwesomeTextBlock}">
-                            <Setter Property="Text" Value="{x:Static shared:AwesomeIcons.Expand}"/>
+                <controls:AwesomeIcon>
+                    <controls:AwesomeIcon.Style>
+                        <Style TargetType="{x:Type controls:AwesomeIcon}">
+                            <Setter Property="Icon" Value="{x:Static shared:AwesomePath.Expand_Solid}"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsFullscreen}" Value="True">
-                                    <Setter Property="Text" Value="{x:Static shared:AwesomeIcons.Compress}"/>
+                                    <Setter Property="Icon" Value="{x:Static shared:AwesomePath.Compress_Solid}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
-                    </controls:AwesomeTextBlock.Style>
-                </controls:AwesomeTextBlock>
+                    </controls:AwesomeIcon.Style>
+                </controls:AwesomeIcon>
             </Button>
             <TextBlock MouseLeftButtonDown="TimeDisplay_OnMouseLeftButtonDown" TextAlignment="Right" DockPanel.Dock="Right" VerticalAlignment="Center" Width="95" Margin="0,0,8,0">
                 <TextBlock.ContextMenu>

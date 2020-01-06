@@ -3,18 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
+using ScriptPlayer.Shared;
 
 namespace AwesomeReader
 {
@@ -23,8 +15,19 @@ namespace AwesomeReader
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly DependencyProperty PathsProperty = DependencyProperty.Register(
+            "Paths", typeof(List<AwesomePath>), typeof(MainWindow), new PropertyMetadata(default(List<AwesomePath>)));
+
+        public List<AwesomePath> Paths
+        {
+            get => (List<AwesomePath>) GetValue(PathsProperty);
+            set => SetValue(PathsProperty, value);
+        }
+
         public MainWindow()
         {
+            Paths = Enum.GetValues(typeof(AwesomePath)).Cast<AwesomePath>().ToList();
+
             InitializeComponent();
         }
 
@@ -38,8 +41,11 @@ namespace AwesomeReader
 
             JObject root = JObject.Parse(File.ReadAllText(dialog.FileName));
 
-            StringBuilder builder = new StringBuilder();
-            StringBuilder builder2 = new StringBuilder();
+            StringBuilder unicodeBuilder = new StringBuilder();
+            StringBuilder exampleBuilder = new StringBuilder();
+            StringBuilder pathStringBuilder = new StringBuilder();
+            StringBuilder enumBuilder = new StringBuilder();
+            StringBuilder switchBuilder = new StringBuilder();
 
             HashSet<string> usedNames = new HashSet<string>();
 
@@ -68,15 +74,29 @@ namespace AwesomeReader
 
                 string line = $"public const string {name} = \"{charSeq}\"; // {label}";
 
-                builder.AppendLine(line);
+                unicodeBuilder.AppendLine(line);
 
                 string actualChar = char.ConvertFromUtf32(Convert.ToInt32(unicode, 16));
 
-                builder2.AppendLine($"{actualChar} = {name}");
+                exampleBuilder.AppendLine($"{actualChar} = {name}");
+
+
+                string[] styles = obj["styles"].Values<string>().ToArray();
+
+                foreach (string style in styles)
+                {
+                    string path = obj["svg"][style]["path"].Value<string>();
+                    string fullName = $"{name}_{UpFirst(style)}";
+
+                    string line3 = $"public const string {fullName} = \"{path}\"; // {label}";
+                    pathStringBuilder.AppendLine(line3);
+                    enumBuilder.AppendLine($"{fullName},");
+                    switchBuilder.AppendLine($"case AwesomePath.{fullName}: return {fullName};");
+                }
             }
 
-            txtOut.Text = builder.ToString();
-            txtChars.Text = builder2.ToString();
+            txtOut.Text = unicodeBuilder.ToString();
+            txtPaths.Text = pathStringBuilder + "\r\n\r\n" + switchBuilder + "\r\n\r\n" + enumBuilder;
         }
 
         private string TransformLabelToName(string label, int index)

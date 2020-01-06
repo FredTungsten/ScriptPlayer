@@ -176,11 +176,15 @@
     <Compile Include="Colors\AnalysisParameters.cs" />
     <Compile Include="Beats\BeatCollection.cs" />
     <Compile Include="Classes\BlockingQueue.cs" />
-    <Compile Include="Controls\AwesomeIcons.cs" />
+    <Compile Include="Controls\AwesomeCharacters.cs" />
+    <Compile Include="Controls\AwesomePaths.cs" />
     <Compile Include="Controls\AwesomeTextBlock.cs" />
     <Compile Include="Controls\MediaWrapper.cs" />
     <Compile Include="Controls\PageSelector.cs" />
     <Compile Include="Controls\ThumbnailPreview.cs" />
+    <Compile Include="Controls\AwesomeIcon.xaml.cs">
+      <DependentUpon>AwesomeIcon.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Converters\BooleanToColumnSpanConverter.cs" />
     <Compile Include="Converters\SeekBarPositionConverter.cs" />
     <Compile Include="Devices\ButtplugAdapter.cs" />
@@ -366,6 +370,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\OverlayText.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\AwesomeIcon.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

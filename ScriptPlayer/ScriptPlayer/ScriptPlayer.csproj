@@ -192,6 +192,7 @@
     <Compile Include="ViewModels\PlaybackMode.cs" />
     <Compile Include="ViewModels\PlayerStateModel.cs" />
     <Compile Include="ViewModels\PreviewGeneratorSettingsViewModel.cs" />
+    <Compile Include="ViewModels\SettingsPage.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="ViewModels\SkipState.cs" />
     <Compile Include="ViewModels\ThumbnailBannerGeneratorSettingsViewModel.cs" />

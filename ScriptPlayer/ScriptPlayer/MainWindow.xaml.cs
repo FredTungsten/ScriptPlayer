@@ -121,6 +121,11 @@ namespace ScriptPlayer
             UpdateVideoColumns();
         }
 
+        public void SettingsPage_Handler(string pagename)
+        {
+            ShowSettings(pagename);
+        }
+
         private void HideOnHoverChanged(object sender, EventArgs eventArgs)
         {
             UpdateVideoColumns();
@@ -230,6 +235,11 @@ namespace ScriptPlayer
         }
 
         private void ViewModelOnRequestShowSettings(object sender, string settingsId)
+        {
+            ShowSettings(settingsId);
+        }
+
+        private void ShowSettings(string settingsId)
         {
             SettingsDialog settings = new SettingsDialog(ViewModel.Settings, settingsId) { Owner = this };
             if (settings.ShowDialog() != true) return;

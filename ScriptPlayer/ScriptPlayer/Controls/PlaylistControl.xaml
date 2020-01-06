@@ -137,39 +137,39 @@
         <UniformGrid Margin="10,0,10,10" Height="27" VerticalAlignment="Bottom" Grid.Row="1" Columns="9">
             <Button ToolTip="Move First" Command="{Binding Playlist.MoveSelectedEntryFirstCommand}" 
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Arrow_Circle_Up}"/>
+                <controls:AwesomeIcon Icon="Arrow_Circle_Up_Solid"/>
             </Button>
             <Button ToolTip="Move Up" Command="{Binding Playlist.MoveSelectedEntryUpCommand}" 
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Arrowup}"/>
+                <controls:AwesomeIcon Icon="Arrowup_Solid"/>
             </Button>
             <Button ToolTip="Move Down" Command="{Binding Playlist.MoveSelectedEntryDownCommand}"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Arrowdown}"/>
+                <controls:AwesomeIcon Icon="Arrowdown_Solid"/>
             </Button>
             <Button ToolTip="Move Last" Command="{Binding Playlist.MoveSelectedEntryLastCommand}"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Arrow_Circle_Down}"/>
+                <controls:AwesomeIcon Icon="Arrow_Circle_Down_Solid"/>
             </Button>
             <Button ToolTip="Remove" Command="{Binding Playlist.RemoveSelectedEntryCommand}" 
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Times}"/>
+                <controls:AwesomeIcon Icon="Times_Solid"/>
             </Button>
             <CheckBox ToolTip="Shuffle" IsChecked="{Binding Playlist.Shuffle}"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Random}"/>
+                <controls:AwesomeIcon Icon="Random_Solid"/>
             </CheckBox>
             <CheckBox ToolTip="Repeat" IsChecked="{Binding Playlist.Repeat}" 
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Redo}"/>
+                <controls:AwesomeIcon Icon="Redo_Solid"/>
             </CheckBox>
             <CheckBox ToolTip="Repeat Single File" IsChecked="{Binding Playlist.RepeatSingleFile}" 
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Redo}"/>
+                <controls:AwesomeIcon Icon="Redo_Solid"/>
             </CheckBox>
             <CheckBox ToolTip="Random Chapters" IsChecked="{Binding Playlist.RandomChapters}" 
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <controls:AwesomeTextBlock Text="{x:Static shared:AwesomeIcons.Bookmark}"/>
+                <controls:AwesomeIcon Icon="Bookmark_Solid"/>
             </CheckBox>
         </UniformGrid>
     </Grid>
