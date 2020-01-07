@@ -767,7 +767,7 @@
         </DockPanel>
 
         <Grid Name="GridPlaylist" Width="Auto" shared:HideOnHover.IsActive="True" Background="White" Grid.Column="0" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1">
-            <Expander ExpandDirection="Right">
+            <Expander Name="ExpanderPlaylist" ExpandDirection="Right">
                 <Expander.Header>
                     <StackPanel Orientation="Vertical">
                         <CheckBox Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Top" Margin="0,3" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="24" Height="24" HorizontalAlignment="Center"
@@ -791,7 +791,7 @@
         </Grid>
 
         <Grid Name="GridSettings" shared:HideOnHover.IsActive="True" Background="White" Grid.Column="2" HorizontalAlignment="Stretch" Margin="0" Grid.Row="1" VerticalAlignment="Stretch" >
-            <Expander ExpandDirection="Left" Width="Auto">
+            <Expander Name="ExpanderSettings" ExpandDirection="Left" Width="Auto">
                 <Expander.Header>
                     <StackPanel Orientation="Vertical">
                         <CheckBox Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Top" Margin="0,3" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="24" Height="24" HorizontalAlignment="Center"

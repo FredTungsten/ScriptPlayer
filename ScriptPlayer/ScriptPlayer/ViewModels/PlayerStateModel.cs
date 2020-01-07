@@ -28,6 +28,9 @@ namespace ScriptPlayer.ViewModels
 
         public bool HidePlaylist { get; set; }
 
+        public bool ExpandSettings { get; set; }
+        public bool ExpandPlaylist { get; set; }
+
         public WindowStateModel()
         {
             SettingsWidth = 200;
@@ -52,6 +55,25 @@ namespace ScriptPlayer.ViewModels
         public Rect GetPosition()
         {
             return new Rect(X, Y, Width, Height);
+        }
+
+        public WindowStateModel Duplicate()
+        {
+            return new WindowStateModel
+            {
+                IsMaximized = IsMaximized,
+                IsFullscreen = IsFullscreen,
+                Width = Width,
+                Height = Height,
+                X = X,
+                Y = Y,
+                SettingsWidth = SettingsWidth,
+                PlaylistWidth = PlaylistWidth,
+                HidePlaylist = HidePlaylist,
+                HideSettings = HideSettings,
+                ExpandPlaylist = ExpandPlaylist,
+                ExpandSettings = ExpandSettings
+            };
         }
     }
 

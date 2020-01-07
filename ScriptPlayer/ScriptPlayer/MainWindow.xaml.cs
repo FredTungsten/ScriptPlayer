@@ -38,15 +38,10 @@ namespace ScriptPlayer
             set => SetValue(ViewModelProperty, value);
         }
 
-        private Rect _windowPosition;
-        private WindowState _windowState;
-
-        private double _playlistWidth;
-        private double _settingWidth;
-        private bool _hidePlaylist;
-        private bool _hideSettings;
+        private WindowStateModel _windowStateModel;
 
         private DateTime _doubleClickTimeStamp = DateTime.MinValue;
+        
 
         public MainWindow()
         {
@@ -145,9 +140,8 @@ namespace ScriptPlayer
 
         private void ViewModelOnRequestGeneratorSettings(object sender, RequestEventArgs<GeneratorSettingsViewModel> eventArgs)
         {
-            GeneratorSettingsDialog dialog = new GeneratorSettingsDialog(ViewModel, eventArgs.Value, 
-                GeneratedElements.All, GeneratedElements.Thumbnails);
-            dialog.Owner = this;
+            GeneratorSettingsDialog dialog = new GeneratorSettingsDialog(ViewModel, eventArgs.Value,
+                GeneratedElements.All, GeneratedElements.Thumbnails) {Owner = this};
 
             if (dialog.ShowDialog() != true)
                 return;
@@ -269,11 +263,17 @@ namespace ScriptPlayer
 
         private void SaveSidePanels()
         {
-            _playlistWidth = GirdPlaylistInner.Width;
-            _settingWidth = GridSettingsInner.Width;
+            if(_windowStateModel == null)
+                _windowStateModel = new WindowStateModel();
+            
+            _windowStateModel.PlaylistWidth = GirdPlaylistInner.Width;
+            _windowStateModel.SettingsWidth = GridSettingsInner.Width;
 
-            _hidePlaylist = HideOnHover.GetIsActive(GridPlaylist);
-            _hideSettings = HideOnHover.GetIsActive(GridSettings);
+            _windowStateModel.HidePlaylist = HideOnHover.GetIsActive(GridPlaylist);
+            _windowStateModel.HideSettings = HideOnHover.GetIsActive(GridSettings);
+
+            _windowStateModel.ExpandPlaylist = ExpanderPlaylist.IsExpanded;
+            _windowStateModel.ExpandSettings = ExpanderSettings.IsExpanded;
         }
 
         private void RestoreWindowState(WindowStateModel windowStateModel)
@@ -281,14 +281,8 @@ namespace ScriptPlayer
             if (windowStateModel == null)
                 return;
 
-            _windowPosition = windowStateModel.GetPosition();
-            _windowState = windowStateModel.IsMaximized ? WindowState.Maximized : WindowState.Normal;
+            _windowStateModel = windowStateModel;
 
-            _settingWidth = windowStateModel.SettingsWidth;
-            _playlistWidth = windowStateModel.PlaylistWidth;
-            _hideSettings = windowStateModel.HideSettings;
-            _hidePlaylist = windowStateModel.HidePlaylist;
-            
             RestoreWindowRect(IsInitialized);
             RestoreSidePanels(IsInitialized);
 
@@ -301,25 +295,25 @@ namespace ScriptPlayer
             if (!isInitialized)
                 return;
 
-            GirdPlaylistInner.Width = _playlistWidth;
-            GridSettingsInner.Width = _settingWidth;
+            if (_windowStateModel == null)
+                return;
 
-            HideOnHover.SetIsActive(GridPlaylist, _hidePlaylist);
-            HideOnHover.SetIsActive(GridSettings, _hideSettings);
+            GirdPlaylistInner.Width = _windowStateModel.PlaylistWidth;
+            GridSettingsInner.Width = _windowStateModel.SettingsWidth;
+
+            HideOnHover.SetIsActive(GridPlaylist, _windowStateModel.HidePlaylist);
+            HideOnHover.SetIsActive(GridSettings, _windowStateModel.HideSettings);
+
+            ExpanderPlaylist.IsExpanded = _windowStateModel.ExpandPlaylist;
+            ExpanderSettings.IsExpanded = _windowStateModel.ExpandSettings;
         }
 
         private void ViewModelOnRequestGetWindowState(object sender, RequestEventArgs<WindowStateModel> e)
         {
-            e.Value = new WindowStateModel
-            {
-                IsMaximized = _windowState == WindowState.Maximized,
-                IsFullscreen = ViewModel.IsFullscreen,
-                WindowPosition = _windowPosition,
-                SettingsWidth = _settingWidth,
-                PlaylistWidth = _playlistWidth,
-                HidePlaylist = _hidePlaylist,
-                HideSettings = _hideSettings
-            };
+            WindowStateModel stateModel = _windowStateModel.Duplicate();
+            stateModel.IsFullscreen = ViewModel.IsFullscreen;
+
+            e.Value = stateModel;
             e.Handled = true;
         }
 
@@ -562,23 +556,33 @@ namespace ScriptPlayer
 
         private void RestoreWindowRect(bool includeWindowState)
         {
-            Left = _windowPosition.Left;
-            Top = _windowPosition.Top;
-            Width = _windowPosition.Width;
-            Height = _windowPosition.Height;
+            if (_windowStateModel == null)
+                return;
+
+            Rect windowPosition = _windowStateModel.GetPosition();
+            WindowState windowState = _windowStateModel.IsMaximized ? WindowState.Maximized : WindowState.Normal;
+
+            Left = windowPosition.Left;
+            Top = windowPosition.Top;
+            Width = windowPosition.Width;
+            Height = windowPosition.Height;
 
             if(includeWindowState)
-                WindowState = _windowState;
+                WindowState = windowState;
         }
 
         private void SaveCurrentWindowRect()
         {
-            _windowState = WindowState;
+            if(_windowStateModel == null)
+                _windowStateModel = new WindowStateModel();
 
-            if (_windowState != WindowState.Normal)
-                _windowPosition = new Rect(RestoreBounds.Left, RestoreBounds.Top, RestoreBounds.Width, RestoreBounds.Height);
-            else
-                _windowPosition = new Rect(Left, Top, Width, Height);
+            _windowStateModel.IsMaximized = WindowState == WindowState.Maximized;
+
+            Rect windowRect = WindowState != WindowState.Normal 
+                ? new Rect(RestoreBounds.Left, RestoreBounds.Top, RestoreBounds.Width, RestoreBounds.Height) 
+                : new Rect(Left, Top, Width, Height);
+
+            _windowStateModel.SetPosition(windowRect);
         }
 
         private async void VideoPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
