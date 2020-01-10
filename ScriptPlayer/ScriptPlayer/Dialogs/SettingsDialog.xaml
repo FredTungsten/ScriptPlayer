@@ -8,6 +8,7 @@
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
         xmlns:dialogs="clr-namespace:ScriptPlayer.Dialogs"
+        xmlns:controls1="clr-namespace:ScriptPlayer.Controls"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
         WindowStartupLocation="CenterOwner"
         WindowStyle="ToolWindow" Loaded="SettingsDialog_OnLoaded"
@@ -69,7 +70,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Players" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Crop Video" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Style>
                     <Style TargetType="{x:Type controls:PageSelector}">
                         <Setter Property="Template">
@@ -97,6 +98,41 @@
                     </Style>
                 </controls:PageSelector.Style>
                 <controls:PageSelector.Elements>
+                    <Grid controls:PageSelector.ContentIdentifier="Crop Video">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeIcon Icon="Alternate_Crop_Solid"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <TextBlock Margin="8" Text="Video Crop can be used to hide the beatbar in CH / FH videos, hide other distracting elements or only show one side of a side-by-side video." TextWrapping="Wrap"></TextBlock>
+                            <CheckBox Margin="8" IsChecked="{Binding Settings.CropVideo}" Content="Enable Video Crop"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <DockPanel Grid.Column="1" Grid.Row="0">
+                                    <TextBlock Text="{Binding Path=Settings.CropLeft, StringFormat={}{0:P0}}" Width="35" DockPanel.Dock="Left" VerticalAlignment="Center" TextAlignment="Center"/>
+                                    <TextBlock Text="{Binding Path=Settings.CropRight, StringFormat={}{0:P0}}" Width="35"  DockPanel.Dock="Right" VerticalAlignment="Center" TextAlignment="Center"/>
+                                    <shared:RangeSlider Minimum="0.0" Maximum="1.0" Height="20" HorizontalAlignment="Stretch" LowerValue="{Binding Path=Settings.CropLeft, Mode=TwoWay}" UpperValue="{Binding Path=Settings.CropRight, Mode=TwoWay}"/>
+                                </DockPanel>
+                                <DockPanel LastChildFill="True" Grid.Row="1" Grid.Column="0" >
+                                    <TextBlock Text="{Binding Path=Settings.CropTop, StringFormat={}{0:P0}}" Width="35" DockPanel.Dock="Top" HorizontalAlignment="Center" TextAlignment="Center"/>
+                                    <TextBlock Text="{Binding Path=Settings.CropBottom, StringFormat={}{0:P0}}" Width="35"  DockPanel.Dock="Bottom" HorizontalAlignment="Center" TextAlignment="Center"/>
+                                    <shared:RangeSlider Minimum="0.0" Maximum="1.0" Height="20" HorizontalAlignment="Stretch" LowerValue="{Binding Path=Settings.CropTop, Mode=TwoWay}" UpperValue="{Binding Path=Settings.CropBottom, Mode=TwoWay}">
+                                        <shared:RangeSlider.LayoutTransform>
+                                            <RotateTransform Angle="90"></RotateTransform>
+                                        </shared:RangeSlider.LayoutTransform>
+                                    </shared:RangeSlider>
+                                </DockPanel>
+                                <controls1:CutoutPreview Grid.Row="1" Grid.Column="1" Cutout="{Binding Settings.CropRect}" VerticalAlignment="Stretch" MinHeight="240" HorizontalAlignment="Stretch"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Format Preference">
                         <controls:PageSelector.Header>
                             <controls:AwesomeIcon Icon="Star_Solid"/>

@@ -20,8 +20,8 @@ namespace ScriptPlayer.Shared.Controls
 
         public Resolution Resolution
         {
-            get { return (Resolution) GetValue(ResolutionProperty); }
-            set { SetValue(ResolutionProperty, value); }
+            get => (Resolution) GetValue(ResolutionProperty);
+            set => SetValue(ResolutionProperty, value);
         }
 
         public static readonly DependencyProperty ActualResolutionProperty = DependencyProperty.Register(
@@ -29,8 +29,8 @@ namespace ScriptPlayer.Shared.Controls
 
         public Resolution ActualResolution
         {
-            get { return (Resolution) GetValue(ActualResolutionProperty); }
-            set { SetValue(ActualResolutionProperty, value); }
+            get => (Resolution) GetValue(ActualResolutionProperty);
+            set => SetValue(ActualResolutionProperty, value);
         }
 
         public static readonly DependencyProperty VideoBrushProperty = DependencyProperty.Register(
@@ -38,14 +38,14 @@ namespace ScriptPlayer.Shared.Controls
 
         public Brush VideoBrush
         {
-            get { return (Brush) GetValue(VideoBrushProperty); }
-            set { SetValue(VideoBrushProperty, value); }
+            get => (Brush) GetValue(VideoBrushProperty);
+            set => SetValue(VideoBrushProperty, value);
         }
 
-        public static readonly DependencyProperty SideBySideProperty = DependencyProperty.Register(
-            "SideBySide", typeof(bool), typeof(MediaWrapper), new PropertyMetadata(default(bool), OnSideBySidePropertyChanged));
+        public static readonly DependencyProperty ViewPortProperty = DependencyProperty.Register(
+            "ViewPort", typeof(Rect), typeof(MediaWrapper), new PropertyMetadata(default(Rect), OnViewPortPropertyChanged));
 
-        private static void OnSideBySidePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnViewPortPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((MediaWrapper)d).OnSideBySideChanged();
         }
@@ -56,10 +56,10 @@ namespace ScriptPlayer.Shared.Controls
             UpdateResolution();
         }
 
-        public bool SideBySide
+        public Rect ViewPort
         {
-            get { return (bool) GetValue(SideBySideProperty); }
-            set { SetValue(SideBySideProperty, value); }
+            get => (Rect) GetValue(ViewPortProperty);
+            set => SetValue(ViewPortProperty, value);
         }
 
         public static readonly DependencyProperty EmptyBrushProperty = DependencyProperty.Register(
@@ -67,8 +67,8 @@ namespace ScriptPlayer.Shared.Controls
 
         public Brush EmptyBrush
         {
-            get { return (Brush) GetValue(EmptyBrushProperty); }
-            set { SetValue(EmptyBrushProperty, value); }
+            get => (Brush) GetValue(EmptyBrushProperty);
+            set => SetValue(EmptyBrushProperty, value);
         }
 
         public static readonly DependencyProperty DurationProperty = DependencyProperty.Register(
@@ -76,8 +76,8 @@ namespace ScriptPlayer.Shared.Controls
 
         public TimeSpan Duration
         {
-            get { return (TimeSpan) GetValue(DurationProperty); }
-            set { SetValue(DurationProperty, value); }
+            get => (TimeSpan) GetValue(DurationProperty);
+            set => SetValue(DurationProperty, value);
         }
 
         public double Volume
@@ -155,8 +155,8 @@ namespace ScriptPlayer.Shared.Controls
 
             Rect rect = new Rect(0, 0, 1, 1);
 
-            if (SideBySide)
-                rect = new Rect(0, 0, 0.5, 1);
+            if (!ViewPort.IsEmpty)
+                rect = ViewPort;
 
             VideoDrawing videoDrawing = new VideoDrawing
             {
@@ -278,10 +278,10 @@ namespace ScriptPlayer.Shared.Controls
 
         private void UpdateResolution()
         {
-            if (!SideBySide)
+            if (ViewPort.IsEmpty)
                 Resolution = ActualResolution;
             else
-                Resolution = new Resolution(ActualResolution.Horizontal / 2, ActualResolution.Vertical);
+                Resolution = new Resolution((int)(ActualResolution.Horizontal * ViewPort.Width), (int)(ActualResolution.Vertical * ViewPort.Height));
         }
 
         public void Dispose()

@@ -1038,6 +1038,8 @@ namespace ScriptPlayer.ViewModels
 
             InstanceHandler.CommandLineReceived += InstanceHandlerOnCommandLineReceived;
             InstanceHandler.EnableEvents();
+
+            UpdateVideoCrop();
         }
 
         private void AutoConnectButtplug()
@@ -1598,6 +1600,7 @@ namespace ScriptPlayer.ViewModels
             UpdateHeatMap();
             UpdatePatternSpeed();
             UpdateOsd();
+            UpdateVideoCrop();
         }
 
         private void UpdatePlaylistRandomChapter()
@@ -1717,7 +1720,19 @@ namespace ScriptPlayer.ViewModels
                     CheckAutoGenerateAll();
                     break;
                 }
+                case nameof(SettingsViewModel.CropRect):
+                case nameof(SettingsViewModel.CropVideo):
+                {
+                    UpdateVideoCrop();
+                    break;
+                }
             }
+        }
+
+        private void UpdateVideoCrop()
+        {
+            if(VideoPlayer != null)
+                VideoPlayer.ViewPort = Settings.CropVideo ? Settings.CropRect : Rect.Empty;
         }
 
         private void UpdateOsd()

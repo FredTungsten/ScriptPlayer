@@ -17,8 +17,8 @@ namespace ScriptPlayer.Shared
 
         public Brush InsideBrush
         {
-            get { return (Brush) GetValue(InsideBrushProperty); }
-            set { SetValue(InsideBrushProperty, value); }
+            get => (Brush) GetValue(InsideBrushProperty);
+            set => SetValue(InsideBrushProperty, value);
         }
 
         public static readonly DependencyProperty OutsideBrushProperty = DependencyProperty.Register(
@@ -26,8 +26,8 @@ namespace ScriptPlayer.Shared
 
         public Brush OutsideBrush
         {
-            get { return (Brush) GetValue(OutsideBrushProperty); }
-            set { SetValue(OutsideBrushProperty, value); }
+            get => (Brush) GetValue(OutsideBrushProperty);
+            set => SetValue(OutsideBrushProperty, value);
         }
 
         public static readonly DependencyProperty MinimumProperty = DependencyProperty.Register(
@@ -45,8 +45,8 @@ namespace ScriptPlayer.Shared
 
         public double Minimum
         {
-            get { return (double) GetValue(MinimumProperty); }
-            set { SetValue(MinimumProperty, value); }
+            get => (double) GetValue(MinimumProperty);
+            set => SetValue(MinimumProperty, value);
         }
 
         public static readonly DependencyProperty MaximumProperty = DependencyProperty.Register(
@@ -64,8 +64,8 @@ namespace ScriptPlayer.Shared
 
         public double Maximum
         {
-            get { return (double) GetValue(MaximumProperty); }
-            set { SetValue(MaximumProperty, value); }
+            get => (double) GetValue(MaximumProperty);
+            set => SetValue(MaximumProperty, value);
         }
 
         public static readonly DependencyProperty LowerValueProperty = DependencyProperty.Register(
@@ -95,8 +95,8 @@ namespace ScriptPlayer.Shared
 
         public double LowerValue
         {
-            get { return (double) GetValue(LowerValueProperty); }
-            set { SetValue(LowerValueProperty, value); }
+            get => (double) GetValue(LowerValueProperty);
+            set => SetValue(LowerValueProperty, value);
         }
 
         public static readonly DependencyProperty UpperValueProperty = DependencyProperty.Register(
@@ -164,8 +164,8 @@ namespace ScriptPlayer.Shared
 
         public double UpperValue
         {
-            get { return (double) GetValue(UpperValueProperty); }
-            set { SetValue(UpperValueProperty, value); }
+            get => (double) GetValue(UpperValueProperty);
+            set => SetValue(UpperValueProperty, value);
         }
 
         public RangeSlider()

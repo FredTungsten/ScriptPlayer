@@ -821,12 +821,13 @@
                                     <StackPanel Margin="4" ToolTip="Minimum and maximum position of the Launch. Values received from the script will be scaled accordingly.">
                                         <TextBlock Margin="0" HorizontalAlignment="Center" Text="Range"/>
                                         <shared:RangeSlider Margin="0,4" Minimum="0" Maximum="99" LowerValue="{Binding Settings.MinPosition, Mode=TwoWay}" UpperValue="{Binding Settings.MaxPosition, Mode=TwoWay}"/>
-                                        <CheckBox Margin="4" Content="Invert Positions" IsChecked="{Binding Settings.InvertPosition}"/>
-                                        <CheckBox Margin="4" Content="Enable Auto Homing" IsChecked="{Binding Settings.AutoHomingEnabled}"/>
                                         <DockPanel LastChildFill="False">
                                             <TextBlock Margin="4,0" Text="{Binding Settings.MinPosition}" DockPanel.Dock="Left"/>
                                             <TextBlock Margin="4,0" Text="{Binding Settings.MaxPosition}" DockPanel.Dock="Right"/>
                                         </DockPanel>
+                                        <CheckBox Margin="4" Content="Invert Positions" IsChecked="{Binding Settings.InvertPosition}"/>
+                                        <CheckBox Margin="4" Content="Enable Auto Homing" IsChecked="{Binding Settings.AutoHomingEnabled}"/>
+                                        
 
                                         <TextBlock Margin="0" HorizontalAlignment="Center" Text="Range Extender"/>
                                         <Slider Margin="0,4" Minimum="0" Maximum="99" Value="{Binding Settings.RangeExtender}"/>
@@ -933,6 +934,7 @@
                                     <Button Command="{Binding ExecuteSelectedTestPatternCommand}" Margin="4,0,4,4" Content="Execute Pattern" VerticalAlignment="Top"/>
                                     <CheckBox IsChecked="{Binding Settings.LogMarkers}" Margin="4" Content="Log Markers"/>
                                     <CheckBox IsChecked="{Binding BlurVideo}" Margin="4" Content="Blur Video"/>
+                                    <CheckBox IsChecked="{Binding Settings.CropVideo}" Margin="4" Content="Crop Video"/>
                                 </StackPanel>
                             </Grid>
                         </ScrollViewer>

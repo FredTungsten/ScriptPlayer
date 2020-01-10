@@ -7,11 +7,11 @@
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Range Stretcher" Height="163.03" Width="353.813">
+        Title="Range Stretcher" Height="188.261" Width="351.872">
     <Grid>
         <shared:RangeSlider Minimum="0" Maximum="99" LowerValue="{Binding Path=MinValueFrom, Mode=TwoWay}" UpperValue="{Binding Path=MaxValueFrom, Mode=TwoWay}" Height="20" Margin="112,10,50,0" VerticalAlignment="Top"/>
         <shared:RangeSlider Minimum="0" Maximum="99" LowerValue="{Binding Path=MinValueTo, Mode=TwoWay}" UpperValue="{Binding Path=MaxValueTo, Mode=TwoWay}" Height="20" Margin="112,35,50,0" VerticalAlignment="Top"/>
-        <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
+        <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="btnOk_Click"/>
         <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,14,0,0" TextWrapping="Wrap" Text="From" VerticalAlignment="Top"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,39,0,0" TextWrapping="Wrap" Text="To" VerticalAlignment="Top"/>
@@ -19,5 +19,12 @@
         <TextBlock HorizontalAlignment="Left" Margin="80,39,0,0" TextWrapping="Wrap" Text="{Binding MinValueTo}" VerticalAlignment="Top" Width="27"/>
         <TextBlock HorizontalAlignment="Left" Margin="301,14,0,0" TextWrapping="Wrap" Text="{Binding MaxValueFrom}" VerticalAlignment="Top" Width="27"/>
         <TextBlock HorizontalAlignment="Left" Margin="301,39,0,0" TextWrapping="Wrap" Text="{Binding MaxValueTo}" VerticalAlignment="Top" Width="27"/>
+        <Button Content="F" HorizontalAlignment="Left" Margin="9,0,0,10" Width="17" Click="btnFull_Click" Background="#FFFF00F3" Height="70" VerticalAlignment="Bottom"/>
+        <Button Content="T" HorizontalAlignment="Left" Margin="31,0,0,60" VerticalAlignment="Bottom" Width="17" Click="btnTop1_Click" Background="#FFFFC500"/>
+        <Button Content="B" HorizontalAlignment="Left" Margin="53,0,0,10" VerticalAlignment="Bottom" Width="17" Click="btnBottom1_Click" Background="#FF0097FF"/>
+        <Button Content="B" HorizontalAlignment="Left" Margin="31,0,0,10" VerticalAlignment="Bottom" Width="17" Click="btnBottom2_Click" Background="#FF0097FF" Height="45"/>
+        <Button Content="T" HorizontalAlignment="Left" Margin="53,0,0,35" VerticalAlignment="Bottom" Width="17" Click="btnTop2_Click" Background="#FFFFC500" Height="45"/>
+        <Button Content="C" HorizontalAlignment="Left" Margin="75,0,0,35" VerticalAlignment="Bottom" Width="17" Click="btnCenter1_Click" Background="#FFFF00F3"/>
+        <Button Content="C" HorizontalAlignment="Left" Margin="97,0,0,23" VerticalAlignment="Bottom" Width="17" Click="btnCenter2_Click" Background="#FFFF00F3" Height="44"/>
     </Grid>
 </Window>

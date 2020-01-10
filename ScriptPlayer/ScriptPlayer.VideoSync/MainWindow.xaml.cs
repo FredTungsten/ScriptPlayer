@@ -1615,6 +1615,9 @@ namespace ScriptPlayer.VideoSync
         {
             var positions = GetSelectedPositions();
 
+            if (positions.Count < 1)
+                return;
+
             RangeStretcherDialog dialog = new RangeStretcherDialog();
 
             dialog.MinValueFrom = positions.Min(p => p.Position);

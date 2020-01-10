@@ -190,6 +190,13 @@ namespace ScriptPlayer.ViewModels
         private bool _fuzzyMatchingEnabled;
         private string _fuzzyMatchingPattern;
         private string _fuzzyMatchingReplacement;
+        private double _cropLeft;
+        private double _cropRight;
+        private double _cropTop;
+        private double _cropBottom;
+        private Rect _cropRect;
+        private bool _rebuildingCropRect;
+        private bool _cropVideo;
 
         public SettingsViewModel()
         {
@@ -214,6 +221,11 @@ namespace ScriptPlayer.ViewModels
 
             FuzzyMatchingPattern = @"^(?<Title>.+?)\s?\(\d{4}\)$";
             FuzzyMatchingReplacement = @"${Title}";
+
+            CropLeft = 0;
+            CropRight = 1;
+            CropTop = 0;
+            CropBottom = 1;
         }
 
         public SettingsViewModel Duplicate()
@@ -1265,6 +1277,97 @@ namespace ScriptPlayer.ViewModels
                 _fuzzyMatchingReplacement = value;
                 OnPropertyChanged();
             }
+        }
+
+        public double CropLeft
+        {
+            get => _cropLeft;
+            set
+            {
+                if (value.Equals(_cropLeft)) return;
+                _cropLeft = value;
+                OnPropertyChanged();
+                RebuildCropRect();
+            }
+        }
+
+        public double CropRight
+        {
+            get => _cropRight;
+            set
+            {
+                if (value.Equals(_cropRight)) return;
+                _cropRight = value;
+                OnPropertyChanged();
+                RebuildCropRect();
+            }
+        }
+
+        public double CropTop
+        {
+            get => _cropTop;
+            set
+            {
+                if (value.Equals(_cropTop)) return;
+                _cropTop = value;
+                OnPropertyChanged();
+                RebuildCropRect();
+            }
+        }
+        
+        public double CropBottom
+        {
+            get => _cropBottom;
+            set
+            {
+                if (value.Equals(_cropBottom)) return;
+                _cropBottom = value;
+                OnPropertyChanged();
+                RebuildCropRect();
+            }
+        }
+
+        [XmlIgnore]
+        public Rect CropRect
+        {
+            get => _cropRect;
+            set
+            {
+                if (value.Equals(_cropRect)) return;
+                _cropRect = value;
+                OnPropertyChanged();
+
+                if (!_rebuildingCropRect)
+                {
+                    CropLeft = _cropRect.Left;
+                    CropRight = _cropRect.Right;
+                    CropTop = _cropRect.Top;
+                    CropBottom = _cropRect.Bottom;
+                }
+            }
+        }
+
+        public bool CropVideo
+        {
+            get => _cropVideo;
+            set
+            {
+                if (value == _cropVideo) return;
+                _cropVideo = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private void RebuildCropRect()
+        {
+            if (_rebuildingCropRect)
+                return;
+
+            _rebuildingCropRect = true;
+
+            CropRect = new Rect(new Point(CropLeft, CropTop), new Point(CropRight, CropBottom));
+
+            _rebuildingCropRect = false;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

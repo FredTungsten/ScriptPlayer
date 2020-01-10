@@ -37,7 +37,7 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         private void UpdateBeatCount()
         {
-            if (IsInitialized)
+            if (IsInitialized && !_multiplying)
                 SetBeatCount(TicksInPattern);
         }
 
@@ -127,6 +127,7 @@ namespace ScriptPlayer.VideoSync.Dialogs
         }
 
         private static readonly ObservableCollection<bool[]> RecentlyUsed = new ObservableCollection<bool[]>();
+        private bool _multiplying;
 
         public ObservableCollection<IndexedBoolean> Beats
         {
@@ -277,6 +278,8 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         private void btnTimes2_Click(object sender, RoutedEventArgs e)
         {
+            _multiplying = true;
+
             ObservableCollection<IndexedBoolean> newBeats = new ObservableCollection<IndexedBoolean>();
 
             for (int i = 0; i < Beats.Count; i++)
@@ -298,6 +301,8 @@ namespace ScriptPlayer.VideoSync.Dialogs
             }
 
             Beats = newBeats;
+            TicksInPattern = newBeats.Count;
+            _multiplying = false;
         }
 
         private void UpdateActiveBeatCount()
@@ -313,6 +318,8 @@ namespace ScriptPlayer.VideoSync.Dialogs
         {
             if (Beats.Count < 4)
                 return;
+
+            _multiplying = true;
 
             ObservableCollection<IndexedBoolean> newBeats = new ObservableCollection<IndexedBoolean>();
 
@@ -330,6 +337,8 @@ namespace ScriptPlayer.VideoSync.Dialogs
             }
 
             Beats = newBeats;
+            TicksInPattern = newBeats.Count;
+            _multiplying = false;
         }
     }
 

@@ -96,10 +96,11 @@ namespace ScriptPlayer.Shared
 
         private readonly MouseHider _mouseHider;
         private bool _down;
-        private Point _offset;
 
         private double _scale;
-        private bool _sideBySide;
+        private Point _offset;
+
+        private Rect _viewPort;
 
         private readonly SemaphoreSlim _seekSemaphore = new SemaphoreSlim(1, 1);
         private ulong _seekPriority;
@@ -213,14 +214,14 @@ namespace ScriptPlayer.Shared
             set => SetValue(OpenedFileProperty, value);
         }
 
-        public bool SideBySide
+        public Rect ViewPort
         {
-            get => _sideBySide;
+            get => _viewPort;
             set
             {
-                _sideBySide = value;
-                Player.SideBySide = value;
-                StandByPlayer.SideBySide = value;
+                _viewPort = value;
+                Player.ViewPort = value;
+                StandByPlayer.ViewPort = value;
             }
         }
 

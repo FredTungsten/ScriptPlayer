@@ -48,9 +48,65 @@ namespace ScriptPlayer.VideoSync.Dialogs
             InitializeComponent();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnOk_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = true;
+        }
+
+        private void btnFull_Click(object sender, RoutedEventArgs e)
+        {
+            MinValueFrom = 5;
+            MinValueTo = 5;
+            MaxValueFrom = 95;
+            MaxValueTo = 95;
+        }
+
+        private void btnTop2_Click(object sender, RoutedEventArgs e)
+        {
+            MinValueFrom = 35;
+            MinValueTo = 35;
+            MaxValueFrom = 95;
+            MaxValueTo = 95;
+        }
+
+        private void btnBottom2_Click(object sender, RoutedEventArgs e)
+        {
+            MinValueFrom = 5;
+            MinValueTo = 5;
+            MaxValueFrom = 65;
+            MaxValueTo = 65;
+        }
+
+        private void btnTop1_Click(object sender, RoutedEventArgs e)
+        {
+            MinValueFrom = 65;
+            MinValueTo = 65;
+            MaxValueFrom = 95;
+            MaxValueTo = 95;
+        }
+
+        private void btnBottom1_Click(object sender, RoutedEventArgs e)
+        {
+            MinValueFrom = 5;
+            MinValueTo = 5;
+            MaxValueFrom = 35;
+            MaxValueTo = 35;
+        }
+
+        private void btnCenter1_Click(object sender, RoutedEventArgs e)
+        {
+            MinValueFrom = 35;
+            MinValueTo = 35;
+            MaxValueFrom = 65;
+            MaxValueTo = 65;
+        }
+
+        private void btnCenter2_Click(object sender, RoutedEventArgs e)
+        {
+            MinValueFrom = 20;
+            MinValueTo = 20;
+            MaxValueFrom = 80;
+            MaxValueTo = 80;
         }
     }
 }

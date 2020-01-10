@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ScriptPlayer.Shared.Classes;
+using ScriptPlayer.Shared.Helpers;
 
 namespace ScriptPlayer.Shared
 {
@@ -82,37 +83,10 @@ namespace ScriptPlayer.Shared
             if (image == null)
                 return;
 
-            Size destSize = StretchSize(Stretch.Uniform, new Size(image.Width, image.Height), rect.Size);
-            Rect destPos = CenterInRect(destSize, rect);
+            Size destSize = ResizeHelper.StretchSize(Stretch.Uniform, new Size(image.Width, image.Height), rect.Size);
+            Rect destPos = ResizeHelper.CenterInRect(destSize, rect);
 
             drawingContext.DrawImage(image, destPos);
-        }
-
-        private Rect CenterInRect(Size destSize, Rect rect)
-        {
-            double offsetX = (rect.Width - destSize.Width) / 2;
-            double offsetY = (rect.Height - destSize.Height) / 2;
-
-            return new Rect(new Point(offsetX, offsetY), destSize);
-        }
-
-        private Size StretchSize(Stretch stretchMode, Size imageSize, Size destSize)
-        {
-            double ratio = imageSize.Width / imageSize.Height;
-
-            double resultWidth = destSize.Width;
-            double resultHeight = destSize.Height;
-
-            if (ratio * destSize.Height > destSize.Width)
-            {
-                resultHeight = destSize.Width / ratio;
-            }
-            else
-            {
-                resultWidth = destSize.Height * ratio;
-            }
-
-            return new Size(resultWidth, resultHeight);
         }
     }
 }
