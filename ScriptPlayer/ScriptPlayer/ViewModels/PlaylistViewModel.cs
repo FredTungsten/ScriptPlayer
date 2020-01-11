@@ -102,7 +102,7 @@ namespace ScriptPlayer.ViewModels
             UpdateFilter();
             CommandManager.InvalidateRequerySuggested();
             UpdateTotalDuration();
-            UpdateNextAndPreviousIfNull();
+            UpdateNextAndPrevious();
             OnEntriesChanged(filesAdded);
         }
 
@@ -259,8 +259,22 @@ namespace ScriptPlayer.ViewModels
 
         private void UpdateNextAndPrevious()
         {
-            PreviousEntry = GetPreviousEntry();
-            NextEntry = GetNextEntry();
+            if(Shuffle)
+                UpdateNextAndPreviousIfNull();
+            else
+            {
+                PreviousEntry = GetPreviousEntry();
+                NextEntry = GetNextEntry();
+            }
+        }
+
+        private void UpdateNextAndPreviousIfNull()
+        {
+            if (NextEntry == null)
+                NextEntry = GetNextEntry();
+
+            if (PreviousEntry == null || PreviousEntry == NextEntry)
+                PreviousEntry = GetPreviousEntry();
         }
 
         public PlaylistEntry SelectedEntry
@@ -631,6 +645,18 @@ namespace ScriptPlayer.ViewModels
             return !SelectionIsEmpty();
         }
 
+        public void Clear()
+        {
+            foreach (var entry in Entries)
+                entry.Removed = true;
+
+            Entries.Clear();
+            _previousEntries.Clear();
+            PreviousEntry = null;
+            NextEntry = null;
+            CommandManager.InvalidateRequerySuggested();
+        }
+
         private void ExecuteRemoveSelectedEntry()
         {
             if (!CanRemoveSelectedEntry())
@@ -808,15 +834,6 @@ namespace ScriptPlayer.ViewModels
             AddEntries(filenames.Select(fn => new PlaylistEntry(fn)));
         }
 
-        private void UpdateNextAndPreviousIfNull()
-        {
-            if (NextEntry == null)
-                NextEntry = GetNextEntry();
-
-            if (PreviousEntry == null || PreviousEntry == NextEntry)
-                PreviousEntry = GetPreviousEntry();
-        }
-
         public void AddEntries(IEnumerable<PlaylistEntry> entries)
         {
             try
@@ -840,19 +857,7 @@ namespace ScriptPlayer.ViewModels
                 DeferLoading = false;
             }
         }
-
-        public void Clear()
-        {
-            foreach (var entry in Entries)
-                entry.Removed = true;
-
-            Entries.Clear();
-            _previousEntries.Clear();
-            PreviousEntry = null;
-            NextEntry = null;
-            CommandManager.InvalidateRequerySuggested();
-        }
-
+        
         public void SetCurrentEntry(string[] files)
         {
             PlaylistEntry existingEntry = GetEntry(files);
