@@ -323,7 +323,7 @@ namespace ScriptPlayer.Shared
 
         public static string GetDownloadUrl()
         {
-            return "https://github.com/intiface/intiface-desktop/releases/tag/v13.0.0";
+            return "https://github.com/intiface/intiface-desktop/releases/";
             //return "https://github.com/buttplugio/buttplug-windows-suite/releases/tag/" + GetButtplugApiVersion();
         }
 
