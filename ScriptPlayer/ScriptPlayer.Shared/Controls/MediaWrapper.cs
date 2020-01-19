@@ -43,7 +43,7 @@ namespace ScriptPlayer.Shared.Controls
         }
 
         public static readonly DependencyProperty ViewPortProperty = DependencyProperty.Register(
-            "ViewPort", typeof(Rect), typeof(MediaWrapper), new PropertyMetadata(default(Rect), OnViewPortPropertyChanged));
+            "ViewPort", typeof(Rect), typeof(MediaWrapper), new PropertyMetadata(new Rect(0,0,1,1), OnViewPortPropertyChanged));
 
         private static void OnViewPortPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {

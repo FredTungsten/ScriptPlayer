@@ -1451,11 +1451,13 @@ namespace ScriptPlayer.VideoSync
                         if (control && shift)
                             ShiftTime(TimeSpan.FromMilliseconds(multiplier * 100));
                         else if (control)
-                            ShiftTime(BeatBarDuration.Multiply(multiplier / 2.0));
+                            ShiftTime(TimeSpan.FromMilliseconds(multiplier * 1000));
                         else if (shift)
                             ShiftTime(TimeSpan.FromMilliseconds(multiplier * 20));
                         else
-                            ShiftTime(TimeSpan.FromMilliseconds(multiplier * 1000));
+                            ShiftTime(BeatBarDuration.Multiply(multiplier / 2.0));
+
+
                         break;
                     }
                 case Key.N:
