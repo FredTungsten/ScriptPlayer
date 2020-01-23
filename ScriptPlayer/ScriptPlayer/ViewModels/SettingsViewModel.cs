@@ -197,6 +197,7 @@ namespace ScriptPlayer.ViewModels
         private Rect _cropRect;
         private bool _rebuildingCropRect;
         private bool _cropVideo;
+        private bool _autoReloadScript;
 
         public SettingsViewModel()
         {
@@ -1354,6 +1355,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _cropVideo) return;
                 _cropVideo = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AutoReloadScript
+        {
+            get => _autoReloadScript;
+            set
+            {
+                if (value == _autoReloadScript) return;
+                _autoReloadScript = value;
                 OnPropertyChanged();
             }
         }

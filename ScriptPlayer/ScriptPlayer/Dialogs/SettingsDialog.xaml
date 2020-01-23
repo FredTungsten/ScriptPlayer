@@ -321,6 +321,7 @@
                             <controls:AwesomeIcon Icon="Bug_Solid"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
+                            <CheckBox Margin="4" IsChecked="{Binding Settings.AutoReloadScript}" Content="Auto Reload Script"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ShowHeatMap}" Content="Show Heat Map"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.ShowScriptPositions}" Content="Show Script Positions"/>
                             <CheckBox Margin="4" IsChecked="{Binding Settings.LogMarkers}" Content="Log Markers"/>

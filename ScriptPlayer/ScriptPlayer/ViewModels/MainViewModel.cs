@@ -153,6 +153,7 @@ namespace ScriptPlayer.ViewModels
                 OnPropertyChanged(nameof(LoadedFiles));
 
                 Playlist.SetCurrentEntry(LoadedFiles);
+                UpdateAutoReloadScript();
             }
         }
 
@@ -300,6 +301,7 @@ namespace ScriptPlayer.ViewModels
         private IOnScreenDisplay[] _usedOsds;
         private string _previouslyOpenedVideoFile = "";
         private bool _isFullscreen;
+        private FileSystemWatcher _fileWatcher;
 
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
@@ -1601,6 +1603,7 @@ namespace ScriptPlayer.ViewModels
             UpdatePatternSpeed();
             UpdateOsd();
             UpdateVideoCrop();
+            UpdateAutoReloadScript();
         }
 
         private void UpdatePlaylistRandomChapter()
@@ -1726,6 +1729,49 @@ namespace ScriptPlayer.ViewModels
                     UpdateVideoCrop();
                     break;
                 }
+                case nameof(SettingsViewModel.AutoReloadScript):
+                {
+                    UpdateAutoReloadScript();
+                    break;
+                }
+            }
+        }
+
+        private void UpdateAutoReloadScript()
+        {
+            StopFileWatcher();
+
+            if (!Settings.AutoReloadScript)
+                return;
+
+            if(!string.IsNullOrEmpty(LoadedScript))
+                StartFileWatcher(LoadedScript);
+        }
+
+        private void StartFileWatcher(string file)
+        {
+            string path = Path.GetDirectoryName(file);
+            string filename = Path.GetFileName(file);
+            _fileWatcher = new FileSystemWatcher(path, filename);
+            _fileWatcher.Changed += FileWatcherOnChanged;
+            _fileWatcher.Created += FileWatcherOnChanged;
+            _fileWatcher.Deleted += FileWatcherOnChanged;
+            _fileWatcher.EnableRaisingEvents = true;
+        }
+
+        private void FileWatcherOnChanged(object sender, FileSystemEventArgs fileSystemEventArgs)
+        {
+            Thread.Sleep(100);
+            if (Application.Current.Dispatcher != null)
+                Application.Current.Dispatcher.BeginInvoke(new Action(ReloadScript));
+        }
+
+        private void StopFileWatcher()
+        {
+            if (_fileWatcher != null)
+            {
+                _fileWatcher.Dispose();
+                _fileWatcher = null;
             }
         }
 
