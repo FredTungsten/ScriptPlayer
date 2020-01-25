@@ -1203,6 +1203,7 @@ namespace ScriptPlayer.ViewModels
                 oldValue.ProgressChanged -= TimeSourceOnProgressChanged;
                 oldValue.DurationChanged -= TimeSourceOnDurationChanged;
                 oldValue.PlaybackRateChanged -= TimeSourceOnPlaybackRateChanged;
+                oldValue.IsPlayingChanged -= TimeSourceIsPlayingChanged;
             }
 
             if (newValue != null)
@@ -1210,7 +1211,14 @@ namespace ScriptPlayer.ViewModels
                 newValue.ProgressChanged += TimeSourceOnProgressChanged;
                 newValue.DurationChanged += TimeSourceOnDurationChanged;
                 newValue.PlaybackRateChanged += TimeSourceOnPlaybackRateChanged;
+                newValue.IsPlayingChanged += TimeSourceIsPlayingChanged;
             }
+        }
+
+        private void TimeSourceIsPlayingChanged(object sender, bool playing)
+        {
+            if(!playing)
+                AutoHomeDevices();
         }
 
         private void TimeSourceOnPlaybackRateChanged(object sender, double d)
@@ -1964,7 +1972,6 @@ namespace ScriptPlayer.ViewModels
                 StopDevices();
                 TimeSource.Pause();
                 StopDevices();
-                AutoHomeDevices();
                 
                 if (Settings.NotifyPlayPause)
                     OsdShowMessage("Pause", TimeSpan.FromSeconds(2), "Playback");
