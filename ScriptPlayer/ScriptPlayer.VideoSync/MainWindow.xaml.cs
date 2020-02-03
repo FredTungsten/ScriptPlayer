@@ -1460,6 +1460,32 @@ namespace ScriptPlayer.VideoSync
 
                         break;
                     }
+                case Key.C:
+                    {
+                        //if (shift)
+                        //    EnforceCommonBeatDuration();
+                        //else
+                        //    FindCommonBeatDuration();
+                        //break;
+                        if (control)
+                            CopyBeats();
+                        break;
+                    }
+                case Key.D:
+                {
+                    StretchSelection();
+                    break;
+                }
+                case Key.E:
+                    {
+                        EqualizeBeatLengths();
+                        break;
+                    }
+                case Key.F:
+                    {
+                        Fade();
+                        break;
+                    }
                 case Key.N:
                     {
                         Normalize();
@@ -1478,27 +1504,6 @@ namespace ScriptPlayer.VideoSync
                 case Key.R:
                     {
                         ChangeRange();
-                        break;
-                    }
-                case Key.F:
-                    {
-                        Fade();
-                        break;
-                    }
-                case Key.C:
-                    {
-                        //if (shift)
-                        //    EnforceCommonBeatDuration();
-                        //else
-                        //    FindCommonBeatDuration();
-                        //break;
-                        if (control)
-                            CopyBeats();
-                        break;
-                    }
-                case Key.E:
-                    {
-                        EqualizeBeatLengths();
                         break;
                     }
                 case Key.S:
@@ -1611,6 +1616,26 @@ namespace ScriptPlayer.VideoSync
 
             if (handled)
                 e.Handled = true;
+        }
+
+        private void StretchSelection()
+        {
+            var beats = GetSelectedBeats();
+
+            if (beats.Count < 2)
+                return;
+
+            double stretchByMs = GetDouble(0, "Stretch total duration by [ms]");
+            if (double.IsNaN(stretchByMs))
+                return;
+
+            TimeSpan first = beats.First();
+            TimeSpan last = beats.Last();
+            TimeSpan duration = last - first;
+            TimeSpan newDuration = duration + TimeSpan.FromMilliseconds(stretchByMs);
+
+            var newbeats = beats.Select(b => (b - first).Multiply(newDuration.Divide(duration)) + first).ToList();
+            SetSelectedBeats(newbeats);
         }
 
         private void ChangeRange()
@@ -2666,7 +2691,7 @@ namespace ScriptPlayer.VideoSync
                             byte newHigh = GetEasedValue(progressHigh, maxValueFrom, maxValueTo, easing);
 
                             TimedPosition action = positions[i].Duplicate();
-                            
+
                             if (positions[i].Position == lowest)
                             {
                                 action.Position = newLow;
@@ -2706,7 +2731,7 @@ namespace ScriptPlayer.VideoSync
             double easedProgress = easing?.Ease(progress) ?? progress;
             double easedValue = easedProgress * minValueTo + (1 - easedProgress) * minValueFrom;
 
-            return (byte) Math.Min(99, Math.Max(0, Math.Round(easedValue)));
+            return (byte)Math.Min(99, Math.Max(0, Math.Round(easedValue)));
         }
     }
 }

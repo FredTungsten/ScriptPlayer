@@ -2560,6 +2560,18 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Decrease Playback Rate"
             });
 
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseFilterRange)
+            {
+                CommandId = "IncreaseFilterRange",
+                DisplayText = "Increase Filter Range"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreaseFilterRange)
+            {
+                CommandId = "DecreaseFilterRange",
+                DisplayText = "Decrease Filter Range"
+            });
+
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseScriptDelay)
             {
                 CommandId = "IncreaseScriptDelay",
@@ -2665,6 +2677,22 @@ namespace ScriptPlayer.ViewModels
                     GlobalCommandManager.GetShortcut(Key.MediaPreviousTrack, ModifierKeys.None, true)
                 }
             });
+        }
+
+        private void DecreaseFilterRange()
+        {
+            ChangeFilterRange(-0.05);
+        }
+
+        private void IncreaseFilterRange()
+        {
+            ChangeFilterRange(0.05);
+        }
+
+        private void ChangeFilterRange(double d)
+        {
+            Settings.FilterRange = Math.Max(0.1, Math.Min(0.9, Settings.FilterRange + d));
+            OsdShowMessage($"Filter Range: {Settings.FilterRange:p0}", TimeSpan.FromSeconds(2), "FilterRange");
         }
 
         private void ShowGeneratorProgress()
