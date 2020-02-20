@@ -490,7 +490,7 @@ namespace ScriptPlayer.ViewModels
 
         private void PlaylistOnRequestGeneratePreviews(object sender, string[] videos)
         {
-            GeneratePreviews(videos);
+            GeneratePreviews(false, videos);
         }
 
         private void Playlist_RequestScriptFileName(object sender, RequestEventArgs<string> e)
@@ -4788,7 +4788,7 @@ namespace ScriptPlayer.ViewModels
             if (!IsVideoLoaded())
                 return;
 
-            GeneratePreviews(LoadedVideo);
+            GeneratePreviews(true, LoadedVideo);
         }
 
         public void GenerateHeatmapForLoadedVideo()
@@ -4993,12 +4993,31 @@ namespace ScriptPlayer.ViewModels
             AutoShowGeneratorProgress();
         }
 
-        private void GeneratePreviews(params string[] videos)
+        private void GeneratePreviews(bool currentlyLoaded, params string[] videos)
         {
             if (!CheckFfmpeg())
                 return;
 
             PreviewGeneratorSettings settings = _lastPreviewSettings?.Duplicate();
+
+            if (currentlyLoaded)
+            {
+                if (_loopA != TimeSpan.MinValue && _loopB != TimeSpan.MinValue)
+                {
+                    if(settings == null)
+                        settings = new PreviewGeneratorSettings();
+
+                    TimeSpan tFrom = _loopB > _loopA ? _loopA : _loopB;
+                    TimeSpan tTo = _loopB > _loopA ? _loopB : _loopA;
+
+                    settings.TimeFrames.Add(new TimeFrame
+                    {
+                        StartTimeSpan = tFrom,
+                        Duration = tTo - tFrom
+                    });
+                }
+            }
+
             settings = OnRequestPreviewGeneratorSettings(settings);
 
             if (settings == null)
@@ -5017,7 +5036,8 @@ namespace ScriptPlayer.ViewModels
                 PreviewGeneratorSettings videoSettings = settings.Duplicate();
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, ".gif");
-                videoSettings.GenerateRelativeTimeFrames(12, TimeSpan.FromSeconds(0.8));
+
+                //videoSettings.GenerateRelativeTimeFrames(12, TimeSpan.FromSeconds(0.8));
 
                 PreviewGenerator generator = new PreviewGenerator(Settings.FfmpegPath);
 

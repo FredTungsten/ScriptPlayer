@@ -47,7 +47,7 @@
         <TextBox HorizontalAlignment="Left" Height="19" Margin="82,125,0,0" TextWrapping="Wrap" Text="{Binding Start}" VerticalAlignment="Top" Width="74"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,150,0,0" TextWrapping="Wrap" Text="Duration" VerticalAlignment="Top"/>
         <TextBox HorizontalAlignment="Left" Height="19" Margin="82,149,0,0" TextWrapping="Wrap" Text="{Binding Duration}" VerticalAlignment="Top" Width="74"/>
-        <RadioButton Content="Single Section" HorizontalAlignment="Left" Margin="10,102,0,0" VerticalAlignment="Top"/>
+        <RadioButton Name="rbSingleSection" Content="Single Section" HorizontalAlignment="Left" Margin="10,102,0,0" VerticalAlignment="Top"/>
         <RadioButton IsChecked="True" Name="rbMultiSections"  Content="Multiple Sections" HorizontalAlignment="Left" Margin="188,102,0,0" VerticalAlignment="Top"/>
 
         <TextBlock HorizontalAlignment="Left" Margin="188,126,0,0" TextWrapping="Wrap" Text="Count" VerticalAlignment="Top"/>
