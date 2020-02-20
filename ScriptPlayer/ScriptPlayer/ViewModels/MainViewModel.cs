@@ -3531,6 +3531,10 @@ namespace ScriptPlayer.ViewModels
                     }
                 case SkipState.Gap:
                     {
+                        if(!Settings.FillGaps)
+                        {
+                            AutoHomeDevices();
+                        }
                         if (Settings.AutoSkip || Settings.RandomChapters)
                         {
                             SkipToNextEvent();
