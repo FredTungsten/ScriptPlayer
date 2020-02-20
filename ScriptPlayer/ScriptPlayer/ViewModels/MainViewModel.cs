@@ -3695,7 +3695,6 @@ namespace ScriptPlayer.ViewModels
 
         private void StopDevices()
         {
-            Debug.WriteLine("Stopping devices!");
             foreach (Device device in _devices.ToList())
                 device.Stop();
         }
