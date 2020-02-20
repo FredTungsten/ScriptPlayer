@@ -1218,7 +1218,10 @@ namespace ScriptPlayer.ViewModels
         private void TimeSourceIsPlayingChanged(object sender, bool playing)
         {
             if(!playing)
+            {
+                StopDevices();
                 AutoHomeDevices();
+            }
         }
 
         private void TimeSourceOnPlaybackRateChanged(object sender, double d)
@@ -1969,9 +1972,7 @@ namespace ScriptPlayer.ViewModels
         {
             if (EntryLoaded())
             {
-                StopDevices();
                 TimeSource.Pause();
-                StopDevices();
                 
                 if (Settings.NotifyPlayPause)
                     OsdShowMessage("Pause", TimeSpan.FromSeconds(2), "Playback");
@@ -1983,7 +1984,7 @@ namespace ScriptPlayer.ViewModels
             if (!Settings.AutoHomingEnabled) return;
 
             TimeSpan duration = TimeSpan.FromMilliseconds(500);
-            byte currentPos = ((byte)(CurrentPosition*100.0));
+            byte currentPos = (byte)(CurrentPosition*100.0);
             byte homePos = 0;
             DeviceCommandInformation homeInfo = new DeviceCommandInformation
             {
@@ -2001,7 +2002,6 @@ namespace ScriptPlayer.ViewModels
 
             homeInfo.SpeedOriginal = SpeedPredictor.PredictSpeed2(homeInfo.PositionFromOriginal, homeInfo.PositionToOriginal, duration);
             homeInfo.SpeedTransformed = ClampSpeed(SpeedPredictor.PredictSpeed2(homeInfo.PositionFromTransformed, homeInfo.PositionToTransformed, duration));
-
 
             SetDevices(homeInfo, false);
         }
@@ -3667,6 +3667,7 @@ namespace ScriptPlayer.ViewModels
 
         private void StopDevices()
         {
+            Debug.WriteLine("Stopping devices!");
             foreach (Device device in _devices.ToList())
                 device.Stop();
         }
