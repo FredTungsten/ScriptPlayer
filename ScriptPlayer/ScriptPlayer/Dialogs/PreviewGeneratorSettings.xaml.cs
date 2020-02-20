@@ -132,10 +132,21 @@ namespace ScriptPlayer.Dialogs
             FrameAutoHeight = initialSettings.Height <= 0;
             FrameRate = initialSettings.Framerate;
             SkipExisting = initialSettings.SkipIfExists;
-            Start = TimeSpan.Zero;
-            Duration = TimeSpan.FromSeconds(5);   
 
             InitializeComponent();
+
+            if (initialSettings.TimeFrames.Count != 1)
+            {
+                Start = TimeSpan.Zero;
+                Duration = TimeSpan.FromSeconds(5);
+            }
+            else
+            {
+                Start = initialSettings.TimeFrames[0].StartTimeSpan;
+                Duration = initialSettings.TimeFrames[0].Duration;
+
+                rbSingleSection.IsChecked = true;
+            }
         }
 
         private void BtnOk_Click(object sender, RoutedEventArgs e)
