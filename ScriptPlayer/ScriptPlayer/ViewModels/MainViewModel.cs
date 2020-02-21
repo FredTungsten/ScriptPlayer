@@ -3531,16 +3531,16 @@ namespace ScriptPlayer.ViewModels
                     }
                 case SkipState.Gap:
                     {
-                        if(!Settings.FillGaps)
-                        {
-                            AutoHomeDevices();
-                        }
                         if (Settings.AutoSkip || Settings.RandomChapters)
                         {
                             SkipToNextEvent();
                         }
                         else
                         {
+                            if(!Settings.FillGaps)
+                            {
+                                AutoHomeDevices();
+                            }
                             if (Settings.NotifyGaps)
                                 OsdShowMessage($"Next event in {timeToNextOriginalEvent.TotalSeconds:f0}s",
                                     TimeSpan.FromSeconds(4), "Events");
