@@ -462,7 +462,6 @@ namespace ScriptPlayer.Shared
                         Connect();
                         SetConnected(true);
                     }
-                    Console.WriteLine("msg: " + result);
                     try
                     {
                         handle_msg(result);
@@ -546,7 +545,6 @@ namespace ScriptPlayer.Shared
                 client.Headers[HttpRequestHeader.ContentType] = "application/json";
 
                 var result = client.UploadString(baseUrl, "POST", json);
-                Console.WriteLine("request: " + result);
                 response = result;
                 SetConnected(true);
                 return true;
