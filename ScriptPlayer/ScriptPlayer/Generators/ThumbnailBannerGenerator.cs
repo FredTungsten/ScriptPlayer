@@ -38,7 +38,7 @@ namespace ScriptPlayer.Generators
                 data.Images[i] = new ThumbnailBannerGeneratorImage
                 {
                     Image = CreateImage(800, 600, Brushes.DimGray),
-                    Position = TimeSpan.FromMinutes(i)
+                    Position = TimeSpan.FromSeconds(123 * i)
                 };
 
             return CreateBanner(data);
@@ -141,7 +141,14 @@ namespace ScriptPlayer.Generators
                         dc.DrawRectangle(borderBrush, null, borderRect);
                         dc.DrawImage(data.Images[index].Image, imageRect);
 
-                        FormattedText text = CreateText(data.Images[index].Position.ToString("mm\\:ss"), typefaceBold, fontSize);
+                        TimeSpan position = data.Images[index].Position;
+                        string durationString;
+                        if (position >= TimeSpan.FromHours(1))
+                            durationString = position.ToString("h\\:mm\\:ss");
+                        else
+                            durationString = position.ToString("mm\\:ss");
+
+                        FormattedText text = CreateText(durationString, typefaceBold, fontSize);
 
                         Point origin = new Point(x + imageWidth - textSpacing - text.Width, y + imageHeight - textSpacing - text.Height);
                         
