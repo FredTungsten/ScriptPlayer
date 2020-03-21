@@ -13,6 +13,7 @@ using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
 using ScriptPlayer.Generators;
 using ScriptPlayer.Shared.Classes;
+using ScriptPlayer.Shared.Helpers;
 using Application = System.Windows.Application;
 using DataFormats = System.Windows.DataFormats;
 using DragEventArgs = System.Windows.DragEventArgs;
@@ -507,6 +508,8 @@ namespace ScriptPlayer
                 Height = screenBounds.Height;
                 Left = screenBounds.Left;
                 Top = screenBounds.Top;
+
+                var offset = this.PointFromScreen(new System.Windows.Point(0, 0));
                 
                 HideOnHover.SetIsActive(MnuMain, true);
                 HideOnHover.SetIsActive(PlayerControls, true);

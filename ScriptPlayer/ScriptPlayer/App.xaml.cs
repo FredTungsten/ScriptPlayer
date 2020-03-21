@@ -17,13 +17,13 @@ namespace ScriptPlayer
     {
         public App()
         {
-            if (AppDomain.CurrentDomain.FriendlyName.EndsWith(".vshost.exe")) return;
-            {
-                Application.Current.DispatcherUnhandledException += CurrentOnDispatcherUnhandledException;
-                AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
-            }
+            if (AppDomain.CurrentDomain.FriendlyName.EndsWith(".vshost.exe"))
+                return;
 
-            if(!InstanceHandler.Startup("ScriptPlayer-Instance", "ScriptPlayer-CommandLinePipe"))
+            Application.Current.DispatcherUnhandledException += CurrentOnDispatcherUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+
+            if (!InstanceHandler.Startup("ScriptPlayer-Instance", "ScriptPlayer-CommandLinePipe"))
                 Environment.Exit(0);
         }
 
