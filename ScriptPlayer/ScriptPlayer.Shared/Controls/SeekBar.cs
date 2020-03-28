@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -93,6 +94,8 @@ namespace ScriptPlayer.Shared
         private StackPanel _stack;
         private ThumbnailPreview _img;
         private PositionBar _pos;
+        private double _calculatedHorizontalOffset;
+        private Window _window;
 
         static SeekBar()
         {
@@ -102,6 +105,7 @@ namespace ScriptPlayer.Shared
 
         public SeekBar()
         {
+            ClipToBounds = true;
             InitializePopup();
         }
 
@@ -183,7 +187,8 @@ namespace ScriptPlayer.Shared
             _popup = new Popup
             {
                 IsOpen = false,
-                Placement = PlacementMode.Top,
+                Placement = PlacementMode.Custom,
+                CustomPopupPlacementCallback = CustomPopupPlacementCallback,
                 PlacementTarget = this,
                 Child = border
             };
@@ -306,7 +311,11 @@ namespace ScriptPlayer.Shared
 
         private void UpdatePopup(Point point)
         {
-            if (Duration == TimeSpan.Zero) return;
+            if (Duration == TimeSpan.Zero)
+                return;
+
+            if (_window == null)
+                _window = Window.GetWindow(this);
 
             double relativePosition = GetRelativePosition(point.X);
             TimeSpan absolutePosition = Duration.Multiply(relativePosition);
@@ -333,9 +342,31 @@ namespace ScriptPlayer.Shared
                 _pos.Visibility = Visibility.Collapsed;
             }
 
+            _calculatedHorizontalOffset = relativePosition * ActualWidth -
+                                          ((FrameworkElement)_popup.Child).ActualWidth / 2.0;
+
+            _popup.VerticalOffset = 1 - _popup.VerticalOffset;
+
             _popup.IsOpen = true;
-            _popup.HorizontalOffset = relativePosition * ActualWidth -
-                                      ((FrameworkElement) _popup.Child).ActualWidth / 2.0;
+        }
+
+        private CustomPopupPlacement[] CustomPopupPlacementCallback(Size popupSize, Size targetSize, Point offset)
+        {
+            Debug.WriteLine($"Size: {popupSize.Width:f0} x {popupSize.Height:f0}, offset = {offset.X:f0}/{offset.Y:f0}");
+            Debug.WriteLine($"x = {offset.X} - {offset.X + popupSize.Width}");
+
+            double verticalOffset = -popupSize.Height - offset.Y;
+            double horizontalOffset = _calculatedHorizontalOffset - offset.X;
+
+            double left = _window.TranslatePoint(new Point(0, 0), this).X;
+            double right = _window.TranslatePoint(new Point(_window.ActualWidth, 0), this).X - popupSize.Width;
+
+            horizontalOffset = Math.Min(right, Math.Max(left, horizontalOffset));
+
+            return new[]
+            {
+                new CustomPopupPlacement(new Point(horizontalOffset, verticalOffset), PopupPrimaryAxis.Horizontal), 
+            };
         }
 
         private double GetRelativePosition(double x)
