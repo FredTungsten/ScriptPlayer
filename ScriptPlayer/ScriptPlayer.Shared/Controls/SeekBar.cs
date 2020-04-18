@@ -352,8 +352,8 @@ namespace ScriptPlayer.Shared
 
         private CustomPopupPlacement[] CustomPopupPlacementCallback(Size popupSize, Size targetSize, Point offset)
         {
-            Debug.WriteLine($"Size: {popupSize.Width:f0} x {popupSize.Height:f0}, offset = {offset.X:f0}/{offset.Y:f0}");
-            Debug.WriteLine($"x = {offset.X} - {offset.X + popupSize.Width}");
+            //Debug.WriteLine($"Size: {popupSize.Width:f0} x {popupSize.Height:f0}, offset = {offset.X:f0}/{offset.Y:f0}");
+            //Debug.WriteLine($"x = {offset.X} - {offset.X + popupSize.Width}");
 
             double verticalOffset = -popupSize.Height - offset.Y;
             double horizontalOffset = _calculatedHorizontalOffset - offset.X;

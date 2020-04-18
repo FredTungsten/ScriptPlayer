@@ -465,7 +465,7 @@ namespace ScriptPlayer.Shared
             _frames = new GifFrame[decoder.Frames.Count];
 
             LoadState = LoadStates.BasicInformation;
-            Debug.WriteLine($"Basic Decode done after {(DateTime.Now - start).TotalMilliseconds:f2}");
+            //Debug.WriteLine($"Basic Decode done after {(DateTime.Now - start).TotalMilliseconds:f2}");
 
             int duration = 0;
 
@@ -514,12 +514,12 @@ namespace ScriptPlayer.Shared
                     continue;
 
                 LoadState = LoadStates.FirstFrame;
-                Debug.WriteLine($"First Frame done after {(DateTime.Now - start).TotalMilliseconds:f2}");
+                //Debug.WriteLine($"First Frame done after {(DateTime.Now - start).TotalMilliseconds:f2}");
             }
 
             Duration = TimeSpan.FromMilliseconds(duration);
             LoadState = LoadStates.Complete;
-            Debug.WriteLine($"All Decode done after {(DateTime.Now - start).TotalMilliseconds:f2}");
+            //Debug.WriteLine($"All Decode done after {(DateTime.Now - start).TotalMilliseconds:f2}");
         }
 
         public void CancelLoad()
@@ -529,7 +529,7 @@ namespace ScriptPlayer.Shared
                 if (_source == null)
                     return;
 
-                Debug.WriteLine("CANCEL LOAD");
+                //Debug.WriteLine("CANCEL LOAD");
                 _source.Cancel(false);
                 _source = null;
             }
