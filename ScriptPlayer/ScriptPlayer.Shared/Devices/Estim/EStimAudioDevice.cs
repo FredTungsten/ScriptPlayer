@@ -14,6 +14,8 @@ namespace ScriptPlayer.Shared.Devices
 
         public EStimAudioDevice(DirectSoundDeviceInfo device, EstimParameters parameters)
         {
+            Name = device.Description;
+
             _parameters = parameters;
 
             _generator = new SineWaveProvider();
