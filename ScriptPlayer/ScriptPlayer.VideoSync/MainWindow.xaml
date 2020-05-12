@@ -122,7 +122,7 @@
                         <RowDefinition Height="9*"/>
                         <RowDefinition Height="5"/>
                         <RowDefinition Height="32"/>
-                        <RowDefinition Height="50"/>
+                        <RowDefinition Height="100"/>
                     </Grid.RowDefinitions>
 
                     <Rectangle Grid.Row="0" Grid.RowSpan="3" Fill="#FF131313"></Rectangle>
@@ -141,7 +141,7 @@
 
                     <shared:PositionBar Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
                                     Midpoint="{Binding BeatBarCenter}" 
-                    LineColor="Lime" Background="Black" Height="50" Grid.Row="3" TotalDisplayedDuration="{Binding BeatBarDuration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Positions="{Binding Positions}"/>
+                    LineColor="Lime" Background="Black" Height="Auto" Grid.Row="3" TotalDisplayedDuration="{Binding BeatBarDuration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Positions="{Binding Positions}"/>
                 </Grid>
             </HeaderedContentControl>
 

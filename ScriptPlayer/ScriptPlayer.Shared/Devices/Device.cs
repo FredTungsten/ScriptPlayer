@@ -131,5 +131,10 @@ namespace ScriptPlayer.Shared
         {
             Close();
         }
+
+        public virtual void SetMinCommandDelay(TimeSpan settingsCommandDelay)
+        {
+            MinDelayBetweenCommands = settingsCommandDelay;
+        }
     }
 }

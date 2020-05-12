@@ -21,7 +21,9 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
+using ScriptPlayer.Dialogs;
 using ScriptPlayer.Generators;
+using ScriptPlayer.Shared.Devices;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -369,6 +371,8 @@ namespace ScriptPlayer.ViewModels
                 // Only initialize LaunchFinder on Win10 15063+
                 InitializeLaunchFinder();
             }
+
+            InitializeEstimController();
 
             InitializeScriptHandler();
             GeneratePatterns();
@@ -1520,6 +1524,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand ConnectLaunchDirectlyCommand { get; set; }
 
+        public ScriptplayerCommand AddEstimAudioCommand { get; set; }
+
         public ScriptplayerCommand AddScriptsToPlaylistCommand { get; set; }
 
         public ScriptplayerCommand AddFolderToPlaylistCommand { get; set; }
@@ -1909,7 +1915,7 @@ namespace ScriptPlayer.ViewModels
             _scriptHandler.MinIntermediateCommandDuration = Settings.CommandDelay;
             foreach (Device device in _devices)
             {
-                device.MinDelayBetweenCommands = Settings.CommandDelay;
+                device.SetMinCommandDelay(Settings.CommandDelay);
             }
 
             foreach (var buttplugAdapter in _controllers.OfType<ButtplugAdapter>())
@@ -2428,6 +2434,12 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Connect Launch Directly"
             };
 
+            AddEstimAudioCommand = new ScriptplayerCommand(AddEstimAudioDevice)
+            {
+                CommandId = "AddEstimAudioDevice",
+                DisplayText = "Add E-Stim Audio Device"
+            };
+
             ConnectButtplugCommand = new ScriptplayerCommand(ConnectButtplug)
             {
                 CommandId = "ConnectButtplug",
@@ -2677,6 +2689,19 @@ namespace ScriptPlayer.ViewModels
                     GlobalCommandManager.GetShortcut(Key.MediaPreviousTrack, ModifierKeys.None, true)
                 }
             });
+        }
+
+        private void AddEstimAudioDevice()
+        {
+            var controller = _controllers.OfType<EStimAudioController>().FirstOrDefault();
+
+            var devices = controller.GetAudioDevices();
+            AudioDeviceSelector dialog = new AudioDeviceSelector(devices);
+
+            if(dialog.ShowDialog() != true)
+                return;
+
+            controller.SetDevice(dialog.SelectedDevice, dialog.Parameters);
         }
 
         private void DecreaseFilterRange()
@@ -3115,6 +3140,16 @@ namespace ScriptPlayer.ViewModels
             launchController.DeviceFound += DeviceController_DeviceFound;
             _controllers.Add(launchController);
             CanDirectConnectLaunch = true;
+        }
+
+        private void InitializeEstimController()
+        {
+            EStimAudioController audioController = _controllers.OfType<EStimAudioController>().FirstOrDefault();
+            if (audioController != null) return;
+
+            audioController = new EStimAudioController();
+            audioController.DeviceFound += DeviceController_DeviceFound;
+            _controllers.Add(audioController);
         }
 
         private void CheckForArguments()

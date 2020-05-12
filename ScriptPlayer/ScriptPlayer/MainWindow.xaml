@@ -462,6 +462,8 @@
                             </Style>
                         </MenuItem.Style>
                     </MenuItem>
+                    <MenuItem Header="Add E-Stim Audio Device (experimental)" Command="{Binding AddEstimAudioCommand}">
+                    </MenuItem>
                     <MenuItem Header="Buttplug / Intiface">
                         <!--<MenuItem.Header>
                             <TextBlock>

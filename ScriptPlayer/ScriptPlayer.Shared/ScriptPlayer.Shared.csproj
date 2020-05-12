@@ -55,6 +55,9 @@
     <Reference Include="Namotion.Reflection, Version=1.0.7.0, Culture=neutral, PublicKeyToken=c2f9c3bdfae56102, processorArchitecture=MSIL">
       <HintPath>..\packages\Namotion.Reflection.1.0.7\lib\net45\Namotion.Reflection.dll</HintPath>
     </Reference>
+    <Reference Include="NAudio, Version=1.10.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.1.10.0\lib\net35\NAudio.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -190,6 +193,8 @@
     </Compile>
     <Compile Include="Converters\BooleanToColumnSpanConverter.cs" />
     <Compile Include="Converters\SeekBarPositionConverter.cs" />
+    <Compile Include="Devices\Estim\EStimAudioController.cs" />
+    <Compile Include="Devices\Estim\EStimAudioDevice.cs" />
     <Compile Include="Devices\ButtplugAdapter.cs" />
     <Compile Include="Colors\ColorSampler.cs" />
     <Compile Include="Colors\HslConversion.cs" />
@@ -241,6 +246,7 @@
     <Compile Include="Devices\CommandConverter.cs" />
     <Compile Include="Devices\DeviceCommandInformation.cs" />
     <Compile Include="Devices\DeviceController.cs" />
+    <Compile Include="Devices\Estim\SineWaveProvider.cs" />
     <Compile Include="Dialogs\BeatPatternEditor.xaml.cs">
       <DependentUpon>BeatPatternEditor.xaml</DependentUpon>
     </Compile>

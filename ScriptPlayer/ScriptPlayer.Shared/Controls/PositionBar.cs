@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -118,6 +119,36 @@ namespace ScriptPlayer.Shared
             set => SetValue(IsReadOnlyProperty, value);
         }
 
+        public static readonly DependencyProperty LockTimeStampProperty = DependencyProperty.Register(
+            "LockTimeStamp", typeof(bool), typeof(PositionBar), new FrameworkPropertyMetadata(default(bool), FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public bool LockTimeStamp
+        {
+            get => (bool) GetValue(LockTimeStampProperty);
+            set => SetValue(LockTimeStampProperty, value);
+        }
+
+        private readonly Popup _positionPopup;
+
+        public PositionBar()
+        {
+            _positionPopup = new Popup
+            {
+                Child = new TextBlock
+                {
+                    Background = Brushes.White,
+                },
+                PlacementTarget = this,
+                Placement = PlacementMode.Mouse,
+            };
+        }
+
+        protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)
+        {
+            LockTimeStamp = !LockTimeStamp;
+            base.OnMouseRightButtonDown(e);
+        }
+
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
             if (IsReadOnly)
@@ -159,6 +190,16 @@ namespace ScriptPlayer.Shared
 
                 CaptureMouse();
             }
+
+            if (_position != null && _down)
+            {
+                ((TextBlock) _positionPopup.Child).Text = $"{_position.Position} @ {_position.TimeStamp:g}";
+                _positionPopup.IsOpen = true;
+            }
+            else
+            {
+                _positionPopup.IsOpen = false;
+            }
         }
 
         private TimedPosition GetClosestPosition(Point mousePos)
@@ -196,6 +237,7 @@ namespace ScriptPlayer.Shared
             if (IsReadOnly)
                 return;
 
+            _positionPopup.IsOpen = false;
             _down = false;
             _mousePos = e.GetPosition(this);
             UpdateSelectedPosition(true);
@@ -208,14 +250,23 @@ namespace ScriptPlayer.Shared
         {
             if (final)
             {
+                var newPosition = GetPositionFromPoint(_mousePos);
+
+                if (LockTimeStamp)
+                    newPosition.TimeStamp = _position.TimeStamp;
+
                 Positions.Remove(_position);
-                Positions.Add(GetPositionFromPoint(_mousePos));
+                Positions.Add(newPosition);
             }
             else
             {
                 TimedPosition pos = GetPositionFromPoint(_mousePos);
-                _position.TimeStamp = pos.TimeStamp;
+
+                if(!LockTimeStamp)
+                    _position.TimeStamp = pos.TimeStamp;
+
                 _position.Position = pos.Position;
+                ((TextBlock)_positionPopup.Child).Text = $"{_position.Position} @ {_position.TimeStamp:g}";
             }
         }
 
@@ -287,14 +338,15 @@ namespace ScriptPlayer.Shared
             drawingContext.PushClip(new RectangleGeometry(fullRect));
             drawingContext.DrawRectangle(Background, null, fullRect);
 
-            Pen redPen = new Pen(Brushes.Red, 1);
+            var gridBrush = LockTimeStamp ? Brushes.Red : Brushes.Green;
+            Pen gridPen = new Pen(gridBrush, 1);
 
             if (DrawLines)
             {
                 drawingContext.PushOpacity(0.3);
                 for (int i = 0; i <= 4; i++)
                 {
-                    drawingContext.DrawLine(redPen, new Point(0, i * ActualHeight / 4.0),
+                    drawingContext.DrawLine(gridPen, new Point(0, i * ActualHeight / 4.0),
                         new Point(ActualWidth, i * ActualHeight / 4.0));
                 }
 
@@ -305,7 +357,7 @@ namespace ScriptPlayer.Shared
             {
                 double midPointX = ActualWidth * Midpoint;
 
-                drawingContext.DrawLine(redPen, new Point(midPointX, 0), new Point(midPointX, ActualHeight));
+                drawingContext.DrawLine(gridPen, new Point(midPointX, 0), new Point(midPointX, ActualHeight));
             }
 
             if (Positions != null)
