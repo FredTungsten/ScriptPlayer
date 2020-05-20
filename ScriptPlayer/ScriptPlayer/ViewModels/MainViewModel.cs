@@ -3305,14 +3305,14 @@ namespace ScriptPlayer.ViewModels
         }
 
         //TODO very similar to HeatMapGenerator.GetSegments --> unify?
-        private List<CommandSection> GetChapters(TimeSpan minChapterDuration, TimeSpan gapDuration, bool includePositions)
+        private List<CommandSection> GetChapters(TimeSpan minChapterDuration, TimeSpan gapDuration, bool includePositions, bool includeFilledGaps = false)
         {
             List<CommandSection> result = new List<CommandSection>();
 
             if (TimeSource == null)
                 return result;
 
-            IEnumerable<ScriptAction> actions = _scriptHandler.GetUnfilledScript();
+            IEnumerable<ScriptAction> actions = includeFilledGaps ? _scriptHandler.GetScript() : _scriptHandler.GetUnfilledScript();
 
             List<TimeSpan> timeStamps = FilterDuplicates(actions.ToList()).Select(s => s.TimeStamp).ToList();
 
@@ -3933,7 +3933,11 @@ namespace ScriptPlayer.ViewModels
             if (duration < minDuration)
                 minDuration = duration.Multiply(0.9);
 
-            var chapters = GetChapters(minDuration, _gapDuration, true);
+            bool includeFilledGaps = mode == ChapterMode.RandomTimeSpan &&
+                               Settings.IncludeFilledGapsInRandomSelection && 
+                               Settings.FillGaps;
+
+            var chapters = GetChapters(minDuration, _gapDuration, true, includeFilledGaps);
             Random r = new Random();
 
             if (chapters.Count == 0)

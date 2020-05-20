@@ -198,6 +198,7 @@ namespace ScriptPlayer.ViewModels
         private bool _rebuildingCropRect;
         private bool _cropVideo;
         private bool _autoReloadScript;
+        private bool _includeFilledGapsInRandomSelection;
 
         public SettingsViewModel()
         {
@@ -1366,6 +1367,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _autoReloadScript) return;
                 _autoReloadScript = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IncludeFilledGapsInRandomSelection
+        {
+            get => _includeFilledGapsInRandomSelection;
+            set
+            {
+                if (value == _includeFilledGapsInRandomSelection) return;
+                _includeFilledGapsInRandomSelection = value;
                 OnPropertyChanged();
             }
         }

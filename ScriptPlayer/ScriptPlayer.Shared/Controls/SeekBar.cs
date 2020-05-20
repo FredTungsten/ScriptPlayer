@@ -216,6 +216,18 @@ namespace ScriptPlayer.Shared
             dc.PushClip(new RectangleGeometry(rect));
 
             dc.DrawRectangle(Background, null, rect);
+
+            if (HighlightRange != null && !HighlightRange.IsEmpty)
+            {
+                double x1 = Math.Min(1, Math.Max(0, HighlightRange.Start.Divide(Duration))) * ActualWidth;
+                double x2 = Math.Min(1, Math.Max(0, HighlightRange.End.Divide(Duration))) * ActualWidth;
+
+                Color inRangeBackgroundColor = Color.FromArgb(255, 35, 35, 35);
+                Brush inRangeBrush = new SolidColorBrush(inRangeBackgroundColor);
+
+                dc.DrawRectangle(inRangeBrush, null, new Rect(new Point(x1, 0), new Point(x2, ActualHeight)));
+            }
+
             dc.PushOpacityMask(OverlayOpacity);
 
             dc.DrawRectangle(Overlay, null, rect);
