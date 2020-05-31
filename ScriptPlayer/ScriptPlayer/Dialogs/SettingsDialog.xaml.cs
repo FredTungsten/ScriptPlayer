@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using JetBrains.Annotations;
 using Microsoft.Win32;
+using NAudio.Wave;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Controls;
 using ScriptPlayer.Shared.Scripts;
@@ -37,6 +38,24 @@ namespace ScriptPlayer.Dialogs
         {
             get => (string)GetValue(FilterProperty);
             set => SetValue(FilterProperty, value);
+        }
+
+        public static readonly DependencyProperty AudioDevicesProperty = DependencyProperty.Register(
+            "AudioDevices", typeof(List<AudioDeviceVm>), typeof(SettingsDialog), new PropertyMetadata(default(List<AudioDeviceVm>)));
+
+        public List<AudioDeviceVm> AudioDevices
+        {
+            get => (List<AudioDeviceVm>) GetValue(AudioDevicesProperty);
+            set => SetValue(AudioDevicesProperty, value);
+        }
+
+        public static readonly DependencyProperty SelectedAudioDeviceProperty = DependencyProperty.Register(
+            "SelectedAudioDevice", typeof(AudioDeviceVm), typeof(SettingsDialog), new PropertyMetadata(default(AudioDeviceVm)));
+
+        public AudioDeviceVm SelectedAudioDevice
+        {
+            get { return (AudioDeviceVm) GetValue(SelectedAudioDeviceProperty); }
+            set { SetValue(SelectedAudioDeviceProperty, value); }
         }
 
         public static readonly DependencyProperty InputMappingsProperty = DependencyProperty.Register(
@@ -143,13 +162,51 @@ namespace ScriptPlayer.Dialogs
         public SettingsDialog(SettingsViewModel initialSettings, string selectedPage = null)
         {
             Settings = initialSettings.Duplicate();
-            CreateInputMappings(GlobalCommandManager.CommandMappings);
+            InitializeAudio();
 
+            CreateInputMappings(GlobalCommandManager.CommandMappings);
+            
             InitializeComponent();
 
             Pages = BuildPages(PageSelector);
             SelectedPage = FindPage(selectedPage) ?? FindPage(_lastSelected) ?? Pages.FirstOrDefault();
             UpdateFilter();
+        }
+
+        private void InitializeAudio()
+        {
+            List<AudioDeviceVm> audioDevices = new List<AudioDeviceVm>();
+
+            audioDevices.Add(new AudioDeviceVm
+            {
+                Description = "- Disabled -",
+                DeviceId = ""
+            });
+
+            for(int i = 0; i < WaveOut.DeviceCount; i++)
+            {
+                var capabilities = WaveOut.GetCapabilities(i);
+                if (capabilities.ProductGuid == Guid.Empty)
+                    continue;
+
+                audioDevices.Add(new AudioDeviceVm
+                {
+                    Description = capabilities.ProductName,
+                    DeviceId = capabilities.ProductName
+                });
+            }
+
+            if (audioDevices.All(a => a.Description != Settings.EstimAudioDevice))
+            {
+                audioDevices.Add(new AudioDeviceVm
+                {
+                    Description = "- UNKNOWN -",
+                    DeviceId = Settings.EstimAudioDevice
+                });
+            }
+
+            AudioDevices = audioDevices;
+            SelectedAudioDevice = AudioDevices.Single(d => d.DeviceId == Settings.EstimAudioDevice);
         }
 
         private void CreateInputMappings(List<InputMapping> inputMappings)
@@ -310,6 +367,7 @@ namespace ScriptPlayer.Dialogs
         {
             ((Button)sender).Focus();
             ApplyInputMappings();
+            Settings.EstimAudioDevice = SelectedAudioDevice.DeviceId;
             DialogResult = true;
         }
 
@@ -703,5 +761,11 @@ namespace ScriptPlayer.Dialogs
             subSetting.Parent = this;
             SubSettings.Add(subSetting);
         }
+    }
+
+    public class AudioDeviceVm
+    {
+        public string DeviceId { get; set; }
+        public string Description { get; set; }
     }
 }

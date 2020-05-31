@@ -62,7 +62,7 @@ namespace ScriptPlayer.ViewModels
             {"mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf", "webm", "flv", "m2ts"};
 
         private readonly string[] _supportedAudioExtensions =
-            {"mp3", "wav", "wma"};
+            {"mp3", "wav"};
 
         private readonly string[] _supportedMediaExtensions;
 
@@ -170,6 +170,18 @@ namespace ScriptPlayer.ViewModels
                 OnPropertyChanged(nameof(LoadedFiles));
 
                 Playlist.SetCurrentEntry(LoadedFiles);
+            }
+        }
+
+        public string LoadedAudio   
+        {
+            get => _loadedAudio;
+            set
+            {
+                if (value == _loadedAudio) return;
+                _loadedAudio = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(LoadedFiles));
             }
         }
 
@@ -304,6 +316,8 @@ namespace ScriptPlayer.ViewModels
         private string _previouslyOpenedVideoFile = "";
         private bool _isFullscreen;
         private FileSystemWatcher _fileWatcher;
+        private AudioFileTimeSource _audioHandler;
+        private string _loadedAudio;
 
         public ObservableCollection<Device> Devices => _devices;
         public TimeSpan PositionsViewport
@@ -355,7 +369,7 @@ namespace ScriptPlayer.ViewModels
             WorkQueue.JobFinished += WorkQueueOnJobFinished;
             WorkQueue.Start(threadCount);
 
-            _supportedMediaExtensions = _supportedVideoExtensions.Concat(_supportedAudioExtensions).ToArray();
+            _supportedMediaExtensions = _supportedVideoExtensions.ToArray();
 
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             Version = new VersionViewModel();
@@ -379,6 +393,36 @@ namespace ScriptPlayer.ViewModels
 
             LoadSettings();
         }
+
+        private void LoadAudio(string file)
+        {
+            try
+            {
+                DisposeAudioHandler();
+                _audioHandler = new AudioFileTimeSource(file, Settings.EstimAudioDevice);
+                LoadedAudio = file;
+
+                if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
+                    OsdShowMessage($"Loaded {Path.GetFileName(file)}", TimeSpan.FromSeconds(4),
+                        "AudioLoaded");
+            }
+            catch (Exception)
+            {
+                LoadedAudio = null;
+                if(Settings.NotifyFileLoaded)
+                    OsdShowMessage($"Couln't load {Path.GetFileName(file)}", TimeSpan.FromSeconds(4), "AudioLoaded");
+            }
+        }
+
+        private void DisposeAudioHandler()
+        {
+            if (_audioHandler != null)
+            {
+                _audioHandler.Dispose();
+                _audioHandler = null;
+            }
+        }
+
 
         private void WorkQueueOnJobFinished(object sender, GeneratorJobEventArgs eventArgs)
         {
@@ -1225,6 +1269,12 @@ namespace ScriptPlayer.ViewModels
             {
                 StopDevices();
                 AutoHomeDevices();
+
+                _audioHandler?.Pause();
+            }
+            else
+            {
+                _audioHandler?.Play();
             }
         }
 
@@ -1254,6 +1304,8 @@ namespace ScriptPlayer.ViewModels
                     }
                 }
             }
+
+            _audioHandler?.Resync(e);
 
             if (Settings.SoftSeekFiles)
             {
@@ -1496,7 +1548,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public string[] LoadedFiles => new[] { LoadedVideo, LoadedScript };
+        public string[] LoadedFiles => new[] { LoadedVideo, LoadedScript, LoadedAudio };
 
         public ScriptplayerCommand ExecuteSelectedTestPatternCommand { get; set; }
 
@@ -1621,6 +1673,7 @@ namespace ScriptPlayer.ViewModels
             UpdateOsd();
             UpdateVideoCrop();
             UpdateAutoReloadScript();
+            ReloadAudio();
         }
 
         private void UpdatePlaylistRandomChapter()
@@ -1751,7 +1804,34 @@ namespace ScriptPlayer.ViewModels
                     UpdateAutoReloadScript();
                     break;
                 }
+                case nameof(SettingsViewModel.EstimAudioDevice):
+                {
+                    ReloadAudio();
+                    break;
+                }
+                case nameof(SettingsViewModel.AudioDelay):
+                {
+                    UpdateAudioDelay();
+                    break;
+                }
             }
+        }
+
+        private void UpdateAudioDelay()
+        {
+            if (_audioHandler == null)
+                return;
+
+            _audioHandler.Delay = Settings.AudioDelay;
+        }
+
+        private void ReloadAudio()
+        {
+            TryFindMatchingAudio(LoadedVideo);
+            if(TimeSource?.IsPlaying ?? false)
+                _audioHandler?.Play();
+
+            UpdateAudioDelay();
         }
 
         private void UpdateAutoReloadScript()
@@ -1927,9 +2007,7 @@ namespace ScriptPlayer.ViewModels
         public void OpenVideo()
         {
             string videoFilters =
-                $"All Media Files|{string.Join(";", _supportedMediaExtensions.Select(v => $"*.{v}"))}|" +
                 $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}|" +
-                $"Audio Audio|{string.Join(";", _supportedAudioExtensions.Select(v => $"*.{v}"))}|" +
                 "All Files|*.*";
 
             string selectedFile = OnRequestFile(videoFilters, ref _lastVideoFilterIndex);
@@ -2606,6 +2684,18 @@ namespace ScriptPlayer.ViewModels
                 }
             });
 
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseAudioDelay)
+            {
+                CommandId = "IncreaseAudioDelay",
+                DisplayText = "Increase Audio Delay",
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreaseAudioDelay)
+            {
+                CommandId = "DecreaseAudioDelay",
+                DisplayText = "Decrease Audio Delay",
+            });
+
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(Play, CanTogglePlayback)
             {
                 CommandId = "Play",
@@ -2829,7 +2919,7 @@ namespace ScriptPlayer.ViewModels
 
         private void DecreaseScriptDelay()
         {
-            if (Settings.ScriptDelay > TimeSpan.FromMilliseconds(-500))
+            if (Settings.ScriptDelay > TimeSpan.FromMilliseconds(-2500))
                 Settings.ScriptDelay -= TimeSpan.FromMilliseconds(25);
 
             OsdShowMessage("Script Delay: " + Settings.ScriptDelay.TotalMilliseconds.ToString("F0") + " ms", TimeSpan.FromSeconds(2), "ScriptDelay");
@@ -2837,10 +2927,26 @@ namespace ScriptPlayer.ViewModels
 
         private void IncreaseScriptDelay()
         {
-            if (Settings.ScriptDelay < TimeSpan.FromMilliseconds(500))
+            if (Settings.ScriptDelay < TimeSpan.FromMilliseconds(2500))
                 Settings.ScriptDelay += TimeSpan.FromMilliseconds(25);
 
             OsdShowMessage("Script Delay: " + Settings.ScriptDelay.TotalMilliseconds.ToString("F0") + " ms", TimeSpan.FromSeconds(2), "ScriptDelay");
+        }
+
+        private void DecreaseAudioDelay()
+        {
+            if (Settings.AudioDelay > TimeSpan.FromMilliseconds(-2500))
+                Settings.AudioDelay -= TimeSpan.FromMilliseconds(25);
+
+            OsdShowMessage("Audio Delay: " + Settings.AudioDelay.TotalMilliseconds.ToString("F0") + " ms", TimeSpan.FromSeconds(2), "AudioDelay");
+        }
+
+        private void IncreaseAudioDelay()
+        {
+            if (Settings.AudioDelay < TimeSpan.FromMilliseconds(2500))
+                Settings.AudioDelay += TimeSpan.FromMilliseconds(25);
+
+            OsdShowMessage("Audio Delay: " + Settings.AudioDelay.TotalMilliseconds.ToString("F0") + " ms", TimeSpan.FromSeconds(2), "AudioDelay");
         }
 
         private void DecreasePlaybackSpeed()
@@ -3209,6 +3315,8 @@ namespace ScriptPlayer.ViewModels
                 if (checkForScript)
                     TryFindMatchingScript(videoFileName);
 
+                TryFindMatchingAudio(videoFileName);
+
                 TryFindMatchingThumbnails(videoFileName, true);
 
                 LoadedVideo = videoFileName;
@@ -3234,7 +3342,7 @@ namespace ScriptPlayer.ViewModels
                     HideBanner();
                     VideoPlayer.Open(videoFileName, start, Settings.SoftSeekFiles ? Settings.SoftSeekFilesDuration : TimeSpan.Zero);
                 }
-
+                
                 Title = Path.GetFileNameWithoutExtension(videoFileName);
 
                 if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
@@ -3251,6 +3359,32 @@ namespace ScriptPlayer.ViewModels
             finally
             {
                 _loading = false;
+            }
+        }
+
+        private void TryFindMatchingAudio(string videoFile)
+        {
+            if (string.IsNullOrEmpty(videoFile))
+            {
+                DisposeAudioHandler();
+                return;
+            }
+
+            if (string.IsNullOrEmpty(Settings.EstimAudioDevice))
+            {
+                DisposeAudioHandler();
+                return;
+            }
+
+            string audioFile = GetRelatedFile(videoFile, _supportedAudioExtensions, _supportedVideoExtensions);
+            if (!string.IsNullOrEmpty(audioFile))
+            {
+                LoadAudio(audioFile);
+                UpdateAudioDelay();
+            }
+            else
+            {
+                DisposeAudioHandler();
             }
         }
 
@@ -4215,9 +4349,7 @@ namespace ScriptPlayer.ViewModels
             ScriptFileFormatCollection formats = ScriptLoaderManager.GetFormats();
 
             string mediaFilters =
-                $"All Media Files|{string.Join(";", _supportedMediaExtensions.Select(v => $"*.{v}"))}|" +
-                $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}|" +
-                $"Audio Audio|{string.Join(";", _supportedAudioExtensions.Select(v => $"*.{v}"))}";
+                $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}";
 
             string scriptFilters = formats.BuildFilter(true);
 

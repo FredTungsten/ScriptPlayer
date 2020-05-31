@@ -199,6 +199,8 @@ namespace ScriptPlayer.ViewModels
         private bool _cropVideo;
         private bool _autoReloadScript;
         private bool _includeFilledGapsInRandomSelection;
+        private string _estimAudioDevice;
+        private TimeSpan _audioDelay;
 
         public SettingsViewModel()
         {
@@ -825,6 +827,25 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("AudioDelay")]
+        public long AudioDelayWrapper
+        {
+            get => AudioDelay.Ticks;
+            set => AudioDelay = TimeSpan.FromTicks(value);
+        }
+
+        [XmlIgnore]
+        public TimeSpan AudioDelay
+        {
+            get => _audioDelay;
+            set
+            {
+                if (value.Equals(_audioDelay)) return;
+                _audioDelay = value;
+                OnPropertyChanged();
+            }
+        }
+
         [XmlElement("CommandDelay")]
         public long CommandDelayWrapper
         {
@@ -1378,6 +1399,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _includeFilledGapsInRandomSelection) return;
                 _includeFilledGapsInRandomSelection = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string EstimAudioDevice
+        {
+            get => _estimAudioDevice;
+            set
+            {
+                if (value.Equals(_estimAudioDevice)) return;
+                _estimAudioDevice = value;
                 OnPropertyChanged();
             }
         }

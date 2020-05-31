@@ -70,7 +70,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Chapter Settings" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="E-Stim Audio" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Style>
                     <Style TargetType="{x:Type controls:PageSelector}">
                         <Setter Property="Template">
@@ -98,6 +98,23 @@
                     </Style>
                 </controls:PageSelector.Style>
                 <controls:PageSelector.Elements>
+                    <Grid controls:PageSelector.ContentIdentifier="E-Stim Audio">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeIcon Icon="Lightning_Bolt_Solid"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock Style="{StaticResource SettingName}" Text="Audio Device" Margin="0,0,8,0"/>
+                                <ComboBox DockPanel.Dock="Right" SelectedItem="{Binding SelectedAudioDevice}" DisplayMemberPath="Description" ItemsSource="{Binding AudioDevices}"></ComboBox>
+                            </DockPanel>
+
+                            <DockPanel Margin="4">
+                                <TextBlock Style="{StaticResource SettingName}" Text="Script Delay"/>
+                                <TextBlock Style="{StaticResource SettingValue}" Text="{Binding Path=Settings.AudioDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
+                                <Slider Value="{Binding Path=Settings.AudioDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-2500" Maximum="2500" SmallChange="25" LargeChange="100"  IsSnapToTickEnabled="True" TickFrequency="25"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Crop Video">
                         <controls:PageSelector.Header>
                             <controls:AwesomeIcon Icon="Alternate_Crop_Solid"/>
