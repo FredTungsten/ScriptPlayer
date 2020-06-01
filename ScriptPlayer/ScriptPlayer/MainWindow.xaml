@@ -427,15 +427,17 @@
             </Grid.RowDefinitions>
             <Menu Grid.Row="0">
                 <MenuItem Header="File">
-                    <MenuItem Header="Open Video" Command="{Binding OpenVideoCommand}"/>
-                    <MenuItem Header="Open Script" Command="{Binding OpenScriptCommand}"/>
+                    <MenuItem Header="Open video" Command="{Binding OpenVideoCommand}"/>
+                    <MenuItem Header="Open script" Command="{Binding OpenScriptCommand}"/>
                     <Separator/>
-                    <MenuItem Header="Add file to Playlist" Command="{Binding AddScriptsToPlaylistCommand}"/>
+                    <MenuItem Header="Show loaded files" Click="BtnShowLoadedFiles_Click"/>
+                    <Separator/>
+                    <MenuItem Header="Add file to playlist" Command="{Binding AddScriptsToPlaylistCommand}"/>
                     <MenuItem Header="Add folder to Playlist" Command="{Binding AddFolderToPlaylistCommand}"/>
-                    <MenuItem Header="Show Playlist" Click="mnuShowPlaylist_Click"/>
+                    <MenuItem Header="Show playlist" Click="mnuShowPlaylist_Click"/>
                 </MenuItem>
                 <MenuItem Header="Devices">
-                    <MenuItem Header="Show Devices" Command="{Binding ShowDeviceManagerCommand}"/>
+                    <MenuItem Header="Show devices" Command="{Binding ShowDeviceManagerCommand}"/>
                     <Separator/>
                     <MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" IsEnabled="{Binding CanDirectConnectLaunch}" ToolTipService.ShowOnDisabled="True">
                         <MenuItem.Header>
@@ -462,7 +464,7 @@
                             </Style>
                         </MenuItem.Style>
                     </MenuItem>
-                    <MenuItem Header="Add E-Stim Audio Device (experimental)" Command="{Binding AddEstimAudioCommand}">
+                    <MenuItem Header="Add e-stim audio device (experimental)" Command="{Binding AddEstimAudioCommand}">
                     </MenuItem>
                     <MenuItem Header="Buttplug / Intiface">
                         <!--<MenuItem.Header>
@@ -475,7 +477,7 @@
                         <Separator/>
                         <MenuItem Header="Connect" Command="{Binding ConnectButtplugCommand}"/>
                         <MenuItem Header="Disconnect" Command="{Binding DisconnectButtplugCommand}"/>
-                        <MenuItem Header="Scan for Devices" Command="{Binding StartScanningButtplugCommand}"/>
+                        <MenuItem Header="Scan for devices" Command="{Binding StartScanningButtplugCommand}"/>
                     </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Video Player">
@@ -493,7 +495,7 @@
                     <MenuItem Header="Shift" Command="{Binding ShiftScriptCommand}"/>
                     <MenuItem Header="Trim" Command="{Binding TrimScriptCommand}"/>
                     <Separator/>
-                    <MenuItem Header="Save As" Command="{Binding SaveScriptAsCommand}"/>
+                    <MenuItem Header="Save as" Command="{Binding SaveScriptAsCommand}"/>
                 </MenuItem>
                 <MenuItem Header="Selection">
                     <MenuItem Header="Set A" Command="{Binding SetLoopACommand}"/>
@@ -504,17 +506,17 @@
                 </MenuItem>
                 <MenuItem Header="Generate">
                     <MenuItem Header="Thumbnails" Command="{Binding GenerateThumbnailsForLoadedVideoCommand}"/>
-                    <MenuItem Header="Thumbnail Banner" Command="{Binding GenerateThumbnailBannerForLoadedVideoCommand}"/>
+                    <MenuItem Header="Thumbnail banner" Command="{Binding GenerateThumbnailBannerForLoadedVideoCommand}"/>
                     <MenuItem Header="Preview GIF" Command="{Binding GeneratePreviewForLoadedVideoCommand}"/>
                     <MenuItem Header="Heatmap" Command="{Binding GenerateHeatmapForLoadedVideoCommand}"/>
                     <MenuItem Header="All" Command="{Binding GenerateAllForLoadedVideoCommand}"/>
                     <Separator/>
-                    <MenuItem Header="Show Progress" Command="{Binding ShowGeneratorProgressCommand}"/>
+                    <MenuItem Header="Show progress" Command="{Binding ShowGeneratorProgressCommand}"/>
                     <MenuItem Header="Settings" Command="{Binding ShowGeneratorSettingsCommand}"/>
                 </MenuItem>
                 <MenuItem Header="View">
-                    <MenuItem Header="Toggle Fullscreen" Command="{Binding ToggleFullScreenCommand}"/>
-                    <MenuItem Header="Stay On Top" IsCheckable="True" IsChecked="{Binding Path=Settings.StayOnTop, Mode=TwoWay}"/>
+                    <MenuItem Header="Toggle fullscreen" Command="{Binding ToggleFullScreenCommand}"/>
+                    <MenuItem Header="Stay on top" IsCheckable="True" IsChecked="{Binding Path=Settings.StayOnTop, Mode=TwoWay}"/>
                 </MenuItem>
                 <MenuItem Header="Settings" Command="{Binding ShowSettingsCommand}">
                 </MenuItem>
@@ -522,7 +524,7 @@
                     <MenuItem Header="Documentation (Online)" Click="mnuDocs_Click"/>
                     <MenuItem Header="Attributions" Click="mnuAttributions_Click"/>
                     <Separator/>
-                    <MenuItem Header="About / Check for new Version" Click="mnuVersion_Click"/>
+                    <MenuItem Header="About / Check for new version" Click="mnuVersion_Click"/>
                 </MenuItem>
             </Menu>
             <Grid Grid.Row="1">

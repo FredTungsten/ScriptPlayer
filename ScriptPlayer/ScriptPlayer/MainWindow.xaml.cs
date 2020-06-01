@@ -806,5 +806,15 @@ namespace ScriptPlayer
         }
 
         #endregion
+
+        private void BtnShowLoadedFiles_Click(object sender, RoutedEventArgs e)
+        {
+            string message 
+                = "Video:\n" + (ViewModel.LoadedVideo ?? "None") + "\n\n"
+                + "Script:\n" + (ViewModel.LoadedScript ?? "None") + "\n\n"
+                + "Audio:\n" + (ViewModel.LoadedAudio ?? "None");
+
+            MessageBox.Show(message, "Loaded Files", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 }
