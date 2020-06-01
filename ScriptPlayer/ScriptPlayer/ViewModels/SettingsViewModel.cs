@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -236,10 +237,19 @@ namespace ScriptPlayer.ViewModels
         {
             SettingsViewModel duplicate = new SettingsViewModel();
 
-            foreach(PropertyInfo property in GetType().GetProperties())
-                property.SetValue(duplicate, property.GetValue(this));
+            foreach (PropertyInfo property in GetType().GetProperties())
+            {
+                try
+                {
+                    property.SetValue(duplicate, property.GetValue(this));
+                }
+                catch
+                {
+                    // o_O
+                }
+            }
 
-            duplicate.AdditionalPaths = new ObservableCollection<string>(AdditionalPaths);
+            duplicate.AdditionalPaths = new ObservableCollection<string>(AdditionalPaths ?? new ObservableCollection<string>());
 
             return duplicate;
         }
