@@ -206,7 +206,7 @@ namespace ScriptPlayer.Dialogs
             }
 
             AudioDevices = audioDevices;
-            SelectedAudioDevice = AudioDevices.Single(d => d.DeviceId == Settings.EstimAudioDevice);
+            SelectedAudioDevice = AudioDevices.FirstOrDefault(d => d.DeviceId == Settings.EstimAudioDevice);
         }
 
         private void CreateInputMappings(List<InputMapping> inputMappings)
@@ -367,7 +367,7 @@ namespace ScriptPlayer.Dialogs
         {
             ((Button)sender).Focus();
             ApplyInputMappings();
-            Settings.EstimAudioDevice = SelectedAudioDevice.DeviceId;
+            Settings.EstimAudioDevice = SelectedAudioDevice?.DeviceId ?? "";
             DialogResult = true;
         }
 
