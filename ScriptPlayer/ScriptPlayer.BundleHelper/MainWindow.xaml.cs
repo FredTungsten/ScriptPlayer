@@ -63,6 +63,8 @@ namespace ScriptPlayer.BundleHelper
             List<string> additionalPaths = new List<string> { txtVideoDir.Text };
             additionalPaths.AddRange(Directory.GetDirectories(txtVideoDir.Text));
 
+            Dictionary<string, string> knownSources = LoadSources(@"D:\Videos\CH\2. Work in Progress\~SOURCES.txt");
+
             foreach (string script in scripts)
             {
                 string video = FileFinder.FindFile(script, _supportedMediaExtensions, additionalPaths.ToArray());
@@ -79,16 +81,48 @@ namespace ScriptPlayer.BundleHelper
                     continue;
                 }
 
-                results.Add(new ResultSet
+                var resultSet = new ResultSet
                 {
                     MediaBaseName = Path.GetFileNameWithoutExtension(script),
                     Duration = MediaHelper.GetDuration(video)
-                });
+                };
+
+                string key = resultSet.MediaBaseName.ToUpperInvariant();
+
+                if (knownSources.ContainsKey(key))
+                    resultSet.Url = knownSources[key];
+
+                results.Add(resultSet);
             }
 
             results.Sort((a, b) => StringComparer.Ordinal.Compare(a.MediaBaseName, b.MediaBaseName));
 
             Data = new ObservableCollection<ResultSet>(results);
+        }
+
+        private Dictionary<string, string> LoadSources(string file)
+        {
+            string[] lines = File.ReadAllLines(file);
+
+            Dictionary<string,string> sources = new Dictionary<string, string>();
+
+            foreach (string line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                int index = line.IndexOf(":", 0, StringComparison.InvariantCultureIgnoreCase);
+                if (index <= 0)
+                    continue;
+
+                string title = line.Substring(0, index).Trim().ToUpperInvariant();
+                string source = line.Substring(index + 1).Trim();
+
+                if(!sources.ContainsKey(title))
+                    sources.Add(title, source);
+            }
+
+            return sources;
         }
 
         private void btnGenerate_Click(object sender, RoutedEventArgs e)

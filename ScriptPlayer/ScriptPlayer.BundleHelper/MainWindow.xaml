@@ -12,7 +12,7 @@
             <RowDefinition Height="5"/>
             <RowDefinition Height="158*"/>
         </Grid.RowDefinitions>
-        <TextBox x:Name="txtBundleDir" Height="23" Margin="117,18,10,0" TextWrapping="Wrap" Text="D:\Videos\CH\~Bundles\~Bundle 8" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtBundleDir" Height="23" Margin="117,18,10,0" TextWrapping="Wrap" Text="D:\Videos\CH\~Bundles\~Bundle 19" VerticalAlignment="Top"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,19,0,0" TextWrapping="Wrap" Text="Bundle Directory" VerticalAlignment="Top" Height="16" Width="88"/>
         <TextBox x:Name="txtVideoDir" Height="23" Margin="117,46,10,0" TextWrapping="Wrap" Text="D:\Videos\CH\7. Done" VerticalAlignment="Top"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,47,0,0" TextWrapping="Wrap" Text="Video Directory" VerticalAlignment="Top" Height="16" Width="82"/>
