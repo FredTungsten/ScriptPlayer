@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Management;
@@ -14,6 +15,9 @@ namespace ScriptPlayer.Shared
         private readonly object _discoverylocker = new object();
         private bool _discover;
         public BluetoothLEAdvertisementWatcher BleWatcher { get; set; }
+
+        private Dictionary<ulong, DateTime> _lastChecked = new Dictionary<ulong, DateTime>();
+        private List<ulong> _nonLaunchDevices = new List<ulong>();
 
         public override void ScanForDevices()
         {
@@ -36,7 +40,10 @@ namespace ScriptPlayer.Shared
             {
                 if (_discover)
                     return;
-            
+
+                _lastChecked.Clear();
+                _nonLaunchDevices.Clear();
+
                 Debug.WriteLine("Start watching ...");
                 _discover = true;
                 BleWatcher.Start();
@@ -77,13 +84,23 @@ namespace ScriptPlayer.Shared
             if (w == null) return;
             if (btAdv == null) return;
 
+            TimeSpan minTimeBetweenChecks = TimeSpan.FromSeconds(10);
+
             lock (_discoverylocker)
             {
                 if (!_discover) return;
-                Stop();
+                //Stop();
+
+                if(_nonLaunchDevices.Contains(btAdv.BluetoothAddress))
+                    return;
+
+                if(!_lastChecked.ContainsKey(btAdv.BluetoothAddress))
+                    _lastChecked.Add(btAdv.BluetoothAddress, DateTime.Now);
+                else if (DateTime.Now - _lastChecked[btAdv.BluetoothAddress] < minTimeBetweenChecks)
+                    return;
             }
 
-            var uids = btAdv.Advertisement?.ServiceUuids;
+            var uids = btAdv.Advertisement?.ServiceUuids.ToList();
             if (uids == null) return;
 
             Debug.WriteLine($"BLE RECEIVED, Services: {string.Join(", ", uids)}, aquiring device ...");
@@ -98,11 +115,19 @@ namespace ScriptPlayer.Shared
 
             Debug.WriteLine($"BLEWATCHER Found: {device.Name}, {device.DeviceId}");
 
+            if (device.Name != "Launch")
+            {
+                Debug.WriteLine("Not a Launch");
+                _nonLaunchDevices.Add(device.BluetoothAddress);
+                device.Dispose();
+                return;
+            }
+
             bool foundAndConnected = false;
 
             try
             {
-                Thread.Sleep(3000);
+                Thread.Sleep(1000);
                 // SERVICES!!
                 GattDeviceService service = (await device.GetGattServicesForUuidAsync(Launch.Uids.MainService))
                     .Services.FirstOrDefault();
@@ -134,7 +159,7 @@ namespace ScriptPlayer.Shared
 
                 foundAndConnected = true;
                 OnDeviceFound(launch);
-
+                Stop();
             }
             catch (Exception e)
             {
