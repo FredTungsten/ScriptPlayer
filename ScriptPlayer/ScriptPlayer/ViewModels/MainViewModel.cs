@@ -26,6 +26,7 @@ using ScriptPlayer.Generators;
 using ScriptPlayer.Shared.Devices;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
+using ScriptPlayer.Shared.Devices.TheHandy;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -85,6 +86,8 @@ namespace ScriptPlayer.ViewModels
         private byte _minScriptPosition;
 
         public GeneratorWorkQueue WorkQueue { get; }
+
+        public HandyController Handy { get; set; } = null;
 
         public WindowStateModel InitialPlayerState { get; private set; }
 
@@ -392,6 +395,9 @@ namespace ScriptPlayer.ViewModels
             GeneratePatterns();
 
             LoadSettings();
+
+            // TODO: REMOVE
+            ConnectHandyDirectly();
         }
 
         private void LoadAudio(string file)
@@ -1265,6 +1271,7 @@ namespace ScriptPlayer.ViewModels
 
         private void TimeSourceIsPlayingChanged(object sender, bool playing)
         {
+            Handy?.Play(playing, TimeSource.Progress.TotalMilliseconds);
             if(!playing)
             {
                 StopDevices();
@@ -1305,6 +1312,7 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
+            Handy?.Resync(e);
             _audioHandler?.Resync(e);
 
             if (Settings.SoftSeekFiles)
@@ -1575,6 +1583,8 @@ namespace ScriptPlayer.ViewModels
         public ScriptplayerCommand ToggleFullScreenCommand { get; set; }
 
         public ScriptplayerCommand ConnectLaunchDirectlyCommand { get; set; }
+
+        public ScriptplayerCommand ConnectHandyDirectlyCommand { get; set; }
 
         public ScriptplayerCommand AddEstimAudioCommand { get; set; }
 
@@ -2512,6 +2522,12 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Connect Launch Directly"
             };
 
+            ConnectHandyDirectlyCommand = new ScriptplayerCommand(ConnectHandyDirectly)
+            {
+                CommandId = "ConenctHandyDirectly",
+                DisplayText = "Connect to Handy directly"
+            };
+
             AddEstimAudioCommand = new ScriptplayerCommand(AddEstimAudioDevice)
             {
                 CommandId = "AddEstimAudioDevice",
@@ -2588,6 +2604,7 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterCommand(OpenVideoCommand);
             GlobalCommandManager.RegisterCommand(AddScriptsToPlaylistCommand);
             GlobalCommandManager.RegisterCommand(ConnectLaunchDirectlyCommand);
+            GlobalCommandManager.RegisterCommand(ConnectHandyDirectlyCommand);
             GlobalCommandManager.RegisterCommand(ConnectButtplugCommand);
             GlobalCommandManager.RegisterCommand(DisconnectButtplugCommand);
             GlobalCommandManager.RegisterCommand(StartScanningButtplugCommand);
@@ -4545,6 +4562,8 @@ namespace ScriptPlayer.ViewModels
             FindMaxPositions();
             UpdateHeatMap();
 
+            Handy?.PrepareNewFunscript(fileName, actions);
+
             return true;
         }
 
@@ -4559,6 +4578,21 @@ namespace ScriptPlayer.ViewModels
 
             LaunchBluetooth controller = _controllers.OfType<LaunchBluetooth>().Single();
             controller.Start();
+        }
+
+        public void ConnectHandyDirectly()
+        {
+            if(Handy == null)
+            {
+                Handy = new HandyController();
+            }
+
+            if(!HandyHelper.IsDeviceIdSet)
+            {
+                // TODO: set device Id
+                Debug.WriteLine("NO HANDY DEVICE_ID SET");
+            }
+            Handy.CheckConnected();
         }
 
         public void VolumeDown()
