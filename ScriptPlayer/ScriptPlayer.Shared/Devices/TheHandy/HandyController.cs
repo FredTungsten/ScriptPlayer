@@ -14,6 +14,7 @@ using System.Net.Sockets;
 using System.Web;
 using System.Reflection;
 using System.Net.Http.Headers;
+using System.Windows;
 
 namespace ScriptPlayer.Shared.Devices.TheHandy
 {
@@ -23,6 +24,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         private const string _defaultKey = "NO_KEY";
         public static bool IsDeviceIdSet => DeviceId != _defaultKey;
 
+        public static string Default => _defaultKey;
         public static string ConnectionBaseUrl { 
             get
             {
@@ -116,7 +118,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         private DateTime _timeOfUpdateServerTime; // holds local time when update was done
         private long _offsetAverage;
 
-        public string ScriptHostUrl => $"http://{GetLocalIPAddress()}:{ServeScriptPort}/script/";
+        public string ScriptHostUrl => $"http://{GetLocalIp()}:{ServeScriptPort}/script/";
 
         private TimeSpan _currentTime = TimeSpan.FromSeconds(0);
         private bool _playing = false;
@@ -132,9 +134,25 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             _serveScriptThread.Start();
         }
 
-        private static string GetLocalIPAddress()
+        private string GetLocalIp()
         {
-            return "192.168.1.204"; // TODO
+            // TODO: this isn't great but hopefully works for alot of people?
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            string foundIp = null;
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    foundIp = ip.ToString();
+                    if (foundIp.StartsWith("192"))
+                        return foundIp;
+                }
+            }
+            if (string.IsNullOrWhiteSpace(foundIp))
+                return foundIp;
+
+            MessageBox.Show("Failed to find local ip. fuck.");
+            return "";
         }
 
         // host current loaded script on {local-ip}:{ServeScriptPort}/script/
@@ -142,7 +160,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         // aswell as no firewall blocking access / windows firewall is blocking by default ...
         private void ServeScript()
         {
-            _server.Prefixes.Add(ScriptHostUrl);
+            _server.Prefixes.Add($"http://*:{ServeScriptPort}/script/");
             try
             {
                 _server.Start(); 
@@ -151,8 +169,17 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             {
                 // ACCESS DENIED
                 // probably needs administrator
-                Debug.WriteLine($"Error hosting script: \"{ex.Message}\"");
+                MessageBox.Show($"Error hosting script: \"{ex.Message}\" (Try as Administrator)", "Error");
                 return;
+            }
+            if(MessageBox.Show($"Hosting handy script at: {ScriptHostUrl}script.csv\n(Press \"Yes\" to test in browser.)\n"
+                + "Try accessing the server with another device in the same network (maybe your phone) to test that no firewall is blocking it otherwise the Handy will also not be able to get the script.",
+                "Host",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Asterisk) 
+                == MessageBoxResult.Yes)
+            {
+                Process.Start($"{ScriptHostUrl}script.csv");
             }
 
             Debug.WriteLine("hosting scripts @ " + ScriptHostUrl);
@@ -162,21 +189,26 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                 // Note: The GetContext method blocks while waiting for a request.
                 HttpListenerContext context = _server.GetContext();
                 HttpListenerRequest request = context.Request;
-                // Obtain a response object.
                 HttpListenerResponse response = context.Response;
+                
                 // Construct a response.
+                byte[] buffer;
                 if(_scriptLoaded)
                 {
                     string responseString = _loadedScript;
-                    byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
-                    // Get a response stream and write the response to it.
-                    response.ContentLength64 = buffer.Length;
+                    buffer = Encoding.UTF8.GetBytes(responseString);
                     response.ContentType = "text/csv";
-                    System.IO.Stream output = response.OutputStream;
-                    output.Write(buffer, 0, buffer.Length);
-                    // You must close the output stream.
-                    output.Close();
                 }
+                else
+                {
+                    buffer = Encoding.UTF8.GetBytes("No script loaded.\nLoad a script and refresh to download.\nThe handy will fetch the script the same way.");
+                    response.ContentType = "text/plain";
+                }
+                // Get a response stream and write the response to it.
+                response.ContentLength64 = buffer.Length;
+                System.IO.Stream output = response.OutputStream;
+                output.Write(buffer, 0, buffer.Length);
+                output.Close();
             }
             _server.Stop();
         }
@@ -205,7 +237,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                     }
                     else
                     {
-                        Debug.WriteLine($"Error: /getStatus: {status.error}");
+                        MessageBox.Show($"Handy not connected.\nError: /getStatus: {status.error}");
                         Connected = false;
                     }
                 }

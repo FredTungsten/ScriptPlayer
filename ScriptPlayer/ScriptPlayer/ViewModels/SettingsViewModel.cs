@@ -11,12 +11,15 @@ using System.Windows;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Devices.TheHandy;
 using ScriptPlayer.Shared.Scripts;
 
 namespace ScriptPlayer.ViewModels
 {
     public class SettingsViewModel : INotifyPropertyChanged
     {
+        private string _handyDeviceId;
+
         private string _vlcEndpoint;
         private string _vlcPassword;
         private string _whirligigEndpoint;
@@ -89,6 +92,17 @@ namespace ScriptPlayer.ViewModels
         private int _kodiHttpPort;
         private string _kodiUser;
         private string _kodiPassword;
+
+        public string HandyDeviceId 
+        {
+            get => _handyDeviceId;
+            set
+            {
+                if (value == _handyDeviceId) return;
+                _handyDeviceId = value;
+                OnPropertyChanged();
+            }
+        }
 
         public VibratorConversionMode VibratorConversionMode
         {
@@ -216,6 +230,7 @@ namespace ScriptPlayer.ViewModels
             KodiIp = null;
             KodiTcpPort = 0;
             KodiHttpPort = 0;
+            HandyDeviceId = HandyHelper.Default;
             TimeDisplayMode = TimeDisplayMode.ContentOnly;
             AutogenerateThumbnails = true;
             AutogenerateAllForPlaylist = true;

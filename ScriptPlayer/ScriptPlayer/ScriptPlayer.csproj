@@ -111,6 +111,9 @@
     <Compile Include="Dialogs\AudioDeviceSelector.xaml.cs">
       <DependentUpon>AudioDeviceSelector.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\HandyDeviceIdSettingsDialog.xaml.cs">
+      <DependentUpon>HandyDeviceIdSettingsDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\DependecyObjectExtensions.cs" />
     <Compile Include="Dialogs\GeneratorSettingsDialog.xaml.cs">
       <DependentUpon>GeneratorSettingsDialog.xaml</DependentUpon>
@@ -270,6 +273,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\GeneratorSettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\HandyDeviceIdSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

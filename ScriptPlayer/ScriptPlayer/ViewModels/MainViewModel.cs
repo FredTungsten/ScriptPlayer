@@ -4580,19 +4580,32 @@ namespace ScriptPlayer.ViewModels
             controller.Start();
         }
 
+        private bool AskForHandyDeviceId()
+        {
+            HandyDeviceIdSettingsDialog deviceIdDialog = new HandyDeviceIdSettingsDialog(Settings.HandyDeviceId);
+            if (deviceIdDialog.ShowDialog() != true) return false;
+            Settings.HandyDeviceId = deviceIdDialog.DeviceId;
+            return true;
+        }
+
         public void ConnectHandyDirectly()
         {
-            if(Handy == null)
-            {
-                Handy = new HandyController();
-            }
-
+            HandyHelper.DeviceId = Settings.HandyDeviceId;
             if(!HandyHelper.IsDeviceIdSet)
             {
                 // TODO: set device Id
                 Debug.WriteLine("NO HANDY DEVICE_ID SET");
+                MessageBox.Show("Set device handy and try again.");
+                AskForHandyDeviceId();
             }
-            Handy.CheckConnected();
+            else
+            {
+                if(Handy == null)
+                    Handy = new HandyController();
+                Handy.CheckConnected();
+                if (!Handy.Connected)
+                    AskForHandyDeviceId();
+            }
         }
 
         public void VolumeDown()
