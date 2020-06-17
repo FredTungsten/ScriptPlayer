@@ -1596,7 +1596,7 @@ namespace ScriptPlayer.VideoSync
                     }
                 case Key.NumPad1:
                     {
-                        AddPositionNow(0);
+                        AddPositionNow(5);
                         break;
                     }
                 case Key.NumPad2:
@@ -1606,7 +1606,7 @@ namespace ScriptPlayer.VideoSync
                     }
                 case Key.NumPad3:
                     {
-                        AddPositionNow(99);
+                        AddPositionNow(95);
                         break;
                     }
                 default:

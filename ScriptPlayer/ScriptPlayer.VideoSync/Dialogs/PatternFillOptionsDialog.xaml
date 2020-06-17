@@ -37,6 +37,7 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <DockPanel LastChildFill="True">
+                        <Button Click="btnAppend_Click" Content="+" Width="30" Height="30" VerticalAlignment="Center" DockPanel.Dock="Right"/>
                         <Button Click="btnRemove_Click" Content="X" Width="30" Height="30" VerticalAlignment="Center" DockPanel.Dock="Right"/>
                         <controls:BeatVisualizer DockPanel.Dock="Left" Foreground="Magenta" Pattern="{Binding}" HorizontalAlignment="Stretch" Height="30" VerticalAlignment="Center"/>
                     </DockPanel>
