@@ -15,6 +15,7 @@ using System.Web;
 using System.Reflection;
 using System.Net.Http.Headers;
 using System.Windows;
+using System.ServiceModel;
 
 namespace ScriptPlayer.Shared.Devices.TheHandy
 {
@@ -53,6 +54,9 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
     // reference: https://app.swaggerhub.com/apis/alexandera/handy-api/1.0.0#/
     // implementing the handy as a device doesn't really work because of it's unique videosync api
     // implementing it as a timesource would make sense but prevent using other timesources...
+
+    // hopeffully in the future the handy will receives an api to send commands to it via bluetooth or LAN 
+    // in which case it would integrate nicely into ScriptPlayer
     public class HandyController 
     {
         class HandyResponse
@@ -101,22 +105,22 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             public int? timeout { get; set; } 
         }
 
+        // TODO: make serve script port configurable
         public int ServeScriptPort { get; set; } = 80;
         public bool Connected { get; private set; }
 
         private HttpClient _http;
         private HttpListener _server;
-        private DateTime _lastSyncAdjust = DateTime.Now;
+        private DateTimeOffset _lastSyncAdjust = DateTimeOffset.Now;
 
         private bool _scriptLoaded => _loadedScript != null;
-        private string _loadedScript;
-        private string _scriptName;
+        private string _loadedScript; // script text as csv
+        private string _scriptName; // path to script
 
-        Thread _serveScriptThread;
+        Thread _serveScriptThread; // thread running the http server hosting the script
 
-        private long _serverTime; // holds time that was calculated via GetServerTime
-        private DateTime _timeOfUpdateServerTime; // holds local time when update was done
-        private long _offsetAverage;
+        private long _timeOfUpdateServerTime; // holds local time when update was done
+        private long _offsetAverage; // holds calculated offset that gets added to current unix time in ms to estimate api server time
 
         public string ScriptHostUrl => $"http://{GetLocalIp()}:{ServeScriptPort}/script/";
 
@@ -148,6 +152,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                         return foundIp;
                 }
             }
+            // return the last found ipv4 address if there is none starting with 192
             if (!string.IsNullOrWhiteSpace(foundIp))
                 return foundIp;
 
@@ -218,10 +223,9 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             return $"{HandyHelper.ConnectionBaseUrl}{path}";
         }
 
+        public void CheckConnected(Action<bool> successCallback = null) => GetStatus(successCallback);
 
-        public void CheckConnected() => GetStatus();
-
-        public void GetStatus()
+        public void GetStatus(Action<bool> successCallback = null)
         {
             SendGetRequest(UrlFor("getStatus"), async response =>
             {
@@ -230,16 +234,17 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                     var status = await response.Content.ReadAsAsync<HandyResponse>();
                     if(status.success)
                     {
-                        Debug.WriteLine("Successfully connected");
-                        Connected = true;
                         UpdateServerTime();
                         SetSyncMode();
+                        Connected = true;
+                        Debug.WriteLine("Successfully connected");
                     }
                     else
                     {
                         MessageBox.Show($"Handy not connected.\nError: /getStatus: {status.error}");
                         Connected = false;
                     }
+                    successCallback?.Invoke(Connected);
                 }
             }, ignoreConnected:true);
         }
@@ -293,6 +298,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             {
                 // TODO: alert user
                 Debug.WriteLine("Failed to load script larger than 1MB");
+                MessageBox.Show("The script is to large for the Handy.");
                 _loadedScript = null;
                 _scriptName = null;
             }
@@ -302,7 +308,6 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         private string GenerateCSVFromActions(List<ScriptAction> actions)
         {
             StringBuilder builder = new StringBuilder(1024*1024);
-            //builder.AppendLine("#");
             builder.AppendLine(@"""{""""type"""":""""handy""""}"",");
             foreach (var action in actions)
             {
@@ -313,20 +318,24 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
 
         public void Resync(TimeSpan time)
         {
-            if (!_playing) return;
-            if (DateTime.Now - _lastSyncAdjust >= TimeSpan.FromSeconds(10) || (_currentTime.TotalMilliseconds - time.TotalMilliseconds) >= 500)
-            {
-                Debug.WriteLine($"Resync time: {time.TotalMilliseconds}");
-                Debug.WriteLine($"Current time: {_currentTime.TotalMilliseconds}");
-                _lastSyncAdjust = DateTime.Now;
-                // adjust time
-                SyncAdjust(new HandyAdjust()
-                {
-                    currentTime = (int)time.TotalMilliseconds,
-                    serverTime = GetServerTimeEstimate(),
-                    timeout = 5000
-                });
-            }
+            // I can't get this to work keeps returning "Machine timed out"
+            // but seems to be working fine without resyncing
+
+            //if (!_playing) return;
+            //if (DateTime.Now - _lastSyncAdjust >= TimeSpan.FromSeconds(10) || (_currentTime.TotalMilliseconds - time.TotalMilliseconds) >= 500)
+            //{
+            //    Debug.WriteLine($"Resync time: {time.TotalMilliseconds}");
+            //    Debug.WriteLine($"Current time: {_currentTime.TotalMilliseconds}");
+            //    _lastSyncAdjust = DateTime.Now;
+            //    // adjust time
+            //    SyncAdjust(new HandyAdjust()
+            //    {
+            //        filter = 0.5f,
+            //        currentTime = (int)time.TotalMilliseconds,
+            //        serverTime = GetServerTimeEstimate(),
+            //        timeout = 5000
+            //    });
+            //}
             _currentTime = time;
         }
 
@@ -338,15 +347,15 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             SendGetRequest(url);
         }
 
-        public void Play(bool playing, double currentTime)
+        public void Play(bool playing, double currentTimeMs)
         {
-            if (playing == _playing) return;
+            if (playing == _playing || !_scriptLoaded) return;
             _playing = playing;
             SyncPlay(new HandyPlay()
             {
                 play = playing,
                 serverTime = GetServerTimeEstimate(),
-                time = (int)currentTime
+                time = (int)currentTimeMs
             });
         }
 
@@ -376,7 +385,6 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                     {
                         query[property.Name] = val.ToString();
                     }
-
                 }
             }
             
@@ -412,43 +420,36 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
            --Calculating server time
            When sending serverTime (Ts) to Handy calculate the Ts by using the average offset (offset_avg) and the current client time (Tc) when sending a message to Handy. Ts = Tc + offset_avg
         */
-        class HandyTime
+        class HandyTimeResponse
         {
             public long serverTime { get; set; }
         }
         public void UpdateServerTime()
         {
-            var Tsend = DateTime.Now;
-            var result = _http.GetAsync(UrlFor("getServerTime")).Result;
-            var Treceive = DateTime.Now;
-            var RTD = Treceive - Tsend;
-            _serverTime = result.Content.ReadAsAsync<HandyTime>().Result.serverTime + (long)RTD.TotalMilliseconds; 
+            // due too an api rate limit of I think 60 request per minute I chose just 10 attempts instead of 30...
+            const int maxSyncAttempts = 10; 
+            long Ts_est = 0;
+            long offset_agg = 0;
+            for (int i = 0; i < maxSyncAttempts; i++)
+            {
+                var Tsend = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                var result = _http.GetAsync(UrlFor("getServerTime")).Result;
+                var Treceive = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                var RTD = Treceive - Tsend;
 
-            // TODO: implement fancy algo
-            //long Ts_est = 0;
-            //long offset_agg = 0;
-            //for(int i=0; i < 30; i++)
-            //{
-            //    var Tsend = DateTime.Now;
-            //    var result = _http.GetAsync(UrlFor("getServerTime")).Result;
-            //    var Treceive = DateTime.Now;
-            //    if(Ts_est > 0)
-            //    {
+                var Ts = result.Content.ReadAsAsync<HandyTimeResponse>().Result.serverTime;
+                Ts_est = Ts + (RTD / 2);
 
-            //    }
-            //    var RTD = Treceive - Tsend;
+                offset_agg += Ts_est - Treceive;
+            }
+            _offsetAverage = (int)((double)offset_agg/(double)maxSyncAttempts);
 
-            //    var Ts = result.Content.ReadAsAsync<HandyTime>().Result.serverTime;
-            //    Ts_est = Ts + (long)(RTD.TotalMilliseconds / 2.0);
-            //    Thread.Sleep(50);
-            //}
-            _timeOfUpdateServerTime = DateTime.Now;
+            _timeOfUpdateServerTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
 
         private long GetServerTimeEstimate()
         {
-            var timePassed = DateTime.Now - _timeOfUpdateServerTime;
-            return _serverTime + (long)timePassed.TotalMilliseconds;
+            return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + _offsetAverage;
         }
     }
 }

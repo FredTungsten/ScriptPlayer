@@ -395,9 +395,6 @@ namespace ScriptPlayer.ViewModels
             GeneratePatterns();
 
             LoadSettings();
-
-            // TODO: REMOVE
-            ConnectHandyDirectly();
         }
 
         private void LoadAudio(string file)
@@ -4602,9 +4599,13 @@ namespace ScriptPlayer.ViewModels
             {
                 if(Handy == null)
                     Handy = new HandyController();
-                Handy.CheckConnected();
-                if (!Handy.Connected)
-                    AskForHandyDeviceId();
+                Handy.CheckConnected(connected =>
+                {
+                    if(!connected)
+                    {
+                        Application.Current.Dispatcher.Invoke(AskForHandyDeviceId);
+                    }
+                });
             }
         }
 
