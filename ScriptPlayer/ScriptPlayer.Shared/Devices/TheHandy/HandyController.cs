@@ -148,7 +148,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                         return foundIp;
                 }
             }
-            if (string.IsNullOrWhiteSpace(foundIp))
+            if (!string.IsNullOrWhiteSpace(foundIp))
                 return foundIp;
 
             MessageBox.Show("Failed to find local ip. fuck.");
