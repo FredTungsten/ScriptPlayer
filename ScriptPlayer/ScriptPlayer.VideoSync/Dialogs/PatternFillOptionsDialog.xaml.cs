@@ -261,6 +261,7 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         private void btnRemove_Click(object sender, RoutedEventArgs e)
         {
+            e.Handled = true;
             bool[] pattern = ((Button) sender).DataContext as bool[];
             Remove(pattern);
         }
@@ -333,6 +334,33 @@ namespace ScriptPlayer.VideoSync.Dialogs
                     Value = Beats[i].Value,
                     CanEdit = (i != 0 && i != Beats.Count - 1),
                     Caption = (newBeats.Count + 1).ToString()
+                });
+            }
+
+            Beats = newBeats;
+            TicksInPattern = newBeats.Count;
+            _multiplying = false;
+        }
+
+        private void btnAppend_Click(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+
+
+            _multiplying = true;
+
+            ObservableCollection<IndexedBoolean> newBeats = new ObservableCollection<IndexedBoolean>(Beats);
+            newBeats.RemoveAt(Beats.Count - 1);
+
+            bool[] pattern = ((Button)sender).DataContext as bool[];
+
+            for (int i = 0; i < pattern.Length; i++)
+            {
+                newBeats.Add(new IndexedBoolean
+                {
+                    CanEdit = i != pattern.Length - 1,
+                    Caption = (newBeats.Count + 1).ToString(),
+                    Value = pattern[i]
                 });
             }
 
