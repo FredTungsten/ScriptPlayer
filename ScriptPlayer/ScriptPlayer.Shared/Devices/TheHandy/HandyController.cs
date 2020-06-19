@@ -314,7 +314,6 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             }
             else
             {
-                // TODO: alert user
                 Debug.WriteLine("Failed to load script larger than 1MB");
                 MessageBox.Show("The script is to large for the Handy.");
                 _loadedScript = null;
@@ -323,13 +322,38 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
 
         }
 
+        private void ScaleScript(List<ScriptAction> actions)
+        {
+            // scale script across full range of the handy
+            // some scripts only go from 5 to 95 or 10 to 90 this will scale
+            // those scripts to the desired 0 - 100 range
+            const int desiredMax = 100;
+            const int desiredMin = 0;
+            int maxPos = actions.Max(action => ((FunScriptAction)action).Position);
+            int minPos = actions.Min(action => ((FunScriptAction)action).Position);
+
+            if (maxPos < 100 || minPos > 0)
+            {
+                foreach (FunScriptAction action in actions)
+                {
+                    int pos = action.Position;
+                    int scaledPos = desiredMin + ((pos - minPos)*(desiredMax - desiredMin) / (maxPos - minPos));
+                    if (scaledPos <= 100 && scaledPos >= 0)
+                        action.Position = (byte)scaledPos;
+                }
+            }
+        }
+
         private string GenerateCSVFromActions(List<ScriptAction> actions)
         {
             StringBuilder builder = new StringBuilder(1024*1024);
             builder.AppendLine(@"""{""""type"""":""""handy""""}"",");
-            foreach (var action in actions)
+            
+            ScaleScript(actions);
+
+            foreach (FunScriptAction action in actions)
             {
-                builder.AppendLine($"{action.TimeStamp.TotalMilliseconds},{((FunScriptAction)action).Position}"); // TODO: convert position into 0 - 100 range
+                builder.AppendLine($"{action.TimeStamp.TotalMilliseconds},{action.Position}");
             }
             return builder.ToString();
         }
