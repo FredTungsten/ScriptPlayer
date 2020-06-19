@@ -27,6 +27,7 @@ using ScriptPlayer.Shared.Devices;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using ScriptPlayer.Shared.Devices.TheHandy;
+using System.Runtime.InteropServices;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -4579,9 +4580,14 @@ namespace ScriptPlayer.ViewModels
 
         private bool AskForHandyDeviceId()
         {
-            HandyDeviceIdSettingsDialog deviceIdDialog = new HandyDeviceIdSettingsDialog(Settings.HandyDeviceId);
-            if (deviceIdDialog.ShowDialog() != true) return false;
+            HandyDeviceIdSettingsDialog deviceIdDialog = new HandyDeviceIdSettingsDialog(Settings.HandyDeviceId, Handy.LocalIp, Handy.ServeScriptPort.ToString(), !Handy.HttpServerRunning);
+            if (deviceIdDialog.ShowDialog() != true) return false;           
             Settings.HandyDeviceId = deviceIdDialog.DeviceId;
+            Handy.LocalIp = deviceIdDialog.LocalIp;
+
+            if(int.TryParse(deviceIdDialog.Port, out int parsedPort))
+                Handy.ServeScriptPort = parsedPort;
+
             return true;
         }
 
@@ -4598,7 +4604,11 @@ namespace ScriptPlayer.ViewModels
             else
             {
                 if(Handy == null)
+                {
                     Handy = new HandyController();
+                    AskForHandyDeviceId();
+                }
+                Handy.StartHttpServer();
                 Handy.CheckConnected(connected =>
                 {
                     if(!connected)

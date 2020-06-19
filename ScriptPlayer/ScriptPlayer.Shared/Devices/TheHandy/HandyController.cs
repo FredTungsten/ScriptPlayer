@@ -22,10 +22,10 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         public static bool IsDeviceIdSet => DeviceId != _defaultKey;
 
         public static string Default => _defaultKey;
-        public static string ConnectionBaseUrl { 
+        public static string ConnectionBaseUrl {
             get
             {
-                if(_updateConnectionUrl)
+                if (_updateConnectionUrl)
                 {
                     _updateConnectionUrl = false;
                     _connectionUrlWithId = string.Format(_connectionUrlBaseFormat, DeviceId);
@@ -36,11 +36,11 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
 
         private static bool _updateConnectionUrl = true;
         private static string _deviceId = _defaultKey;
-        public static string DeviceId { 
+        public static string DeviceId {
             get => _deviceId;
             set
             {
-                if(value != _deviceId)
+                if (value != _deviceId)
                     _updateConnectionUrl = true;
                 _deviceId = value;
             }
@@ -117,20 +117,31 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
 
         private long _offsetAverage; // holds calculated offset that gets added to current unix time in ms to estimate api server time
 
-        public string ScriptHostUrl => $"http://{GetLocalIp()}:{ServeScriptPort}/script/";
+        public string ScriptHostUrl => $"http://{LocalIp}:{ServeScriptPort}/script/";
 
         private TimeSpan _currentTime = TimeSpan.FromSeconds(0);
         private bool _playing = false;
 
+        public string LocalIp { get; set; }
+
+        public bool HttpServerRunning => _serveScriptThread != null && _serveScriptThread.IsAlive;
+
         public HandyController()
         {
+            LocalIp = GetLocalIp();
             _http = new HttpClient();
             _http.DefaultRequestHeaders.Accept.Clear();
             _http.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
-            _server = new HttpListener();
-            _serveScriptThread = new Thread(ServeScript);
-            _serveScriptThread.Start();
+        }
+
+        public void StartHttpServer()
+        {
+            if(_serveScriptThread == null || !_serveScriptThread.IsAlive)
+            {
+                _serveScriptThread = new Thread(ServeScript);
+                _serveScriptThread.Start();
+            }
         }
 
         private string GetLocalIp()
@@ -151,8 +162,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             if (!string.IsNullOrWhiteSpace(foundIp))
                 return foundIp;
 
-            MessageBox.Show("Failed to find local ip. fuck.");
-            return "";
+            return "failed to find ip";
         }
 
         public void Exit()
@@ -173,6 +183,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         // aswell as no firewall blocking access / windows firewall is blocking by default ...
         private void ServeScript()
         {
+            _server = new HttpListener();
             _server.Prefixes.Add($"http://*:{ServeScriptPort}/script/");
             try
             {
