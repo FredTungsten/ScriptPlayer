@@ -131,14 +131,6 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             _server = new HttpListener();
             _serveScriptThread = new Thread(ServeScript);
             _serveScriptThread.Start();
-
-            // TODO: REMOVE
-            SyncPlay(new HandyPlay()
-            {
-                play = true,
-                serverTime = GetServerTimeEstimate(),
-                time = (int)0.0
-            });
         }
 
         private string GetLocalIp()
