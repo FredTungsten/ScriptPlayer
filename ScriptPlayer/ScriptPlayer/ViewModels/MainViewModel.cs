@@ -4780,7 +4780,7 @@ namespace ScriptPlayer.ViewModels
         {
             InstanceHandler.CommandLineReceived -= InstanceHandlerOnCommandLineReceived;
             InstanceHandler.Shutdown();
-
+            Handy?.Exit();
             SaveSettings();
             SavePlaylist();
         }

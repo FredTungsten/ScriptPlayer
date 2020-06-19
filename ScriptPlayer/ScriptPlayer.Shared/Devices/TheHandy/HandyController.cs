@@ -72,7 +72,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             public int mode { get; set; }
             public float position { get; set; }
             public int stroke { get; set; }
-            public int speed { get; set; }
+            public float speed { get; set; }
         }
 
         class HandyPlay
@@ -160,6 +160,19 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             return "";
         }
 
+        public void Exit()
+        {
+            if (_serveScriptThread.IsAlive)
+            {
+                try
+                {
+                    _server.Close();
+                    _serveScriptThread.Abort();
+                }
+                catch(Exception) { }
+            }
+        }
+
         // host current loaded script on {local-ip}:{ServeScriptPort}/script/
         // handy needs to be in the same network for this to work also needs administrator
         // aswell as no firewall blocking access / windows firewall is blocking by default ...
@@ -168,7 +181,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             _server.Prefixes.Add($"http://*:{ServeScriptPort}/script/");
             try
             {
-                _server.Start(); 
+                _server.Start();
             }
             catch(HttpListenerException ex)
             {
@@ -192,9 +205,14 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             {
                 Debug.WriteLine("Listening...");
                 // Note: The GetContext method blocks while waiting for a request.
-                HttpListenerContext context = _server.GetContext();
-                HttpListenerRequest request = context.Request;
-                HttpListenerResponse response = context.Response;
+                HttpListenerResponse response = null;
+                try
+                {
+                    HttpListenerContext context = _server.GetContext();
+                    HttpListenerRequest request = context.Request;
+                    response = context.Response;
+                }
+                catch (Exception) { break; }
                 
                 // Construct a response.
                 byte[] buffer;
