@@ -98,6 +98,8 @@ namespace ScriptPlayer.Shared
                     _lastChecked.Add(btAdv.BluetoothAddress, DateTime.Now);
                 else if (DateTime.Now - _lastChecked[btAdv.BluetoothAddress] < minTimeBetweenChecks)
                     return;
+
+                _lastChecked[btAdv.BluetoothAddress] = DateTime.Now;
             }
 
             var uids = btAdv.Advertisement?.ServiceUuids.ToList();
