@@ -4594,29 +4594,20 @@ namespace ScriptPlayer.ViewModels
         public void ConnectHandyDirectly()
         {
             HandyHelper.DeviceId = Settings.HandyDeviceId;
-            if(!HandyHelper.IsDeviceIdSet)
+
+            if(Handy == null)
             {
-                // TODO: set device Id
-                Debug.WriteLine("NO HANDY DEVICE_ID SET");
-                MessageBox.Show("Set device handy and try again.");
+                Handy = new HandyController();
                 AskForHandyDeviceId();
             }
-            else
+            Handy.StartHttpServer();
+            Handy.CheckConnected(connected =>
             {
-                if(Handy == null)
+                if(!connected)
                 {
-                    Handy = new HandyController();
-                    AskForHandyDeviceId();
+                    Application.Current.Dispatcher.Invoke(AskForHandyDeviceId);
                 }
-                Handy.StartHttpServer();
-                Handy.CheckConnected(connected =>
-                {
-                    if(!connected)
-                    {
-                        Application.Current.Dispatcher.Invoke(AskForHandyDeviceId);
-                    }
-                });
-            }
+            });
         }
 
         public void VolumeDown()
