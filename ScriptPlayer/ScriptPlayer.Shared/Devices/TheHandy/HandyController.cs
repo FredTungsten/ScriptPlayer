@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Web.UI;
 using System.Diagnostics;
 using ScriptPlayer.Shared.Scripts;
 using System.Net;
@@ -15,12 +12,11 @@ using System.Web;
 using System.Reflection;
 using System.Net.Http.Headers;
 using System.Windows;
-using System.ServiceModel;
 
 namespace ScriptPlayer.Shared.Devices.TheHandy
 {
     public static class HandyHelper {
-        private static readonly string _connectionUrlBaseFormat = @"https://www.handyfeeling.com/api/v1/{0}/";
+        private const string _connectionUrlBaseFormat = @"https://www.handyfeeling.com/api/v1/{0}/";
         private static string _connectionUrlWithId = null;
         private const string _defaultKey = "NO_KEY";
         public static bool IsDeviceIdSet => DeviceId != _defaultKey;
@@ -119,7 +115,6 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
 
         Thread _serveScriptThread; // thread running the http server hosting the script
 
-        private long _timeOfUpdateServerTime; // holds local time when update was done
         private long _offsetAverage; // holds calculated offset that gets added to current unix time in ms to estimate api server time
 
         public string ScriptHostUrl => $"http://{GetLocalIp()}:{ServeScriptPort}/script/";
@@ -136,6 +131,14 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             _server = new HttpListener();
             _serveScriptThread = new Thread(ServeScript);
             _serveScriptThread.Start();
+
+            // TODO: REMOVE
+            SyncPlay(new HandyPlay()
+            {
+                play = true,
+                serverTime = GetServerTimeEstimate(),
+                time = (int)0.0
+            });
         }
 
         private string GetLocalIp()
@@ -205,7 +208,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             {
                 Debug.WriteLine("Listening...");
                 // Note: The GetContext method blocks while waiting for a request.
-                HttpListenerResponse response = null;
+                HttpListenerResponse response;
                 try
                 {
                     HttpListenerContext context = _server.GetContext();
@@ -252,7 +255,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                     var status = await response.Content.ReadAsAsync<HandyResponse>();
                     if(status.success)
                     {
-                        UpdateServerTime();
+                        CalcServerTimeOffset();
                         SetSyncMode();
                         Connected = true;
                         Debug.WriteLine("Successfully connected");
@@ -295,8 +298,9 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         public void PrepareNewFunscript(string fileName, List<ScriptAction> actions)
         {
             string csv = GenerateCSVFromActions(actions);
-            long scriptSize = System.Text.Encoding.UTF8.GetByteCount(csv);
-            if(scriptSize <= (1048576 * 0.99))
+            long scriptSize = Encoding.UTF8.GetByteCount(csv);
+            // the maximum size for the script is 1MB
+            if(scriptSize <= (1048576 * 0.995)) // 1MB - 5kb just in case
             {
                 _loadedScript = csv;
                 _scriptName = fileName;
@@ -319,7 +323,6 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                 _loadedScript = null;
                 _scriptName = null;
             }
-
         }
 
         private void ScaleScript(List<ScriptAction> actions)
@@ -413,6 +416,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         {
             // there is probably a better way to do the same thing
             var query = HttpUtility.ParseQueryString(string.Empty);
+
             PropertyInfo[] properties = queryObject.GetType().GetProperties();
             foreach (PropertyInfo property in properties)
             {
@@ -421,7 +425,9 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                 {
                     if(val is bool boolVal)
                     {
-                        query[property.Name] = val.ToString().ToLower();
+                        // by default bool ToString() returns "True" or "False"
+                        // which I think has to be lower case for the query
+                        query[property.Name] = boolVal.ToString().ToLower();
                     }
                     else
                     {
@@ -466,11 +472,10 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         {
             public long serverTime { get; set; }
         }
-        public void UpdateServerTime()
+        public void CalcServerTimeOffset()
         {
             // due too an api rate limit of I think 60 request per minute I chose just 10 attempts instead of 30...
-            const int maxSyncAttempts = 10; 
-            long Ts_est = 0;
+            const int maxSyncAttempts = 10;
             long offset_agg = 0;
             for (int i = 0; i < maxSyncAttempts; i++)
             {
@@ -480,18 +485,13 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                 var RTD = Treceive - Tsend;
 
                 var Ts = result.Content.ReadAsAsync<HandyTimeResponse>().Result.serverTime;
-                Ts_est = Ts + (RTD / 2);
+                long Ts_est = Ts + (RTD / 2);
 
                 offset_agg += Ts_est - Treceive;
             }
             _offsetAverage = (int)((double)offset_agg/(double)maxSyncAttempts);
-
-            _timeOfUpdateServerTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
 
-        private long GetServerTimeEstimate()
-        {
-            return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + _offsetAverage;
-        }
+        private long GetServerTimeEstimate() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + _offsetAverage;
     }
 }
