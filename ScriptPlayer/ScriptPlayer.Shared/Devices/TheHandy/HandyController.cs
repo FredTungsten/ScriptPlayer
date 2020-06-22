@@ -1,4 +1,6 @@
-﻿using System;
+﻿#pragma warning disable IDE1006 // Naming Styles
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -12,9 +14,46 @@ using System.Web;
 using System.Reflection;
 using System.Net.Http.Headers;
 using System.Windows;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace ScriptPlayer.Shared.Devices.TheHandy
 {
+    public class BlockingTaskQueue
+    {
+        private BlockingCollection<Task> _jobs = new BlockingCollection<Task>();
+
+        private CancellationTokenSource _tokenSource = new CancellationTokenSource();
+
+        private Thread _worker;
+
+        public BlockingTaskQueue()
+        {
+            _worker = new Thread(new ThreadStart(OnStart));
+            _worker.IsBackground = true;
+            _worker.Start();
+        }
+
+        public void Enqueue(Task job)
+        {
+            _jobs.Add(job);
+        }
+
+        private void OnStart()
+        {
+            foreach (var job in _jobs.GetConsumingEnumerable(_tokenSource.Token))
+            {
+                job.RunSynchronously();
+            }
+        }
+
+        public void Cancel()
+        {
+            _tokenSource.Cancel();
+            _worker.Abort();
+        }
+    }
+
     public static class HandyHelper {
         private const string _connectionUrlBaseFormat = @"https://www.handyfeeling.com/api/v1/{0}/";
         private static string _connectionUrlWithId = null;
@@ -91,6 +130,14 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             public int? timeout { get; set; }
         }
 
+        class HandyOffset
+        {
+            // required
+            public int offset { get; set; }
+            // optional
+            public int? timeout { get; set; }
+        }
+
         class HandyAdjust
         {
             // required
@@ -101,7 +148,6 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             public int? timeout { get; set; } 
         }
 
-        // TODO: make serve script port configurable
         public int ServeScriptPort { get; set; } = 80;
         public bool Connected { get; private set; }
 
@@ -126,9 +172,19 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
 
         public bool HttpServerRunning => _serveScriptThread != null && _serveScriptThread.IsAlive;
 
+        // offset task to not spam server with api calls everytime the offset changes slightly
+        private Task _updateOffsetTask = null;
+        private int _newOffsetMs;
+        private bool _resetOffsetTask = false;
+        private object _updateOffsetLock = new object();
+
+        // api call queue ensures correct order of api calls
+        private BlockingTaskQueue _apiCallQueue = null;
+
         public HandyController()
         {
             LocalIp = GetLocalIp();
+            _apiCallQueue = new BlockingTaskQueue();
             _http = new HttpClient();
             _http.DefaultRequestHeaders.Accept.Clear();
             _http.DefaultRequestHeaders.Accept.Add(
@@ -167,6 +223,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
 
         public void Exit()
         {
+            _apiCallQueue.Cancel();
             if (_serveScriptThread.IsAlive)
             {
                 try
@@ -184,7 +241,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         private void ServeScript()
         {
             _server = new HttpListener();
-            _server.Prefixes.Add($"http://*:{ServeScriptPort}/script/");
+            _server.Prefixes.Add($"http://+:{ServeScriptPort}/script/");
             try
             {
                 _server.Start();
@@ -276,26 +333,32 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         private void SendGetRequest(string url, Action<HttpResponseMessage> resultCallback = null, bool ignoreConnected = false)
         {
             if (!ignoreConnected && !Connected) return;
-            var result = _http.GetAsync(url);
-            if (resultCallback != null)
-                result.ContinueWith(r => resultCallback(r.Result));
-            else
+            var apiCall = new Task(async () =>
             {
-#if DEBUG
-                result.ContinueWith(r =>
+                var request = _http.GetAsync(url);
+                Task call = request;
+                if (resultCallback != null)
+                    call = request.ContinueWith(r => resultCallback(r.Result));
+                else
                 {
-                    HandyResponse resp = r.Result.Content.ReadAsAsync<HandyResponse>().Result;
-                    if (!resp.success)
+    #if DEBUG
+                    call = request.ContinueWith(r =>
                     {
-                        Debug.WriteLine($"error: cmd:{resp.cmd} - {resp.error} - {url}");
-                    }
-                    else
-                    {
-                        Debug.WriteLine($"success: {url}");
-                    }
-                });
-#endif
-            }
+                        HandyResponse resp = r.Result.Content.ReadAsAsync<HandyResponse>().Result;
+                        if (!resp.success)
+                        {
+                            Debug.WriteLine($"error: cmd:{resp.cmd} - {resp.error} - {url}");
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"success: {url}");
+                        }
+                    });
+    #endif
+                }
+                await call; // wait for response
+            });
+            _apiCallQueue.Enqueue(apiCall);
         }
 
         public void PrepareNewFunscript(string fileName, List<ScriptAction> actions)
@@ -326,6 +389,43 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                 _loadedScript = null;
                 _scriptName = null;
             }
+        }
+
+        public void SetScriptOffset(TimeSpan offset)
+        {
+            lock (_updateOffsetLock)
+            {
+                _newOffsetMs = (int)offset.TotalMilliseconds;
+                if (!_updateOffsetTask?.IsCompleted ?? false)
+                {
+                    _resetOffsetTask = true;
+                    return;
+                }
+
+                _resetOffsetTask = true;
+                _updateOffsetTask = Task.Run(() =>
+                {
+                    while(_resetOffsetTask)
+                    {
+                        Debug.WriteLine("offset task waiting ...");
+                        _resetOffsetTask = false;
+                        Thread.Sleep(200);
+                    }
+
+                    Debug.WriteLine($"set offset to {_newOffsetMs}");
+                    SyncOffset(new HandyOffset()
+                    {
+                        offset = _newOffsetMs
+                    });
+                });
+            }
+        }
+
+        private void SyncOffset(HandyOffset offset)
+        {
+            string url = GetQuery("syncOffset", offset);
+            Debug.WriteLine($"{nameof(SyncOffset)}: {url}");
+            SendGetRequest(url);
         }
 
         private void ScaleScript(List<ScriptAction> actions)
@@ -370,7 +470,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             // but seems to be working fine without resyncing
 
             //if (!_playing) return;
-            //if (DateTime.Now - _lastSyncAdjust >= TimeSpan.FromSeconds(10) || (_currentTime.TotalMilliseconds - time.TotalMilliseconds) >= 500)
+            //if (DateTime.Now - _lastSyncAdjust >= TimeSpan.FromSeconds(10) || Math.Abs((_currentTime - time).TotalMilliseconds) >= 500)
             //{
             //    Debug.WriteLine($"Resync time: {time.TotalMilliseconds}");
             //    Debug.WriteLine($"Current time: {_currentTime.TotalMilliseconds}");
@@ -384,6 +484,19 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             //        timeout = 5000
             //    });
             //}
+
+
+            // HACK: this resyncs whenever there is a jump greater than 500ms
+            // this solves auto skip gaps
+            if(_scriptLoaded && _playing) { 
+                if (Math.Abs((_currentTime - time).TotalMilliseconds) >= 500)
+                {
+                    Debug.WriteLine("Resync HACK");
+                    Play(false, time.TotalMilliseconds);
+                    Play(true, time.TotalMilliseconds);
+                }
+            }
+
             _currentTime = time;
         }
 
@@ -455,7 +568,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         private void SetSyncMode()
         {
             string url = GetQuery("setMode", new { mode = 4 });
-            Debug.WriteLine($"{nameof(SyncAdjust)}: {url}");
+            Debug.WriteLine($"{nameof(SetSyncMode)}: {url}");
             SendGetRequest(url);
         }
 

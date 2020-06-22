@@ -1927,6 +1927,7 @@ namespace ScriptPlayer.ViewModels
         private void UpdateScriptDelay()
         {
             _scriptHandler.Delay = Settings.ScriptDelay;
+            Handy?.SetScriptOffset(Settings.ScriptDelay);
         }
 
         public void Dispose()
@@ -3718,6 +3719,12 @@ namespace ScriptPlayer.ViewModels
                         if (Settings.AutoSkip || Settings.RandomChapters)
                         {
                             SkipToNextEvent();
+                            
+                            //if(Handy != null)
+                            //{
+                            //    Handy.Play(false, TimeSource.Progress.TotalMilliseconds);
+                            //    Handy.Play(true, TimeSource.Progress.TotalMilliseconds);
+                            //}
                         }
                         else
                         {
@@ -4583,6 +4590,7 @@ namespace ScriptPlayer.ViewModels
             HandyDeviceIdSettingsDialog deviceIdDialog = new HandyDeviceIdSettingsDialog(Settings.HandyDeviceId, Handy.LocalIp, Handy.ServeScriptPort.ToString(), !Handy.HttpServerRunning);
             if (deviceIdDialog.ShowDialog() != true) return false;           
             Settings.HandyDeviceId = deviceIdDialog.DeviceId;
+            HandyHelper.DeviceId = deviceIdDialog.DeviceId;
             Handy.LocalIp = deviceIdDialog.LocalIp;
 
             if(int.TryParse(deviceIdDialog.Port, out int parsedPort))
