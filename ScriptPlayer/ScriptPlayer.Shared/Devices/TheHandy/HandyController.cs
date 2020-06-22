@@ -333,7 +333,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         private void SendGetRequest(string url, Action<HttpResponseMessage> resultCallback = null, bool ignoreConnected = false)
         {
             if (!ignoreConnected && !Connected) return;
-            var apiCall = new Task(async () =>
+            var apiCall = new Task(() =>
             {
                 var request = _http.GetAsync(url);
                 Task call = request;
@@ -356,7 +356,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                     });
     #endif
                 }
-                await call; // wait for response
+                call.Wait(); // wait for response
             });
             _apiCallQueue.Enqueue(apiCall);
         }
