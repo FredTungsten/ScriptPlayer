@@ -251,6 +251,7 @@
     <Compile Include="Devices\DeviceController.cs" />
     <Compile Include="Devices\Estim\SineWaveProvider.cs" />
     <Compile Include="Devices\TheHandy\HandyController.cs" />
+    <Compile Include="Devices\TheHandy\HandyScriptServer.cs" />
     <Compile Include="Dialogs\BeatPatternEditor.xaml.cs">
       <DependentUpon>BeatPatternEditor.xaml</DependentUpon>
     </Compile>

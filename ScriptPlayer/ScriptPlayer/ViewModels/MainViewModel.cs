@@ -28,6 +28,7 @@ using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using ScriptPlayer.Shared.Devices.TheHandy;
 using System.Runtime.InteropServices;
+using System.ServiceModel.Channels;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -4587,14 +4588,34 @@ namespace ScriptPlayer.ViewModels
 
         private bool AskForHandyDeviceId()
         {
-            HandyDeviceIdSettingsDialog deviceIdDialog = new HandyDeviceIdSettingsDialog(Settings.HandyDeviceId, Handy.LocalIp, Handy.ServeScriptPort.ToString(), !Handy.HttpServerRunning);
+            HandyDeviceIdSettingsDialog deviceIdDialog = null;
+            if (Handy.UseLocalScriptServer)
+            {
+                deviceIdDialog = new HandyDeviceIdSettingsDialog(Settings.HandyDeviceId,
+                    Handy.LocalScriptServer.LocalIp,
+                    Handy.LocalScriptServer.ServeScriptPort.ToString(),
+                    !Handy.LocalScriptServer.HttpServerRunning
+                );
+            }
+            else
+            {
+                deviceIdDialog = new HandyDeviceIdSettingsDialog(Settings.HandyDeviceId,
+                    "unused",
+                    "unused",
+                    false
+                );
+            }
+
             if (deviceIdDialog.ShowDialog() != true) return false;           
             Settings.HandyDeviceId = deviceIdDialog.DeviceId;
             HandyHelper.DeviceId = deviceIdDialog.DeviceId;
-            Handy.LocalIp = deviceIdDialog.LocalIp;
-
-            if(int.TryParse(deviceIdDialog.Port, out int parsedPort))
-                Handy.ServeScriptPort = parsedPort;
+            
+            if(Handy.UseLocalScriptServer)
+            {
+                Handy.LocalScriptServer.LocalIp = deviceIdDialog.LocalIp;
+                if(int.TryParse(deviceIdDialog.Port, out int parsedPort))
+                    Handy.LocalScriptServer.ServeScriptPort = parsedPort;
+            }
 
             return true;
         }
@@ -4605,10 +4626,11 @@ namespace ScriptPlayer.ViewModels
 
             if(Handy == null)
             {
-                Handy = new HandyController();
+                var hostLocal = MessageBox.Show("Host scripts locally?\nNo means the script gets uploaded to handyfeeling.com.", "Host?", MessageBoxButton.YesNo);
+                Handy = new HandyController(hostLocal == MessageBoxResult.Yes);
                 AskForHandyDeviceId();
             }
-            Handy.StartHttpServer();
+            Handy.StartLocalHttpServer(); // this does nothing when hostLocal is false
             Handy.CheckConnected(connected =>
             {
                 if(!connected)

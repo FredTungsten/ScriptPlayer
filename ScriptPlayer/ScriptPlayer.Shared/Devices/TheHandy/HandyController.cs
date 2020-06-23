@@ -16,6 +16,8 @@ using System.Net.Http.Headers;
 using System.Windows;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.IO;
+using System.ServiceModel.Channels;
 
 namespace ScriptPlayer.Shared.Devices.TheHandy
 {
@@ -110,6 +112,18 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             public float speed { get; set; }
         }
 
+        class HandyUploadResponse
+        {
+            public bool success { get; set; }
+            public bool? converted { get; set; }
+            public string filename { get; set; }
+            public string info { get; set; }
+            public string orginalfile { get; set; }
+            public int size { get; set; }
+            public string url { get; set; }
+            public string error { get; set; }
+        }
+
         class HandyPlay
         {
             // required
@@ -148,29 +162,24 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             public int? timeout { get; set; } 
         }
 
-        public int ServeScriptPort { get; set; } = 80;
+        public bool UseLocalScriptServer => LocalScriptServer != null;
+        public HandyScriptServer LocalScriptServer { get; private set; } = null;
+        
         public bool Connected { get; private set; }
 
         private HttpClient _http;
-        private HttpListener _server;
         private DateTimeOffset _lastSyncAdjust = DateTimeOffset.Now;
 
         private bool _scriptLoaded => _loadedScript != null;
         private string _loadedScript; // script text as csv
         private string _scriptName; // path to script
 
-        Thread _serveScriptThread; // thread running the http server hosting the script
-
         private long _offsetAverage; // holds calculated offset that gets added to current unix time in ms to estimate api server time
 
-        public string ScriptHostUrl => $"http://{LocalIp}:{ServeScriptPort}/script/";
 
         private TimeSpan _currentTime = TimeSpan.FromSeconds(0);
         private bool _playing = false;
 
-        public string LocalIp { get; set; }
-
-        public bool HttpServerRunning => _serveScriptThread != null && _serveScriptThread.IsAlive;
 
         // offset task to not spam server with api calls everytime the offset changes slightly
         private Task _updateOffsetTask = null;
@@ -181,128 +190,32 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         // api call queue ensures correct order of api calls
         private BlockingTaskQueue _apiCallQueue = null;
 
-        public HandyController()
+        public HandyController(bool hostLocal)
         {
-            LocalIp = GetLocalIp();
+            if(hostLocal)
+            {
+                LocalScriptServer = new HandyScriptServer();
+            }
+
             _apiCallQueue = new BlockingTaskQueue();
             _http = new HttpClient();
             _http.DefaultRequestHeaders.Accept.Clear();
-            _http.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
-        }
-
-        public void StartHttpServer()
-        {
-            if(_serveScriptThread == null || !_serveScriptThread.IsAlive)
-            {
-                _serveScriptThread = new Thread(ServeScript);
-                _serveScriptThread.Start();
-            }
-        }
-
-        private string GetLocalIp()
-        {
-            // TODO: this isn't great but hopefully works for alot of people?
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            string foundIp = null;
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    foundIp = ip.ToString();
-                    if (foundIp.StartsWith("192"))
-                        return foundIp;
-                }
-            }
-            // return the last found ipv4 address if there is none starting with 192
-            if (!string.IsNullOrWhiteSpace(foundIp))
-                return foundIp;
-
-            return "failed to find ip";
+            _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
         }
 
         public void Exit()
         {
             _apiCallQueue.Cancel();
-            if (_serveScriptThread.IsAlive)
-            {
-                try
-                {
-                    _server.Close();
-                    _serveScriptThread.Abort();
-                }
-                catch(Exception) { }
-            }
-        }
-
-        // host current loaded script on {local-ip}:{ServeScriptPort}/script/
-        // handy needs to be in the same network for this to work also needs administrator
-        // aswell as no firewall blocking access / windows firewall is blocking by default ...
-        private void ServeScript()
-        {
-            _server = new HttpListener();
-            _server.Prefixes.Add($"http://+:{ServeScriptPort}/script/");
-            try
-            {
-                _server.Start();
-            }
-            catch(HttpListenerException ex)
-            {
-                // ACCESS DENIED
-                // probably needs administrator
-                MessageBox.Show($"Error hosting script: \"{ex.Message}\" (Try as Administrator)", "Error");
-                return;
-            }
-            if(MessageBox.Show($"Hosting handy script at: {ScriptHostUrl}script.csv\n(Press \"Yes\" to test in browser.)\n"
-                + "Try accessing the server with another device in the same network (maybe your phone) to test that no firewall is blocking it otherwise the Handy will also not be able to get the script.",
-                "Host",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Asterisk) 
-                == MessageBoxResult.Yes)
-            {
-                Process.Start($"{ScriptHostUrl}script.csv");
-            }
-
-            Debug.WriteLine("hosting scripts @ " + ScriptHostUrl);
-            while(true)
-            {
-                Debug.WriteLine("Listening...");
-                // Note: The GetContext method blocks while waiting for a request.
-                HttpListenerResponse response;
-                try
-                {
-                    HttpListenerContext context = _server.GetContext();
-                    HttpListenerRequest request = context.Request;
-                    response = context.Response;
-                }
-                catch (Exception) { break; }
-                
-                // Construct a response.
-                byte[] buffer;
-                if(_scriptLoaded)
-                {
-                    string responseString = _loadedScript;
-                    buffer = Encoding.UTF8.GetBytes(responseString);
-                    response.ContentType = "text/csv";
-                }
-                else
-                {
-                    buffer = Encoding.UTF8.GetBytes("No script loaded.\nLoad a script and refresh to download.\nThe handy will fetch the script the same way.");
-                    response.ContentType = "text/plain";
-                }
-                // Get a response stream and write the response to it.
-                response.ContentLength64 = buffer.Length;
-                System.IO.Stream output = response.OutputStream;
-                output.Write(buffer, 0, buffer.Length);
-                output.Close();
-            }
-            _server.Stop();
+            LocalScriptServer?.Exit();
         }
 
         private string UrlFor(string path)
         {
             return $"{HandyHelper.ConnectionBaseUrl}{path}";
         }
+
+        public void StartLocalHttpServer() => LocalScriptServer?.Start();
 
         public void CheckConnected(Action<bool> successCallback = null) => GetStatus(successCallback);
 
@@ -361,7 +274,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             _apiCallQueue.Enqueue(apiCall);
         }
 
-        public void PrepareNewFunscript(string fileName, List<ScriptAction> actions)
+        public void PrepareNewFunscript(string filePath, List<ScriptAction> actions)
         {
             string csv = GenerateCSVFromActions(actions);
             long scriptSize = Encoding.UTF8.GetByteCount(csv);
@@ -369,15 +282,35 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             if(scriptSize <= (1048576 * 0.995)) // 1MB - 5kb just in case
             {
                 _loadedScript = csv;
-                _scriptName = fileName;
-                if (!_serveScriptThread.IsAlive)
-                    _serveScriptThread = new Thread(ServeScript);
+                _scriptName = filePath;
+                string filename = System.IO.Path.GetFileName(filePath);
+
+                string scriptUrl = null;
+                if (UseLocalScriptServer)
+                {
+                    LocalScriptServer.LoadedScript = csv;
+                    scriptUrl = LocalScriptServer.ScriptHostUrl + "tmp.csv";
+                }
+                else
+                {
+                    var response = PostScriptToHandyfeeling(filename, csv);
+                    if(response.success)
+                    {
+                        scriptUrl = response.url;
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Failed to upload script");
+                        MessageBox.Show($"Failed to upload script to handyfeeling.com.\n{response.error}\n{response.info}");
+                        return;
+                    }
+                }
+
                 SetSyncMode();
                 SyncPrepare(new HandyPrepare()
                 {
-                    name = System.IO.Path.GetFileNameWithoutExtension(_scriptName),
-                    url = ScriptHostUrl + "tmp.csv",
-                    //url = @"https://sweettecheu.s3.eu-central-1.amazonaws.com/scripts/admin/dataset.csv",
+                    name = filename,
+                    url = scriptUrl,
                     size = (int)scriptSize,
                     timeout = 20000
                 });
@@ -388,7 +321,35 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                 MessageBox.Show("The script is to large for the Handy.");
                 _loadedScript = null;
                 _scriptName = null;
+                if (UseLocalScriptServer)
+                    LocalScriptServer.LoadedScript = null;
             }
+        }
+
+        private HandyUploadResponse PostScriptToHandyfeeling(string filename, string csv)
+        {
+            const string uploadUrl = "https://www.handyfeeling.com/api/sync/upload";
+            string name = Path.GetFileNameWithoutExtension(filename);
+            string csvFileName = $"{name}.csv";
+
+            var requestContent = new MultipartFormDataContent();
+
+            var fileContent = new StreamContent(new MemoryStream(Encoding.UTF8.GetBytes(csv)));
+            //var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
+            fileContent.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("form-data")
+            {
+                Name = "syncFile",
+                FileName = "\"" + csvFileName + "\""
+            };
+
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
+            requestContent.Add(fileContent, name, csvFileName);
+
+
+
+            var request = _http.PostAsync(uploadUrl, requestContent);
+            var response = request.Result.Content.ReadAsAsync<HandyUploadResponse>().Result;
+            return response;
         }
 
         public void SetScriptOffset(TimeSpan offset)
