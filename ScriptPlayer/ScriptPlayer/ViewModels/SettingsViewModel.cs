@@ -1418,7 +1418,7 @@ namespace ScriptPlayer.ViewModels
             get => _estimAudioDevice;
             set
             {
-                if (value.Equals(_estimAudioDevice)) return;
+                if (Equals(value,_estimAudioDevice)) return;
                 _estimAudioDevice = value;
                 OnPropertyChanged();
             }

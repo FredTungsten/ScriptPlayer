@@ -1964,14 +1964,12 @@ namespace ScriptPlayer.ViewModels
             {
                 oldValue.MediaOpened -= VideoPlayer_MediaOpened;
                 oldValue.MediaEnded -= VideoPlayer_MediaEnded;
-                oldValue.MouseRightButtonDown -= VideoPlayer_MouseRightButtonDown;
             }
 
             if (newValue != null)
             {
                 newValue.MediaOpened += VideoPlayer_MediaOpened;
                 newValue.MediaEnded += VideoPlayer_MediaEnded;
-                newValue.MouseRightButtonDown += VideoPlayer_MouseRightButtonDown;
 
                 TimeSource = newValue.TimeSource;
             }
@@ -2696,6 +2694,44 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Decrease Audio Delay",
             });
 
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreasePatternSpeed)
+            {
+                CommandId = "IncreasePatternSpeed",
+                DisplayText = "Increase Pattern Speed",
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreasePatternSpeed)
+            {
+                CommandId = "DecreasePatternSpeed",
+                DisplayText = "Decrease Pattern Speed",
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseMinSpeed)
+            {
+                CommandId = "IncreaseMinSpeed",
+                DisplayText = "Increase Min Speed",
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreaseMinSpeed)
+            {
+                CommandId = "DecreaseMinSpeed",
+                DisplayText = "Decrease Min Speed",
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseMaxSpeed)
+            {
+                CommandId = "IncreaseMaxSpeed",
+                DisplayText = "Increase Max Speed",
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreaseMaxSpeed)
+            {
+                CommandId = "DecreaseMaxSpeed",
+                DisplayText = "Decrease Max Speed",
+            });
+
+
+
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(Play, CanTogglePlayback)
             {
                 CommandId = "Play",
@@ -2779,6 +2815,54 @@ namespace ScriptPlayer.ViewModels
                     GlobalCommandManager.GetShortcut(Key.MediaPreviousTrack, ModifierKeys.None, true)
                 }
             });
+        }
+
+        private void DecreaseMinSpeed()
+        {
+            if (Settings.MinSpeed > 0)
+                Settings.MinSpeed = (byte)Math.Max(0, (int)(Settings.MinSpeed - 5));
+
+            OsdShowMessage("Min Speed: " + Settings.MinSpeed, TimeSpan.FromSeconds(2), "MinSpeed");
+        }
+
+        private void IncreaseMinSpeed()
+        {
+            if (Settings.MinSpeed < 99 && Settings.MinSpeed < Settings.MaxSpeed)
+                Settings.MinSpeed = (byte)Math.Min(99, Math.Min(Settings.MaxSpeed, Settings.MinSpeed + 5));
+
+            OsdShowMessage("Min Speed: " + Settings.MinSpeed, TimeSpan.FromSeconds(2), "MinSpeed");
+        }
+
+        private void DecreaseMaxSpeed()
+        {
+            if (Settings.MaxSpeed > 0 && Settings.MaxSpeed > Settings.MinSpeed)
+                Settings.MaxSpeed = (byte)Math.Max(0, Math.Max(Settings.MaxSpeed - 5, Settings.MinSpeed));
+
+            OsdShowMessage("Max Speed: " + Settings.MaxSpeed, TimeSpan.FromSeconds(2), "MaxSpeed");
+        }
+
+        private void IncreaseMaxSpeed()
+        {
+            if (Settings.MaxSpeed < 99 )
+                Settings.MaxSpeed = (byte)Math.Min(99, Settings.MaxSpeed + 5);
+
+            OsdShowMessage("Min Speed: " + Settings.MinSpeed, TimeSpan.FromSeconds(2), "MaxSpeed");
+        }
+
+        private void DecreasePatternSpeed()
+        {
+            if (Settings.PatternSpeed < TimeSpan.FromMilliseconds(1000))
+                Settings.PatternSpeed = TimeSpan.FromMilliseconds(Math.Min(1000, (int)Settings.PatternSpeed.TotalMilliseconds + 25));
+
+            OsdShowMessage("Pattern Speed: " + Settings.PatternSpeed.TotalMilliseconds.ToString("F0") + " ms / command", TimeSpan.FromSeconds(2), "PatternSpeed");
+        }
+
+        private void IncreasePatternSpeed()
+        {
+            if (Settings.PatternSpeed > TimeSpan.FromMilliseconds(100))
+                Settings.PatternSpeed = TimeSpan.FromMilliseconds(Math.Max(100, (int)Settings.PatternSpeed.TotalMilliseconds - 25));
+
+            OsdShowMessage("Pattern Speed: " + Settings.PatternSpeed.TotalMilliseconds.ToString("F0") + " ms / command", TimeSpan.FromSeconds(2), "PatternSpeed");
         }
 
         private void AddEstimAudioDevice()
@@ -3951,7 +4035,7 @@ namespace ScriptPlayer.ViewModels
             Playlist.PlayPreviousEntry();
         }
 
-        private void VideoPlayer_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        public void LogMarkerNow()
         {
             if (Settings.LogMarkers != true)
                 return;

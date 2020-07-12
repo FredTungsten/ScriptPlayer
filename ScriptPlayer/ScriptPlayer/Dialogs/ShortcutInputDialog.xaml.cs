@@ -58,5 +58,23 @@ namespace ScriptPlayer.Dialogs
         {
             GlobalCommandManager.PreviewKeyReceived -= GlobalCommandManagerOnPreviewKeyReceived;
         }
+
+        private void Window_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            string shortcut = GlobalCommandManager.GetShortcut(e);
+            e.Handled = true;
+
+            Shortcut = shortcut;
+            DialogResult = true;
+        }
+
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            string shortcut = GlobalCommandManager.GetShortcut(e);
+            e.Handled = true;
+
+            Shortcut = shortcut;
+            DialogResult = true;
+        }
     }
 }

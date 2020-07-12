@@ -12,13 +12,13 @@ namespace ScriptPlayer.Shared
 {
     public class LaunchBluetooth : DeviceController
     {
+        private readonly Dictionary<ulong, DateTime> _lastChecked = new Dictionary<ulong, DateTime>();
+        private readonly List<ulong> _nonLaunchDevices = new List<ulong>();
+
         private readonly object _discoverylocker = new object();
         private bool _discover;
         public BluetoothLEAdvertisementWatcher BleWatcher { get; set; }
-
-        private Dictionary<ulong, DateTime> _lastChecked = new Dictionary<ulong, DateTime>();
-        private List<ulong> _nonLaunchDevices = new List<ulong>();
-
+        
         public override void ScanForDevices()
         {
             Start();
@@ -44,7 +44,7 @@ namespace ScriptPlayer.Shared
                 _lastChecked.Clear();
                 _nonLaunchDevices.Clear();
 
-                Debug.WriteLine("Start watching ...");
+                Debug.WriteLine("Start watching for BLE devices ...");
                 _discover = true;
                 BleWatcher.Start();
             }
@@ -102,10 +102,7 @@ namespace ScriptPlayer.Shared
                 _lastChecked[btAdv.BluetoothAddress] = DateTime.Now;
             }
 
-            var uids = btAdv.Advertisement?.ServiceUuids.ToList();
-            if (uids == null) return;
-
-            Debug.WriteLine($"BLE RECEIVED, Services: {string.Join(", ", uids)}, aquiring device ...");
+            Debug.WriteLine($"BLE advertisement received, aquiring device ...");
 
             var deviceAwaiting = BluetoothLEDevice.FromBluetoothAddressAsync(btAdv.BluetoothAddress);
 
@@ -115,7 +112,7 @@ namespace ScriptPlayer.Shared
 
             if (device == null) return;
 
-            Debug.WriteLine($"BLEWATCHER Found: {device.Name}, {device.DeviceId}");
+            Debug.WriteLine($"BLE Device: {device.Name} ({device.DeviceId})");
 
             if (device.Name != "Launch")
             {

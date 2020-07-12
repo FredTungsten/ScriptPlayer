@@ -99,7 +99,7 @@
         </Grid.RowDefinitions>
 
         <Grid Name="GridVideo" Grid.Row="1" Grid.ColumnSpan="3"
-              Background="Black" MouseLeftButtonDown="VideoPlayer_OnMouseLeftButtonDown" AllowDrop="True" Drop="GridVideo_Drop">
+              Background="Black" MouseDown="VideoPlayer_OnMouseDown" AllowDrop="True" Drop="GridVideo_Drop">
             <!-- VIDEO PLAYER -->
             <shared:VideoPlayer Volume="{Binding Volume}" HideMouse="true" x:Name="VideoPlayer">
                 <shared:VideoPlayer.Style>

@@ -124,11 +124,28 @@ namespace ScriptPlayer.Shared
             if (OnPreviewKeyReceived(key, modifiers))
                 return true;
 
-            if (!IsEnabled)
-                return false;
-
             bool isGlobal = source == KeySource.Global;
             string shortcut = GetShortcut(key, modifiers);
+
+            return ProcessInput(shortcut, isGlobal);
+        }
+
+        public static bool ProcessInput(MouseWheelEventArgs args)
+        {
+            string shortCut = GetShortcut(args);
+            return ProcessInput(shortCut, false);
+        }
+
+        public static bool ProcessInput(MouseButtonEventArgs args)
+        {
+            string shortCut = GetShortcut(args);
+            return ProcessInput(shortCut, false);
+        }
+
+        private static bool ProcessInput(string shortcut, bool isGlobal)
+        {
+            if (!IsEnabled)
+                return false;
 
             InputMapping mapping = CommandMappings.FirstOrDefault(
                 c => c.KeyboardShortcut == shortcut
@@ -137,7 +154,7 @@ namespace ScriptPlayer.Shared
             if (mapping == null)
                 return false;
 
-            Debug.WriteLine($"Processing '{shortcut}' from {source} => {mapping.CommandId}");
+            Debug.WriteLine($"Processing '{shortcut}' (global = {isGlobal}) => {mapping.CommandId}");
 
             if (!Commands.ContainsKey(mapping.CommandId))
                 return false;
@@ -180,6 +197,16 @@ namespace ScriptPlayer.Shared
                 activeMods |= ModifierKeys.Control;
 
             return activeMods;
+        }
+
+        public static string GetShortcut(MouseWheelEventArgs args)
+        {
+            return "Mouse Wheel " + (args.Delta > 0 ? "Up" : "Down");
+        }
+
+        public static string GetShortcut(MouseButtonEventArgs args)
+        {
+            return "Mouse Click " + args.ChangedButton;
         }
     }
 }

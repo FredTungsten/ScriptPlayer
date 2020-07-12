@@ -588,6 +588,33 @@ namespace ScriptPlayer
             _windowStateModel.SetPosition(windowRect);
         }
 
+
+        private void VideoPlayer_OnMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            bool handled = GlobalCommandManager.ProcessInput(e);
+            if (handled)
+            {
+                e.Handled = true;
+            }
+            else 
+            {
+                switch (e.ChangedButton)
+                {
+                    case MouseButton.Left:
+                    {
+                        VideoPlayer_OnMouseLeftButtonDown(sender, e);
+                        break;
+                    }
+                    case MouseButton.Right:
+                    {
+                        e.Handled = true;
+                        ViewModel.LogMarkerNow();
+                        break;
+                    }
+                }
+            }
+        }
+
         private async void VideoPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             SettingsViewModel s = ViewModel.Settings;
@@ -649,12 +676,19 @@ namespace ScriptPlayer
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
-            e.Handled = true;
+            bool handled = GlobalCommandManager.ProcessInput(e);
 
-            if (e.Delta > 0)
-                ViewModel.VolumeUp();
+            if (handled)
+            {
+                e.Handled = true;
+            }
             else
-                ViewModel.VolumeDown();
+            {
+                if (e.Delta > 0)
+                    ViewModel.VolumeUp();
+                else
+                    ViewModel.VolumeDown();
+            }
         }
 
         private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}" WindowStartupLocation="CenterOwner"
-        Title="Set Shortcut" Height="190.571" Width="246.827" Focusable="True" PreviewKeyDown="ShortcutInputDialog_OnPreviewKeyDown" WindowStyle="ToolWindow" Closing="Window_Closing">
+        Title="Set Shortcut" Height="190.571" Width="246.827" Focusable="True" PreviewKeyDown="ShortcutInputDialog_OnPreviewKeyDown" WindowStyle="ToolWindow" Closing="Window_Closing" MouseWheel="Window_MouseWheel" MouseDown="Window_MouseDown">
     <Grid>
         <StackPanel>
             <TextBlock Margin="10" TextWrapping="Wrap" TextAlignment="Center" FontWeight="Bold" Text="Press key(s) to set new shortcut or close dialog to cancel."/>
