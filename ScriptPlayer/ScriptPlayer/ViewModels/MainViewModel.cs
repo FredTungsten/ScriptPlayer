@@ -387,6 +387,7 @@ namespace ScriptPlayer.ViewModels
             }
 
             InitializeEstimController();
+            InitializeFunstimController();
 
             InitializeScriptHandler();
             GeneratePatterns();
@@ -1578,6 +1579,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand AddEstimAudioCommand { get; set; }
 
+        public ScriptplayerCommand AddFunstimAudioCommand { get; set; }
+
         public ScriptplayerCommand AddScriptsToPlaylistCommand { get; set; }
 
         public ScriptplayerCommand AddFolderToPlaylistCommand { get; set; }
@@ -2516,6 +2519,12 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Add E-Stim Audio Device"
             };
 
+            AddFunstimAudioCommand = new ScriptplayerCommand(AddFunstimAudioDevice)
+            {
+                CommandId = "AddFunstimAudioDevice",
+                DisplayText = "Add Funstim Audio Device"
+            };
+
             ConnectButtplugCommand = new ScriptplayerCommand(ConnectButtplug)
             {
                 CommandId = "ConnectButtplug",
@@ -2876,6 +2885,23 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             controller.SetDevice(dialog.SelectedDevice, dialog.Parameters);
+        }
+
+        private void AddFunstimAudioDevice()
+        {
+            var controller = _controllers.OfType<FunstimAudioController>().FirstOrDefault();
+
+            var devices = controller.GetAudioDevices();
+            FunstimDeviceSelector dialog = new FunstimDeviceSelector(devices);
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            controller.SetDevice(dialog.SelectedDevice, new FunstimParameters() {
+                Frequencies = Settings.FunstimFrequencies,
+                FadeMs = Settings.FunstimFadeMs,
+                FadeOnPause = Settings.FunstimFadeOnPause,
+            });
         }
 
         private void DecreaseFilterRange()
@@ -3342,6 +3368,16 @@ namespace ScriptPlayer.ViewModels
             _controllers.Add(audioController);
         }
 
+        private void InitializeFunstimController()
+        {
+            FunstimAudioController funstimController = _controllers.OfType<FunstimAudioController>().FirstOrDefault();
+            if (funstimController != null) return;
+
+            funstimController = new FunstimAudioController();
+            funstimController.DeviceFound += DeviceController_DeviceFound;
+            _controllers.Add(funstimController);
+        }
+
         private void CheckForArguments()
         {
             string[] args = Environment.GetCommandLineArgs();
@@ -3701,38 +3737,33 @@ namespace ScriptPlayer.ViewModels
                     TransformPosition(eventArgs.NextAction.Position, eventArgs.NextAction.TimeStamp);
 
                 // Execute next movement
+                byte speedOriginal =
+                    SpeedPredictor.PredictSpeed(
+                        (byte)Math.Abs(eventArgs.CurrentAction.Position - eventArgs.NextAction.Position),
+                        durationStretched);
+                byte speedTransformed =
+                    SpeedPredictor.PredictSpeed(
+                        (byte)Math.Abs(currentPositionTransformed - nextPositionTransformed),
+                        durationStretched);
+                speedTransformed = ClampSpeed(speedTransformed * Settings.SpeedMultiplier);
 
-                if (currentPositionTransformed != nextPositionTransformed)
+                DeviceCommandInformation info = new DeviceCommandInformation
                 {
+                    Duration = duration,
+                    DurationStretched = durationStretched,
+                    PlaybackRate = TimeSource.PlaybackRate,
+                    SpeedTransformed = speedTransformed,
+                    SpeedOriginal = speedOriginal,
+                    PositionFromTransformed = currentPositionTransformed,
+                    PositionToTransformed = nextPositionTransformed,
+                    PositionFromOriginal = eventArgs.CurrentAction.Position,
+                    PositionToOriginal = eventArgs.NextAction.Position,
+                    SpeedMultiplier = Settings.SpeedMultiplier,
+                    SpeedMin = Settings.MinSpeed / 99.0,
+                    SpeedMax = Settings.MaxSpeed / 99.0,
+                };
 
-                    byte speedOriginal =
-                        SpeedPredictor.PredictSpeed(
-                            (byte)Math.Abs(eventArgs.CurrentAction.Position - eventArgs.NextAction.Position),
-                            durationStretched);
-                    byte speedTransformed =
-                        SpeedPredictor.PredictSpeed(
-                            (byte)Math.Abs(currentPositionTransformed - nextPositionTransformed),
-                            durationStretched);
-                    speedTransformed = ClampSpeed(speedTransformed * Settings.SpeedMultiplier);
-
-                    DeviceCommandInformation info = new DeviceCommandInformation
-                    {
-                        Duration = duration,
-                        DurationStretched = durationStretched,
-                        PlaybackRate = TimeSource.PlaybackRate,
-                        SpeedTransformed = speedTransformed,
-                        SpeedOriginal = speedOriginal,
-                        PositionFromTransformed = currentPositionTransformed,
-                        PositionToTransformed = nextPositionTransformed,
-                        PositionFromOriginal = eventArgs.CurrentAction.Position,
-                        PositionToOriginal = eventArgs.NextAction.Position,
-                        SpeedMultiplier = Settings.SpeedMultiplier,
-                        SpeedMin = Settings.MinSpeed / 99.0,
-                        SpeedMax = Settings.MaxSpeed / 99.0,
-                    };
-
-                    SetDevices(info);
-                }
+                SetDevices(info);
 
                 if (eventArgs.NextAction.OriginalAction)
                 {

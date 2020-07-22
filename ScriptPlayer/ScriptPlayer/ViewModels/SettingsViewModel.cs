@@ -201,6 +201,9 @@ namespace ScriptPlayer.ViewModels
         private bool _autoReloadScript;
         private bool _includeFilledGapsInRandomSelection;
         private string _estimAudioDevice;
+        private string _funstimFrequencies = "420,520,620";
+        private TimeSpan _funstimFadeMs = TimeSpan.FromMilliseconds(1000);
+        private bool _funstimFadeOnPause;
         private TimeSpan _audioDelay;
 
         public SettingsViewModel()
@@ -856,6 +859,25 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("FunstimFadeMs")]
+        public long FunstimFadeMsWrapper
+        {
+            get => FunstimFadeMs.Ticks;
+            set => FunstimFadeMs = TimeSpan.FromTicks(value);
+        }
+
+        [XmlIgnore]
+        public TimeSpan FunstimFadeMs
+        {
+            get => _funstimFadeMs;
+            set
+            {
+                if (value.Equals(_funstimFadeMs)) return;
+                _funstimFadeMs = value;
+                OnPropertyChanged();
+            }
+        }
+
         [XmlElement("CommandDelay")]
         public long CommandDelayWrapper
         {
@@ -1420,6 +1442,28 @@ namespace ScriptPlayer.ViewModels
             {
                 if (Equals(value,_estimAudioDevice)) return;
                 _estimAudioDevice = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string FunstimFrequencies
+        {
+            get => _funstimFrequencies;
+            set
+            {
+                if (value == _funstimFrequencies) return;
+                _funstimFrequencies = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool FunstimFadeOnPause
+        {
+            get => _funstimFadeOnPause;
+            set
+            {
+                if (value == _funstimFadeOnPause) return;
+                _funstimFadeOnPause = value;
                 OnPropertyChanged();
             }
         }
