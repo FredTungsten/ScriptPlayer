@@ -115,6 +115,27 @@
                             </DockPanel>
                         </StackPanel>
                     </Grid>
+                    <Grid controls:PageSelector.ContentIdentifier="Funstim Converter">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeIcon Icon="Lightning_Bolt_Solid"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock Style="{StaticResource SettingName}" Text="Frequencies (Hz)" Margin="0,0,8,0"/>
+                                <TextBox Text="{Binding Settings.FunstimFrequencies}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                            </DockPanel>
+
+                            <DockPanel>
+                                <TextBlock Style="{StaticResource SettingName}" Text="Fade in/out"/>
+                                <TextBlock Style="{StaticResource SettingValue}" Text="{Binding Path=Settings.FunstimFadeMs, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
+                                <Slider Value="{Binding Path=Settings.FunstimFadeMs, Converter={StaticResource MillisecondsConverter}}" Margin="8,4" Minimum="0" Maximum="5000" SmallChange="100" LargeChange="500"  IsSnapToTickEnabled="True" TickFrequency="100"/>
+                            </DockPanel>
+
+                            <DockPanel>
+                                <CheckBox Margin="128,0" IsChecked="{Binding Settings.FunstimFadeOnPause}" Content="Fade out during pauses"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Crop Video">
                         <controls:PageSelector.Header>
                             <controls:AwesomeIcon Icon="Alternate_Crop_Solid"/>
