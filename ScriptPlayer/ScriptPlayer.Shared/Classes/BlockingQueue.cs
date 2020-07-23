@@ -73,7 +73,35 @@ namespace ScriptPlayer.Shared
             }
         }
 
-        public T Deqeue()
+        public T Dequeue(TimeSpan timeout)
+        {
+            try
+            {
+                if (_closed) return null;
+
+                lock (_queueLock)
+                {
+                    T result;
+
+                    while (!_queue.TryDequeue(out result))
+                    {
+                        if (_closed)
+                            return null;
+
+                        if (!Monitor.Wait(_queueLock, timeout))
+                            return null;
+                    }
+
+                    return result;
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                return null;
+            }
+        }
+
+        public T Dequeue()
         {
             try
             {

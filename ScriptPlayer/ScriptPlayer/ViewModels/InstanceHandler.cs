@@ -97,7 +97,7 @@ namespace ScriptPlayer.ViewModels
         {
             while (!_shutdown)
             {
-                string line = CommandLineQueue.Deqeue();
+                string line = CommandLineQueue.Dequeue();
                 if (line == null)
                     return;
 

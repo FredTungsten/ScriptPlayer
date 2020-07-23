@@ -165,7 +165,7 @@ namespace ScriptPlayer.Generators
 
             while (_running)
             {
-                _activeJobs[processIndex] = _unprocessedJobs.Deqeue();
+                _activeJobs[processIndex] = _unprocessedJobs.Dequeue();
                 if (_activeJobs[processIndex] == null)
                     return;
 

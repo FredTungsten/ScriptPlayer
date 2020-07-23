@@ -515,7 +515,7 @@ namespace ScriptPlayer.ViewModels
         {
             while (!_disposed)
             {
-                PlaylistEntry entry = _uncheckedPlaylistEntries.Deqeue();
+                PlaylistEntry entry = _uncheckedPlaylistEntries.Dequeue();
                 if (entry == null)
                     return;
 

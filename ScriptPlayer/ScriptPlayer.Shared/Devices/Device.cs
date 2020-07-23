@@ -55,7 +55,7 @@ namespace ScriptPlayer.Shared
         {
             while (_running)
             {
-                var entry = _queue.Deqeue();
+                var entry = _queue.Dequeue();
 
                 if (!_isEnabled)
                     continue;

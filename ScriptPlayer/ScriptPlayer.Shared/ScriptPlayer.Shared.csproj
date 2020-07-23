@@ -329,6 +329,7 @@
     <Compile Include="Helpers\SystemIdlePreventer.cs" />
     <Compile Include="TimeSource\AudioFileTimeSource.cs" />
     <Compile Include="TimeSource\CompositionTargetClock.cs" />
+    <Compile Include="TimeSource\DeoVrTimeSource.cs" />
     <Compile Include="TimeSource\DispatcherClock.cs" />
     <Compile Include="TimeSource\IOnScreenDisplay.cs" />
     <Compile Include="TimeSource\KodiConnectionSettings.cs" />
