@@ -11,7 +11,7 @@ namespace ScriptPlayer.Dialogs
     public partial class FunstimDeviceSelector : Window
     {
         public static readonly DependencyProperty DevicesProperty = DependencyProperty.Register(
-            "Devices", typeof(List<DirectSoundDeviceInfo>), typeof(AudioDeviceSelector), new PropertyMetadata(default(List<DirectSoundDeviceInfo>)));
+            "Devices", typeof(List<DirectSoundDeviceInfo>), typeof(FunstimDeviceSelector), new PropertyMetadata(default(List<DirectSoundDeviceInfo>)));
 
         public List<DirectSoundDeviceInfo> Devices
         {
@@ -20,7 +20,7 @@ namespace ScriptPlayer.Dialogs
         }
 
         public static readonly DependencyProperty SelectedDeviceProperty = DependencyProperty.Register(
-            "SelectedDevice", typeof(DirectSoundDeviceInfo), typeof(AudioDeviceSelector), new PropertyMetadata(default(DirectSoundDeviceInfo)));
+            "SelectedDevice", typeof(DirectSoundDeviceInfo), typeof(FunstimDeviceSelector), new PropertyMetadata(default(DirectSoundDeviceInfo)));
 
         public DirectSoundDeviceInfo SelectedDevice
         {
