@@ -108,6 +108,9 @@
     </Compile>
     <Compile Include="Converters\AlternativeValueConverter.cs" />
     <Compile Include="Converters\InverterConverter.cs" />
+    <Compile Include="Dialogs\CompactControlWindow.xaml.cs">
+      <DependentUpon>CompactControlWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\FunstimDeviceSelector.xaml.cs">
       <DependentUpon>FunstimDeviceSelector.xaml</DependentUpon>
     </Compile>
@@ -257,6 +260,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\AttributionDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\CompactControlWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

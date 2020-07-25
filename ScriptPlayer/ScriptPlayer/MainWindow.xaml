@@ -519,6 +519,8 @@
                 <MenuItem Header="View">
                     <MenuItem Header="Toggle fullscreen" Command="{Binding ToggleFullScreenCommand}"/>
                     <MenuItem Header="Stay on top" IsCheckable="True" IsChecked="{Binding Path=Settings.StayOnTop, Mode=TwoWay}"/>
+                    <Separator/>
+                    <MenuItem Header="Compact Controls" Click="BtnCompactControls_Click"/>
                 </MenuItem>
                 <MenuItem Header="Settings" Command="{Binding ShowSettingsCommand}">
                 </MenuItem>

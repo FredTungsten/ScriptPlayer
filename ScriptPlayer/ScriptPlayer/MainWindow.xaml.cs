@@ -850,5 +850,29 @@ namespace ScriptPlayer
 
             MessageBox.Show(message, "Loaded Files", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+
+        private void BtnCompactControls_Click(object sender, RoutedEventArgs e)
+        {
+            CompactControlWindow existing = Application.Current.Windows.OfType<CompactControlWindow>().FirstOrDefault();
+
+            if (existing == null || !existing.IsLoaded)
+            {
+                CompactControlWindow controls = new CompactControlWindow(ViewModel);
+                controls.Show();
+                controls.Topmost = false;
+                controls.Topmost = true;
+            }
+            else
+            {
+                if (existing.WindowState == WindowState.Minimized)
+                    existing.WindowState = WindowState.Normal;
+
+                existing.Activate();
+                existing.Focus();
+
+                existing.Topmost = false;
+                existing.Topmost = true;
+            }
+        }
     }
 }
