@@ -204,10 +204,20 @@ namespace ScriptPlayer.ViewModels
                 if (value == _shuffle) return;
                 _shuffle = value;
 
+                ClearNextAndPrevious();
                 UpdateNextAndPrevious();
                 CommandManager.InvalidateRequerySuggested();
                 OnPropertyChanged();
             }
+        }
+
+        private void UpdateNextEntryIfNull()
+        {
+            if(NextEntry == null)
+                NextEntry = GetNextEntry();
+
+            if (PreviousEntry == null || PreviousEntry == NextEntry)
+                PreviousEntry = GetPreviousEntry();
         }
 
         private void UpdateNextEntry()
@@ -237,7 +247,7 @@ namespace ScriptPlayer.ViewModels
                 if (value == _repeat) return;
                 _repeat = value;
 
-                UpdateNextEntry();
+                UpdateNextEntryIfNull();
                 CommandManager.InvalidateRequerySuggested();
                 OnPropertyChanged();
             }
@@ -251,10 +261,17 @@ namespace ScriptPlayer.ViewModels
                 if (value == _repeatSingleFile) return;
                 _repeatSingleFile = value;
 
+                ClearNextAndPrevious();
                 UpdateNextAndPrevious();
                 CommandManager.InvalidateRequerySuggested();
                 OnPropertyChanged();
             }
+        }
+
+        private void ClearNextAndPrevious()
+        {
+            NextEntry = null;
+            PreviousEntry = null;
         }
 
         private void UpdateNextAndPrevious()
