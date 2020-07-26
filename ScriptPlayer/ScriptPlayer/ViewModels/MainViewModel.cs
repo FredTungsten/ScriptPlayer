@@ -33,7 +33,7 @@ namespace ScriptPlayer.ViewModels
     {
         public event EventHandler<RequestEventArgs<VlcConnectionSettings>> RequestVlcConnectionSettings;
         public event EventHandler<RequestEventArgs<WhirligigConnectionSettings>> RequestWhirligigConnectionSettings;
-        public event EventHandler<RequestEventArgs<MpcConnectionSettings>> RequestMpcConnectionSettings;
+        public event EventHandler<RequestEventArgs<SimpleTcpConnectionSettings>> RequestSimpleTcpConnectionSettings;
         public event EventHandler<RequestEventArgs<SamsungVrConnectionSettings>> RequestSamsungVrConnectionSettings;
         public event EventHandler<RequestEventArgs<ZoomPlayerConnectionSettings>> RequestZoomPlayerConnectionSettings;
         public event EventHandler<RequestEventArgs<KodiConnectionSettings>> RequestKodiConnectionSettings;
@@ -799,16 +799,48 @@ namespace ScriptPlayer.ViewModels
 
                             break;
                         }
+                    case PlaybackMode.DeoVr:
+                    {
+                        HideBanner();
+
+                        if (string.IsNullOrWhiteSpace(Settings.DeoVrEndpoint))
+                        {
+                            SimpleTcpConnectionSettings settings =
+                                OnRequestSimpleTcpConnectionSettings(new SimpleTcpConnectionSettings()
+                                {
+                                    IpAndPort = MpcTimeSource.DefaultEndpoint
+                                });
+
+                            if (settings == null)
+                            {
+                                PlaybackMode = PlaybackMode.Local;
+                                return;
+                            }
+
+                            Settings.DeoVrEndpoint = settings.IpAndPort;
+                        }
+
+                        TimeSource = new DeoVrTimeSource(
+                            new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                TimeSpan.FromMilliseconds(10)), new SimpleTcpConnectionSettings
+                            {
+                                IpAndPort = Settings.MpcHcEndpoint
+                            });
+
+                        ((DeoVrTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+
+                        break;
+                    }
                     case PlaybackMode.MpcHc:
                         {
                             HideBanner();
 
                             if (string.IsNullOrWhiteSpace(Settings.MpcHcEndpoint))
                             {
-                                MpcConnectionSettings settings =
-                                    OnRequestMpcConnectionSettings(new MpcConnectionSettings
+                                SimpleTcpConnectionSettings settings =
+                                    OnRequestSimpleTcpConnectionSettings(new SimpleTcpConnectionSettings
                                     {
-                                        IpAndPort = MpcConnectionSettings.DefaultEndpoint
+                                        IpAndPort = MpcTimeSource.DefaultEndpoint
                                     });
 
                                 if (settings == null)
@@ -822,7 +854,7 @@ namespace ScriptPlayer.ViewModels
 
                             TimeSource = new MpcTimeSource(
                             new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
-                                TimeSpan.FromMilliseconds(10)), new MpcConnectionSettings
+                                TimeSpan.FromMilliseconds(10)), new SimpleTcpConnectionSettings
                                 {
                                     IpAndPort = Settings.MpcHcEndpoint
                                 });
@@ -961,10 +993,10 @@ namespace ScriptPlayer.ViewModels
             return args.Value;
         }
 
-        private MpcConnectionSettings OnRequestMpcConnectionSettings(MpcConnectionSettings currentSettings)
+        private SimpleTcpConnectionSettings OnRequestSimpleTcpConnectionSettings(SimpleTcpConnectionSettings currentSettings)
         {
-            RequestEventArgs<MpcConnectionSettings> args = new RequestEventArgs<MpcConnectionSettings>(currentSettings);
-            RequestMpcConnectionSettings?.Invoke(this, args);
+            RequestEventArgs<SimpleTcpConnectionSettings> args = new RequestEventArgs<SimpleTcpConnectionSettings>(currentSettings);
+            RequestSimpleTcpConnectionSettings?.Invoke(this, args);
 
             if (!args.Handled)
                 return null;
@@ -4896,7 +4928,7 @@ namespace ScriptPlayer.ViewModels
                     break;
                 case PlaybackMode.MpcHc:
                     if (TimeSource is MpcTimeSource mpc)
-                        mpc.UpdateConnectionSettings(new MpcConnectionSettings
+                        mpc.UpdateConnectionSettings(new SimpleTcpConnectionSettings
                         {
                             IpAndPort = settings.MpcHcEndpoint
                         });

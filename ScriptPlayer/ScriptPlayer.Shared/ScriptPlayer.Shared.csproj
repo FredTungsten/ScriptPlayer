@@ -338,7 +338,7 @@
     <Compile Include="TimeSource\MediaPlayerTimeSource.cs" />
     <Compile Include="TimeSource\ISampleClock.cs" />
     <Compile Include="TimeSource\MpcCommandCodes.cs" />
-    <Compile Include="TimeSource\MpcConnectionSettings.cs" />
+    <Compile Include="TimeSource\SimpleTcpConnectionSettings.cs" />
     <Compile Include="TimeSource\MpcPlaybackState.cs" />
     <Compile Include="TimeSource\MpcStatus.cs" />
     <Compile Include="TimeSource\MpcTimeSource.cs" />

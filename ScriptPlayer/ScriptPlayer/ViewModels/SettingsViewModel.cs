@@ -1,12 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
@@ -205,6 +203,7 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _funstimFadeMs = TimeSpan.FromMilliseconds(1000);
         private bool _funstimFadeOnPause;
         private TimeSpan _audioDelay;
+        private string _deoVrEndpoint;
 
         public SettingsViewModel()
         {
@@ -517,6 +516,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _vlcPassword) return;
                 _vlcPassword = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string DeoVrEndpoint
+        {
+            get => _deoVrEndpoint;
+            set
+            {
+                if (value == _deoVrEndpoint) return;
+                _deoVrEndpoint = value;
                 OnPropertyChanged();
             }
         }

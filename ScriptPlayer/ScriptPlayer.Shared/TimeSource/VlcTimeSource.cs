@@ -11,9 +11,12 @@ namespace ScriptPlayer.Shared
 {
     public class VlcTimeSource : TimeSource, IDisposable
     {
-        private VlcConnectionSettings _connectionSettings;
 
-        public event EventHandler<string> FileOpened;
+        public override string Name => "VLC";
+        public override bool ShowBanner => true;
+        public override string ConnectInstructions => "Not connected.\r\nStart VLC and activate the webinterface in the preferences.";
+
+        private VlcConnectionSettings _connectionSettings;
 
         private readonly Thread _clientLoop;
         private readonly ManualTimeSource _timeSource;
@@ -238,11 +241,6 @@ namespace ScriptPlayer.Shared
         public void SetDuration(TimeSpan duration)
         {
             _timeSource.SetDuration(duration);
-        }
-
-        protected virtual void OnFileOpened(string e)
-        {
-            FileOpened?.Invoke(this, e);
         }
 
         public void Dispose()

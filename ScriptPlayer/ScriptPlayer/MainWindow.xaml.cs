@@ -74,7 +74,7 @@ namespace ScriptPlayer
             ViewModel.RequestVlcConnectionSettings += ViewModelOnRequestVlcConnectionSettings;
             ViewModel.RequestZoomPlayerConnectionSettings += ViewModelOnRequestZoomPlayerConnectionSettings;
             ViewModel.RequestWhirligigConnectionSettings += ViewModelOnRequestWhirligigConnectionSettings;
-            ViewModel.RequestMpcConnectionSettings += ViewModelOnRequestMpcConnectionSettings;
+            ViewModel.RequestSimpleTcpConnectionSettings += ViewModelOnRequestSimpleTcpConnectionSettings;
             ViewModel.RequestSamsungVrConnectionSettings += ViewModelOnRequestSamsungVrConnectionSettings;
             ViewModel.RequestKodiConnectionSettings += ViewModelOnRequestKodiConnectionSettings;
             ViewModel.RequestGetWindowState += ViewModelOnRequestGetWindowState;
@@ -368,13 +368,13 @@ namespace ScriptPlayer
             };
         }
 
-        private void ViewModelOnRequestMpcConnectionSettings(object sender, RequestEventArgs<MpcConnectionSettings> args)
+        private void ViewModelOnRequestSimpleTcpConnectionSettings(object sender, RequestEventArgs<SimpleTcpConnectionSettings> args)
         {
-            MpcConnectionSettingsDialog dialog = new MpcConnectionSettingsDialog(args.Value.IpAndPort) { Owner = this };
+            SimpleTcpConnectionSettingsDialog dialog = new SimpleTcpConnectionSettingsDialog(args.Value.IpAndPort) { Owner = this };
             if (dialog.ShowDialog() != true) return;
 
             args.Handled = true;
-            args.Value = new MpcConnectionSettings
+            args.Value = new SimpleTcpConnectionSettings
             {
                 IpAndPort = dialog.IpAndPort
             };

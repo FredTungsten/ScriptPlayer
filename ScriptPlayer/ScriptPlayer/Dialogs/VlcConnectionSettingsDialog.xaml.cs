@@ -20,7 +20,7 @@ namespace ScriptPlayer.Dialogs
     public partial class VlcConnectionSettingsDialog : Window
     {
         public static readonly DependencyProperty IpAndPortProperty = DependencyProperty.Register(
-            "IpAndPort", typeof(string), typeof(VlcConnectionSettingsDialog), new PropertyMetadata(default(string)));
+            "IpEndpoint", typeof(string), typeof(VlcConnectionSettingsDialog), new PropertyMetadata(default(string)));
 
         public string IpAndPort
         {

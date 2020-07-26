@@ -9,7 +9,7 @@ namespace ScriptPlayer.Dialogs
     public partial class WhirligigConnectionSettingsDialog : Window
     {
         public static readonly DependencyProperty IpAndPortProperty = DependencyProperty.Register(
-            "IpAndPort", typeof(string), typeof(WhirligigConnectionSettingsDialog), new PropertyMetadata(default(string)));
+            "IpEndpoint", typeof(string), typeof(WhirligigConnectionSettingsDialog), new PropertyMetadata(default(string)));
 
         public string IpAndPort
         {

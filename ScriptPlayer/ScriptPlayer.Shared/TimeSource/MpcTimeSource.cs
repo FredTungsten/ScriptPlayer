@@ -8,9 +8,15 @@ namespace ScriptPlayer.Shared
 {
     public class MpcTimeSource : TimeSource, IDisposable
     {
-        private MpcConnectionSettings _connectionSettings;
+        public override string Name => "MPC-HC";
+        public override bool ShowBanner => true;
+        public override string ConnectInstructions => "Not connected.\r\nStart MPC-HC and activate the webinterface in the preferences.";
 
-        public event EventHandler<string> FileOpened;
+        public const string DefaultEndpoint = "localhost:13579";
+
+        // http://localhost:13579/variables.html
+
+        private SimpleTcpConnectionSettings _connectionSettings;
 
         private readonly Thread _clientLoop;
         private readonly ManualTimeSource _timeSource;
@@ -18,7 +24,7 @@ namespace ScriptPlayer.Shared
         private bool _running = true;
         private MpcStatus _previousStatus;
 
-        public MpcTimeSource(ISampleClock clock, MpcConnectionSettings connectionSettings)
+        public MpcTimeSource(ISampleClock clock, SimpleTcpConnectionSettings connectionSettings)
         {
             _connectionSettings = connectionSettings;
             _previousStatus = new MpcStatus { IsValid = false };
@@ -38,7 +44,7 @@ namespace ScriptPlayer.Shared
             OnPlaybackRateChanged(d);
         }
 
-        public void UpdateConnectionSettings(MpcConnectionSettings connectionSettings)
+        public void UpdateConnectionSettings(SimpleTcpConnectionSettings connectionSettings)
         {
             _connectionSettings = connectionSettings;
         }
@@ -67,7 +73,7 @@ namespace ScriptPlayer.Shared
                     while (_running)
                     {
                         string status = Request("variables.html");
-                        if (string.IsNullOrWhiteSpace(status))
+                        if (String.IsNullOrWhiteSpace(status))
                         {
                             SetConnected(false);
                         }
@@ -220,11 +226,6 @@ namespace ScriptPlayer.Shared
         public void SetDuration(TimeSpan duration)
         {
             _timeSource.SetDuration(duration);
-        }
-
-        protected virtual void OnFileOpened(string e)
-        {
-            FileOpened?.Invoke(this, e);
         }
 
         public override double PlaybackRate

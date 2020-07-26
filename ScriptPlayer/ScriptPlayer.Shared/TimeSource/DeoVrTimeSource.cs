@@ -9,6 +9,12 @@ namespace ScriptPlayer.Shared
 {
     public class DeoVrTimeSource : TimeSource, IDisposable
     {
+        public override string Name => "DeoVR";
+        public override bool ShowBanner => true;
+        public override string ConnectInstructions => "Not connected.\r\nOpen settings menu in selection scene or file browser. Toggle switch 'Enable remote control'.";
+
+        public const string DefaultEndpoint = "localhost:23554";
+
         private const bool UseLittleEndian = false;
 
         private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(3.0);
@@ -23,9 +29,7 @@ namespace ScriptPlayer.Shared
         private TcpClient _client;
         private bool _connected;
         private DeoVrApiData _previousData;
-        private DeoVrConnectionSettings _connectionSettings;
-
-        public event EventHandler<string> FileOpened;
+        private SimpleTcpConnectionSettings _connectionSettings;
 
         public override double PlaybackRate { get; set; }
 
@@ -59,7 +63,7 @@ namespace ScriptPlayer.Shared
             });
         }
 
-        public DeoVrTimeSource(ISampleClock clock, DeoVrConnectionSettings connectionSettings)
+        public DeoVrTimeSource(ISampleClock clock, SimpleTcpConnectionSettings connectionSettings)
         {
             // Manual TimeSource that will interpolate Timestamps between updates
 
@@ -103,7 +107,7 @@ namespace ScriptPlayer.Shared
             if (port <= 0 || port > 65535)
                 throw new Exception("Invalid port!");
 
-            _client = new TcpClient(_connectionSettings.Address, _connectionSettings.Port);
+            _client = new TcpClient(hostname, port);
             Stream stream = _client.GetStream();
             _connected = true;
 
@@ -337,23 +341,11 @@ namespace ScriptPlayer.Shared
                 Dispatcher.Invoke(() => { SetConnected(isConnected); });
         }
 
-        protected virtual void OnFileOpened(string e)
-        {
-            FileOpened?.Invoke(this, e);
-        }
-
         public void Dispose()
         {
             _client?.Dispose();
             Disconnect();
         }
-    }
-
-
-    public class DeoVrConnectionSettings
-    {
-        public string Address { get; set; }
-        public int Port { get; set; }
     }
 
     [Serializable]

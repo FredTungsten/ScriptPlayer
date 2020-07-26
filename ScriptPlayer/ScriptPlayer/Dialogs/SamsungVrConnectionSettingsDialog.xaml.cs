@@ -13,8 +13,8 @@ namespace ScriptPlayer.Dialogs
 
         public int UdpPort
         {
-            get { return (int) GetValue(UdpPortProperty); }
-            set { SetValue(UdpPortProperty, value); }
+            get => (int) GetValue(UdpPortProperty);
+            set => SetValue(UdpPortProperty, value);
         }
 
         public SamsungVrConnectionSettingsDialog(int udpPort)

@@ -5,6 +5,10 @@ namespace ScriptPlayer.Shared
 {
     public class ManualTimeSource : TimeSource
     {
+        public override string Name => "Manuel Timesource";
+        public override bool ShowBanner => false;
+        public override string ConnectInstructions => "";
+
         private readonly ISampleClock _clock;
         private readonly object _clocklock = new object();
 

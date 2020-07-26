@@ -12,9 +12,11 @@ namespace ScriptPlayer.Shared
 {
     public class WhirligigTimeSource : TimeSource, IDisposable
     {
-        private WhirligigConnectionSettings _connectionSettings;
+        public override string Name => "Whirligig";
+        public override bool ShowBanner => true;
+        public override string ConnectInstructions => "Not connected.\r\nStart Whirligig and activate 'Timecode Server' in the settings tab 'General 1'.";
 
-        public event EventHandler<string> FileOpened;
+        private WhirligigConnectionSettings _connectionSettings;
 
         private readonly Thread _clientLoop;
         private readonly ManualTimeSource _timeSource;
@@ -231,11 +233,6 @@ namespace ScriptPlayer.Shared
         public void SetDuration(TimeSpan duration)
         {
             _timeSource.SetDuration(duration);
-        }
-
-        protected virtual void OnFileOpened(string e)
-        {
-            FileOpened?.Invoke(this, e);
         }
 
         public void Dispose()

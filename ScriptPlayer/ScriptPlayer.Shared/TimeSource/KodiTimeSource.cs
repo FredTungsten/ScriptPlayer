@@ -35,9 +35,11 @@ namespace ScriptPlayer.Shared
 {
     public class KodiTimeSource : TimeSource, IDisposable
     {
-        private KodiConnectionSettings _connectionSettings;
+        public override string Name => "Kodi";
+        public override bool ShowBanner => true;
+        public override string ConnectInstructions => "Not connected.\r\nEnable remote control via http (Settings - Services - Control).";
 
-        public event EventHandler<string> FileOpened;
+        private KodiConnectionSettings _connectionSettings;
 
         private Thread _clientLoop;
         private readonly ManualTimeSource _timeSource;
@@ -568,11 +570,6 @@ namespace ScriptPlayer.Shared
             SetConnected(false);
             response = null;
             return false;
-        }
-
-        protected virtual void OnFileOpened(string e)
-        {
-            FileOpened?.Invoke(this, e);
         }
 
         private void TimeSourceOnDurationChanged(object sender, TimeSpan duration)

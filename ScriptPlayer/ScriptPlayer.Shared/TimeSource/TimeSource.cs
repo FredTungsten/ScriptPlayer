@@ -14,6 +14,7 @@ namespace ScriptPlayer.Shared
         public event EventHandler<TimeSpan> DurationChanged;
         public event EventHandler<double> PlaybackRateChanged; 
         public event EventHandler<bool> IsPlayingChanged;
+        public event EventHandler<string> FileOpened;
 
         private static readonly DependencyPropertyKey IsConnectedPropertyKey = DependencyProperty.RegisterReadOnly(
             "IsConnected", typeof(bool), typeof(TimeSource), new PropertyMetadata(default(bool)));
@@ -82,6 +83,12 @@ namespace ScriptPlayer.Shared
 
         public virtual IOnScreenDisplay OnScreenDisplay { get; } = null;
 
+        public abstract string Name { get; }
+
+        public abstract bool ShowBanner { get; }
+
+        public abstract string ConnectInstructions { get; }
+
         public abstract double PlaybackRate { get; set; }
 
         public abstract bool CanPlayPause { get; }
@@ -125,6 +132,11 @@ namespace ScriptPlayer.Shared
         protected virtual void OnPlaybackRateChanged(double rate)
         {
             PlaybackRateChanged?.Invoke(this, rate);
+        }
+
+        protected virtual void OnFileOpened(string e)
+        {
+            FileOpened?.Invoke(this, e);
         }
     }
 }

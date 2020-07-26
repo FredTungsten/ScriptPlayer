@@ -438,7 +438,7 @@ namespace ScriptPlayer.Dialogs
 
         private void BtnMpcHcDefault_Click(object sender, RoutedEventArgs e)
         {
-            Settings.MpcHcEndpoint = MpcConnectionSettings.DefaultEndpoint;
+            Settings.MpcHcEndpoint = MpcTimeSource.DefaultEndpoint;
         }
 
         private void BtnSelectFallBackScript_Click(object sender, RoutedEventArgs e)

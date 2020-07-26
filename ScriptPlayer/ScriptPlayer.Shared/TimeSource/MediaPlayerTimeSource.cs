@@ -8,6 +8,10 @@ namespace ScriptPlayer.Shared
 {
     public class MediaPlayerTimeSource : TimeSource, IDisposable
     {
+        public override string Name => "Local Playback";
+        public override bool ShowBanner => false;
+        public override string ConnectInstructions => "";
+
         private MediaPlayer _player;
         private readonly ISampleClock _clock;
         private TimeSpan _timeWhenPaused;

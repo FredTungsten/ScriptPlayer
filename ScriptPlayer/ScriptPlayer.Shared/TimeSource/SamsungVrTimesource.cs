@@ -11,9 +11,11 @@ namespace ScriptPlayer.Shared
 {
     public class SamsungVrTimeSource : TimeSource, IDisposable
     {
-        private SamsungVrConnectionSettings _connectionSettings;
+        public override string Name => "Samsung VR";
+        public override bool ShowBanner => true;
+        public override string ConnectInstructions => "Not connected.\r\nStart Samsung VR and make sure 'Presentation mode' is activated in the settings menu.";
 
-        public event EventHandler<string> FileOpened;
+        private SamsungVrConnectionSettings _connectionSettings;
 
         private readonly Thread _clientLoop;
         private readonly ManualTimeSource _timeSource;
@@ -247,11 +249,6 @@ namespace ScriptPlayer.Shared
         public void SetDuration(TimeSpan duration)
         {
             _timeSource.SetDuration(duration);
-        }
-
-        protected virtual void OnFileOpened(string e)
-        {
-            FileOpened?.Invoke(this, e);
         }
 
         public void Dispose()

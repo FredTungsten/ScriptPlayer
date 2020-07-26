@@ -185,8 +185,8 @@
     <Compile Include="Dialogs\ZoomPlayerConnectionSettingsDialog.xaml.cs">
       <DependentUpon>ZoomPlayerConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dialogs\MpcConnectionSettingsDialog.xaml.cs">
-      <DependentUpon>MpcConnectionSettingsDialog.xaml</DependentUpon>
+    <Compile Include="Dialogs\SimpleTcpConnectionSettingsDialog.xaml.cs">
+      <DependentUpon>SimpleTcpConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\SamsungVrConnectionSettingsDialog.xaml.cs">
       <DependentUpon>SamsungVrConnectionSettingsDialog.xaml</DependentUpon>
@@ -347,7 +347,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dialogs\MpcConnectionSettingsDialog.xaml">
+    <Page Include="Dialogs\SimpleTcpConnectionSettingsDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

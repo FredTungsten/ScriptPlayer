@@ -12,9 +12,11 @@ namespace ScriptPlayer.Shared
 {
     public class ZoomPlayerTimeSource : TimeSource, IDisposable, IOnScreenDisplay
     {
-        private ZoomPlayerConnectionSettings _connectionSettings;
+        public override string Name => "Zoom Player";
+        public override bool ShowBanner => true;
+        public override string ConnectInstructions => "Not connected.\r\nStart Zoom Player and enable External TCP Control (Advanced Mode - System).";
 
-        public event EventHandler<string> FileOpened;
+        private ZoomPlayerConnectionSettings _connectionSettings;
 
         private readonly Thread _clientLoop;
         private readonly ManualTimeSource _timeSource;
@@ -236,11 +238,6 @@ namespace ScriptPlayer.Shared
         public void SetDuration(TimeSpan duration)
         {
             _timeSource.SetDuration(duration);
-        }
-
-        protected virtual void OnFileOpened(string e)
-        {
-            FileOpened?.Invoke(this, e);
         }
 
         public void Dispose()

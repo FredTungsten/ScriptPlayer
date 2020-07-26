@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using NAudio.Utils;
 using NAudio.Wave;
 
 namespace ScriptPlayer.Shared
 {
     public class AudioFileTimeSource : TimeSource, IDisposable
     {
+        public override string Name => "Audio File";
+        public override bool ShowBanner => true;
+        public override string ConnectInstructions => "";
+
         private string _path;
         private WaveStream _rdr;
         private WaveStream _wavStream;

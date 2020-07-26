@@ -137,24 +137,24 @@
                 <TextBlock Text="Blind Mode" Foreground="White" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
 
-            <!-- WHIRLIGIG -->
+            <!-- External Players -->
             <Grid IsHitTestVisible="False">
                 <Grid.Style>
                     <Style TargetType="{x:Type Grid}">
                         <Setter Property="Visibility" Value="Hidden"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding PlaybackMode}" Value="{x:Static viewModels:PlaybackMode.Whirligig}">
+                            <DataTrigger Binding="{Binding TimeSource.ShowBanner}" Value="true">
                                 <Setter Property="Visibility" Value="Visible"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Grid.Style>
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="Whirligig" Foreground="White" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Text="{Binding TimeSource.Name}" Foreground="White" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
                     <TextBlock Foreground="White" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">
                         <TextBlock.Style>
                             <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="Text" Value="Not Connected.&#x0d;&#x0a;Start Whirligig and activate 'Timecode Server'&#x0d;&#x0a; in the settings tab 'General 1'."/>
+                                <Setter Property="Text" Value="{Binding TimeSource.ConnectInstructions}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding TimeSource.IsConnected}" Value="true">
                                         <Setter Property="Text" Value="Connected"/>
@@ -165,152 +165,7 @@
                     </TextBlock>
                 </StackPanel>
             </Grid>
-
-            <!-- VLC -->
-            <Grid IsHitTestVisible="False">
-                <Grid.Style>
-                    <Style TargetType="{x:Type Grid}">
-                        <Setter Property="Visibility" Value="Hidden"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding PlaybackMode}" Value="{x:Static viewModels:PlaybackMode.Vlc}">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Grid.Style>
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="VLC" Foreground="White" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                    <TextBlock Foreground="White" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="Text" Value="Not Connected.&#x0d;&#x0a;Start VLC and activate the webinterface in the preferences."/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding TimeSource.IsConnected}" Value="true">
-                                        <Setter Property="Text" Value="Connected"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                </StackPanel>
-            </Grid>
-
-            <!-- MPC-HC -->
-            <Grid IsHitTestVisible="False">
-                <Grid.Style>
-                    <Style TargetType="{x:Type Grid}">
-                        <Setter Property="Visibility" Value="Hidden"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding PlaybackMode}" Value="{x:Static viewModels:PlaybackMode.MpcHc}">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Grid.Style>
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="MPC-HC" Foreground="White" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                    <TextBlock Foreground="White" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="Text" Value="Not Connected.&#x0d;&#x0a;Start MPC-HC and activate the webinterface in the preferences."/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding TimeSource.IsConnected}" Value="true">
-                                        <Setter Property="Text" Value="Connected"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                </StackPanel>
-            </Grid>
-
-            <!-- Samsung VR -->
-            <Grid IsHitTestVisible="False">
-                <Grid.Style>
-                    <Style TargetType="{x:Type Grid}">
-                        <Setter Property="Visibility" Value="Hidden"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding PlaybackMode}" Value="{x:Static viewModels:PlaybackMode.SamsungVr}">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Grid.Style>
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="Samsung VR" Foreground="White" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                    <TextBlock Foreground="White" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="Text" Value="No data received.&#x0d;&#x0a;Start Samsung VR and make sure 'Presentation mode' is activated in the settings menu."/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding TimeSource.IsConnected}" Value="true">
-                                        <Setter Property="Text" Value="Connected"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                </StackPanel>
-            </Grid>
-
-            <!-- Zoom Player -->
-            <Grid IsHitTestVisible="False">
-                <Grid.Style>
-                    <Style TargetType="{x:Type Grid}">
-                        <Setter Property="Visibility" Value="Hidden"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding PlaybackMode}" Value="{x:Static viewModels:PlaybackMode.ZoomPlayer}">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Grid.Style>
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="Zoom Player" Foreground="White" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                    <TextBlock Foreground="White" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="Text" Value="Not Connected.&#x0d;&#x0a;Start Zoom Player and enable External TCP Control (Advanced Mode - System)."/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding TimeSource.IsConnected}" Value="true">
-                                        <Setter Property="Text" Value="Connected"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                </StackPanel>
-            </Grid>
-
-            <!--Kodi-->
-            <Grid IsHitTestVisible="False">
-                <Grid.Style>
-                    <Style TargetType="{x:Type Grid}">
-                        <Setter Property="Visibility" Value="Hidden"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding PlaybackMode}" Value="{x:Static viewModels:PlaybackMode.Kodi}">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Grid.Style>
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="Kodi" Foreground="White" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                    <TextBlock Foreground="White" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="Text" Value="Not Connected.&#x0d;&#x0a; Enable remote control via http (Settings - Services - Control)."/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding TimeSource.IsConnected}" Value="true">
-                                        <Setter Property="Text" Value="Connected"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                </StackPanel>
-            </Grid>
-
+           
             <!-- ICON AND VERSION -->
             <Grid IsHitTestVisible="False" Visibility="{Binding ShowBanner, Converter={StaticResource VisibilityConverter}}">
                 <Grid.RowDefinitions>
@@ -486,6 +341,7 @@
                     <MenuItem Header="Local" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Local}}"/>
                     <MenuItem Header="None (Script Only)" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Blind}}"/>
                     <Separator/>
+                    <MenuItem Header="DeoVR" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.DeoVr}}"/>
                     <MenuItem Header="MPC-HC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.MpcHc}}"/>
                     <MenuItem Header="Samsung VR" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.SamsungVr}}"/>
                     <MenuItem Header="VLC" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Vlc}}"/>
