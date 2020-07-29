@@ -26,6 +26,9 @@ using ScriptPlayer.Generators;
 using ScriptPlayer.Shared.Devices;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
+using ScriptPlayer.Shared.Devices.TheHandy;
+using System.Runtime.InteropServices;
+using System.ServiceModel.Channels;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -85,6 +88,8 @@ namespace ScriptPlayer.ViewModels
         private byte _minScriptPosition;
 
         public GeneratorWorkQueue WorkQueue { get; }
+
+        public HandyController Handy { get; set; } = null;
 
         public WindowStateModel InitialPlayerState { get; private set; }
 
@@ -1298,6 +1303,7 @@ namespace ScriptPlayer.ViewModels
 
         private void TimeSourceIsPlayingChanged(object sender, bool playing)
         {
+            Handy?.Play(playing, TimeSource.Progress.TotalMilliseconds);
             if(!playing)
             {
                 StopDevices();
@@ -1338,6 +1344,7 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
+            Handy?.Resync(e);
             _audioHandler?.Resync(e);
 
             if (Settings.SoftSeekFiles)
@@ -1608,6 +1615,8 @@ namespace ScriptPlayer.ViewModels
         public ScriptplayerCommand ToggleFullScreenCommand { get; set; }
 
         public ScriptplayerCommand ConnectLaunchDirectlyCommand { get; set; }
+
+        public ScriptplayerCommand ConnectHandyDirectlyCommand { get; set; }
 
         public ScriptplayerCommand AddEstimAudioCommand { get; set; }
 
@@ -1954,6 +1963,7 @@ namespace ScriptPlayer.ViewModels
         private void UpdateScriptDelay()
         {
             _scriptHandler.Delay = Settings.ScriptDelay;
+            Handy?.SetScriptOffset(Settings.ScriptDelay);
         }
 
         public void Dispose()
@@ -2545,6 +2555,12 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Connect Launch Directly"
             };
 
+            ConnectHandyDirectlyCommand = new ScriptplayerCommand(ConnectHandyDirectly)
+            {
+                CommandId = "ConenctHandyDirectly",
+                DisplayText = "Connect to Handy directly"
+            };
+
             AddEstimAudioCommand = new ScriptplayerCommand(AddEstimAudioDevice)
             {
                 CommandId = "AddEstimAudioDevice",
@@ -2627,6 +2643,7 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterCommand(OpenVideoCommand);
             GlobalCommandManager.RegisterCommand(AddScriptsToPlaylistCommand);
             GlobalCommandManager.RegisterCommand(ConnectLaunchDirectlyCommand);
+            GlobalCommandManager.RegisterCommand(ConnectHandyDirectlyCommand);
             GlobalCommandManager.RegisterCommand(ConnectButtplugCommand);
             GlobalCommandManager.RegisterCommand(DisconnectButtplugCommand);
             GlobalCommandManager.RegisterCommand(StartScanningButtplugCommand);
@@ -3850,6 +3867,12 @@ namespace ScriptPlayer.ViewModels
                         if (Settings.AutoSkip || Settings.RandomChapters)
                         {
                             SkipToNextEvent();
+                            
+                            //if(Handy != null)
+                            //{
+                            //    Handy.Play(false, TimeSource.Progress.TotalMilliseconds);
+                            //    Handy.Play(true, TimeSource.Progress.TotalMilliseconds);
+                            //}
                         }
                         else
                         {
@@ -4692,6 +4715,8 @@ namespace ScriptPlayer.ViewModels
             FindMaxPositions();
             UpdateHeatMap();
 
+            Handy?.PrepareNewFunscript(fileName, actions);
+
             return true;
         }
 
@@ -4706,6 +4731,60 @@ namespace ScriptPlayer.ViewModels
 
             LaunchBluetooth controller = _controllers.OfType<LaunchBluetooth>().Single();
             controller.Start();
+        }
+
+        private bool AskForHandyDeviceId()
+        {
+            HandyDeviceIdSettingsDialog deviceIdDialog = null;
+            if (Handy.UseLocalScriptServer)
+            {
+                deviceIdDialog = new HandyDeviceIdSettingsDialog(Settings.HandyDeviceId,
+                    Handy.LocalScriptServer.LocalIp,
+                    Handy.LocalScriptServer.ServeScriptPort.ToString(),
+                    !Handy.LocalScriptServer.HttpServerRunning
+                );
+            }
+            else
+            {
+                deviceIdDialog = new HandyDeviceIdSettingsDialog(Settings.HandyDeviceId,
+                    "unused",
+                    "unused",
+                    false
+                );
+            }
+
+            if (deviceIdDialog.ShowDialog() != true) return false;           
+            Settings.HandyDeviceId = deviceIdDialog.DeviceId;
+            HandyHelper.DeviceId = deviceIdDialog.DeviceId;
+            
+            if(Handy.UseLocalScriptServer)
+            {
+                Handy.LocalScriptServer.LocalIp = deviceIdDialog.LocalIp;
+                if(int.TryParse(deviceIdDialog.Port, out int parsedPort))
+                    Handy.LocalScriptServer.ServeScriptPort = parsedPort;
+            }
+
+            return true;
+        }
+
+        public void ConnectHandyDirectly()
+        {
+            HandyHelper.DeviceId = Settings.HandyDeviceId;
+
+            if(Handy == null)
+            {
+                var hostLocal = MessageBox.Show("Host scripts locally?\nNo means the script gets uploaded to handyfeeling.com.", "Host?", MessageBoxButton.YesNo);
+                Handy = new HandyController(hostLocal == MessageBoxResult.Yes);
+                AskForHandyDeviceId();
+            }
+            Handy.StartLocalHttpServer(); // this does nothing when hostLocal is false
+            Handy.CheckConnected(connected =>
+            {
+                if(!connected)
+                {
+                    Application.Current.Dispatcher.Invoke(AskForHandyDeviceId);
+                }
+            });
         }
 
         public void VolumeDown()
@@ -4879,7 +4958,7 @@ namespace ScriptPlayer.ViewModels
         {
             InstanceHandler.CommandLineReceived -= InstanceHandlerOnCommandLineReceived;
             InstanceHandler.Shutdown();
-
+            Handy?.Exit();
             SaveSettings();
             SavePlaylist();
         }

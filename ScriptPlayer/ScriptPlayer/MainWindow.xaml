@@ -294,6 +294,9 @@
                 <MenuItem Header="Devices">
                     <MenuItem Header="Show devices" Command="{Binding ShowDeviceManagerCommand}"/>
                     <Separator/>
+                    <MenuItem Header="Connect to Handy directly" Command="{Binding ConnectHandyDirectlyCommand}" IsEnabled="{Binding CanDirectConnectHandy}" ToolTipService.ShowOnDisabled="True">
+                        
+                    </MenuItem>
                     <MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" IsEnabled="{Binding CanDirectConnectLaunch}" ToolTipService.ShowOnDisabled="True">
                         <MenuItem.Header>
                             <TextBlock Text="Connect Launch directly">
