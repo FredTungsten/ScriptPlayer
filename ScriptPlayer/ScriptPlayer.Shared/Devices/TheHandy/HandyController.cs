@@ -1,6 +1,4 @@
-﻿#pragma warning disable IDE1006 // Naming Styles
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -8,91 +6,20 @@ using System.Text;
 using System.Threading;
 using System.Diagnostics;
 using ScriptPlayer.Shared.Scripts;
-using System.Net;
-using System.Net.Sockets;
 using System.Web;
 using System.Reflection;
 using System.Net.Http.Headers;
 using System.Windows;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
 using System.IO;
-using System.ServiceModel.Channels;
 
 namespace ScriptPlayer.Shared.Devices.TheHandy
 {
-    public class BlockingTaskQueue
-    {
-        private BlockingCollection<Task> _jobs = new BlockingCollection<Task>();
-
-        private CancellationTokenSource _tokenSource = new CancellationTokenSource();
-
-        private Thread _worker;
-
-        public BlockingTaskQueue()
-        {
-            _worker = new Thread(new ThreadStart(OnStart));
-            _worker.IsBackground = true;
-            _worker.Start();
-        }
-
-        public void Enqueue(Task job)
-        {
-            _jobs.Add(job);
-        }
-
-        private void OnStart()
-        {
-            foreach (var job in _jobs.GetConsumingEnumerable(_tokenSource.Token))
-            {
-                job.RunSynchronously();
-            }
-        }
-
-        public void Cancel()
-        {
-            _tokenSource.Cancel();
-            _worker.Abort();
-        }
-    }
-
-    public static class HandyHelper {
-        private const string _connectionUrlBaseFormat = @"https://www.handyfeeling.com/api/v1/{0}/";
-        private static string _connectionUrlWithId = null;
-        private const string _defaultKey = "NO_KEY";
-        public static bool IsDeviceIdSet => DeviceId != _defaultKey;
-
-        public static string Default => _defaultKey;
-        public static string ConnectionBaseUrl {
-            get
-            {
-                if (_updateConnectionUrl)
-                {
-                    _updateConnectionUrl = false;
-                    _connectionUrlWithId = string.Format(_connectionUrlBaseFormat, DeviceId);
-                }
-                return _connectionUrlWithId;
-            }
-        }
-
-        private static bool _updateConnectionUrl = true;
-        private static string _deviceId = _defaultKey;
-        public static string DeviceId {
-            get => _deviceId;
-            set
-            {
-                if (value != _deviceId)
-                    _updateConnectionUrl = true;
-                _deviceId = value;
-            }
-        }
-    }
-
     // reference: https://app.swaggerhub.com/apis/alexandera/handy-api/1.0.0#/
     // implementing the handy as a device doesn't really work because of it's unique videosync api
     // implementing it as a timesource would make sense but prevent using other timesources...
 
-    // hopeffully in the future the handy will receives an api to send commands to it via bluetooth or LAN 
+    // hopefully in the future the handy will receive an api to send commands to it via bluetooth or LAN 
     // in which case it would integrate nicely into ScriptPlayer
     public class HandyController 
     {
@@ -545,10 +472,12 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
            --Calculating server time
            When sending serverTime (Ts) to Handy calculate the Ts by using the average offset (offset_avg) and the current client time (Tc) when sending a message to Handy. Ts = Tc + offset_avg
         */
+
         class HandyTimeResponse
         {
             public long serverTime { get; set; }
         }
+
         public void CalcServerTimeOffset()
         {
             // due too an api rate limit of I think 60 request per minute I chose just 10 attempts instead of 30...
