@@ -12,6 +12,8 @@ using System.Net.Http.Headers;
 using System.Windows;
 using System.Threading.Tasks;
 using System.IO;
+using JetBrains.Annotations;
+using Newtonsoft.Json.Serialization;
 
 namespace ScriptPlayer.Shared.Devices.TheHandy
 {
@@ -23,7 +25,8 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
     // in which case it would integrate nicely into ScriptPlayer
     public class HandyController 
     {
-        class HandyResponse
+        [UsedImplicitly]
+        private class HandyResponse
         {
             public bool success { get; set; }
             public bool connected { get; set; }
@@ -39,7 +42,8 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             public float speed { get; set; }
         }
 
-        class HandyUploadResponse
+        [UsedImplicitly]
+        private class HandyUploadResponse
         {
             public bool success { get; set; }
             public bool? converted { get; set; }
@@ -51,7 +55,8 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             public string error { get; set; }
         }
 
-        class HandyPlay
+        [UsedImplicitly]
+        private class HandyPlay
         {
             // required
             public bool play { get; set; }
@@ -61,7 +66,8 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             public int? timeout { get; set; }
         }
 
-        class HandyPrepare
+        [UsedImplicitly]
+        private class HandyPrepare
         {
             // required
             public string url { get; set; } // url to funscript converted to csv can be local ip
@@ -71,7 +77,8 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             public int? timeout { get; set; }
         }
 
-        class HandyOffset
+        [UsedImplicitly]
+        private class HandyOffset
         {
             // required
             public int offset { get; set; }
@@ -79,7 +86,8 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             public int? timeout { get; set; }
         }
 
-        class HandyAdjust
+        [UsedImplicitly]
+        private class HandyAdjust
         {
             // required
             public int currentTime { get; set; }
@@ -205,12 +213,13 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         {
             string csv = GenerateCSVFromActions(actions);
             long scriptSize = Encoding.UTF8.GetByteCount(csv);
+
             // the maximum size for the script is 1MB
-            if(scriptSize <= (1048576 * 0.995)) // 1MB - 5kb just in case
+            if(scriptSize <= 1024 * (1024 - 25)) // 1MB - 5kb just in case
             {
                 _loadedScript = csv;
                 _scriptName = filePath;
-                string filename = System.IO.Path.GetFileName(filePath);
+                string filename = Path.GetFileName(filePath);
 
                 string scriptUrl = null;
                 if (UseLocalScriptServer)

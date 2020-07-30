@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace ScriptPlayer.Shared.Devices.TheHandy
@@ -27,8 +24,8 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         public HandyScriptServer()
         {
             LocalIp = GetLocalIp();
-
         }
+
         private string GetLocalIp()
         {
             // TODO: this isn't great but hopefully works for alot of people?
@@ -43,6 +40,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                         return foundIp;
                 }
             }
+
             // return the last found ipv4 address if there is none starting with 192
             if (!string.IsNullOrWhiteSpace(foundIp))
                 return foundIp;
@@ -77,19 +75,41 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         // aswell as no firewall blocking access / windows firewall is blocking by default ...
         private void ServeScript()
         {
+            string prefix = $"http://+:{ServeScriptPort}/script/";
+
             _server = new HttpListener();
-            _server.Prefixes.Add($"http://+:{ServeScriptPort}/script/");
+            _server.Prefixes.Add(prefix);
+
             try
             {
                 _server.Start();
             }
-            catch (HttpListenerException ex)
+            catch (HttpListenerException)
             {
-                // ACCESS DENIED
-                // probably needs administrator
-                MessageBox.Show($"Error hosting script: \"{ex.Message}\" (Try as Administrator)", "Error");
-                return;
+                try
+                {
+                    // Launch a command prompt as admin and add prefix to URL-ACL for future use
+
+                    ProcessStartInfo info = new ProcessStartInfo("cmd", $"/C netsh http add urlacl url=\"{prefix}\" user=\"{Environment.UserName}\"");
+                    info.UseShellExecute = true;
+                    info.Verb = "runas";
+                    info.WindowStyle = ProcessWindowStyle.Hidden;
+
+                    Process.Start(info);
+
+                    _server = new HttpListener();
+                    _server.Prefixes.Add(prefix);
+                    _server.Start();
+                }
+                catch(HttpListenerException ex)
+                {
+                    // ACCESS DENIED
+                    // probably needs administrator
+                    MessageBox.Show($"Error hosting script: \"{ex.Message}\" (Try as Administrator)", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
             }
+
             if (MessageBox.Show($"Hosting handy script at: {ScriptHostUrl}script.csv\n(Press \"Yes\" to test in browser.)\n"
                 + "Try accessing the server with another device in the same network (maybe your phone) to test that no firewall is blocking it otherwise the Handy will also not be able to get the script.",
                 "Host",
@@ -101,6 +121,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
             }
 
             Debug.WriteLine("hosting scripts @ " + ScriptHostUrl);
+
             while (true)
             {
                 Debug.WriteLine("Listening...");
