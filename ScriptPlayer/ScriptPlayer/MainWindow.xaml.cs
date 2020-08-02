@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using ScriptPlayer.Dialogs;
 using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
@@ -94,6 +95,7 @@ namespace ScriptPlayer
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.RequestFolder += ViewModelOnRequestFolder;
+            ViewModel.RequestRename += ViewModel_RequestRename;
             ViewModel.RequestShowDeviceManager += ViewModelOnRequestShowDeviceManager;
 
             ViewModel.Beat += ViewModel_Beat;
@@ -115,6 +117,16 @@ namespace ScriptPlayer
             hideonhoverDescriptor.AddValueChanged(GridSettings, HideOnHoverChanged);
 
             UpdateVideoColumns();
+        }
+
+        private void ViewModel_RequestRename(object sender, RequestEventArgs<string> args)
+        {
+            RenameDialog dialog = new RenameDialog(args.Value){Owner = this};
+            if (dialog.ShowDialog() != true)
+                return;
+
+            args.Value = dialog.Filename;
+            args.Handled = true;
         }
 
         public void SettingsPage_Handler(string pagename)
@@ -320,16 +332,28 @@ namespace ScriptPlayer
 
         private void ViewModelOnRequestFolder(object sender, RequestEventArgs<string> e)
         {
-            FolderBrowserDialogEx x = new FolderBrowserDialogEx();
+            var dlg = new CommonOpenFileDialog
+            {
+                IsFolderPicker = true,
+                AddToMostRecentlyUsedList = true,
+                AllowNonFileSystemItems = false,
+                EnsureFileExists = true,
+                EnsurePathExists = true,
+                EnsureReadOnly = false,
+                EnsureValidNames = true,
+                Multiselect = false,
+                ShowPlacesList = true
+            };
+
 
             if (!string.IsNullOrWhiteSpace(e.Value))
-                x.SelectedPath = e.Value;
+                dlg.InitialDirectory = e.Value;
 
-            if (x.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            if (dlg.ShowDialog() != CommonFileDialogResult.Ok)
                 return;
 
             e.Handled = true;
-            e.Value = x.SelectedPath;
+            e.Value = dlg.FileName;
         }
 
 
@@ -873,6 +897,11 @@ namespace ScriptPlayer
                 existing.Topmost = false;
                 existing.Topmost = true;
             }
+        }
+
+        private void btnNext_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            ViewModel.Playlist.SelectNewRandomEntry();
         }
     }
 }

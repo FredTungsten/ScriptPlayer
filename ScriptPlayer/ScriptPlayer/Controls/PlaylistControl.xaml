@@ -10,9 +10,16 @@
              xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
              mc:Ignorable="d" Background="White" d:DesignHeight="435.699" d:DesignWidth="354.767" KeyDown="UserControl_KeyDown">
     <UserControl.Resources>
-        <ContextMenu x:Key="ItemContextMenu">
+        <ContextMenu x:Key="ItemContextMenu" shared:HideOnHover.OverridesHideOnHover="True">
             <MenuItem Header="Open in Explorer" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.OpenInExplorerCommand}"
                       CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext}"/>
+            <Separator/>
+            <MenuItem Header="Rename" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.RenameCommand}"
+                      CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext}"></MenuItem>
+            <MenuItem Header="Move" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.MoveCommand}"
+                      CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext}"></MenuItem>
+            <MenuItem Header="Delete" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.DeleteCommand}"
+                      CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext}"></MenuItem>
         </ContextMenu>
         <ToolTip x:Key="EntryToolTip" Opened="ToolTip_OnOpened"
                  Padding="0" Placement="Right" BorderThickness="0">

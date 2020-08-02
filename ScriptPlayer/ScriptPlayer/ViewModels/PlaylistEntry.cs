@@ -11,6 +11,9 @@ namespace ScriptPlayer.ViewModels
         private bool _hasMedia;
         private bool _hasScript;
         private PlaylistEntryStatus _status;
+        private string _shortname;
+        private string _fullname;
+        private bool _removed;
 
         public PlaylistEntry()
         {
@@ -20,13 +23,41 @@ namespace ScriptPlayer.ViewModels
         public PlaylistEntry(string filename)
         {
             Fullname = filename;
-            Shortname = System.IO.Path.GetFileNameWithoutExtension(filename);
         }
 
-        public string Shortname { get; set; }
-        public string Fullname { get; set; }
+        public string Shortname
+        {
+            get => _shortname;
+            set
+            {
+                if (value == _shortname) return;
+                _shortname = value;
+                OnPropertyChanged();
+            }
+        }
 
-        public bool Removed { get; set; }
+        public string Fullname
+        {
+            get => _fullname;
+            set
+            {
+                if (value == _fullname) return;
+                _fullname = value;
+                Shortname = System.IO.Path.GetFileNameWithoutExtension(_fullname);
+                OnPropertyChanged();
+            }
+        }
+
+        public bool Removed
+        {
+            get => _removed;
+            set
+            {
+                if (value == _removed) return;
+                _removed = value;
+                OnPropertyChanged();
+            }
+        }
 
         public PlaylistEntryStatus Status
         {

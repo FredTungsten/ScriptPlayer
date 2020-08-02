@@ -5,6 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ScriptPlayer.Controls"
              xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
+             FontFamily="Segoe UI"
+             FontSize="12"
              mc:Ignorable="d" >
     <StackPanel Width="300" Background="White">
         <shared:GifPlayer Name="player" Background="Black" AutoPlay="True" Stretch="Uniform" Height="169"/>

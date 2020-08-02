@@ -27,8 +27,6 @@ using ScriptPlayer.Shared.Devices;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using ScriptPlayer.Shared.Devices.TheHandy;
-using System.Runtime.InteropServices;
-using System.ServiceModel.Channels;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -48,6 +46,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<TimeSpan>> RequestScriptShiftTimespan;
         public event EventHandler<RequestEventArgs<Section>> RequestSection;
         public event EventHandler<RequestEventArgs<GeneratorSettingsViewModel>> RequestGeneratorSettings;
+
         
         public event EventHandler RequestActivate;
         public event EventHandler RequestShowDeviceManager;
@@ -475,14 +474,21 @@ namespace ScriptPlayer.ViewModels
                 Playlist = new PlaylistViewModel();
                 Playlist.PlayEntry += PlaylistOnPlayEntry;
                 Playlist.PropertyChanged += PlaylistOnPropertyChanged;
+
                 Playlist.RequestMediaFileName += Playlist_RequestMediaFileName;
                 Playlist.RequestVideoFileName += Playlist_RequestVideoFileName;
                 Playlist.RequestScriptFileName += Playlist_RequestScriptFileName;
+                Playlist.RequestAllRelatedFiles += PlaylistOnRequestAllRelatedFiles;
+
+                Playlist.RequestRenameFile += PlaylistOnRequestRenameFile;
+                Playlist.RequestDirectory += PlaylistOnRequestDirectory;
+
                 Playlist.RequestGenerateThumbnails += PlaylistOnRequestGenerateThumbnails;
                 Playlist.RequestGenerateThumbnailBanners += PlaylistOnRequestGenerateThumbnailBanners;
                 Playlist.RequestGeneratePreviews += PlaylistOnRequestGeneratePreviews;
                 Playlist.RequestGenerateHeatmaps += PlaylistOnRequestGenerateHeatmaps;
                 Playlist.RequestGenerateAll += PlaylistOnRequestGenerateAll;
+
                 Playlist.EntriesChanged += PlaylistOnEntriesChanged;
                 Playlist.NextOrPreviousChanged += PlaylistOnNextOrPreviousChanged;
             }
@@ -500,6 +506,38 @@ namespace ScriptPlayer.ViewModels
             UpdateRandomChapterTooltip();
 
             LoadGeneratorSettings();
+        }
+
+        private void PlaylistOnRequestDirectory(object sender, RequestEventArgs<string> args)
+        {
+            string initialValue = args.Value;
+            if (string.IsNullOrEmpty(initialValue))
+                initialValue = _lastFolder;
+
+            string folder = OnRequestFolder(initialValue);
+
+            if (string.IsNullOrWhiteSpace(folder))
+                return;
+
+            _lastFolder = folder;
+            args.Value = folder;
+            args.Handled = true;
+        }
+
+        private void PlaylistOnRequestRenameFile(object sender, RequestEventArgs<string> args)
+        {
+            string result = OnRequestRename(args.Value);
+            if (string.IsNullOrEmpty(result))
+                return;
+
+            args.Value = result;
+            args.Handled = true;
+        }
+
+        private void PlaylistOnRequestAllRelatedFiles(object sender, RequestEventArgs<string, string[]> args)
+        {
+            args.ValueOut = GetAllRelatedFiles(args.ValueIn).ToArray();
+            args.Handled = true;
         }
 
         private void PlaylistOnNextOrPreviousChanged(object sender, EventArgs eventArgs1)
@@ -1998,6 +2036,8 @@ namespace ScriptPlayer.ViewModels
 
         public event EventHandler<RequestEventArgs<string>> RequestFolder;
         public event EventHandler<RequestFileEventArgs> RequestFile;
+        public event EventHandler<RequestEventArgs<string>> RequestRename;
+
         public event EventHandler<MessageBoxEventArgs> RequestMessageBox;
         public event EventHandler<ButtplugUrlRequestEventArgs> RequestButtplugUrl;
         public event EventHandler RequestToggleFullscreen;
@@ -5639,6 +5679,29 @@ namespace ScriptPlayer.ViewModels
             }
 
             _usedOsds = osds.ToArray();
+        }
+
+        public List<string> GetAllRelatedFiles(string filePath)
+        {
+            List<string> paths = GetAdditionalPaths().ToList();
+            string currentPath = Path.GetDirectoryName(filePath);
+
+            if(!paths.Contains(currentPath, StringComparer.InvariantCultureIgnoreCase))
+                paths.Add(currentPath);
+
+            string commonFileName = Path.GetFileNameWithoutExtension(filePath);
+
+            return paths.SelectMany(path => Directory.EnumerateFiles(path, commonFileName + ".*", SearchOption.TopDirectoryOnly)).ToList();
+        }
+
+        protected virtual string OnRequestRename(string initialValue)
+        {
+            RequestEventArgs<string> e = new RequestEventArgs<string>(initialValue);
+            RequestRename?.Invoke(this, e);
+            if (!e.Handled)
+                return null;
+
+            return e.Value;
         }
     }
 }

@@ -10,6 +10,7 @@
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
         xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
         xmlns:controls1="clr-namespace:ScriptPlayer.Controls"
+        xmlns:helpers="clr-namespace:ScriptPlayer.Shared.Helpers;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
@@ -165,7 +166,7 @@
                     </TextBlock>
                 </StackPanel>
             </Grid>
-           
+
             <!-- ICON AND VERSION -->
             <Grid IsHitTestVisible="False" Visibility="{Binding ShowBanner, Converter={StaticResource VisibilityConverter}}">
                 <Grid.RowDefinitions>
@@ -295,7 +296,7 @@
                     <MenuItem Header="Show devices" Command="{Binding ShowDeviceManagerCommand}"/>
                     <Separator/>
                     <MenuItem Header="Connect to Handy directly" Command="{Binding ConnectHandyDirectlyCommand}" IsEnabled="{Binding CanDirectConnectHandy}" ToolTipService.ShowOnDisabled="True">
-                        
+
                     </MenuItem>
                     <MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" IsEnabled="{Binding CanDirectConnectLaunch}" ToolTipService.ShowOnDisabled="True">
                         <MenuItem.Header>
@@ -460,7 +461,7 @@
                     </Button.Style>
                     <Grid Width="30" Height="30">
                         <controls:AwesomeIcon Icon="Video_File_Regular" Focusable="False" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        
+
                         <ProgressBar Minimum="0" Maximum="1" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                                      Value="{Binding WorkQueue.TotalProgress}" BorderThickness="0" Foreground="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Foreground}">
                         </ProgressBar>
@@ -479,7 +480,7 @@
                     <Setter Property="Height" Value="30"/>
                     <Setter Property="DockPanel.Dock" Value="Left"></Setter>
                 </Style>
-                <Style TargetType="Button" BasedOn="{StaticResource FlatButton}">
+                <Style TargetType="Button" BasedOn="{StaticResource FlatButton}" x:Key="MediaControlButton">
                     <Setter Property="Focusable" Value="False"></Setter>
                 </Style>
                 <Style TargetType="Separator" BasedOn="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}">
@@ -488,7 +489,7 @@
             </DockPanel.Resources>
             <Button ToolTip="Play / Pause" Command="{Binding TogglePlaybackCommand}">
                 <Button.Style>
-                    <Style TargetType="Button" BasedOn="{StaticResource FlatButton}">
+                    <Style TargetType="Button" BasedOn="{StaticResource MediaControlButton}">
                         <Setter Property="Content" Value="4"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Path=TimeSource.IsPlaying}" Value="True">
@@ -498,9 +499,11 @@
                     </Style>
                 </Button.Style>
             </Button>
-            <Button Command="{Binding SkipToNextEventCommand}" ToolTip="Skip close to next event" viewModels:SettingsPage.PageName="Gaps" Content="8"/>
+            <Button 
+                Style="{StaticResource MediaControlButton}"
+                Command="{Binding SkipToNextEventCommand}" ToolTip="Skip close to next event" viewModels:SettingsPage.PageName="Gaps" Content="8"/>
 
-            <Button Command="{Binding ToggleFullScreenCommand}" ToolTip="Toggle Fullscreen" DockPanel.Dock="Right">
+            <Button Command="{Binding ToggleFullScreenCommand}" ToolTip="Toggle Fullscreen" DockPanel.Dock="Right" Style="{StaticResource MediaControlButton}">
                 <controls:AwesomeIcon>
                     <controls:AwesomeIcon.Style>
                         <Style TargetType="{x:Type controls:AwesomeIcon}">
@@ -516,7 +519,7 @@
             </Button>
             <TextBlock MouseLeftButtonDown="TimeDisplay_OnMouseLeftButtonDown" TextAlignment="Right" DockPanel.Dock="Right" VerticalAlignment="Center" Width="95" Margin="0,0,8,0">
                 <TextBlock.ContextMenu>
-                    <ContextMenu>
+                    <ContextMenu shared:HideOnHover.OverridesHideOnHover="True">
                         <ContextMenu.Resources>
                             <Style x:Key="DisplayModeCommand" TargetType="MenuItem">
                                 <Setter Property="Command" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget.(FrameworkElement.DataContext).(viewModels:MainViewModel.SetTimeDisplayModeCommand)}"/>
@@ -579,37 +582,26 @@
                 </TextBlock.Style>
             </TextBlock>
             <Slider VerticalAlignment="Center" Margin="16,0" Width="50" Value="{Binding Volume, Mode=TwoWay}" Minimum="0" Maximum="100" DockPanel.Dock="Right" Style="{DynamicResource VolumeSliderStyle}"></Slider>
-            <Button Command="{Binding Playlist.PlayNextEntryCommand}" Content=":" DockPanel.Dock="Right"
-                    ToolTipService.BetweenShowDelay="0" ToolTipService.ShowDuration="60000">
-                <Button.ToolTip>
-                    <ToolTip DataContext="{Binding RelativeSource={RelativeSource Self}, Path=PlacementTarget.(FrameworkElement.DataContext)}" 
+            <Button Style="{StaticResource MediaControlButton}"
+                Command="{Binding Playlist.PlayNextEntryCommand}" Content=":" DockPanel.Dock="Right"
+                    ToolTipService.Placement="Top"
+                    ToolTipService.BetweenShowDelay="0" ToolTipService.ShowDuration="60000" MouseRightButtonUp="btnNext_MouseRightButtonUp">
+                <controls:BetterToolTip.ToolTip>
+                    <controls1:VideoDetailsPreview ViewModel="{Binding .}" Entry="{Binding Path=(viewModels:MainViewModel.Playlist).NextEntry}"/>
+                </controls:BetterToolTip.ToolTip>
+                <!-- <ToolTip DataContext="{Binding RelativeSource={RelativeSource Self}, Path=PlacementTarget.(FrameworkElement.DataContext)}" 
                              Padding="0" Placement="Top" BorderThickness="0">
                         <controls1:VideoDetailsPreview ViewModel="{Binding .}" Entry="{Binding Path=(viewModels:MainViewModel.Playlist).NextEntry}"/>
                     </ToolTip>
-                    <!--<ToolTip Padding="0" Placement="Top" Opened="ToolTipNext_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
-                        <StackPanel Width="300">
-                            <shared:GifPlayer Background="Black" AutoPlay="True" Name="playerNext" Stretch="Uniform"/>
-                            <Image Name="heatMapNext" HorizontalAlignment="Stretch" Height="15" Stretch="Fill" />
-                            <TextBlock Margin="2" Background="White" Foreground="Black" Name="titleNext" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                        </StackPanel>
-                    </ToolTip>-->
-                </Button.ToolTip>
+                -->
             </Button>
-            <Button Command="{Binding Playlist.PlayPreviousEntryCommand}" Content="9" DockPanel.Dock="Right"
+            <Button Style="{StaticResource MediaControlButton}"
+                Command="{Binding Playlist.PlayPreviousEntryCommand}" Content="9" DockPanel.Dock="Right"
+                    ToolTipService.Placement="Top"
                     ToolTipService.BetweenShowDelay="0" ToolTipService.ShowDuration="60000">
-                <Button.ToolTip>
-                    <ToolTip DataContext="{Binding RelativeSource={RelativeSource Self}, Path=PlacementTarget.(FrameworkElement.DataContext)}" 
-                             Padding="0" Placement="Top" BorderThickness="0">
-                        <controls1:VideoDetailsPreview ViewModel="{Binding .}" Entry="{Binding Path=(viewModels:MainViewModel.Playlist).PreviousEntry}"/>
-                    </ToolTip>
-                    <!--<ToolTip Padding="0" Placement="Top" Opened="ToolTipPrevious_OnOpened" Closed="ToolTip_OnClosed" BorderThickness="0">
-                        <StackPanel Width="300">
-                            <shared:GifPlayer Background="Black" AutoPlay="True" Name="playerPrevious" Stretch="Uniform"/>
-                            <Image Name="heatMapPrevious" HorizontalAlignment="Stretch" Height="15" Stretch="Fill" />
-                            <TextBlock Margin="2" Background="White" Foreground="Black" Name="titlePrevious" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                        </StackPanel>
-                    </ToolTip>-->
-                </Button.ToolTip>
+                <controls:BetterToolTip.ToolTip>
+                    <controls1:VideoDetailsPreview ViewModel="{Binding .}" Entry="{Binding Path=(viewModels:MainViewModel.Playlist).PreviousEntry}"/>
+                </controls:BetterToolTip.ToolTip>
             </Button>
             <shared:SeekBar Positions="{Binding Positions}" HighlightRange="{Binding DisplayedRange}" SnapsToDevicePixels="True" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="SeekBar" Thumbnails="{Binding Thumbnails}" Progress="{Binding Path=TimeSource.Progress}" Duration="{Binding Path=TimeSource.Duration}" Seek="SeekBar_OnSeek">
                 <shared:SeekBar.OverlayOpacity>
@@ -685,11 +677,11 @@
                                         <TextBlock TextAlignment="Center" Margin="0" Text="{Binding Path=Settings.ScriptDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
                                     </StackPanel>
                                     <StackPanel Margin="4">
-                                    <TextBlock TextAlignment="Center" Margin="0" Text="Audio Delay"/>
-                                    <Slider Value="{Binding Path=Settings.AudioDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-2500" Maximum="2500" SmallChange="25" LargeChange="100" IsSnapToTickEnabled="True" TickFrequency="25"/>
+                                        <TextBlock TextAlignment="Center" Margin="0" Text="Audio Delay"/>
+                                        <Slider Value="{Binding Path=Settings.AudioDelay, Converter={StaticResource MillisecondsConverter}}" Margin="0,4" Minimum="-2500" Maximum="2500" SmallChange="25" LargeChange="100" IsSnapToTickEnabled="True" TickFrequency="25"/>
                                         <TextBlock TextAlignment="Center" Margin="0" Text="{Binding Path=Settings.AudioDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
-                                </StackPanel>
-                                <Separator/>
+                                    </StackPanel>
+                                    <Separator/>
                                     <StackPanel Margin="4" ToolTip="Minimum and maximum position of the Launch. Values received from the script will be scaled accordingly.">
                                         <TextBlock Margin="0" HorizontalAlignment="Center" Text="Range"/>
                                         <shared:RangeSlider Margin="0,4" Minimum="0" Maximum="99" LowerValue="{Binding Settings.MinPosition, Mode=TwoWay}" UpperValue="{Binding Settings.MaxPosition, Mode=TwoWay}"/>
@@ -699,7 +691,7 @@
                                         </DockPanel>
                                         <CheckBox Margin="4" Content="Invert Positions" IsChecked="{Binding Settings.InvertPosition}"/>
                                         <CheckBox Margin="4" Content="Enable Auto Homing" IsChecked="{Binding Settings.AutoHomingEnabled}"/>
-                                        
+
 
                                         <TextBlock Margin="0" HorizontalAlignment="Center" Text="Range Extender"/>
                                         <Slider Margin="0,4" Minimum="0" Maximum="99" Value="{Binding Settings.RangeExtender}"/>

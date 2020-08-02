@@ -1,0 +1,16 @@
+﻿<Window x:Class="ScriptPlayer.Dialogs.DirectorySelectorDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
+        mc:Ignorable="d"
+        Title="Select directory" Height="393.75" Width="371.928">
+    <Grid>
+        <Button Content="Pick from file system" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="344"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,35,0,0" TextWrapping="Wrap" Text="Favorites" VerticalAlignment="Top"/>
+        <ListBox HorizontalAlignment="Left" Height="114" Margin="10,56,0,0" VerticalAlignment="Top" Width="344"/>
+
+    </Grid>
+</Window>

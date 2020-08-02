@@ -15,8 +15,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         public string ScriptHostUrl => $"http://{LocalIp}:{ServeScriptPort}/script/";
         public bool HttpServerRunning => _serveScriptThread != null && _serveScriptThread.IsAlive;
         public string LoadedScript { get; set; }
-
-
+        
         private HttpListener _server;
         private Thread _serveScriptThread; // thread running the http server hosting the script
         private bool _scriptLoaded => !string.IsNullOrWhiteSpace(LoadedScript);
@@ -28,7 +27,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
 
         private string GetLocalIp()
         {
-            // TODO: this isn't great but hopefully works for alot of people?
+            // TODO: this isn't great but hopefully works for a lot of people?
             var host = Dns.GetHostEntry(Dns.GetHostName());
             string foundIp = null;
             foreach (var ip in host.AddressList)
