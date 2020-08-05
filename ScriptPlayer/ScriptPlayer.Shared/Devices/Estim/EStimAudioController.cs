@@ -13,11 +13,6 @@ namespace ScriptPlayer.Shared.Devices
             return DirectSoundOut.Devices.ToList();
         }
 
-        public override void ScanForDevices()
-        {
-            
-        }
-
         public void SetDevice(DirectSoundDeviceInfo device, EstimParameters parameters)
         {
             if (_device != null)

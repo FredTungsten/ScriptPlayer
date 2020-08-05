@@ -5,10 +5,12 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using ScriptPlayer.Shared.Devices.Interfaces;
 
 namespace ScriptPlayer.Shared
 {
-    public abstract class Device : INotifyPropertyChanged, IDisposable
+
+    public abstract class Device : IActionBasedDevice, INotifyPropertyChanged, IDisposable
     {
         public event EventHandler<Exception> Disconnected;
 
@@ -102,7 +104,7 @@ namespace ScriptPlayer.Shared
             return Math.Abs(command1.PositionToTransformed - command2.PositionToTransformed) < 10;
         }
 
-        public abstract Task Set(DeviceCommandInformation information);
+        protected abstract Task Set(DeviceCommandInformation information);
 
         public abstract Task Set(IntermediateCommandInformation information);
 

@@ -40,8 +40,6 @@ namespace ScriptPlayer.Shared
                 default:
                     throw new ArgumentException($"Unsupported Audio file format", nameof(path));
             }
-                
-            
             
             _wavStream = WaveFormatConversionStream.CreatePcmStream(_rdr);
             _baStream = new BlockAlignReductionStream(_wavStream);

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         xmlns:converters="clr-namespace:ScriptPlayer.Converters"
+        xmlns:interfaces="clr-namespace:ScriptPlayer.Shared.Devices.Interfaces;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}" SizeToContent="Height"
         Title="Device Manager" Height="300" Width="344.492" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
     <Window.Resources>
@@ -41,7 +42,7 @@
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type shared:Device}">
+                    <DataTemplate DataType="{x:Type interfaces:IDevice}">
                         <Border HorizontalAlignment="Stretch" Background="Azure" BorderBrush="CornflowerBlue" BorderThickness="1" Margin="2">
                             <DockPanel LastChildFill="True" HorizontalAlignment="Stretch">
                                 <CheckBox Width="40" Height="40" IsChecked="{Binding IsEnabled}" DockPanel.Dock="Left">

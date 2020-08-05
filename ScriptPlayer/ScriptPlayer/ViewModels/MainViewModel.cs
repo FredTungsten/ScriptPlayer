@@ -24,9 +24,10 @@ using System.Windows.Threading;
 using ScriptPlayer.Dialogs;
 using ScriptPlayer.Generators;
 using ScriptPlayer.Shared.Devices;
+using ScriptPlayer.Shared.Devices.Interfaces;
+using ScriptPlayer.Shared.TheHandy;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
-using ScriptPlayer.Shared.Devices.TheHandy;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -87,8 +88,6 @@ namespace ScriptPlayer.ViewModels
         private byte _minScriptPosition;
 
         public GeneratorWorkQueue WorkQueue { get; }
-
-        public HandyController Handy { get; set; } = null;
 
         public WindowStateModel InitialPlayerState { get; private set; }
 
@@ -262,7 +261,7 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _positionsViewport = TimeSpan.FromSeconds(5);
 
         private readonly List<DeviceController> _controllers = new List<DeviceController>();
-        private readonly ObservableCollection<Device> _devices = new ObservableCollection<Device>();
+        private readonly ObservableCollection<IDevice> _devices = new ObservableCollection<IDevice>();
         private bool _showBanner = true;
         private string _scriptPlayerVersion;
         private bool _blurVideo;
@@ -323,7 +322,8 @@ namespace ScriptPlayer.ViewModels
         private AudioFileTimeSource _audioHandler;
         private string _loadedAudio;
 
-        public ObservableCollection<Device> Devices => _devices;
+        public ObservableCollection<IDevice> Devices => _devices;
+
         public TimeSpan PositionsViewport
         {
             get => _positionsViewport;
@@ -401,6 +401,7 @@ namespace ScriptPlayer.ViewModels
 
         private void LoadAudio(string file)
         {
+            //AudioFileTimeSource should be remodelled to be a ISyncBasedDevice
             try
             {
                 DisposeAudioHandler();
@@ -1341,8 +1342,10 @@ namespace ScriptPlayer.ViewModels
 
         private void TimeSourceIsPlayingChanged(object sender, bool playing)
         {
-            Handy?.Play(playing, TimeSource.Progress.TotalMilliseconds);
-            if(!playing)
+            foreach (ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
+                device.Play(playing, TimeSource.Progress);
+
+            if (!playing)
             {
                 StopDevices();
                 AutoHomeDevices();
@@ -1382,7 +1385,11 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
-            Handy?.Resync(e);
+            foreach (ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
+            {
+                device.Resync(e);
+            }
+
             _audioHandler?.Resync(e);
 
             if (Settings.SoftSeekFiles)
@@ -1755,6 +1762,7 @@ namespace ScriptPlayer.ViewModels
             UpdateOsd();
             UpdateVideoCrop();
             UpdateAutoReloadScript();
+            UpdateHandySettings();
             ReloadAudio();
         }
 
@@ -1896,7 +1904,23 @@ namespace ScriptPlayer.ViewModels
                     UpdateAudioDelay();
                     break;
                 }
+                case nameof(SettingsViewModel.HandyScriptHost):
+                case nameof(SettingsViewModel.HandyDeviceId):
+                case nameof(SettingsViewModel.HandyLocalIp):
+                case nameof(SettingsViewModel.HandyLocalPort):
+                {
+                    UpdateHandySettings();
+                    break;
+                }
             }
+        }
+
+        private void UpdateHandySettings()
+        {
+            HandyController handyController = _controllers.OfType<HandyController>().FirstOrDefault();
+
+            handyController?.UpdateSettings(Settings.HandyDeviceId, Settings.HandyScriptHost, Settings.HandyLocalIp,
+                Settings.HandyLocalPort);
         }
 
         private void UpdateAudioDelay()
@@ -2001,7 +2025,9 @@ namespace ScriptPlayer.ViewModels
         private void UpdateScriptDelay()
         {
             _scriptHandler.Delay = Settings.ScriptDelay;
-            Handy?.SetScriptOffset(Settings.ScriptDelay);
+
+            foreach(ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
+                device.SetScriptOffset(Settings.ScriptDelay);
         }
 
         public void Dispose()
@@ -2022,10 +2048,11 @@ namespace ScriptPlayer.ViewModels
             }
             _controllers.Clear();
 
-            foreach (Device device in _devices)
+            foreach (IDisposable device in _devices.OfType<IDisposable>())
             {
                 device.Dispose();
             }
+
             _devices.Clear();
 
             DisposeTimeSource();
@@ -2076,7 +2103,7 @@ namespace ScriptPlayer.ViewModels
         private void UpdateDeviceSettings()
         {
             _scriptHandler.MinIntermediateCommandDuration = Settings.CommandDelay;
-            foreach (Device device in _devices)
+            foreach (IActionBasedDevice device in _devices.OfType<IActionBasedDevice>())
             {
                 device.SetMinCommandDelay(Settings.CommandDelay);
             }
@@ -3347,36 +3374,57 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void DeviceController_DeviceRemoved(object sender, Device device)
+        private void DeviceController_DeviceRemoved(object sender, IDevice device)
         {
             RemoveDevice(device);
         }
 
-        private void RemoveDevice(Device device)
+        private void RemoveDevice(IDevice device)
         {
             // ReSharper disable once AccessToDisposedClosure
             if (ShouldInvokeInstead(() => RemoveDevice(device))) return;
 
-            device.Disconnected -= Device_Disconnected;
-            device.Dispose();
+            if (!_devices.Contains(device))
+                return;
+
+            if (device is Device dev)
+            {
+                dev.Disconnected -= Device_Disconnected;
+                dev.Dispose();
+            }
+
             _devices.Remove(device);
 
             if (Settings.NotifyDevices)
                 OsdShowMessage("Device Removed: " + device.Name, TimeSpan.FromSeconds(8));
         }
 
-        private void DeviceController_DeviceFound(object sender, Device device)
+        private void DeviceController_DeviceFound(object sender, IDevice device)
         {
             AddDevice(device);
         }
 
-        private void AddDevice(Device device)
+        private void AddDevice(IDevice device)
         {
             if (ShouldInvokeInstead(() => AddDevice(device))) return;
 
+            if (_devices.Contains(device))
+                return;
+
             _devices.Add(device);
             device.IsEnabled = true;
-            device.Disconnected += Device_Disconnected;
+
+            if(device is Device dev)
+                dev.Disconnected += Device_Disconnected;
+
+            if (device is ISyncBasedDevice sync)
+            {
+                if(!string.IsNullOrEmpty(LoadedScript))
+                    sync.SetScript(Path.GetFileNameWithoutExtension(LoadedScript), _scriptHandler.GetScript());
+
+                if(TimeSource.IsPlaying)
+                    sync.Play(true, TimeSource.Progress);
+            }
 
             if (Settings.NotifyDevices)
                 OsdShowMessage("Device Connected: " + device.Name, TimeSpan.FromSeconds(8));
@@ -3392,8 +3440,8 @@ namespace ScriptPlayer.ViewModels
 
         private void Device_Disconnected(object sender, Exception exception)
         {
-            Device device = sender as Device;
-            if (device == null) return;
+            if (!(sender is Device device))
+                return;
 
             RemoveDevice(device);
         }
@@ -3465,6 +3513,32 @@ namespace ScriptPlayer.ViewModels
             funstimController = new FunstimAudioController();
             funstimController.DeviceFound += DeviceController_DeviceFound;
             _controllers.Add(funstimController);
+        }
+
+        private void InitializeHandyController()
+        {
+            HandyController handyController = _controllers.OfType<HandyController>().FirstOrDefault();
+            if (handyController != null)
+            {
+                handyController.UpdateConnectionStatus();
+                return;
+            }
+
+            if (!CheckHandySettings())
+            {
+                ShowSettings("The Handy");
+                if (!CheckHandySettings())
+                    return;
+            }
+
+            handyController = new HandyController();
+            handyController.OsdRequest += HandyOnOsdRequest;
+            handyController.DeviceFound += DeviceController_DeviceFound;
+            handyController.DeviceRemoved += DeviceController_DeviceRemoved;
+            _controllers.Add(handyController);
+
+            UpdateHandySettings();
+
         }
 
         private void CheckForArguments()
@@ -4060,7 +4134,7 @@ namespace ScriptPlayer.ViewModels
 
             CurrentPosition = information.PositionFromTransformed / 99.0;
 
-            foreach (Device device in _devices)
+            foreach (IActionBasedDevice device in _devices.OfType<IActionBasedDevice>())
                 device.Enqueue(information);
         }
 
@@ -4071,14 +4145,14 @@ namespace ScriptPlayer.ViewModels
 
             if (!TimeSource.IsPlaying && requirePlaying) return;
 
-            foreach (Device device in _devices)
+            foreach (IActionBasedDevice device in _devices.OfType<IActionBasedDevice>())
                 if (device.IsEnabled)
                     device.Set(intermediateInfo);
         }
 
         private void StopDevices()
         {
-            foreach (Device device in _devices.ToList())
+            foreach (IActionBasedDevice device in _devices.OfType<IActionBasedDevice>().ToList())
                 device.Stop();
         }
 
@@ -4755,7 +4829,8 @@ namespace ScriptPlayer.ViewModels
             FindMaxPositions();
             UpdateHeatMap();
 
-            Handy?.PrepareNewFunscript(fileName, actions);
+            foreach(ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
+                device.SetScript(Path.GetFileNameWithoutExtension(LoadedScript), _scriptHandler.GetScript());
 
             return true;
         }
@@ -4773,35 +4848,20 @@ namespace ScriptPlayer.ViewModels
             controller.Start();
         }
 
-        private bool AskForHandyDeviceId()
+        private bool CheckHandySettings()
         {
-            HandyDeviceIdSettingsDialog deviceIdDialog = null;
-            if (Handy.UseLocalScriptServer)
-            {
-                deviceIdDialog = new HandyDeviceIdSettingsDialog(Settings.HandyDeviceId,
-                    Handy.LocalScriptServer.LocalIp,
-                    Handy.LocalScriptServer.ServeScriptPort.ToString(),
-                    !Handy.LocalScriptServer.HttpServerRunning
-                );
-            }
-            else
-            {
-                deviceIdDialog = new HandyDeviceIdSettingsDialog(Settings.HandyDeviceId,
-                    "unused",
-                    "unused",
-                    false
-                );
-            }
+            if (string.IsNullOrEmpty(Settings.HandyDeviceId) || Settings.HandyDeviceId == HandyHelper.DefaultDeviceId)
+                return false;
 
-            if (deviceIdDialog.ShowDialog() != true) return false;           
-            Settings.HandyDeviceId = deviceIdDialog.DeviceId;
-            HandyHelper.DeviceId = deviceIdDialog.DeviceId;
-            
-            if(Handy.UseLocalScriptServer)
+            switch (Settings.HandyScriptHost)
             {
-                Handy.LocalScriptServer.LocalIp = deviceIdDialog.LocalIp;
-                if(int.TryParse(deviceIdDialog.Port, out int parsedPort))
-                    Handy.LocalScriptServer.ServeScriptPort = parsedPort;
+                case HandyHost.Local:
+                {
+                    if (string.IsNullOrEmpty(Settings.HandyLocalIp))
+                        return false;
+
+                    break;
+                }
             }
 
             return true;
@@ -4809,22 +4869,12 @@ namespace ScriptPlayer.ViewModels
 
         public void ConnectHandyDirectly()
         {
-            HandyHelper.DeviceId = Settings.HandyDeviceId;
+            InitializeHandyController();
+        }
 
-            if(Handy == null)
-            {
-                var hostLocal = MessageBox.Show("Host scripts locally?\nNo means the script gets uploaded to handyfeeling.com.", "Host?", MessageBoxButton.YesNo);
-                Handy = new HandyController(hostLocal == MessageBoxResult.Yes);
-                AskForHandyDeviceId();
-            }
-            Handy.StartLocalHttpServer(); // this does nothing when hostLocal is false
-            Handy.CheckConnected(connected =>
-            {
-                if(!connected)
-                {
-                    Application.Current.Dispatcher.Invoke(AskForHandyDeviceId);
-                }
-            });
+        private void HandyOnOsdRequest(string text, TimeSpan span, string designation)
+        {
+            OsdShowMessage(text,span,designation);
         }
 
         public void VolumeDown()
@@ -4998,7 +5048,7 @@ namespace ScriptPlayer.ViewModels
         {
             InstanceHandler.CommandLineReceived -= InstanceHandlerOnCommandLineReceived;
             InstanceHandler.Shutdown();
-            Handy?.Exit();
+
             SaveSettings();
             SavePlaylist();
         }

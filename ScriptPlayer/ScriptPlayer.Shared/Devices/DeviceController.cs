@@ -1,4 +1,5 @@
 ﻿using System;
+using ScriptPlayer.Shared.Devices.Interfaces;
 
 namespace ScriptPlayer.Shared
 {
@@ -6,17 +7,16 @@ namespace ScriptPlayer.Shared
     {
         public event EventHandler Disconnected;
 
-        public event EventHandler<Device> DeviceFound;
+        public event EventHandler<IDevice> DeviceFound;
 
-        public event EventHandler<Device> DeviceRemoved;
-        public abstract void ScanForDevices();
+        public event EventHandler<IDevice> DeviceRemoved;
 
-        protected virtual void OnDeviceFound(Device e)
+        protected virtual void OnDeviceFound(IDevice e)
         {
             DeviceFound?.Invoke(this, e);
         }
 
-        protected virtual void OnDeviceRemoved(Device e)
+        protected virtual void OnDeviceRemoved(IDevice e)
         {
             DeviceRemoved?.Invoke(this, e);
         }

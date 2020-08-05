@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Windows;
 using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Devices.Interfaces;
 
 namespace ScriptPlayer.Dialogs
 {
@@ -11,15 +12,15 @@ namespace ScriptPlayer.Dialogs
     public partial class DeviceManagerDialog : Window
     {
         public static readonly DependencyProperty DevicesProperty = DependencyProperty.Register(
-            "Devices", typeof(ObservableCollection<Device>), typeof(DeviceManagerDialog), new PropertyMetadata(default(ObservableCollection<Device>)));
+            "Devices", typeof(ObservableCollection<IDevice>), typeof(DeviceManagerDialog), new PropertyMetadata(default(ObservableCollection<IDevice>)));
 
-        public ObservableCollection<Device> Devices
+        public ObservableCollection<IDevice> Devices
         {
-            get => (ObservableCollection<Device>) GetValue(DevicesProperty);
+            get => (ObservableCollection<IDevice>) GetValue(DevicesProperty);
             set => SetValue(DevicesProperty, value);
         }
 
-        public DeviceManagerDialog(ObservableCollection<Device> devices)
+        public DeviceManagerDialog(ObservableCollection<IDevice> devices)
         {
             Devices = devices;
             InitializeComponent();

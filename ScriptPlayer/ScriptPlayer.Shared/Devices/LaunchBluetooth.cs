@@ -19,7 +19,7 @@ namespace ScriptPlayer.Shared
         private bool _discover;
         public BluetoothLEAdvertisementWatcher BleWatcher { get; set; }
         
-        public override void ScanForDevices()
+        public void ScanForDevices()
         {
             Start();
         }

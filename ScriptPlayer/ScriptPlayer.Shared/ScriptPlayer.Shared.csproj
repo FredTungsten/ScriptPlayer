@@ -254,7 +254,9 @@
     <Compile Include="Devices\Estim\FunstimAudioDevice.cs" />
     <Compile Include="Devices\Estim\FunstimSampleProvider.cs" />
     <Compile Include="Devices\Estim\SineWaveProvider.cs" />
+    <Compile Include="Devices\Interfaces\IDevice.cs" />
     <Compile Include="Devices\TheHandy\BlockingTaskQueue.cs" />
+    <Compile Include="Devices\TheHandy\HandyApiMessages.cs" />
     <Compile Include="Devices\TheHandy\HandyController.cs" />
     <Compile Include="Devices\TheHandy\HandyHelper.cs" />
     <Compile Include="Devices\TheHandy\HandyScriptServer.cs" />

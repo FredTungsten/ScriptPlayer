@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace ScriptPlayer.Shared.Scripts
@@ -211,10 +210,10 @@ namespace ScriptPlayer.Shared.Scripts
             return _filledActions.AsReadOnly();
         }
 
-        public IEnumerable<ScriptAction> GetUnfilledScript()
+        public IEnumerable<FunScriptAction> GetUnfilledScript()
         {
             if (_originalActions == null)
-                return new List<ScriptAction>();
+                return new List<FunScriptAction>();
 
             return _originalActions.AsReadOnly();
         }

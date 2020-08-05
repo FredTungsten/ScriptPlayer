@@ -327,7 +327,7 @@ namespace ScriptPlayer.Shared
             //return "https://github.com/buttplugio/buttplug-windows-suite/releases/tag/" + GetButtplugApiVersion();
         }
 
-        public override async void ScanForDevices()
+        public async void ScanForDevices()
         {
             await StartScanning();
         }

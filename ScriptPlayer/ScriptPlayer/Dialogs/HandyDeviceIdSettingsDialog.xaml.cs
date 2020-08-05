@@ -1,16 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace ScriptPlayer.Dialogs
 {
@@ -24,8 +13,8 @@ namespace ScriptPlayer.Dialogs
 
         public string DeviceId
         {
-            get { return (string)GetValue(DeviceIdProperty); }
-            set { SetValue(DeviceIdProperty, value); }
+            get => (string)GetValue(DeviceIdProperty);
+            set => SetValue(DeviceIdProperty, value);
         }
 
         public static readonly DependencyProperty LocalIpProperty = DependencyProperty.Register(
@@ -33,8 +22,8 @@ namespace ScriptPlayer.Dialogs
 
         public string LocalIp
         {
-            get { return (string)GetValue(LocalIpProperty); }
-            set { SetValue(LocalIpProperty, value); }
+            get => (string)GetValue(LocalIpProperty);
+            set => SetValue(LocalIpProperty, value);
         }
 
         public static readonly DependencyProperty PortProperty = DependencyProperty.Register(
@@ -42,8 +31,8 @@ namespace ScriptPlayer.Dialogs
 
         public string Port
         {
-            get { return (string)GetValue(PortProperty); }
-            set { SetValue(PortProperty, value); }
+            get => (string)GetValue(PortProperty);
+            set => SetValue(PortProperty, value);
         }
 
         public HandyDeviceIdSettingsDialog(string currentId, string localIp, string port, bool enableLanOverride)

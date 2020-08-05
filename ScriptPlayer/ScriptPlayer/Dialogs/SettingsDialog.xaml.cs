@@ -5,6 +5,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -54,8 +56,8 @@ namespace ScriptPlayer.Dialogs
 
         public AudioDeviceVm SelectedAudioDevice
         {
-            get { return (AudioDeviceVm) GetValue(SelectedAudioDeviceProperty); }
-            set { SetValue(SelectedAudioDeviceProperty, value); }
+            get => (AudioDeviceVm) GetValue(SelectedAudioDeviceProperty);
+            set => SetValue(SelectedAudioDeviceProperty, value);
         }
 
         public static readonly DependencyProperty InputMappingsProperty = DependencyProperty.Register(
@@ -101,6 +103,15 @@ namespace ScriptPlayer.Dialogs
         {
             get => (string)GetValue(AdditionalPathProperty);
             set => SetValue(AdditionalPathProperty, value);
+        }
+
+        public static readonly DependencyProperty LocalAdressesProperty = DependencyProperty.Register(
+            "LocalAdresses", typeof(List<string>), typeof(SettingsDialog), new PropertyMetadata(default(List<string>)));
+
+        public List<string> LocalAdresses
+        {
+            get => (List<string>) GetValue(LocalAdressesProperty);
+            set => SetValue(LocalAdressesProperty, value);
         }
 
         public static readonly DependencyProperty SettingsProperty = DependencyProperty.Register(
@@ -163,6 +174,7 @@ namespace ScriptPlayer.Dialogs
         {
             Settings = initialSettings.Duplicate();
             InitializeAudio();
+            InitializeLocalAddresses();
 
             CreateInputMappings(GlobalCommandManager.CommandMappings);
             
@@ -171,6 +183,24 @@ namespace ScriptPlayer.Dialogs
             Pages = BuildPages(PageSelector);
             SelectedPage = FindPage(selectedPage) ?? FindPage(_lastSelected) ?? Pages.FirstOrDefault();
             UpdateFilter();
+        }
+
+        private void InitializeLocalAddresses()
+        {
+            // TODO: this isn't great but hopefully works for a lot of people?
+
+            List<string> ips = new List<string>();
+            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
+            
+            foreach (IPAddress ip in host.AddressList)
+            {
+                if (ip.AddressFamily != AddressFamily.InterNetwork)
+                    continue;
+
+                ips.Add(ip.ToString());
+            }
+
+            LocalAdresses = ips;
         }
 
         private void InitializeAudio()

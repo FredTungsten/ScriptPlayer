@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ScriptPlayer.Shared.Devices.TheHandy
+namespace ScriptPlayer.Shared.TheHandy
 {
     public class BlockingTaskQueue
     {

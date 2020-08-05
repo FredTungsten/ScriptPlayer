@@ -18,7 +18,7 @@ namespace ScriptPlayer.Shared
             _buttplugAdapter = buttplugAdapter;
         }
 
-        public override async Task Set(DeviceCommandInformation information)
+        protected override async Task Set(DeviceCommandInformation information)
         {
             await _buttplugAdapter.Set(_device, information);
         }

@@ -1,12 +1,12 @@
-﻿namespace ScriptPlayer.Shared.Devices.TheHandy
+﻿namespace ScriptPlayer.Shared.TheHandy
 {
     public static class HandyHelper {
         private const string _connectionUrlBaseFormat = @"https://www.handyfeeling.com/api/v1/{0}/";
         private static string _connectionUrlWithId = null;
-        private const string _defaultKey = "NO_KEY";
-        public static bool IsDeviceIdSet => DeviceId != _defaultKey;
+        private const string DefaultDeviceKey = "NO_KEY";
+        public static bool IsDeviceKeySet => DeviceId != DefaultDeviceKey;
 
-        public static string Default => _defaultKey;
+        public static string DefaultDeviceId => DefaultDeviceKey;
         public static string ConnectionBaseUrl {
             get
             {
@@ -20,7 +20,7 @@
         }
 
         private static bool _updateConnectionUrl = true;
-        private static string _deviceId = _defaultKey;
+        private static string _deviceId = DefaultDeviceKey;
         public static string DeviceId {
             get => _deviceId;
             set

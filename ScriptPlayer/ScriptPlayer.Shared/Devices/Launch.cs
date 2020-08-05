@@ -99,7 +99,7 @@ namespace ScriptPlayer.Shared
             public static Guid CommandCharacteristics = Guid.Parse("88f80583-0000-01e6-aace-0002a5d5c51b");
         }
 
-        public override async Task Set(DeviceCommandInformation information)
+        protected override async Task Set(DeviceCommandInformation information)
         {
             await SetPosition(information.PositionToTransformed, information.SpeedTransformed);
         }

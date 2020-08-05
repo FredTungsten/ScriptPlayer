@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Windows;
 
-namespace ScriptPlayer.Shared.Devices.TheHandy
+namespace ScriptPlayer.Shared.TheHandy
 {
     public class HandyScriptServer
     {
@@ -18,7 +18,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
         
         private HttpListener _server;
         private Thread _serveScriptThread; // thread running the http server hosting the script
-        private bool _scriptLoaded => !string.IsNullOrWhiteSpace(LoadedScript);
+        private bool IsScriptLoaded => !string.IsNullOrWhiteSpace(LoadedScript);
 
         public HandyScriptServer()
         {
@@ -89,10 +89,13 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                 {
                     // Launch a command prompt as admin and add prefix to URL-ACL for future use
 
-                    ProcessStartInfo info = new ProcessStartInfo("cmd", $"/C netsh http add urlacl url=\"{prefix}\" user=\"{Environment.UserName}\"");
-                    info.UseShellExecute = true;
-                    info.Verb = "runas";
-                    info.WindowStyle = ProcessWindowStyle.Hidden;
+                    string args = $"/C netsh http add urlacl url=\"{prefix}\" user=\"{Environment.UserName}\"";
+                    ProcessStartInfo info = new ProcessStartInfo("cmd", args)
+                    {
+                        UseShellExecute = true,
+                        Verb = "runas",
+                        WindowStyle = ProcessWindowStyle.Hidden
+                    };
 
                     Process.Start(info);
 
@@ -109,15 +112,15 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
                 }
             }
 
-            if (MessageBox.Show($"Hosting handy script at: {ScriptHostUrl}script.csv\n(Press \"Yes\" to test in browser.)\n"
-                + "Try accessing the server with another device in the same network (maybe your phone) to test that no firewall is blocking it otherwise the Handy will also not be able to get the script.",
-                "Host",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Asterisk)
-                == MessageBoxResult.Yes)
-            {
-                Process.Start($"{ScriptHostUrl}script.csv");
-            }
+            //if (MessageBox.Show($"Hosting handy script at: {ScriptHostUrl}script.csv\n(Press \"Yes\" to test in browser.)\n"
+            //    + "Try accessing the server with another device in the same network (maybe your phone) to test that no firewall is blocking it otherwise the Handy will also not be able to get the script.",
+            //    "Host",
+            //    MessageBoxButton.YesNo,
+            //    MessageBoxImage.Asterisk)
+            //    == MessageBoxResult.Yes)
+            //{
+            //    Process.Start($"{ScriptHostUrl}script.csv");
+            //}
 
             Debug.WriteLine("hosting scripts @ " + ScriptHostUrl);
 
@@ -136,7 +139,7 @@ namespace ScriptPlayer.Shared.Devices.TheHandy
 
                 // Construct a response.
                 byte[] buffer;
-                if (_scriptLoaded)
+                if (IsScriptLoaded)
                 {
                     string responseString = LoadedScript;
                     buffer = Encoding.UTF8.GetBytes(responseString);

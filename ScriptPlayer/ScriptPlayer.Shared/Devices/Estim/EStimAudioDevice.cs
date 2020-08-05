@@ -36,7 +36,7 @@ namespace ScriptPlayer.Shared.Devices
         {
         }
 
-        public override async Task Set(DeviceCommandInformation information)
+        protected override async Task Set(DeviceCommandInformation information)
         {
             
         }

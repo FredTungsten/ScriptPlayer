@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Devices.Interfaces;
 
 namespace ScriptPlayer.Converters
 {
@@ -70,7 +71,7 @@ namespace ScriptPlayer.Converters
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is Device device)
+            if (value is IDevice device)
             {
                 if (device.Name.Contains("Launch"))
                     return DeviceImages.Launch;
