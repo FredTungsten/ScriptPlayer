@@ -4,7 +4,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Web;
-using System.Windows;
 using System.Xml;
 
 namespace ScriptPlayer.Shared

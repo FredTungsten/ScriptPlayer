@@ -2,8 +2,6 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Xml;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
 using ScriptPlayer.Generators;

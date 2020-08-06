@@ -3,14 +3,14 @@ using System.Threading.Tasks;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-namespace ScriptPlayer.Shared.Devices
+namespace ScriptPlayer.Shared.Estim
 {
     public class EStimAudioDevice : Device
     {
         private readonly SineWaveProvider _generator;
         private readonly DirectSoundOut _soundOut;
-        private MonoToStereoSampleProvider _stereo;
-        private EstimParameters _parameters;
+        private readonly MonoToStereoSampleProvider _stereo;
+        private readonly EstimParameters _parameters;
 
         public EStimAudioDevice(DirectSoundDeviceInfo device, EstimParameters parameters)
         {
@@ -18,13 +18,14 @@ namespace ScriptPlayer.Shared.Devices
 
             _parameters = parameters;
 
-            _generator = new SineWaveProvider();
-            _generator.Frequency = 600;
+            _generator = new SineWaveProvider {Frequency = 600};
 
-            _stereo = new MonoToStereoSampleProvider(_generator);
-            _stereo.LeftVolume = 0f;
-            _stereo.RightVolume = 0f;
-            
+            _stereo = new MonoToStereoSampleProvider(_generator)
+            {
+                LeftVolume = 0f,
+                RightVolume = 0f
+            };
+
             _soundOut = new DirectSoundOut(device.Guid);
             _soundOut.Init(_stereo);
             _soundOut.Play();
@@ -36,12 +37,12 @@ namespace ScriptPlayer.Shared.Devices
         {
         }
 
-        protected override async Task Set(DeviceCommandInformation information)
+        protected override Task Set(DeviceCommandInformation information)
         {
-            
+            return Task.CompletedTask;
         }
 
-        public override async Task Set(IntermediateCommandInformation information)
+        public override Task Set(IntermediateCommandInformation information)
         {
             double position = (information.DeviceInformation.PositionFromOriginal / 99.0) * (1.0 - information.Progress) +
                               (information.DeviceInformation.PositionToOriginal / 99.0) * information.Progress;
@@ -68,6 +69,7 @@ namespace ScriptPlayer.Shared.Devices
                     throw new ArgumentOutOfRangeException();
             }
 
+            return Task.CompletedTask;
         }
 
         protected override void StopInternal()

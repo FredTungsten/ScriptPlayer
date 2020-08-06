@@ -19,8 +19,8 @@ namespace ScriptPlayer.Shared
 
         public BeatDefinition BeatDefinition
         {
-            get { return (BeatDefinition) GetValue(BeatDefinitionProperty); }
-            set { SetValue(BeatDefinitionProperty, value); }
+            get => (BeatDefinition) GetValue(BeatDefinitionProperty);
+            set => SetValue(BeatDefinitionProperty, value);
         }
 
         public static readonly DependencyProperty PatternDurationProperty = DependencyProperty.Register(
@@ -28,13 +28,13 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan PatternDuration
         {
-            get { return (TimeSpan) GetValue(PatternDurationProperty); }
-            set { SetValue(PatternDurationProperty, value); }
+            get => (TimeSpan) GetValue(PatternDurationProperty);
+            set => SetValue(PatternDurationProperty, value);
         }
 
         public bool TimeLock
         {
-            get { return _timeLock; }
+            get => _timeLock;
             set
             {
                 _timeLock = value;
@@ -47,7 +47,7 @@ namespace ScriptPlayer.Shared
 
                     if (duration == TimeSpan.Zero) return;
 
-                    _patternRepeats = duration.Divide(PatternDuration);
+                    PatternRepeatCount = duration.Divide(PatternDuration);
                 }
                 else
                 {
@@ -58,13 +58,13 @@ namespace ScriptPlayer.Shared
 
                     if (duration == TimeSpan.Zero) return;
 
-                    PatternDuration = duration.Divide(_patternRepeats);
+                    PatternDuration = duration.Divide(PatternRepeatCount);
                 }
                 InvalidateVisual();
             }
         }
 
-        public double _patternRepeats;
+        public double PatternRepeatCount;
 
         public BeatLine()
         {
@@ -129,8 +129,8 @@ namespace ScriptPlayer.Shared
             }
             else
             {
-                widthPerBeat = ActualWidth / (BeatDefinition.Pattern.Length * _patternRepeats);
-                PatternDuration = duration.Divide(_patternRepeats);
+                widthPerBeat = ActualWidth / (BeatDefinition.Pattern.Length * PatternRepeatCount);
+                PatternDuration = duration.Divide(PatternRepeatCount);
             }
 
             double x = 0;
@@ -149,7 +149,7 @@ namespace ScriptPlayer.Shared
                 if(on)
                     drawingContext.DrawRectangle(Brushes.White,null, new Rect(x,0,widthPerCylce,ActualHeight));
 
-                var text = new FormattedText(i.ToString("D"), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, 12.0, Brushes.Black, new NumberSubstitution(), TextFormattingMode.Display);
+                var text = new FormattedText(i.ToString("D"), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, 12.0, Brushes.Black, new NumberSubstitution(), TextFormattingMode.Display, 1);
 
                 drawingContext.DrawText(text, new Point(x,0));
 
@@ -195,7 +195,7 @@ namespace ScriptPlayer.Shared
             _timeLock = summary.TimeLocked;
 
             if (_timeLock)
-                _patternRepeats = summary.Duration / (double)summary.PatternDuration;
+                PatternRepeatCount = summary.Duration / (double)summary.PatternDuration;
 
             PatternDuration = TimeSpan.FromTicks(summary.PatternDuration);
             BeatDefinition = summary.Beat;
@@ -211,7 +211,7 @@ namespace ScriptPlayer.Shared
             if (duration <= TimeSpan.Zero) return;
 
             _timeLock = false;
-            _patternRepeats = duration.Divide(beatDuration);
+            PatternRepeatCount = duration.Divide(beatDuration);
             PatternDuration = beatDuration;
 
             InvalidateVisual();
@@ -219,10 +219,12 @@ namespace ScriptPlayer.Shared
 
         public BeatSegment GetBeatSegment()
         {
-            BeatSegment summary = new BeatSegment();
-            summary.Beat = BeatDefinition;
-            summary.PatternDuration = PatternDuration.Ticks;
-            summary.TimeLocked = TimeLock;
+            BeatSegment summary = new BeatSegment
+            {
+                Beat = BeatDefinition,
+                PatternDuration = PatternDuration.Ticks,
+                TimeLocked = TimeLock
+            };
 
             return summary;
         }
@@ -237,14 +239,14 @@ namespace ScriptPlayer.Shared
             if (duration <= TimeSpan.Zero) return;
 
             if(!TimeLock)
-                _patternRepeats = duration.Divide(PatternDuration);
+                PatternRepeatCount = duration.Divide(PatternDuration);
 
-            int repeats = (int) Math.Round(_patternRepeats);
+            int repeats = (int) Math.Round(PatternRepeatCount);
             if (repeats <= 0)
                 repeats = 1;
 
             duration = PatternDuration.Multiply(repeats);
-            _patternRepeats = repeats;
+            PatternRepeatCount = repeats;
 
             TimePanel.SetDuration(_parent, duration);
         }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows;
-using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Devices.Interfaces;
 
 namespace ScriptPlayer.Dialogs

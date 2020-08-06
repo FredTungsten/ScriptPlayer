@@ -13,17 +13,14 @@ namespace ScriptPlayer.Shared
 {
     public class ColorSampler : INotifyPropertyChanged
     {
-        public event EventHandler<TimeSpan> BeatDetected;
-
         private TimeSource _timeSource;
         private Brush _source;
         private DrawingVisual _drawing;
         private RenderTargetBitmap _bitmap;
         private Resolution _resolution;
-        private bool _active;
         private Brush _pixelPreview;
 
-        public List<Tuple<TimeSpan, Color>> _colorsByTime = new List<Tuple<TimeSpan, Color>>();
+        public List<Tuple<TimeSpan, Color>> ColorsByTime = new List<Tuple<TimeSpan, Color>>();
 
         public TimeSource TimeSource
         {
@@ -84,17 +81,12 @@ namespace ScriptPlayer.Shared
 
         public Int32Rect Sample
         {
-            get { return _sample; }
+            get => _sample;
             set
             {
                 _sample = value;
                 RefreshSample();
             }
-        }
-
-        public ColorSampler()
-        {
-            _condition = new PixelColorSampleCondition();
         }
 
         private void ValueOnProgressChanged(object sender, TimeSpan d)
@@ -104,20 +96,18 @@ namespace ScriptPlayer.Shared
 
         public List<Color> GetColors(TimeSpan maxTimeStamp, int maxCount)
         {
-            return _colorsByTime.Where(p => p.Item1 <= maxTimeStamp).OrderByDescending(p => p.Item1).Take(maxCount).Select(p => p.Item2).ToList();
+            return ColorsByTime.Where(p => p.Item1 <= maxTimeStamp).OrderByDescending(p => p.Item1).Take(maxCount).Select(p => p.Item2).ToList();
         }
 
-        private TimeSpan lastTimestamp;
+        private TimeSpan _lastTimestamp;
         private Int32Rect _sample;
-
-        private SampleCondition _condition;
 
         private void TakeSample(TimeSpan timestamp)
         {
-            if (timestamp == lastTimestamp)
+            if (timestamp == _lastTimestamp)
                 return;
 
-            lastTimestamp = timestamp;
+            _lastTimestamp = timestamp;
 
             _bitmap.Render(_drawing);
 
@@ -131,12 +121,12 @@ namespace ScriptPlayer.Shared
 
             Color average = SampleCondition.GetAverageColor(rgbPixels);
 
-            if (_colorsByTime.All(i => i.Item1 != timestamp))
+            if (ColorsByTime.All(i => i.Item1 != timestamp))
             {
-                _colorsByTime.Add(new Tuple<TimeSpan, Color>(timestamp, average));
+                ColorsByTime.Add(new Tuple<TimeSpan, Color>(timestamp, average));
 
-                while (_colorsByTime.Count > 500)
-                    _colorsByTime.RemoveAt(0);
+                while (ColorsByTime.Count > 500)
+                    ColorsByTime.RemoveAt(0);
             }
 
             PixelPreview = new SolidColorBrush(average);

@@ -25,6 +25,7 @@ using ScriptPlayer.Dialogs;
 using ScriptPlayer.Generators;
 using ScriptPlayer.Shared.Devices;
 using ScriptPlayer.Shared.Devices.Interfaces;
+using ScriptPlayer.Shared.Estim;
 using ScriptPlayer.Shared.TheHandy;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
@@ -118,19 +117,17 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan ViewPort
         {
-            get { return (TimeSpan)GetValue(ViewPortProperty); }
-            set { SetValue(ViewPortProperty, value); }
+            get => (TimeSpan)GetValue(ViewPortProperty);
+            set => SetValue(ViewPortProperty, value);
         }
 
         public static readonly DependencyProperty OffsetProperty = DependencyProperty.Register(
             "Offset", typeof(TimeSpan), typeof(TimeLineHeader), new PropertyMetadata(default(TimeSpan)));
 
         private bool _down;
-        private TimeSpan _downTime;
         private Point _downPosition;
         private TimeSpan _downCenter;
-        private static readonly Typeface _typeface;
-        private TimeSpan _lastRender;
+        private static readonly Typeface Typeface;
 
         public TimeSpan Offset
         {
@@ -143,7 +140,7 @@ namespace ScriptPlayer.Shared
             BackgroundProperty.OverrideMetadata(typeof(TimeLineHeader), new FrameworkPropertyMetadata(Brushes.Black));
 
             //Cache the typeface (not much but should help a little)
-            _typeface = new Typeface(new FontFamily("Arial"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+            Typeface = new Typeface(new FontFamily("Arial"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
         }
 
         protected override void OnRender(DrawingContext drawingContext)
@@ -182,7 +179,7 @@ namespace ScriptPlayer.Shared
 
                 drawingContext.DrawLine(new Pen(Brushes.White, 1), new Point(x, 32), new Point(x, 64));
                 
-                FormattedText text = new FormattedText(GetText(currentPosition), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, _typeface, 10, Brushes.White, 96);
+                FormattedText text = new FormattedText(GetText(currentPosition), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface, 10, Brushes.White, 96);
 
                 drawingContext.DrawText(text, new Point(x - text.Width / 2, text.Height));
 
@@ -206,7 +203,7 @@ namespace ScriptPlayer.Shared
 
                 _down = true;
                 _downPosition = e.GetPosition(this);
-                _downTime = PositionToTimeSpan(_downPosition);
+                PositionToTimeSpan(_downPosition);
                 _downCenter = Position;
             }
             else

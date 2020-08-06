@@ -1,13 +1,8 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
-using Windows.UI.Xaml.Controls;
-using ContextMenuEventArgs = System.Windows.Controls.ContextMenuEventArgs;
 
 namespace ScriptPlayer.Shared
 {

@@ -1,5 +1,4 @@
-﻿using System;
-using ScriptPlayer.ViewModels;
+﻿using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Generators
 {

@@ -104,9 +104,9 @@ namespace ScriptPlayer.Shared
             await SetPosition(information.PositionToTransformed, information.SpeedTransformed);
         }
 
-        public override async Task Set(IntermediateCommandInformation information)
+        public override Task Set(IntermediateCommandInformation information)
         {
-            return;
+            return Task.CompletedTask;
             // Does not apply
         }
 

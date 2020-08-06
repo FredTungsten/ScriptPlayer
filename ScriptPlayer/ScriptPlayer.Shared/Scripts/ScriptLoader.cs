@@ -23,15 +23,18 @@ namespace ScriptPlayer.Shared.Scripts
                 return Load(stream);
         }
 
-        private void WaitForFileReadable(string filename)
+        private static void WaitForFileReadable(string filename)
         {
             for(int i = 0; i < 5; i++)
             {
                 try
                 {
-                    using (File.OpenRead(filename));
+                    using (File.OpenRead(filename))
+                    {
+                        //
+                    }
                 }
-                catch (System.IO.IOException ex)
+                catch (IOException)
                 {
                     Thread.Sleep(TimeSpan.FromMilliseconds(50));
                 }

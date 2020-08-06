@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
-using System.Windows;
 
 namespace ScriptPlayer.Shared
 {

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using NAudio.Wave;
 using ScriptPlayer.Shared.Devices;
+using ScriptPlayer.Shared.Estim;
 
 namespace ScriptPlayer.Dialogs
 {

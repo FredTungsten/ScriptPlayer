@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Xml;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
 

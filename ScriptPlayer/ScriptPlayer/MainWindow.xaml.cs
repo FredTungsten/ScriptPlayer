@@ -14,7 +14,6 @@ using ScriptPlayer.Shared;
 using ScriptPlayer.ViewModels;
 using ScriptPlayer.Generators;
 using ScriptPlayer.Shared.Classes;
-using ScriptPlayer.Shared.Helpers;
 using Application = System.Windows.Application;
 using DataFormats = System.Windows.DataFormats;
 using DragEventArgs = System.Windows.DragEventArgs;

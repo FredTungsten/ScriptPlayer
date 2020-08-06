@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Windows;
 using Newtonsoft.Json.Linq;
 
 namespace ScriptPlayer.Shared

@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shell;
-using Accord.Audio;
-using Accord.Audio.Formats;
-using Accord.DirectSound;
 using Accord.Video.FFMPEG;
 using ScriptPlayer.Shared;
 

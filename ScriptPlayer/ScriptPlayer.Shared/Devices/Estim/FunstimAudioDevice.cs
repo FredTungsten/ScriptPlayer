@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using NAudio.Wave;
 
-namespace ScriptPlayer.Shared.Devices
+namespace ScriptPlayer.Shared.Estim
 {
     public class FunstimAudioDevice : Device
     {
         private readonly DirectSoundOut _soundOut;
-        private FunstimSampleProvider _provider;
+        private readonly FunstimSampleProvider _provider;
 
         public FunstimAudioDevice(DirectSoundDeviceInfo device, FunstimParameters parameters)
         {
@@ -28,7 +28,7 @@ namespace ScriptPlayer.Shared.Devices
 
                 MinDelayBetweenCommands = TimeSpan.Zero;
             }
-            catch (FormatException e)
+            catch (FormatException)
             {
 
             }
@@ -44,17 +44,15 @@ namespace ScriptPlayer.Shared.Devices
 
         }
 
-        protected override async Task Set(DeviceCommandInformation information)
+        protected override Task Set(DeviceCommandInformation information)
         {
-            if (_provider != null)
-            {
-                _provider.Action(information.PositionFromTransformed, information.PositionToTransformed, (int)information.Duration.TotalMilliseconds, information.SpeedMultiplier);
-            }
+            _provider?.Action(information.PositionFromTransformed, information.PositionToTransformed, (int)information.Duration.TotalMilliseconds, information.SpeedMultiplier);
+            return Task.CompletedTask;
         }
 
-        public override async Task Set(IntermediateCommandInformation information)
+        public override Task Set(IntermediateCommandInformation information)
         {
-
+            return Task.CompletedTask;
         }
 
         protected override void StopInternal()

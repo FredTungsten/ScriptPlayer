@@ -161,7 +161,7 @@ namespace ScriptPlayer.Shared
         public const string Brush = "\xf55d"; // Brush
         public const string Btc = "\xf15a"; // BTC
         public const string Buffer = "\xf837"; // Buffer
-        public const string Bug = "\xf188"; // Bug
+        public const string Bug = "\xf188"; // 
         public const string Building = "\xf1ad"; // Building
         public const string Bullhorn = "\xf0a1"; // bullhorn
         public const string Bullseye = "\xf140"; // Bullseye
@@ -418,7 +418,7 @@ namespace ScriptPlayer.Shared
         public const string Envelope_Opentext = "\xf658"; // Envelope Open-text
         public const string Envelope_Square = "\xf199"; // Envelope Square
         public const string Envira_Gallery = "\xf299"; // Envira Gallery
-        public const string Equals = "\xf52c"; // Equals
+        public const string EqualsSign = "\xf52c"; // Equals
         public const string Eraser = "\xf12d"; // eraser
         public const string Erlang = "\xf39d"; // Erlang
         public const string Ethereum = "\xf42e"; // Ethereum
