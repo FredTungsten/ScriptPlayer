@@ -173,7 +173,8 @@ namespace ScriptPlayer.Shared.TheHandy
             Task apiCall = new Task(() =>
             {
                 Task<HttpResponseMessage> request = _http.GetAsync(url);
-                Task call;
+
+                Task call; 
 
                 if (resultCallback != null)
                 {
@@ -181,7 +182,7 @@ namespace ScriptPlayer.Shared.TheHandy
                 }
                 else
                 {
-    #if DEBUG
+#if DEBUG
                     call = request.ContinueWith(r =>
                     {
                         HandyResponse resp = r.Result.Content.ReadAsAsync<HandyResponse>().Result;
@@ -197,7 +198,9 @@ namespace ScriptPlayer.Shared.TheHandy
                             Debug.WriteLine($"success: {url}");
                         }
                     });
-    #endif
+#else
+                    call = request;
+#endif
                 }
                 call.Wait(); // wait for response
             });
