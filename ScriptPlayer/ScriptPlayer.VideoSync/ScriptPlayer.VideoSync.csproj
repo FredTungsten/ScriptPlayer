@@ -59,41 +59,11 @@
     <Reference Include="Accord, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.3.8.2-alpha\lib\net462\Accord.dll</HintPath>
     </Reference>
-    <Reference Include="Accord.Audio, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Audio.3.8.2-alpha\lib\net462\Accord.Audio.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Audio.DirectSound, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.DirectSound.3.8.2-alpha\lib\net462\Accord.Audio.DirectSound.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Extensions.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Extensions.Core.3.0.1\lib\net45\Accord.Extensions.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Extensions.Imaging.AForgeInterop, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Extensions.Imaging.AForgeInterop.3.0.1\lib\net45\Accord.Extensions.Imaging.AForgeInterop.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Extensions.Imaging.Algorithms, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Extensions.Imaging.Algorithms.3.0.1\lib\net45\Accord.Extensions.Imaging.Algorithms.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Extensions.Math, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Extensions.Math.3.0.1\lib\net45\Accord.Extensions.Math.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Extensions.Vision, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Extensions.Vision.3.0.1\lib\net45\Accord.Extensions.Vision.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Imaging, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Imaging.3.8.2-alpha\lib\net462\Accord.Imaging.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.MachineLearning, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.MachineLearning.3.8.2-alpha\lib\net462\Accord.MachineLearning.dll</HintPath>
-    </Reference>
     <Reference Include="Accord.Math, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.Math.3.8.2-alpha\lib\net462\Accord.Math.dll</HintPath>
     </Reference>
     <Reference Include="Accord.Math.Core, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.Math.3.8.2-alpha\lib\net462\Accord.Math.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Statistics, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Statistics.3.8.2-alpha\lib\net462\Accord.Statistics.dll</HintPath>
     </Reference>
     <Reference Include="Accord.Video, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.Video.3.8.2-alpha\lib\net462\Accord.Video.dll</HintPath>
@@ -101,26 +71,8 @@
     <Reference Include="Accord.Video.FFMPEG, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=x86">
       <HintPath>..\packages\Accord.Video.FFMPEG.3.8.2-alpha\lib\net462\Accord.Video.FFMPEG.dll</HintPath>
     </Reference>
-    <Reference Include="Accord.Vision, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Vision.3.8.2-alpha\lib\net462\Accord.Vision.dll</HintPath>
-    </Reference>
-    <Reference Include="DotImaging.BitmapInterop, Version=4.7.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotImaging.BitmapInterop.4.8.3\lib\net45\DotImaging.BitmapInterop.dll</HintPath>
-    </Reference>
-    <Reference Include="DotImaging.GenericImage, Version=4.7.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotImaging.GenericImage.4.8.3\lib\net45\DotImaging.GenericImage.dll</HintPath>
-    </Reference>
-    <Reference Include="DotImaging.Primitives2D, Version=4.7.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotImaging.Primitives2D.4.8.3\lib\net45\DotImaging.Primitives2D.dll</HintPath>
-    </Reference>
     <Reference Include="NAudio, Version=1.10.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NAudio.1.10.0\lib\net35\NAudio.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpDX.4.1.0\lib\net45\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.DirectSound, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpDX.DirectSound.4.1.0\lib\net45\SharpDX.DirectSound.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -166,9 +118,6 @@
     <Compile Include="Dialogs\DoubleInputDialog.xaml.cs">
       <DependentUpon>DoubleInputDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dialogs\MocktestDialog.xaml.cs">
-      <DependentUpon>MocktestDialog.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Dialogs\NormalizationDialog.xaml.cs">
       <DependentUpon>NormalizationDialog.xaml</DependentUpon>
     </Compile>
@@ -177,9 +126,6 @@
     </Compile>
     <Compile Include="Dialogs\RangeStretcherDialog.xaml.cs">
       <DependentUpon>RangeStretcherDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\VisualTrackerDialog.xaml.cs">
-      <DependentUpon>VisualTrackerDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Extensions\DoubleMarkup.cs" />
     <Compile Include="Properties\Annotations.cs" />
@@ -223,10 +169,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dialogs\MocktestDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Dialogs\NormalizationDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -236,10 +178,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\RangeStretcherDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialogs\VisualTrackerDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

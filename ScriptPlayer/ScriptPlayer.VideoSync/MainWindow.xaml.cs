@@ -813,17 +813,6 @@ namespace ScriptPlayer.VideoSync
             SetAllBeats(Beats.Where(t => t < tBegin || t > tEnd));
         }
 
-        private void mnuTrackBlob_OnClick(object sender, RoutedEventArgs e)
-        {
-            var dialog = new VisualTrackerDialog(_videoFile, _marker1, _marker2, new Rectangle(SampleX, SampleY, SampleW, SampleH));
-            dialog.Show();
-        }
-
-        private void mnuShowMock_Click(object sender, RoutedEventArgs e)
-        {
-            new MocktestDialog().Show();
-        }
-
         private void SaveProjectAs()
         {
             if (string.IsNullOrWhiteSpace(_videoFile))
