@@ -10,7 +10,6 @@
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
         xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
         xmlns:controls1="clr-namespace:ScriptPlayer.Controls"
-        xmlns:helpers="clr-namespace:ScriptPlayer.Shared.Helpers;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
@@ -295,7 +294,7 @@
                 <MenuItem Header="Devices">
                     <MenuItem Header="Show devices" Command="{Binding ShowDeviceManagerCommand}"/>
                     <Separator/>
-                    <MenuItem Header="Connect to Handy directly" Command="{Binding ConnectHandyDirectlyCommand}" IsEnabled="{Binding CanDirectConnectHandy}" ToolTipService.ShowOnDisabled="True">
+                    <MenuItem Header="Connect to Handy directly" Command="{Binding ConnectHandyDirectlyCommand}" ToolTipService.ShowOnDisabled="True">
 
                     </MenuItem>
                     <MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" IsEnabled="{Binding CanDirectConnectLaunch}" ToolTipService.ShowOnDisabled="True">
