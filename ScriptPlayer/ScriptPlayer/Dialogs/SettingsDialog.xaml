@@ -490,6 +490,11 @@
                             <controls:AwesomeIcon Icon="Rock_Hand_Solid"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
+                            <TextBlock Text="Common Settings"/>
+                            <DockPanel Margin="4" ToolTip="Connection key used to connect to The Handy. Sometimes also referred to as device id oder device key">
+                                <TextBlock Style="{StaticResource SettingName}" Text="Connection Key"/>
+                                <TextBox Text="{Binding Settings.HandyDeviceId}"/>
+                            </DockPanel>
                             <TextBlock Text="Script Host"/>
                             <RadioButton Margin="4" IsChecked="{Binding Settings.HandyScriptHost, Converter={StaticResource BooleanConverter}, 
                                 ConverterParameter={x:Static theHandy:HandyHost.HandyfeelingCom}}" Content="handyfeeling.com"/>
