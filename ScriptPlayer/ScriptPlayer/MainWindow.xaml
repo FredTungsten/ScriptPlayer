@@ -294,9 +294,7 @@
                 <MenuItem Header="Devices">
                     <MenuItem Header="Show devices" Command="{Binding ShowDeviceManagerCommand}"/>
                     <Separator/>
-                    <MenuItem Header="Connect to Handy directly" Command="{Binding ConnectHandyDirectlyCommand}" ToolTipService.ShowOnDisabled="True">
-
-                    </MenuItem>
+                    <MenuItem Header="Connect to Handy directly" Command="{Binding ConnectHandyDirectlyCommand}" ToolTipService.ShowOnDisabled="True"/>
                     <MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" IsEnabled="{Binding CanDirectConnectLaunch}" ToolTipService.ShowOnDisabled="True">
                         <MenuItem.Header>
                             <TextBlock Text="Connect Launch directly">
@@ -688,6 +686,15 @@
                                             <TextBlock Margin="4,0" Text="{Binding Settings.MinPosition}" DockPanel.Dock="Left"/>
                                             <TextBlock Margin="4,0" Text="{Binding Settings.MaxPosition}" DockPanel.Dock="Right"/>
                                         </DockPanel>
+                                        <TextBlock>The Handy Stroke Length</TextBlock>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Button Margin="2" HorizontalAlignment="Stretch" Grid.Column="0" Content="-" Command="{Binding DecreaseHandyStrokeLengthCommand}"/>
+                                            <Button Margin="2" HorizontalAlignment="Stretch" Grid.Column="1" Content="+" Command="{Binding IncreaseHandyStrokeLengthCommand}"/>
+                                        </Grid>
                                         <CheckBox Margin="4" Content="Invert Positions" IsChecked="{Binding Settings.InvertPosition}"/>
                                         <CheckBox Margin="4" Content="Enable Auto Homing" IsChecked="{Binding Settings.AutoHomingEnabled}"/>
 

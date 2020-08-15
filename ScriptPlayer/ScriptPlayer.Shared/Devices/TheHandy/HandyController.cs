@@ -405,6 +405,42 @@ namespace ScriptPlayer.Shared.TheHandy
             _currentTime = time;
         }
 
+        public void StepStroke(bool stepUp)
+        {
+            SendGetRequest(GetQuery("stepStroke", new
+            {
+                step = stepUp,
+                timeout = 5000
+            }), async response =>
+            {
+                if (!response.IsSuccessStatusCode)
+                    return;
+
+                HandyResponse status = await response.Content.ReadAsAsync<HandyResponse>();
+
+                if (status.success)
+                {
+                    OnOsdRequest("Stroke Length: " + status.stroke, TimeSpan.FromSeconds(2), "HandyStrokeLength");
+                }
+            });
+        }
+
+        public void SetStroke(int percent)
+        {
+            SetStroke(new HandySetStroke
+            {
+                timeout = 4000,
+                type = "%",
+                value = percent
+            });
+        }
+
+        private void SetStroke(HandySetStroke stroke)
+        {
+            string url = GetQuery("setStroke", stroke);
+            SendGetRequest(url);
+        }
+
         ///<remarks>/syncPrepare</remarks> 
         private void SyncPrepare(HandyPrepare prep)
         {

@@ -1712,6 +1712,10 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand ShowGeneratorProgressCommand { get; set; }
 
+        public ScriptplayerCommand IncreaseHandyStrokeLengthCommand { get; set; }
+
+        public ScriptplayerCommand DecreaseHandyStrokeLengthCommand { get; set; }
+
         public PlaylistViewModel Playlist
         {
             get => _playlist;
@@ -2544,6 +2548,18 @@ namespace ScriptPlayer.ViewModels
 
             ShowGeneratorProgressCommand = new ScriptplayerCommand(ShowGeneratorProgress);
 
+            IncreaseHandyStrokeLengthCommand = new ScriptplayerCommand(IncreaseHandyStrokeLength)
+            {
+                CommandId = "IncreaseHandyStrokeLength",
+                DisplayText = "Increase Handy Stroke Length"
+            }; 
+
+            DecreaseHandyStrokeLengthCommand = new ScriptplayerCommand(DecreaseHandyStrokeLength)
+            {
+                CommandId = "DecreaseHandyStrokeLength",
+                DisplayText = "Decrease Handy Stroke Length"
+            };
+
             SaveScriptAsCommand = new ScriptplayerCommand(SaveScriptAs, IsScriptLoaded)
             {
                 CommandId = "SaveScriptAs",
@@ -2720,6 +2736,8 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterCommand(VolumeUpCommand);
             GlobalCommandManager.RegisterCommand(VolumeDownCommand);
             GlobalCommandManager.RegisterCommand(ToggleFullScreenCommand);
+            GlobalCommandManager.RegisterCommand(IncreaseHandyStrokeLengthCommand);
+            GlobalCommandManager.RegisterCommand(DecreaseHandyStrokeLengthCommand);
 
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(ToggleCommandSourceVideoPattern)
             {
@@ -2941,6 +2959,25 @@ namespace ScriptPlayer.ViewModels
                     GlobalCommandManager.GetShortcut(Key.MediaPreviousTrack, ModifierKeys.None, true)
                 }
             });
+        }
+
+        private void IncreaseHandyStrokeLength()
+        {
+            ModifyHandyStrokeLength(true);
+        }
+
+        private void ModifyHandyStrokeLength(bool increase)
+        {
+            var handyController = _controllers.OfType<HandyController>().FirstOrDefault();
+            if (handyController == null)
+                return;
+
+            handyController.StepStroke(increase);
+        }
+
+        private void DecreaseHandyStrokeLength()
+        {
+            ModifyHandyStrokeLength(false);
         }
 
         private void DecreaseMinSpeed()
