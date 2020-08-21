@@ -85,6 +85,8 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<bool> EntriesChanged;
         public event EventHandler NextOrPreviousChanged;
 
+        public bool AllowLocalControl { get; set; }
+
         public ObservableCollection<PlaylistEntry> Entries
         {
             get => _entries;

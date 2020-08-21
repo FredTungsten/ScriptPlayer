@@ -54,6 +54,15 @@ namespace ScriptPlayer.Shared
             Debug.WriteLine($"Duration of ManualTimeSource set to {duration:g}");
         }
 
+        public void SetPlaybackRate(double playbackRate)
+        {
+            if (Math.Abs(PlaybackRate - playbackRate) < 0.01)
+                return;
+
+            PlaybackRate = playbackRate;
+            Debug.WriteLine($"Duration of ManualTimeSource set to {playbackRate:g}");
+        }
+
         public override void SetPosition(TimeSpan position)
         {
             //Calculate Expected Position and Compare:

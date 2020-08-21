@@ -600,7 +600,7 @@ namespace ScriptPlayer.Shared
 
         public override bool CanSeek => true;
 
-        public override bool CanOpenMedia => true;
+        public override bool CanOpenMedia => false;
 
         public void Dispose()
         {

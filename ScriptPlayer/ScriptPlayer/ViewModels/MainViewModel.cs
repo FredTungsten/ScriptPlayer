@@ -869,7 +869,7 @@ namespace ScriptPlayer.ViewModels
                             new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
                                 TimeSpan.FromMilliseconds(10)), new SimpleTcpConnectionSettings
                             {
-                                IpAndPort = Settings.MpcHcEndpoint
+                                IpAndPort = Settings.DeoVrEndpoint
                             });
 
                         ((DeoVrTimeSource)TimeSource).FileOpened += OnVideoFileOpened;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
@@ -15,7 +16,7 @@ namespace ScriptPlayer.Shared
 
         public const string DefaultEndpoint = "localhost:23554";
 
-        private const bool UseLittleEndian = false;
+        private const bool UseLittleEndian = true;
 
         private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(3.0);
         private static readonly TimeSpan DisconnectTimeout = TimeSpan.FromSeconds(1.0);
@@ -30,14 +31,19 @@ namespace ScriptPlayer.Shared
         private bool _connected;
         private DeoVrApiData _previousData;
         private SimpleTcpConnectionSettings _connectionSettings;
+        private bool _disposed;
 
-        public override double PlaybackRate { get; set; }
+        public override double PlaybackRate
+        {
+            get => _timeSource.PlaybackRate;
+            set => _timeSource.SetPlaybackRate(value);
+        }
 
         public override bool CanPlayPause => true;
 
         public override bool CanSeek => true;
 
-        public override bool CanOpenMedia => true;
+        public override bool CanOpenMedia => false;
 
         public override void Play()
         {
@@ -74,6 +80,29 @@ namespace ScriptPlayer.Shared
             _timeSource.PlaybackRateChanged += TimeSourceOnPlaybackRateChanged;
 
             _connectionSettings = connectionSettings;
+
+            new Thread(KeepConnecting).Start();
+        }
+
+        private void KeepConnecting()
+        {
+            while (!_disposed)
+            {
+                if (!_connected)
+                {
+                    try
+                    {
+                        _connectionSettings.GetParameters(out string host, out int port);
+                        Connect(host, port);
+                    }
+                    catch
+                    {
+                        //
+                    }
+                }
+
+                Thread.Sleep(2000);
+            }
         }
 
         private void TimeSourceOnPlaybackRateChanged(object sender, double d)
@@ -107,9 +136,11 @@ namespace ScriptPlayer.Shared
             if (port <= 0 || port > 65535)
                 throw new Exception("Invalid port!");
 
-            _client = new TcpClient(hostname, port);
+            _client = new TcpClient();
+            _client.Connect(hostname, port);
             Stream stream = _client.GetStream();
             _connected = true;
+            SetConnected(true);
 
             _sendThread = new Thread(SendLoop);
             _sendThread.Start(stream);
@@ -130,27 +161,48 @@ namespace ScriptPlayer.Shared
         {
             _connected = false;
 
-            if (_client != null)
-            {
-                _client.Close();
-                _client.Dispose();
-                _client = null;
-            }
-
             SetConnected(false);
             
             if (_sendThread != null)
             {
-                if (!_sendThread.Join(DisconnectTimeout))
-                    _sendThread.Abort();
-                _sendThread = null;
+                try
+                {
+                    if (!_sendThread.Join(DisconnectTimeout))
+                        _sendThread.Abort();
+                    _sendThread = null;
+                }
+                catch
+                {
+                    //
+                }
             }
 
             if (_sendThread != null)
             {
-                if (!_receiveThread.Join(DisconnectTimeout))
-                    _receiveThread.Abort();
-                _receiveThread = null;
+                try
+                {
+                    if (!_receiveThread.Join(DisconnectTimeout))
+                        _receiveThread.Abort();
+                    _receiveThread = null;
+                }
+                catch
+                {
+                    //
+                }
+            }
+
+            if (_client != null)
+            {
+                try
+                {
+                    _client.Close();
+                    _client.Dispose();
+                    _client = null;
+                }
+                catch
+                {
+                    //
+                }
             }
 
             _sendQueue.Clear();
@@ -161,18 +213,22 @@ namespace ScriptPlayer.Shared
         private void ReceiveLoop(object arg)
         {
             Stream stream = (Stream)arg;
-            stream.ReadTimeout = (int) PingDelay.TotalMilliseconds;
+            stream.ReadTimeout = int.MaxValue; //(int) PingDelay.TotalMilliseconds;
 
             try
             {
                 DateTime lastReceiveTime = DateTime.UtcNow;
                 byte[] buffer = new byte[1024 * 8];
-                int bufferPosition = 0;
-
+                
                 while (_connected)
                 {
+                    int bufferPosition = 0;
+
                     if (DateTime.UtcNow - lastReceiveTime >= ConnectTimeout)
-                        throw new Exception($"Connection timeout! (>= {ConnectTimeout.TotalSeconds:F2}s)");
+                    {
+                        Debug.WriteLine("Connection Timeout?");
+                        //throw new Exception($"Connection timeout! (>= {ConnectTimeout.TotalSeconds:F2}s)");
+                    }
 
                     const int headerLength = 4;
 
@@ -196,10 +252,11 @@ namespace ScriptPlayer.Shared
                         bufferPosition += actuallyRead;
                     }
 
+                    lastReceiveTime = DateTime.UtcNow;
+
                     if (messageLength == 0)
                     {
                         // Ping
-                        lastReceiveTime = DateTime.UtcNow;
                         continue;
                     }
 
@@ -243,16 +300,26 @@ namespace ScriptPlayer.Shared
             }
 
             if (data.PlaybackSpeed != null)
-                _timeSource.PlaybackRate = (float)data.PlaybackSpeed;
+            {
+                //TODO doesn't work yet because of broken Two-Way Binding
+                _timeSource.SetPlaybackRate((float)data.PlaybackSpeed);
+            }
 
             if (data.Duration != null)
+            {
                 _timeSource.SetDuration(TimeSpan.FromSeconds((float) data.Duration));
+            }
 
-            if(data.CurrentTime != null)
+            if (data.CurrentTime != null)
+            {
                 _timeSource.SetPosition(TimeSpan.FromSeconds((float) data.CurrentTime));
+                Debug.WriteLine("New Position: " + data.CurrentTime);
+            }
 
             if (data.PlayerState != null)
             {
+                Debug.WriteLine("New PlayerState: " + data.PlayerState);
+
                 bool isPlaying = (data.PlayerState == DeoVrPlayerState.Play);
                 if (_timeSource.IsPlaying != isPlaying)
                 {
@@ -296,6 +363,7 @@ namespace ScriptPlayer.Shared
                 while (_connected)
                 {
                     DeoVrApiData data = _sendQueue.Dequeue(PingDelay);
+                    Debug.WriteLine("Sending data to DeoVR");
                     SendData(data, stream);
                 }
 
@@ -311,8 +379,11 @@ namespace ScriptPlayer.Shared
             }
         }
 
-        private static void SendData(DeoVrApiData data, Stream stream)
+        private void SendData(DeoVrApiData data, Stream stream)
         {
+            if (_disposed || !_connected)
+                return;
+
             byte[] result;
 
             if (data != null)
@@ -343,7 +414,7 @@ namespace ScriptPlayer.Shared
 
         public void Dispose()
         {
-            _client?.Dispose();
+            _disposed = true;
             Disconnect();
         }
     }
