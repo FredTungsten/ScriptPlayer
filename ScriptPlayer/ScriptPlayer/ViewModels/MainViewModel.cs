@@ -2756,6 +2756,42 @@ namespace ScriptPlayer.ViewModels
                 }
             });
 
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetCommandSourceToNone)
+            {
+                CommandId = "SetCommandSourceToNone",
+                DisplayText = "Set Command Source None"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetCommandSourceToVideo)
+            {
+                CommandId = "SetCommandSourceToVideo",
+                DisplayText = "Set Command Source Video"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetCommandSourceToPattern)
+            {
+                CommandId = "SetCommandSourceToPattern",
+                DisplayText = "Set Command Source Pattern"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetCommandSourceToRandom)
+            {
+                CommandId = "SetCommandSourceToRandom",
+                DisplayText = "Set Command Source Random"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(NextPattern)
+            {
+                CommandId = "NextPattern",
+                DisplayText = "Next Pattern"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(PreviousPattern)
+            {
+                CommandId = "PreviousPattern",
+                DisplayText = "Previous Pattern"
+            });
+
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseUpperRange)
             {
                 CommandId = "IncreaseUpperRange",
@@ -2959,6 +2995,47 @@ namespace ScriptPlayer.ViewModels
                     GlobalCommandManager.GetShortcut(Key.MediaPreviousTrack, ModifierKeys.None, true)
                 }
             });
+        }
+
+        private void PreviousPattern()
+        {
+            int index = (Patterns.IndexOf(SelectedPattern) - 1 + Patterns.Count) % Patterns.Count;
+            SelectedPattern = Patterns[index];
+
+            OsdShowMessage("Pattern: " + SelectedPattern.Name, TimeSpan.FromSeconds(3), "Pattern");
+        }
+
+        private void NextPattern()
+        {
+            int index = (Patterns.IndexOf(SelectedPattern) + 1) % Patterns.Count;
+            SelectedPattern = Patterns[index];
+
+            OsdShowMessage("Pattern: " + SelectedPattern.Name, TimeSpan.FromSeconds(3), "Pattern");
+        }
+
+        private void SetCommandSourceToRandom()
+        {
+            CommandSource = CommandSource.Random;
+
+            OsdShowMessage("Source: " + CommandSource, TimeSpan.FromSeconds(3), "Source");
+        }
+
+        private void SetCommandSourceToPattern()
+        {
+            CommandSource = CommandSource.Pattern;
+            OsdShowMessage("Source: " + CommandSource, TimeSpan.FromSeconds(3), "Source");
+        }
+
+        private void SetCommandSourceToVideo()
+        {
+            CommandSource = CommandSource.Video;
+            OsdShowMessage("Source: " + CommandSource, TimeSpan.FromSeconds(3), "Source");
+        }
+
+        private void SetCommandSourceToNone()
+        {
+            CommandSource = CommandSource.None;
+            OsdShowMessage("Source: " + CommandSource, TimeSpan.FromSeconds(3), "Source");
         }
 
         private void IncreaseHandyStrokeLength()
@@ -3237,6 +3314,8 @@ namespace ScriptPlayer.ViewModels
                 CommandSource = CommandSource.Pattern;
             else
                 CommandSource = CommandSource.Video;
+
+            OsdShowMessage("Source: " + CommandSource, TimeSpan.FromSeconds(3), "Source");
         }
 
         private void ToggleCommandSourceVideoNone()
@@ -3245,6 +3324,8 @@ namespace ScriptPlayer.ViewModels
                 CommandSource = CommandSource.None;
             else
                 CommandSource = CommandSource.Video;
+
+            OsdShowMessage("Source: " + CommandSource, TimeSpan.FromSeconds(3), "Source");
         }
 
         private void ExecuteClearLoop()
