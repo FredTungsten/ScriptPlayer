@@ -48,7 +48,6 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<TimeSpan>> RequestScriptShiftTimespan;
         public event EventHandler<RequestEventArgs<Section>> RequestSection;
         public event EventHandler<RequestEventArgs<GeneratorSettingsViewModel>> RequestGeneratorSettings;
-
         
         public event EventHandler RequestActivate;
         public event EventHandler RequestShowDeviceManager;
@@ -1343,12 +1342,15 @@ namespace ScriptPlayer.ViewModels
 
         private void TimeSourceIsPlayingChanged(object sender, bool playing)
         {
+            if (CommandSource != CommandSource.Video)
+                return;
+
             foreach (ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
                 device.Play(playing, TimeSource.Progress);
 
             if (!playing)
             {
-                StopDevices();
+                StopActionBasedDevices();
                 AutoHomeDevices();
 
                 _audioHandler?.Pause();
@@ -1386,12 +1388,15 @@ namespace ScriptPlayer.ViewModels
                 }
             }
 
-            foreach (ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
+            if (CommandSource == CommandSource.Video)
             {
-                device.Resync(e);
-            }
+                foreach (ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
+                {
+                    device.Resync(e);
+                }
 
-            _audioHandler?.Resync(e);
+                _audioHandler?.Resync(e);
+            }
 
             if (Settings.SoftSeekFiles)
             {
@@ -2460,6 +2465,15 @@ namespace ScriptPlayer.ViewModels
 
             _pattern = generator;
 
+            var generatedDuration = TimeSpan.FromMinutes(10);
+
+            List<FunScriptAction> actions = generator.Generate(generatedDuration);
+
+            foreach (ISyncBasedDevice device in Devices.OfType<ISyncBasedDevice>())
+            {
+                device.SetScript("Pattern", actions);
+            }
+                
             _repeaterThread = new Thread(() =>
             {
                 IEnumerator<PatternGenerator.PositionTransistion> enumerator = _pattern.Get();
@@ -2467,10 +2481,22 @@ namespace ScriptPlayer.ViewModels
                 var app = Application.Current;
                 if (app == null) return;
 
+                foreach (ISyncBasedDevice device in Devices.OfType<ISyncBasedDevice>())
+                {
+                    device.Play(true, TimeSpan.Zero);
+                }
+
+                DateTime start = DateTime.Now;
+
                 while (enumerator.MoveNext())
                 {
                     PatternGenerator.PositionTransistion transistion = enumerator.Current;
                     if (transistion == null) break;
+
+                    foreach (ISyncBasedDevice device in Devices.OfType<ISyncBasedDevice>())
+                    {
+                        device.Resync((DateTime.Now - start).Mod(generatedDuration));
+                    }
 
                     app.Dispatcher.BeginInvoke(new Action(() =>
                     {
@@ -2502,7 +2528,9 @@ namespace ScriptPlayer.ViewModels
 
         private void StopPattern()
         {
-            StopDevices();
+            StopActionBasedDevices();
+            StopSyncBasedDevices();
+
             if (_pattern != null)
             {
                 _pattern.Stop();
@@ -2519,6 +2547,7 @@ namespace ScriptPlayer.ViewModels
             {
                 case CommandSource.Video:
                     StopPattern();
+                    ResyncDevices();
                     break;
                 case CommandSource.None:
                     StopPattern();
@@ -2531,6 +2560,26 @@ namespace ScriptPlayer.ViewModels
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(commandSource), commandSource, null);
+            }
+        }
+
+        private void ResyncDevices()
+        {
+            if (string.IsNullOrEmpty(LoadedScript))
+                return;
+
+            string name = Path.GetFileNameWithoutExtension(LoadedScript);
+            var actions = _scriptHandler.GetScript().ToList();
+
+            foreach (ISyncBasedDevice device in Devices.OfType<ISyncBasedDevice>())
+            {
+                device.SetScript(name, actions);
+            }
+
+            foreach (ISyncBasedDevice device in Devices.OfType<ISyncBasedDevice>())
+            {
+                if (TimeSource.IsPlaying)
+                    device.Play(true, TimeSource.Progress);
             }
         }
 
@@ -4269,10 +4318,16 @@ namespace ScriptPlayer.ViewModels
                     device.Set(intermediateInfo);
         }
 
-        private void StopDevices()
+        private void StopActionBasedDevices()
         {
             foreach (IActionBasedDevice device in _devices.OfType<IActionBasedDevice>().ToList())
                 device.Stop();
+        }
+
+        private void StopSyncBasedDevices()
+        {
+            foreach (ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
+                device.Play(false, TimeSpan.Zero);
         }
 
         protected virtual string OnRequestFile(string filter, ref int filterIndex, bool save = false)
@@ -4338,7 +4393,8 @@ namespace ScriptPlayer.ViewModels
             if (IsSeeking || IsTransistioning)
                 return;
 
-            StopDevices();
+            StopActionBasedDevices();
+            StopSyncBasedDevices();
             PlayNextPlaylistEntry();
         }
 

@@ -28,6 +28,7 @@ namespace ScriptPlayer.Shared
         }
 
         public abstract IEnumerator<PositionTransistion> Get();
+        public abstract List<FunScriptAction> Generate(TimeSpan duration);
     }
 
     public class RandomPatternGenerator : PatternGenerator
@@ -54,6 +55,34 @@ namespace ScriptPlayer.Shared
 
                 Thread.Sleep(duration);
             }
+        }
+
+        public override List<FunScriptAction> Generate(TimeSpan duration)
+        {
+            TimeSpan progress = TimeSpan.Zero;
+
+            bool up = true;
+            Random rng = new Random();
+
+            List<FunScriptAction> result = new List<FunScriptAction>();
+            
+            while (progress < duration)
+            {
+                up ^= true;
+                byte currentPosition = (byte)(rng.Next(0,50) + (up ? 49 : 0));
+                TimeSpan nextDuration = TimeSpan.FromMilliseconds(rng.Next(180, 750));
+
+                result.Add(new FunScriptAction
+                {
+                    OriginalAction = true,
+                    Position = currentPosition,
+                    TimeStamp = progress
+                });
+
+                progress += nextDuration;
+            }
+
+            return result;
         }
     }
 
@@ -96,43 +125,34 @@ namespace ScriptPlayer.Shared
                 index = nextIndex;
             }
         }
-    }
 
-    public class RepeatingPatternGenerator : PatternGenerator
-    {
-        private readonly List<TimedPosition> _commands = new List<TimedPosition>();
-
-        public void Add(byte position, TimeSpan duration)
+        public override List<FunScriptAction> Generate(TimeSpan duration)
         {
-            _commands.Add(new TimedPosition
-            {
-                Duration = duration, Position = position
-            });
-        }
+            TimeSpan progress = TimeSpan.Zero;
 
-        public override IEnumerator<PositionTransistion> Get()
-        {
+            List<FunScriptAction> result = new List<FunScriptAction>();
+
             int index = 0;
+            
+            if (_pattern.Count == 0)
+                return result;
 
-            if (_commands.Count == 0)
-                yield break;
-
-            while (!_stopped)
+            while (progress < duration)
             {
-                int currentIndex = index;
-                int nextIndex = (index + 1) % _commands.Count;
-
-                yield return new PositionTransistion
+                TimeSpan nextDuration = Duration.Multiply(_pattern[index].Duration);
+                
+                result.Add(new FunScriptAction
                 {
-                    Duration = _commands[nextIndex].Duration,
-                    From = _commands[currentIndex].Position,
-                    To = _commands[nextIndex].Position
-                };
+                    OriginalAction = true,
+                    Position = _pattern[index].Position,
+                    TimeStamp = progress
+                });
 
-                Thread.Sleep(_commands[nextIndex].Duration);
-
-                index = nextIndex;
+                progress += nextDuration;
+                index = (index + 1) % _pattern.Count;
             }
+
+            return result;
         }
     }
 }

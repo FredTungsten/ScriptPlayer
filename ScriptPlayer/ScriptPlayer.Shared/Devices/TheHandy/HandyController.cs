@@ -56,6 +56,7 @@ namespace ScriptPlayer.Shared.TheHandy
         // api call queue ensures correct order of api calls
         private readonly BlockingTaskQueue _apiCallQueue;
         private HandyHost _host;
+        private DateTime _lastTimeAdjustement = DateTime.MinValue;
 
         public void UpdateSettings(string deviceId, HandyHost host, string localIp, int localPort)
         {
@@ -392,7 +393,9 @@ namespace ScriptPlayer.Shared.TheHandy
             // this solves auto skip gaps
             if(IsScriptLoaded && _playing)
             {
-                TimeSpan diff = (_currentTime - time).Abs();
+
+
+                TimeSpan diff = (EstimateCurrentTime() - time).Abs();
                 
                 if(diff > MaxOffset)
                 {
@@ -402,7 +405,24 @@ namespace ScriptPlayer.Shared.TheHandy
                 }
             }
 
+            UpdateCurrentTime(time);
+        }
+
+        private TimeSpan EstimateCurrentTime()
+        {
+            if (_lastTimeAdjustement != DateTime.MinValue)
+            {
+                TimeSpan elapsedSinceLastUpdate = DateTime.Now - _lastTimeAdjustement;
+                return _currentTime + elapsedSinceLastUpdate;
+            }
+
+            return _currentTime;
+        }
+
+        private void UpdateCurrentTime(TimeSpan time)
+        {
             _currentTime = time;
+            _lastTimeAdjustement = DateTime.Now;
         }
 
         public void StepStroke(bool stepUp)

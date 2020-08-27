@@ -23,5 +23,10 @@ namespace ScriptPlayer.Shared
         {
             return t.Ticks < 0 ? -t : t;
         }
+
+        public static TimeSpan Mod(this TimeSpan t, TimeSpan tmod)
+        {
+            return TimeSpan.FromTicks(t.Ticks % tmod.Ticks);
+        }
     }
 }
