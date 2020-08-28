@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using ScriptPlayer.Shared.Devices.Interfaces;
+using ScriptPlayer.Shared.Interfaces;
 
 namespace ScriptPlayer.Shared
 {

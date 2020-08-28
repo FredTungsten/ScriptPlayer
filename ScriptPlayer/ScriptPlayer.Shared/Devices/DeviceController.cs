@@ -1,5 +1,5 @@
 ﻿using System;
-using ScriptPlayer.Shared.Devices.Interfaces;
+using ScriptPlayer.Shared.Interfaces;
 
 namespace ScriptPlayer.Shared
 {

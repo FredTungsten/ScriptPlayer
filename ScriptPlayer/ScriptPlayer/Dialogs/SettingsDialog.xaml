@@ -256,7 +256,7 @@
                             <DockPanel Margin="4" ToolTip="The approximate duration of randomly selected sections.">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Target Duration"/>
                                 <TextBlock Style="{StaticResource SettingValue}" Text="{Binding Path=Settings.ChapterTargetDuration, Converter={StaticResource SecondsConverter}, StringFormat={}{0:f0}s}"/>
-                                <Slider Margin="0,4" Minimum="10" Maximum="300" Value="{Binding Path=Settings.ChapterTargetDuration, Converter={StaticResource SecondsConverter}}"  IsSnapToTickEnabled="True" TickFrequency="1"/>
+                                <Slider Margin="0,4" Minimum="10" Maximum="600" Value="{Binding Path=Settings.ChapterTargetDuration, Converter={StaticResource SecondsConverter}}"  IsSnapToTickEnabled="True" TickFrequency="10"/>
                             </DockPanel>
                         </StackPanel>
                     </Grid>

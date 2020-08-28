@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
-using ScriptPlayer.Shared.Devices.Interfaces;
+using ScriptPlayer.Shared.Interfaces;
 using ScriptPlayer.Shared.Scripts;
 
 namespace ScriptPlayer.Shared.TheHandy

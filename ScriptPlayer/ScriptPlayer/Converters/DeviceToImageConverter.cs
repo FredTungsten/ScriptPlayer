@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
-using ScriptPlayer.Shared.Devices.Interfaces;
+using ScriptPlayer.Shared.Interfaces;
 
 namespace ScriptPlayer.Converters
 {
