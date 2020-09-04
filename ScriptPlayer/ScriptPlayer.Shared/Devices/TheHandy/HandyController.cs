@@ -74,7 +74,7 @@ namespace ScriptPlayer.Shared.TheHandy
                 {
                     if(LocalScriptServer == null)
                     {
-                        LocalScriptServer = new HandyScriptServer();
+                        LocalScriptServer = new HandyScriptServer(this);
                     }
 
                     if (LocalScriptServer.HttpServerRunning)
@@ -372,6 +372,8 @@ namespace ScriptPlayer.Shared.TheHandy
             // I can't get this to work keeps returning "Machine timed out"
             // but seems to be working fine without resyncing
 
+            // https://www.reddit.com/r/handySupport/comments/hlljii/timeout_on_syncadjusttimestamp/
+
             //if (!_playing) return;
             //if (DateTime.Now - _lastSyncAdjust >= TimeSpan.FromSeconds(10) || Math.Abs((_currentTime - time).TotalMilliseconds) >= 500)
             //{
@@ -391,21 +393,36 @@ namespace ScriptPlayer.Shared.TheHandy
 
             // HACK: this resyncs whenever there is a jump greater than 500ms
             // this solves auto skip gaps
-            if(IsScriptLoaded && _playing)
+            if (IsScriptLoaded && _playing)
             {
-
-
                 TimeSpan diff = (EstimateCurrentTime() - time).Abs();
                 
                 if(diff > MaxOffset)
                 {
                     Debug.WriteLine($"Resync (Offset = {diff.TotalMilliseconds})");
-                    Play(false, time);
-                    Play(true, time);
+
+                    //SyncAdjust(new HandyAdjust
+                    //{
+                    //    currentTime = (int)time.TotalMilliseconds,
+                    //    serverTime = GetServerTimeEstimate(),
+                    //    filter = 1.0f,
+                    //    timeout = 10000
+                    //});
+
+                    ResyncNow(time);
                 }
             }
 
             UpdateCurrentTime(time);
+        }
+
+        private void ResyncNow(TimeSpan time)
+        {
+            if (IsScriptLoaded && _playing)
+            {
+                Play(false, time);
+                Play(true, time);
+            }
         }
 
         private TimeSpan EstimateCurrentTime()
@@ -466,7 +483,26 @@ namespace ScriptPlayer.Shared.TheHandy
         {
             string url = GetQuery("syncPrepare", prep);
             Debug.WriteLine($"{nameof(SyncPrepare)}: {url}");
-            SendGetRequest(url);
+            SendGetRequest(url, SyncPrepareFinished);
+        }
+
+        private void SyncPrepareFinished(HttpResponseMessage r)
+        {
+            HandyResponse resp = r.Content.ReadAsAsync<HandyResponse>().Result;
+            if (!resp.success)
+            {
+                Debug.WriteLine($"error: cmd:{resp.cmd} - {resp.error} - SyncPrepare");
+
+                if (resp.error == "No machine connected")
+                    OnHandyDisconnected();
+            }
+            else
+            {
+                TimeSpan time = EstimateCurrentTime();
+                Debug.WriteLine($"success: (SyncPrepare), resyncing @ " + time.ToString("g"));
+
+                ResyncNow(time);
+            }
         }
 
         public void Play(bool playing, TimeSpan progress)
@@ -569,7 +605,7 @@ namespace ScriptPlayer.Shared.TheHandy
 
         private long GetServerTimeEstimate() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + _offsetAverage;
 
-        protected virtual void OnOsdRequest(string text, TimeSpan duration, string designation)
+        public virtual void OnOsdRequest(string text, TimeSpan duration, string designation)
         {
             OsdRequest?.Invoke(text, duration, designation);
         }
