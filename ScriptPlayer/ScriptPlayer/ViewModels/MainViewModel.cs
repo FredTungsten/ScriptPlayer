@@ -5906,17 +5906,34 @@ namespace ScriptPlayer.ViewModels
             _usedOsds = osds.ToArray();
         }
 
-        public List<string> GetAllRelatedFiles(string filePath)
+        public List<string> GetAllRelatedFiles(string filePath, bool filterDuplicates = true)
         {
             List<string> paths = GetAdditionalPaths().ToList();
             string currentPath = Path.GetDirectoryName(filePath);
 
             if(!paths.Contains(currentPath, StringComparer.InvariantCultureIgnoreCase))
-                paths.Add(currentPath);
+                paths.Insert(0, currentPath);
 
             string commonFileName = Path.GetFileNameWithoutExtension(filePath);
 
-            return paths.SelectMany(path => Directory.EnumerateFiles(path, commonFileName + ".*", SearchOption.TopDirectoryOnly)).ToList();
+            List<string> allFilePaths = paths.SelectMany(path => Directory.EnumerateFiles(path, commonFileName + ".*", SearchOption.TopDirectoryOnly)).ToList();
+            if (!filterDuplicates)
+                return allFilePaths;
+
+            HashSet<string> uniqueFileNames = new HashSet<string>();
+
+            List<string> result = new List<string>();
+
+            foreach (string file in allFilePaths)
+            {
+                string fileName = Path.GetFileName(file).ToUpperInvariant();
+                if (uniqueFileNames.Contains(fileName))
+                    continue;
+                uniqueFileNames.Add(fileName);
+                result.Add(file);
+            }
+
+            return result;
         }
 
         protected virtual string OnRequestRename(string initialValue)

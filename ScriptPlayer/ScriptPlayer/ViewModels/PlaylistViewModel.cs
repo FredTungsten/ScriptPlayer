@@ -12,6 +12,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using JetBrains.Annotations;
+using Microsoft.VisualBasic.FileIO;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Helpers;
 
@@ -353,8 +354,9 @@ namespace ScriptPlayer.ViewModels
 
         public RelayCommand<PlaylistEntry> OpenInExplorerCommand { get; set; }
         public RelayCommand<PlaylistEntry> RenameCommand { get; set; }
-        public RelayCommand<PlaylistEntry> MoveCommand { get; set; }
-        public RelayCommand<PlaylistEntry> DeleteCommand { get; set; }
+        public RelayCommand MoveCommand { get; set; }
+        public RelayCommand RecycleCommand { get; set; }
+        public RelayCommand DeleteCommand { get; set; }
 
         public RelayCommand PlayNextEntryCommand { get; set; }
         public RelayCommand PlayPreviousEntryCommand { get; set; }
@@ -363,6 +365,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand MoveSelectedEntryFirstCommand { get; set; }
         public RelayCommand MoveSelectedEntryLastCommand { get; set; }
         public RelayCommand RemoveSelectedEntryCommand { get; set; }
+
         public RelayCommand ClearPlaylistCommand { get; set; }
         public RelayCommand<bool> SortByDurationCommand { get; set; }
         public RelayCommand<bool> SortByNameCommand { get; set; }
@@ -384,15 +387,16 @@ namespace ScriptPlayer.ViewModels
             SelectedEntries = new List<PlaylistEntry>();
 
             RenameCommand = new RelayCommand<PlaylistEntry>(ExecuteRenameCommand, SingleEntrySelected);
-            MoveCommand = new RelayCommand<PlaylistEntry>(ExecuteMoveCommand, SingleEntrySelected);
-            DeleteCommand = new RelayCommand<PlaylistEntry>(ExecuteDeleteCommand, SingleEntrySelected);
+            MoveCommand = new RelayCommand(ExecuteMoveCommand, SelectionIsNotEmpty);
+            DeleteCommand = new RelayCommand(ExecuteDeleteCommand, SelectionIsNotEmpty);
+            RecycleCommand = new RelayCommand(ExecuteRecycleCommand, SelectionIsNotEmpty);
 
             OpenInExplorerCommand = new RelayCommand<PlaylistEntry>(ExecuteOpenInExplorer, EntryNotNull);
             MoveSelectedEntryDownCommand = new RelayCommand(ExecuteMoveSelectedEntryDown, CanMoveSelectedEntryDown);
             MoveSelectedEntryUpCommand = new RelayCommand(ExecuteMoveSelectedEntryUp, CanMoveSelectedEntryUp);
             MoveSelectedEntryLastCommand = new RelayCommand(ExecuteMoveSelectedEntryLast, CanMoveSelectedEntryDown);
             MoveSelectedEntryFirstCommand = new RelayCommand(ExecuteMoveSelectedEntryFirst, CanMoveSelectedEntryUp);
-            RemoveSelectedEntryCommand = new RelayCommand(ExecuteRemoveSelectedEntry, CanRemoveSelectedEntry);
+            RemoveSelectedEntryCommand = new RelayCommand(ExecuteRemoveSelectedEntry, SelectionIsNotEmpty);
             ClearPlaylistCommand = new RelayCommand(ExecuteClearPlaylist, CanClearPlaylist);
             PlayNextEntryCommand = new RelayCommand(ExecutePlayNextEntry, CanPlayNextEntry);
             PlayPreviousEntryCommand = new RelayCommand(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
@@ -418,18 +422,25 @@ namespace ScriptPlayer.ViewModels
             return EntryNotNull(arg) && _selectedEntries != null && _selectedEntries.Count == 1;
         }
 
-        private void ExecuteDeleteCommand(PlaylistEntry entry)
+        private void ExecuteDeleteCommand()
         {
-            string originalFile = entry.Fullname;
+            List<string> allFiles = new List<string>();
+            var entriesToDelete = _selectedEntries.ToList();
 
-            string[] relatedFiles = GetAllRelatedFiles(originalFile);
+            foreach (PlaylistEntry entry in entriesToDelete)
+            {
+                string originalFile = entry.Fullname;
 
-            if (relatedFiles == null || relatedFiles.Length == 0)
-                return;
+                string[] relatedFiles = GetAllRelatedFiles(originalFile);
 
-            string messageSuffix = relatedFiles.Length == 1 ? "file" : $"and {relatedFiles.Length - 1} related Files";
+                if (relatedFiles == null || relatedFiles.Length == 0)
+                    continue;
 
-            var answer = MessageBox.Show($"Are you sure you want to PERMANENTLY delete this {messageSuffix}?", "Confirm delete",
+                allFiles.AddRange(relatedFiles);
+            }
+
+            var answer = MessageBox.Show($"Are you sure you want to PERMANENTLY delete these {allFiles.Count} files?",
+                "Confirm delete",
                 MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (answer != MessageBoxResult.Yes)
@@ -437,38 +448,90 @@ namespace ScriptPlayer.ViewModels
 
             try
             {
-                foreach (string file in relatedFiles)
+                foreach (string file in allFiles)
+                {
                     File.Delete(file);
+                }
 
-                RemoveEntries(new List<PlaylistEntry>{entry});
+                RemoveEntries(entriesToDelete);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show("An error occured while deleting files:\r\n" + ex.Message, "Delete files",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void ExecuteMoveCommand(PlaylistEntry entry)
+        private void ExecuteRecycleCommand()
         {
-            string originalFile = entry.Fullname;
-            string[] relatedFiles = GetAllRelatedFiles(originalFile);
+            List<string> allFiles = new List<string>();
+            var entriesToDelete = _selectedEntries.ToList();
 
-            if (relatedFiles == null || relatedFiles.Length == 0)
+            foreach (PlaylistEntry entry in entriesToDelete)
+            {
+                string originalFile = entry.Fullname;
+
+                string[] relatedFiles = GetAllRelatedFiles(originalFile);
+
+                if (relatedFiles == null || relatedFiles.Length == 0)
+                    continue;
+
+                allFiles.AddRange(relatedFiles);
+            }
+
+            var answer = MessageBox.Show($"Are you sure you want to delete these {allFiles.Count} files?",
+                "Confirm delete",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (answer != MessageBoxResult.Yes)
                 return;
-
-            string newDirectory = OnRequestDirectory(Path.GetDirectoryName(originalFile));
-            if (string.IsNullOrEmpty(newDirectory))
-                return;
-
-            Dictionary<string, string> newNames;
 
             try
             {
-                newNames = relatedFiles.ToDictionary(k => k, v => GetNewPath(v, newDirectory), _pathComparer);
+                foreach (string file in allFiles)
+                {
+                    FileSystem.DeleteFile(file, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin, UICancelOption.ThrowException);
+                }
+
+                RemoveEntries(entriesToDelete);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("An error occured while deleting files:\r\n" + ex.Message, "Delete files",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ExecuteMoveCommand()
+        {
+            string newDirectory = OnRequestDirectory(Path.GetDirectoryName(_selectedEntries.First().Fullname));
+            if (string.IsNullOrEmpty(newDirectory))
+                return;
+
+            Dictionary<string, string> newNames = new Dictionary<string, string>();
+
+            var entriesToMove = _selectedEntries.ToList();
+
+            foreach (PlaylistEntry entry in entriesToMove)
+            {
+                string originalFile = entry.Fullname;
+                string[] relatedFiles = GetAllRelatedFiles(originalFile);
+
+                if (relatedFiles == null || relatedFiles.Length == 0)
+                    continue;
+
+                foreach (var kvp in relatedFiles.ToDictionary(k => k, v => GetNewPath(v, newDirectory), _pathComparer))
+                {
+                    if (!newNames.ContainsKey(kvp.Key))
+                        newNames.Add(kvp.Key, kvp.Value);
+                }
+            }
+
+            try
+            {
                 bool allAlreadyInNewDir = true;
 
-                foreach (string file in relatedFiles)
+                foreach (string file in newNames.Keys)
                 {
                     if (!_pathComparer.Equals(Path.GetDirectoryName(file), newDirectory))
                         allAlreadyInNewDir = false;
@@ -480,12 +543,13 @@ namespace ScriptPlayer.ViewModels
                         MessageBoxImage.Warning);
                     return;
                 }
-                
-                foreach (string oldFile in relatedFiles)
+
+                foreach (string oldFile in newNames.Keys)
                 {
                     if (File.Exists(newNames[oldFile]))
                     {
-                        MessageBox.Show($"Can't move file!\r\n The file '{newNames[oldFile]}' already exists!", "Move",
+                        MessageBox.Show($"Can't move file!\r\n The file '{newNames[oldFile]}' already exists!",
+                            "Move",
                             MessageBoxButton.OK, MessageBoxImage.Error);
 
                         return;
@@ -503,15 +567,18 @@ namespace ScriptPlayer.ViewModels
 
             try
             {
-                foreach (string oldFile in relatedFiles)
+                foreach (string oldFile in newNames.Keys)
                 {
                     newFileName = newNames[oldFile];
                     File.Move(oldFile, newFileName);
                 }
 
-                entry.Fullname = newNames[originalFile];
-                entry.Reset();
-                _uncheckedPlaylistEntries.Enqueue(entry);
+                foreach (PlaylistEntry entry in entriesToMove)
+                {
+                    entry.Fullname = newNames[entry.Fullname];
+                    entry.Reset();
+                    _uncheckedPlaylistEntries.Enqueue(entry);
+                }
             }
             catch (Exception ex)
             {
@@ -608,6 +675,14 @@ namespace ScriptPlayer.ViewModels
         private bool EntryNotNull(PlaylistEntry arg)
         {
             return arg != null;
+        }
+
+        private bool EntriesNotNull(List<PlaylistEntry> arg)
+        {
+            if (arg == null)
+                return false;
+
+            return arg.Count > 0;
         }
 
         private bool AreEntriesSelected()
@@ -856,7 +931,7 @@ namespace ScriptPlayer.ViewModels
             PlayNextEntry();
         }
 
-        private bool CanRemoveSelectedEntry()
+        private bool SelectionIsNotEmpty()
         {
             return !SelectionIsEmpty();
         }
@@ -875,7 +950,7 @@ namespace ScriptPlayer.ViewModels
 
         private void ExecuteRemoveSelectedEntry()
         {
-            if (!CanRemoveSelectedEntry())
+            if (!SelectionIsNotEmpty())
                 return;
 
             RemoveEntries(_selectedEntries);
@@ -1415,7 +1490,7 @@ namespace ScriptPlayer.ViewModels
 
         public void SelectNewRandomEntry()
         {
-            if(Shuffle)
+            if (Shuffle)
                 UpdateNextEntry();
         }
 
