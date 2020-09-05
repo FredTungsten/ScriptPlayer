@@ -17,7 +17,7 @@
         <TextBox x:Name="txtVideoDir" Height="23" Margin="117,46,10,0" TextWrapping="Wrap" Text="D:\Videos\CH\7. Done" VerticalAlignment="Top"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,47,0,0" TextWrapping="Wrap" Text="Video Directory" VerticalAlignment="Top" Height="16" Width="82"/>
         <TextBox x:Name="txtOutput" Margin="10,10,10,35" TextWrapping="Wrap" AcceptsReturn="True" Grid.Row="2"/>
-        <Button Content="Generate BBCode" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="113" Click="btnGenerate_Click" Grid.Row="2" Height="20"/>
+        <Button Content="Generate BBCode" HorizontalAlignment="Right" Margin="0,0,129,10" VerticalAlignment="Bottom" Width="113" Click="btnGenerate_Click" Grid.Row="2" Height="20"/>
         <DataGrid Margin="10,74,10,10" ItemsSource="{Binding Data}" AutoGenerateColumns="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Name" Width="Auto" Binding="{Binding MediaBaseName}"/>
@@ -40,7 +40,8 @@
             </DataGrid.Columns>
         </DataGrid>
         <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="1"/>
-        <Button Content="Load Directory" HorizontalAlignment="Right" Margin="0,0,128,10" VerticalAlignment="Bottom" Width="113" Click="btnLoad_Click" Grid.Row="2" Height="20"/>
+        <Button Content="Load Directory" HorizontalAlignment="Right" Margin="0,0,247,10" VerticalAlignment="Bottom" Width="113" Click="btnLoad_Click" Grid.Row="2" Height="20"/>
+        <Button Content="Generate Markdown" HorizontalAlignment="Right" Margin="0,0,11,10" VerticalAlignment="Bottom" Width="113" Click="btnGenerateMarkdown_Click" Grid.Row="2" Height="20"/>
 
     </Grid>
 </Window>

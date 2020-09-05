@@ -52,7 +52,7 @@ namespace ScriptPlayer.BundleHelper
                 return;
             }
 
-            string[] scripts = Directory.GetFiles(txtBundleDir.Text, "*.funscript");
+            string[] scripts = Directory.GetFiles(txtBundleDir.Text, "*.funscript", SearchOption.AllDirectories);
 
             List<ResultSet> results = new List<ResultSet>();
 
@@ -129,10 +129,27 @@ namespace ScriptPlayer.BundleHelper
             StringBuilder builder = new StringBuilder();
             foreach (ResultSet result in Data)
             {
-                if(!String.IsNullOrWhiteSpace(result.Url))
+                if (!String.IsNullOrWhiteSpace(result.Url))
                     builder.AppendLine($"[*][url={result.Url}]{result.MediaBaseName} [{result.GetDuration}][/url]");
                 else
                     builder.AppendLine($"[*]{result.MediaBaseName} [{result.GetDuration}]");
+            }
+
+            txtOutput.Text = builder.ToString();
+        }
+
+        private void btnGenerateMarkdown_Click(object sender, RoutedEventArgs e)
+        {
+            if (Data == null)
+                return;
+
+            StringBuilder builder = new StringBuilder();
+            foreach (ResultSet result in Data)
+            {
+                if (!String.IsNullOrWhiteSpace(result.Url))
+                    builder.AppendLine($"* [{result.MediaBaseName} [{result.GetDuration}]]({result.Url})");
+                else
+                    builder.AppendLine($"* {result.MediaBaseName} [{result.GetDuration}]");
             }
 
             txtOutput.Text = builder.ToString();
