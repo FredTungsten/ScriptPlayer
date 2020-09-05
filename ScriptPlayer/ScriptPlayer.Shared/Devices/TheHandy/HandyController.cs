@@ -28,6 +28,7 @@ namespace ScriptPlayer.Shared.TheHandy
     public class HandyController : DeviceController, ISyncBasedDevice, IDisposable
     {
         private static readonly TimeSpan MaxOffset = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan ResyncIntervall = TimeSpan.FromSeconds(10);
 
         public delegate void OsdRequestEventHandler(string text, TimeSpan duration, string designation = null);
 
@@ -58,6 +59,7 @@ namespace ScriptPlayer.Shared.TheHandy
         private readonly BlockingTaskQueue _apiCallQueue;
         private HandyHost _host;
         private DateTime _lastTimeAdjustement = DateTime.MinValue;
+        private DateTime _lastResync = DateTime.Now;
 
         public void UpdateSettings(string deviceId, HandyHost host, string localIp, int localPort)
         {
@@ -186,7 +188,7 @@ namespace ScriptPlayer.Shared.TheHandy
             }, false);
         }
 
-        private void SendGetRequest(string url, Action<HttpResponseMessage> resultCallback = null, bool ignoreConnected = false)
+        private void SendGetRequest(string url, Action<HttpResponseMessage> resultCallback = null, bool ignoreConnected = false, bool waitForAnswer = true)
         {
             if (!ignoreConnected && !Connected)
                 return;
@@ -196,6 +198,12 @@ namespace ScriptPlayer.Shared.TheHandy
             Task apiCall = new Task(() =>
             {
                 Task<HttpResponseMessage> request = _http.GetAsync(url);
+
+                if (!waitForAnswer)
+                {
+                    request.Wait(1);
+                    return;
+                }
 
                 Task call;
 
@@ -401,33 +409,45 @@ namespace ScriptPlayer.Shared.TheHandy
 
                 if (diff > MaxOffset)
                 {
+                    //Hard resync because time is out of sync
                     Debug.WriteLine($"Resync (Offset = {diff.TotalMilliseconds})");
-                    ResyncNow(time);
+                    ResyncNow(time, true);
+                }
+                else if (DateTime.Now - _lastResync > ResyncIntervall)
+                {
+                    //Soft resync to "remind" Handy where it should be
+                    ResyncNow(time, false);
                 }
             }
 
             UpdateCurrentTime(time);
         }
 
-        private void ResyncNow(TimeSpan time)
+        private void ResyncNow(TimeSpan time, bool hard)
         {
             // I can't get this to work keeps returning "Machine timed out"
             // but seems to be working fine without resyncing
-
             // https://www.reddit.com/r/handySupport/comments/hlljii/timeout_on_syncadjusttimestamp/
-
-            //SyncAdjust(new HandyAdjust
-            //{
-            //    currentTime = (int)time.TotalMilliseconds,
-            //    serverTime = GetServerTimeEstimate(),
-            //    filter = 1.0f,
-            //    timeout = 10000
-            //});
 
             if (IsScriptLoaded && _playing)
             {
-                Play(false, time);
-                Play(true, time);
+                if (hard)
+                {
+                    Play(false, time);
+                    Play(true, time);
+                }
+                else
+                {
+                    SyncAdjust(new HandyAdjust
+                    {
+                        currentTime = (int) time.TotalMilliseconds,
+                        serverTime = GetServerTimeEstimate(),
+                        filter = 1.0f,
+                        timeout = 1
+                    });
+                }
+
+                _lastResync = DateTime.Now;
             }
         }
 
@@ -496,7 +516,7 @@ namespace ScriptPlayer.Shared.TheHandy
         {
             TimeSpan time = EstimateCurrentTime();
             Debug.WriteLine($"success: (SyncPrepare), resyncing @ " + time.ToString("g"));
-            ResyncNow(time);
+            ResyncNow(time, true);
         }
 
         public void Play(bool playing, TimeSpan progress)
@@ -551,7 +571,7 @@ namespace ScriptPlayer.Shared.TheHandy
         {
             string url = GetQuery("syncAdjustTimestamp", adjust);
             Debug.WriteLine($"{nameof(SyncAdjust)}: {url}");
-            SendGetRequest(url);
+            SendGetRequest(url, null, false, false);
         }
 
         private void SetSyncMode()
