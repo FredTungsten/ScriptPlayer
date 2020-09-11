@@ -224,6 +224,8 @@ namespace ScriptPlayer.Shared.TheHandy
                         {
                             Debug.WriteLine($"error: cmd:{resp.cmd} - {resp.error} - {url} [{duration.TotalMilliseconds:F0}ms]");
 
+                            OnOsdRequest($"Error: {resp.error}", TimeSpan.FromSeconds(3), "HandyError");
+
                             if (resp.error == "No machine connected")
                                 OnHandyDisconnected();
                         }
@@ -425,30 +427,29 @@ namespace ScriptPlayer.Shared.TheHandy
 
         private void ResyncNow(TimeSpan time, bool hard)
         {
-            // I can't get this to work keeps returning "Machine timed out"
-            // but seems to be working fine without resyncing
-            // https://www.reddit.com/r/handySupport/comments/hlljii/timeout_on_syncadjusttimestamp/
-
-            if (IsScriptLoaded && _playing)
+            if (!IsScriptLoaded) return;
+            if (hard)
             {
-                if (hard)
-                {
-                    Play(false, time);
-                    Play(true, time);
-                }
-                else
-                {
-                    SyncAdjust(new HandyAdjust
-                    {
-                        currentTime = (int) time.TotalMilliseconds,
-                        serverTime = GetServerTimeEstimate(),
-                        filter = 1.0f,
-                        timeout = 1
-                    });
-                }
+                SyncPlay(false, time);
 
-                _lastResync = DateTime.Now;
+                if(_playing)
+                    SyncPlay(true, time);
             }
+            else
+            {
+                // Handy doesn't respond  to this command so I'll just let it run into a (very short) timeout
+                // https://www.reddit.com/r/handySupport/comments/hlljii/timeout_on_syncadjusttimestamp/
+
+                SyncAdjust(new HandyAdjust
+                {
+                    currentTime = (int) time.TotalMilliseconds,
+                    serverTime = GetServerTimeEstimate(),
+                    filter = 1.0f,
+                    timeout = 1
+                });
+            }
+
+            _lastResync = DateTime.Now;
         }
 
         private TimeSpan EstimateCurrentTime()
@@ -516,13 +517,21 @@ namespace ScriptPlayer.Shared.TheHandy
         {
             TimeSpan time = EstimateCurrentTime();
             Debug.WriteLine($"success: (SyncPrepare), resyncing @ " + time.ToString("g"));
+            OnOsdRequest("Handy finished downloading Script", TimeSpan.FromSeconds(3), "Handy");
             ResyncNow(time, true);
         }
 
         public void Play(bool playing, TimeSpan progress)
         {
+            Debug.WriteLine($"HandyController.Play: {playing} @ {progress}");
             if (playing == _playing || !IsScriptLoaded) return;
             _playing = playing;
+
+            SyncPlay(playing, progress);
+        }
+
+        private void SyncPlay(bool playing, TimeSpan progress)
+        {
             SyncPlay(new HandyPlay
             {
                 play = playing,
