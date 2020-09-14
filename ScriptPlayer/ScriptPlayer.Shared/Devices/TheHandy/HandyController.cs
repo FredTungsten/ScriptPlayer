@@ -440,9 +440,11 @@ namespace ScriptPlayer.Shared.TheHandy
                 // Handy doesn't respond  to this command so I'll just let it run into a (very short) timeout
                 // https://www.reddit.com/r/handySupport/comments/hlljii/timeout_on_syncadjusttimestamp/
 
+                //SyncPlay(_playing, time);
+
                 SyncAdjust(new HandyAdjust
                 {
-                    currentTime = (int) time.TotalMilliseconds,
+                    currentTime = (int)time.TotalMilliseconds,
                     serverTime = GetServerTimeEstimate(),
                     filter = 1.0f,
                     timeout = 1
