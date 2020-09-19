@@ -39,6 +39,7 @@ namespace ScriptPlayer.Dialogs
                 new ExtendedAttributionEntry("Net005", "Zoom Player"),
                 new ExtendedAttributionEntry("Raser1", "Layout for docked-mode"),
                 new ExtendedAttributionEntry("Milovana", "Community", new Link("Homepage", "https://milovana.com/")),
+                new ExtendedAttributionEntry("EroScripts", "Community", new Link("Homepage", "https://discuss.eroscripts.com/")),
                 new ExtendedAttributionEntry("RTS", "Community", new Link("Homepage", "http://realtouchscripts.com/")),
                 new AttributionEntry("And a whole lot of people who probably don't want anything to do with this smut :)")
             };
@@ -55,6 +56,13 @@ namespace ScriptPlayer.Dialogs
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void btnCopyLink_Click(object sender, RoutedEventArgs e)
+        {
+            Link link = ((MenuItem) sender).DataContext as Link;
+            if(link != null)
+                Clipboard.SetText(link.Url);
         }
     }
 

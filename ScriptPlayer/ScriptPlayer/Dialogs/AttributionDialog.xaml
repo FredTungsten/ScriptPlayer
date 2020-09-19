@@ -54,7 +54,13 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="{x:Type local:Link}">
-                                        <Button Margin="0,0,5,0" Style="{StaticResource LinkButton}" Content="{Binding Title}"/>
+                                        <Button Cursor="{x:Static Cursors.Hand}" Margin="0,0,5,0" Style="{StaticResource LinkButton}" Content="{Binding Title}" ToolTip="{Binding Url}">
+                                            <Button.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Copy Link" Click="btnCopyLink_Click"/>
+                                                </ContextMenu>
+                                            </Button.ContextMenu>
+                                        </Button>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
