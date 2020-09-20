@@ -15,10 +15,11 @@
                       CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext}"/>
             <Separator/>
             <MenuItem Header="Remove from playlist" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.RemoveSelectedEntryCommand}"></MenuItem>
-            <Separator/>
             <MenuItem Header="Rename" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.RenameCommand}"
                       CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.DataContext}"></MenuItem>
             <MenuItem Header="Move" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.MoveCommand}"></MenuItem>
+            <MenuItem Header="Move and remove from playlist" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.MoveAndRemoveCommand}"></MenuItem>
+            <Separator/>
             <MenuItem Header="Delete (Recycle Bin)" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.RecycleCommand}"></MenuItem>
             <MenuItem Header="Delete (Permanently)" Command="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.Tag.Playlist.DeleteCommand}"></MenuItem>
         </ContextMenu>

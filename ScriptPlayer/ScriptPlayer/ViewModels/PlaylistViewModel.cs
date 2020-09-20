@@ -355,6 +355,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand<PlaylistEntry> OpenInExplorerCommand { get; set; }
         public RelayCommand<PlaylistEntry> RenameCommand { get; set; }
         public RelayCommand MoveCommand { get; set; }
+        public RelayCommand MoveAndRemoveCommand { get; set; }
         public RelayCommand RecycleCommand { get; set; }
         public RelayCommand DeleteCommand { get; set; }
 
@@ -388,6 +389,7 @@ namespace ScriptPlayer.ViewModels
 
             RenameCommand = new RelayCommand<PlaylistEntry>(ExecuteRenameCommand, SingleEntrySelected);
             MoveCommand = new RelayCommand(ExecuteMoveCommand, SelectionIsNotEmpty);
+            MoveCommand = new RelayCommand(ExecuteMoveAndRemoveCommand, SelectionIsNotEmpty);
             DeleteCommand = new RelayCommand(ExecuteDeleteCommand, SelectionIsNotEmpty);
             RecycleCommand = new RelayCommand(ExecuteRecycleCommand, SelectionIsNotEmpty);
 
@@ -502,7 +504,17 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        private void ExecuteMoveAndRemoveCommand()
+        {
+            MoveSelectedEntriesToNewDirectory(true);
+        }
+
         private void ExecuteMoveCommand()
+        {
+            MoveSelectedEntriesToNewDirectory(false);
+        }
+
+        private void MoveSelectedEntriesToNewDirectory(bool removeFromPlaylist)
         {
             string newDirectory = OnRequestDirectory(Path.GetDirectoryName(_selectedEntries.First().Fullname));
             if (string.IsNullOrEmpty(newDirectory))
@@ -573,11 +585,18 @@ namespace ScriptPlayer.ViewModels
                     File.Move(oldFile, newFileName);
                 }
 
-                foreach (PlaylistEntry entry in entriesToMove)
+                if (removeFromPlaylist)
                 {
-                    entry.Fullname = newNames[entry.Fullname];
-                    entry.Reset();
-                    _uncheckedPlaylistEntries.Enqueue(entry);
+                    RemoveEntries(entriesToMove);
+                }
+                else
+                {
+                    foreach (PlaylistEntry entry in entriesToMove)
+                    {
+                        entry.Fullname = newNames[entry.Fullname];
+                        entry.Reset();
+                        _uncheckedPlaylistEntries.Enqueue(entry);
+                    }
                 }
             }
             catch (Exception ex)
