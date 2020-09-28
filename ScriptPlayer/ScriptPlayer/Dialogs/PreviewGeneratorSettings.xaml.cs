@@ -121,6 +121,15 @@ namespace ScriptPlayer.Dialogs
             set { SetValue(SkipExistingProperty, value); }
         }
 
+        public static readonly DependencyProperty ClipLeftProperty = DependencyProperty.Register(
+            "ClipLeft", typeof(bool), typeof(PreviewGeneratorSettingsDialog), new PropertyMetadata(default(bool)));
+
+        public bool ClipLeft
+        {
+            get { return (bool) GetValue(ClipLeftProperty); }
+            set { SetValue(ClipLeftProperty, value); }
+        }
+
         public PreviewGeneratorSettingsDialog(PreviewGeneratorSettings initialSettings)
         {
             if(initialSettings == null)
@@ -132,6 +141,7 @@ namespace ScriptPlayer.Dialogs
             FrameAutoHeight = initialSettings.Height <= 0;
             FrameRate = initialSettings.Framerate;
             SkipExisting = initialSettings.SkipIfExists;
+            ClipLeft = initialSettings.ClipLeft;
 
             InitializeComponent();
 
@@ -176,7 +186,8 @@ namespace ScriptPlayer.Dialogs
                 Height = FrameAutoHeight ? -2 : FrameHeight,
                 Width = FrameAutoWidth ? -2 : FrameWidth,
                 Framerate = FrameRate,
-                SkipIfExists = SkipExisting
+                SkipIfExists = SkipExisting,
+                ClipLeft = ClipLeft
             };
 
             if (rbMultiSections.IsChecked == true)

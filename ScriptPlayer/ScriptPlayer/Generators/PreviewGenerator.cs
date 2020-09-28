@@ -63,7 +63,8 @@ namespace ScriptPlayer.Generators
                     InputFile = settings.VideoFile,
                     Width = settings.Width,
                     Height = settings.Height,
-                    Framerate = settings.Framerate
+                    Framerate = settings.Framerate,
+                    ClipLeft = settings.ClipLeft
                 };
                 
                 for (int i = 0; i < settings.TimeFrames.Count; i++)
@@ -78,7 +79,7 @@ namespace ScriptPlayer.Generators
                     clipArguments.Duration = timeFrame.Duration;
                     clipArguments.StartTimeSpan = timeFrame.StartTimeSpan;
                     clipArguments.OutputFile = sectionFileName;
-
+                    
                     entry.Update($"Generating GIF (1/4): Clipping Video Section {i + 1}/{settings.TimeFrames.Count}",
                         ((i / (double) settings.TimeFrames.Count)) / 4.0);
 

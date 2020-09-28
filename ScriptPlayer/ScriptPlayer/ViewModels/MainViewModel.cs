@@ -378,7 +378,8 @@ namespace ScriptPlayer.ViewModels
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             Version = new VersionViewModel();
 
-            ConversionModes = Enum.GetValues(typeof(ConversionMode)).Cast<ConversionMode>().ToList();
+            ConversionModes = Enum.GetValues(typeof(ConversionMode))
+                .Cast<ConversionMode>().Except(new []{ConversionMode.Custom}).ToList();
             _supportedScriptExtensions = ScriptLoaderManager.GetSupportedExtensions();
 
             InitializeCommands();

@@ -389,7 +389,7 @@ namespace ScriptPlayer.ViewModels
 
             RenameCommand = new RelayCommand<PlaylistEntry>(ExecuteRenameCommand, SingleEntrySelected);
             MoveCommand = new RelayCommand(ExecuteMoveCommand, SelectionIsNotEmpty);
-            MoveCommand = new RelayCommand(ExecuteMoveAndRemoveCommand, SelectionIsNotEmpty);
+            MoveAndRemoveCommand = new RelayCommand(ExecuteMoveAndRemoveCommand, SelectionIsNotEmpty);
             DeleteCommand = new RelayCommand(ExecuteDeleteCommand, SelectionIsNotEmpty);
             RecycleCommand = new RelayCommand(ExecuteRecycleCommand, SelectionIsNotEmpty);
 

@@ -46,7 +46,8 @@ namespace ScriptPlayer.Generators
                     OutputDirectory = FfmpegWrapper.CreateRandomTempDirectory(),
                     Intervall = intervall,
                     Width = settings.Width,
-                    Height = settings.Height
+                    Height = settings.Height,
+                    ClipLeft = settings.ClipLeft
                 };
                 
                 string thumbfile = Path.ChangeExtension(settings.VideoFile, "thumbs");

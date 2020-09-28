@@ -20,7 +20,7 @@ namespace ScriptPlayer.Generators
             Height = 170;
             Width = -2;
             Framerate = 24;
-
+            
             SkipIfExists = true;
         }
 
@@ -53,6 +53,7 @@ namespace ScriptPlayer.Generators
                 Height = Height,
                 Width = Width,
                 SkipIfExists = SkipIfExists,
+                ClipLeft = ClipLeft,
                 TimeFrames = TimeFrames.Select(t => t.Duplicate()).ToList()
             };
         }

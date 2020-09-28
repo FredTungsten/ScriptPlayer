@@ -7,7 +7,7 @@
         xmlns:converters="clr-namespace:ScriptPlayer.Converters"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d"
-        Title="Preview Generator Settings" Height="270.683" Width="358.89" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+        Title="Preview Generator Settings" Height="289.608" Width="358.89" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <Window.Resources>
         <converters:InverterConverter x:Key="InverterConverter"/>
         <converters:AlternativeValueConverter x:Key="AlternativeValueConverter"/>
@@ -43,17 +43,18 @@
 
         <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="BtnOk_Click"/>
         <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="BtnCancel_Click"/>
-        <TextBlock HorizontalAlignment="Left" Margin="10,126,0,0" TextWrapping="Wrap" Text="Start" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,125,0,0" TextWrapping="Wrap" Text="{Binding Start}" VerticalAlignment="Top" Width="74"/>
-        <TextBlock HorizontalAlignment="Left" Margin="10,150,0,0" TextWrapping="Wrap" Text="Duration" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,149,0,0" TextWrapping="Wrap" Text="{Binding Duration}" VerticalAlignment="Top" Width="74"/>
-        <RadioButton Name="rbSingleSection" Content="Single Section" HorizontalAlignment="Left" Margin="10,102,0,0" VerticalAlignment="Top"/>
-        <RadioButton IsChecked="True" Name="rbMultiSections"  Content="Multiple Sections" HorizontalAlignment="Left" Margin="188,102,0,0" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,140,0,0" TextWrapping="Wrap" Text="Start" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,139,0,0" TextWrapping="Wrap" Text="{Binding Start}" VerticalAlignment="Top" Width="74"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,164,0,0" TextWrapping="Wrap" Text="Duration" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="82,163,0,0" TextWrapping="Wrap" Text="{Binding Duration}" VerticalAlignment="Top" Width="74"/>
+        <RadioButton Name="rbSingleSection" Content="Single Section" HorizontalAlignment="Left" Margin="10,116,0,0" VerticalAlignment="Top"/>
+        <RadioButton IsChecked="True" Name="rbMultiSections"  Content="Multiple Sections" HorizontalAlignment="Left" Margin="188,116,0,0" VerticalAlignment="Top"/>
 
-        <TextBlock HorizontalAlignment="Left" Margin="188,126,0,0" TextWrapping="Wrap" Text="Count" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="19" Margin="260,125,0,0" TextWrapping="Wrap" Text="{Binding SectionCount}" VerticalAlignment="Top" Width="74"/>
-        <TextBlock HorizontalAlignment="Left" Margin="188,150,0,0" TextWrapping="Wrap" Text="Duration" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="19" Margin="260,149,0,0" TextWrapping="Wrap" Text="{Binding DurationEach}" VerticalAlignment="Top" Width="74"/>
-        <CheckBox Content="Skip Existing" IsChecked="{Binding SkipExisting}" HorizontalAlignment="Left" Margin="10,187,0,0" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="188,140,0,0" TextWrapping="Wrap" Text="Count" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="260,139,0,0" TextWrapping="Wrap" Text="{Binding SectionCount}" VerticalAlignment="Top" Width="74"/>
+        <TextBlock HorizontalAlignment="Left" Margin="188,164,0,0" TextWrapping="Wrap" Text="Duration" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="19" Margin="260,163,0,0" TextWrapping="Wrap" Text="{Binding DurationEach}" VerticalAlignment="Top" Width="74"/>
+        <CheckBox Content="Skip Existing" IsChecked="{Binding SkipExisting}" HorizontalAlignment="Left" Margin="10,201,0,0" VerticalAlignment="Top"/>
+        <CheckBox Content="Only use left half" IsChecked="{Binding ClipLeft}" HorizontalAlignment="Left" Margin="10,88,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

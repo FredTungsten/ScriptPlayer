@@ -9,6 +9,8 @@ namespace ScriptPlayer.Shared
 
         public int Height { get; set; }
 
+        public bool ClipLeft { get; set; }
+
         public double Intervall { get; set; }
 
         public string OutputDirectory { get; set; }
@@ -27,7 +29,13 @@ namespace ScriptPlayer.Shared
 
             string intervall = Intervall.ToString("f3", CultureInfo.InvariantCulture);
 
-            return $"-i \"{InputFile}\" -vf \"scale={Width}:{Height}, fps=1/{intervall}\" \"{OutputDirectory}%05d.jpg\" -stats";
+            return $"-i \"{InputFile}\" " + 
+                   "-vf \"" + 
+                   $"scale={Width}:{Height}" + 
+                   $", fps=1/{intervall}" + 
+                   (ClipLeft ? ", stereo3d=sbsl:ml" : "") +
+                   $"\" " + 
+                   $"\"{OutputDirectory}%05d.jpg\" -stats";
         }
     }
 }

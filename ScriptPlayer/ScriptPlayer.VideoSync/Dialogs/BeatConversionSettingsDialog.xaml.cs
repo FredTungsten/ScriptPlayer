@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 
 namespace ScriptPlayer.VideoSync.Dialogs
@@ -51,6 +52,8 @@ namespace ScriptPlayer.VideoSync.Dialogs
         public static readonly DependencyProperty ResultProperty = DependencyProperty.Register(
             "Result", typeof(ConversionSettings), typeof(BeatConversionSettingsDialog), new PropertyMetadata(default(ConversionSettings)));
 
+        private static PositionCollection _previousPattern;
+
         public ConversionSettings Result
         {
             get { return (ConversionSettings) GetValue(ResultProperty); }
@@ -87,6 +90,16 @@ namespace ScriptPlayer.VideoSync.Dialogs
                 Max = MaxValue,
                 Mode = ConversionMode
             };
+
+            if (ConversionMode == ConversionMode.Custom)
+            {
+                CustomConversionDialog dialog = new CustomConversionDialog(_previousPattern ?? new PositionCollection());
+                if (dialog.ShowDialog() != true)
+                    return;
+
+                _previousPattern = dialog.Positions;
+                Result.CustomPositions = dialog.Positions;
+            }
 
             DialogResult = true;
         }

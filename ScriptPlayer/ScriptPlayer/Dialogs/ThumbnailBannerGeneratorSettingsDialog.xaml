@@ -17,7 +17,8 @@
         <Button IsDefault="True" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="btnOk_Click"/>
         <Button IsCancel="True" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="btnCancel_Click"/>
         <Button Content="Preview" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="75" Click="btnPreview_Click"/>
-        <CheckBox IsChecked="{Binding ExistingFileStrategy}" Content="Skip existing" HorizontalAlignment="Left" Margin="10,100,0,0" VerticalAlignment="Top"/>
+        <CheckBox IsChecked="{Binding SkipIfExists}" Content="Skip existing" HorizontalAlignment="Left" Margin="10,100,0,0" VerticalAlignment="Top"/>
+        <CheckBox IsChecked="{Binding ClipLeft}" Content="Use only left half" HorizontalAlignment="Left" Margin="108,100,0,0" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>

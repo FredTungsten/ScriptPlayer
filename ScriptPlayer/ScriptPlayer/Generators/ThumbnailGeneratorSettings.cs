@@ -22,7 +22,8 @@
                 Width =  Width,
                 Height = Height,
                 Intervall = Intervall,
-                SkipIfExists = SkipIfExists
+                SkipIfExists = SkipIfExists,
+                ClipLeft = ClipLeft
             };
         }
 

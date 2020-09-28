@@ -74,6 +74,7 @@
                 <MenuItem Header="Show Duration" Click="mnuShowBeatDuration_Click"/>
                 <Separator/>
                 <MenuItem Header="Trim to video duration" Click="mnuTrimBeats_Click"/>
+                <MenuItem Header="Remove duplicate positions" Click="mnuRemoveDuplicate_Click"/>
                 <Separator/>
                 <MenuItem IsCheckable="true" Name="cckRecord" Header="Record from Live-Sampler"/>
             </MenuItem>

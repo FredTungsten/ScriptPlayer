@@ -35,6 +35,8 @@ namespace ScriptPlayer.Shared.Converters
                     return "Up (Fast, Slow)";
                 case ConversionMode.UpSlowFast:
                     return "Up (Slow, Fast)";
+                case ConversionMode.Custom:
+                    return "Custom";
                 default:
                     throw new ArgumentOutOfRangeException(nameof(value), value, null);
             }

@@ -18,7 +18,8 @@ namespace ScriptPlayer.Shared.Scripts
         UpFast,
         UpCenter,
         UpFastSlow,
-        UpSlowFast
+        UpSlowFast,
+        Custom
     }
 
     public class ConversionSettings
@@ -26,6 +27,7 @@ namespace ScriptPlayer.Shared.Scripts
         public ConversionMode Mode { get; set; }
         public byte Min { get; set; }
         public byte Max { get; set; }
+        public PositionCollection CustomPositions { get; set; }
     }
 
     public static class BeatsToFunScriptConverter
@@ -48,6 +50,9 @@ namespace ScriptPlayer.Shared.Scripts
 
             TimeSpan fastLimit = TimeSpan.FromMilliseconds(180);
             TimeSpan slowLimit = TimeSpan.FromMilliseconds(2000);
+
+            List<Tuple<double, byte>> relativeCustomPositions = new List<Tuple<double, byte>>();
+            bool flips = false;
 
             switch (settings.Mode)
             {
@@ -103,10 +108,32 @@ namespace ScriptPlayer.Shared.Scripts
                     positionDown = settings.Min;
                     positionUp = settings.Max;
                     break;
+                case ConversionMode.Custom:
+                    centerLimit = TimeSpan.Zero;
+                    positionDown = settings.Min;
+                    positionUp = settings.Max;
+
+                    TimeSpan customDuration = settings.CustomPositions.Last().TimeStamp -
+                                              settings.CustomPositions.First().TimeStamp;
+
+                    flips = settings.CustomPositions.First().Position != settings.CustomPositions.Last().Position;
+
+                    foreach (TimedPosition pos in settings.CustomPositions)
+                    {
+                        double relativePosition =
+                            (pos.TimeStamp - settings.CustomPositions.First().TimeStamp).Divide(customDuration);
+
+                        relativeCustomPositions.Add(new Tuple<double, byte>(relativePosition, pos.Position));
+                    }
+
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(settings.Mode), settings.Mode, null);
             }
 
+            
+
+            
             for (int index = 0; index < beats.Count; index++)
             {
                 TimeSpan timestamp = beats[index];
@@ -114,6 +141,24 @@ namespace ScriptPlayer.Shared.Scripts
 
                 switch (settings.Mode)
                 {
+                    case ConversionMode.Custom:
+                    {
+                        if (index > 0)
+                        {
+                            TimeSpan duration = timestamp - previousTimeStamp;
+
+                            for (int x = 0; x < relativeCustomPositions.Count; x++)
+                            {
+                                actions.Add(new FunScriptAction
+                                {
+                                    Position = (byte)((flips && !up) ? 99 - relativeCustomPositions[x].Item2 : relativeCustomPositions[x].Item2),
+                                    TimeStamp = previousTimeStamp + duration.Multiply(relativeCustomPositions[x].Item1)
+                                });
+                            }
+                        }
+
+                        break;
+                    }
                     case ConversionMode.UpDownFast:
                     {
                         if (index > 0)

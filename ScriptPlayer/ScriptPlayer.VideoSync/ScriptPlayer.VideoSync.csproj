@@ -115,6 +115,9 @@
     <Compile Include="Controls\ProjectTree.xaml.cs">
       <DependentUpon>ProjectTree.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\CustomConversionDialog.xaml.cs">
+      <DependentUpon>CustomConversionDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\DoubleInputDialog.xaml.cs">
       <DependentUpon>DoubleInputDialog.xaml</DependentUpon>
     </Compile>
@@ -150,6 +153,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ProjectTree.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\CustomConversionDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

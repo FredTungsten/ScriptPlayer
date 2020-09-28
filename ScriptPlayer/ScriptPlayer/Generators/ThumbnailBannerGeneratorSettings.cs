@@ -22,7 +22,9 @@
             {
                 Rows = Rows,
                 Columns = Columns,
-                TotalWidth = TotalWidth
+                TotalWidth = TotalWidth,
+                ClipLeft = ClipLeft,
+                SkipIfExists = SkipIfExists
             };
         }
 

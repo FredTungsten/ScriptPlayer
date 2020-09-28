@@ -2614,6 +2614,33 @@ namespace ScriptPlayer.VideoSync
             Beats = new BeatCollection(Beats.Where(b => b >= TimeSpan.Zero && b <= duration));
             Positions = new PositionCollection(Positions.Where(p => p.TimeStamp >= TimeSpan.Zero && p.TimeStamp <= duration));
         }
+
+        private void mnuRemoveDuplicate_Click(object sender, RoutedEventArgs e)
+        {
+            TimeSpan diffT = TimeSpan.FromMilliseconds(10);
+            int diffPos = 2;
+
+            PositionCollection pos = new PositionCollection();
+
+            TimedPosition previous = null;
+
+            for (int i = 0; i < Positions.Count; i++)
+            {
+                TimedPosition current = Positions[i];
+
+                if (previous != null)
+                {
+                    if (current.TimeStamp - previous.TimeStamp <= diffT &&
+                        Math.Abs(current.Position - (int) previous.Position) <= diffPos)
+                        continue;
+                }
+
+                pos.Add(current);
+                previous = current;
+            }
+
+            Positions = pos;
+        }
     }
 
     public enum PositionType

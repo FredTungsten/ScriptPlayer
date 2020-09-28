@@ -224,7 +224,8 @@ namespace ScriptPlayer.Generators
                     Intervall = intervall.TotalSeconds,
                     StatusUpdateHandler = (progress) => { entry.Update(null, progress); },
                     InputFile = settings.VideoFile,
-                    OutputDirectory = FfmpegWrapper.CreateRandomTempDirectory()
+                    OutputDirectory = FfmpegWrapper.CreateRandomTempDirectory(),
+                    ClipLeft = settings.ClipLeft
                 };
                 
                 entry.Update("Extracting Frames", 0);
