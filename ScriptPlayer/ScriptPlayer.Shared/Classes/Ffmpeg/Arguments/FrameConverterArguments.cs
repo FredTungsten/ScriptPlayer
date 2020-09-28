@@ -11,6 +11,8 @@ namespace ScriptPlayer.Shared
 
         public bool ClipLeft { get; set; }
 
+        public bool DeLense { get; set; }
+
         public double Intervall { get; set; }
 
         public string OutputDirectory { get; set; }
@@ -31,9 +33,10 @@ namespace ScriptPlayer.Shared
 
             return $"-i \"{InputFile}\" " + 
                    "-vf \"" + 
-                   $"scale={Width}:{Height}" + 
-                   $", fps=1/{intervall}" + 
+                   $"fps=1/{intervall}" + 
                    (ClipLeft ? ", stereo3d=sbsl:ml" : "") +
+                   // (DeLense ? $", lenscorrection=k1=-0.18:k2=-0.022" : "") +
+                   (ClipLeft ? $", scale = {Width / 2}:{Height}" : $", scale = {Width}:{Height}") +
                    $"\" " + 
                    $"\"{OutputDirectory}%05d.jpg\" -stats";
         }

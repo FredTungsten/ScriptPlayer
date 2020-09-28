@@ -64,7 +64,8 @@ namespace ScriptPlayer.Generators
                     Width = settings.Width,
                     Height = settings.Height,
                     Framerate = settings.Framerate,
-                    ClipLeft = settings.ClipLeft
+                    ClipLeft = settings.ClipLeft,
+                    DeLense = settings.ClipLeft
                 };
                 
                 for (int i = 0; i < settings.TimeFrames.Count; i++)

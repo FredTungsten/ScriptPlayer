@@ -19,6 +19,8 @@ namespace ScriptPlayer.Shared
 
         public bool ClipLeft { get; set; }
 
+        public bool DeLense { get; set; }
+
         public override string BuildArguments()
         {
             string framerate = Framerate.ToString("F2", CultureInfo.InvariantCulture);
@@ -31,8 +33,10 @@ namespace ScriptPlayer.Shared
                 $"-r {framerate} " +
                 "-vf " + // video filter parameters" +
                 $"\"" + 
-                $"setpts=PTS-STARTPTS, hqdn3d=10, scale = {Width}:{Height}"+ 
+                $"setpts=PTS-STARTPTS, hqdn3d=10"+ 
                 (ClipLeft ? $", stereo3d=sbsl:ml" : "") + // de-3D
+                // (DeLense ? $", lenscorrection=k1=0:k2=-0.33" : "") +
+                (ClipLeft ? $", scale = {Width / 2}:{Height}" : $", scale = {Width}:{Height}") + 
                 "\" " +
                 (ClipLeft ? "-metadata:s:v:0 stereo_mode=\"mono\" " : "") + //de-3D
                 "-vcodec libx264 -crf 0 " +

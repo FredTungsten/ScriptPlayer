@@ -225,7 +225,8 @@ namespace ScriptPlayer.Generators
                     StatusUpdateHandler = (progress) => { entry.Update(null, progress); },
                     InputFile = settings.VideoFile,
                     OutputDirectory = FfmpegWrapper.CreateRandomTempDirectory(),
-                    ClipLeft = settings.ClipLeft
+                    ClipLeft = settings.ClipLeft,
+                    DeLense = settings.ClipLeft
                 };
                 
                 entry.Update("Extracting Frames", 0);

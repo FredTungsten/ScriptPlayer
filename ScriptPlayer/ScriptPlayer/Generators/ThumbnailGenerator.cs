@@ -47,7 +47,8 @@ namespace ScriptPlayer.Generators
                     Intervall = intervall,
                     Width = settings.Width,
                     Height = settings.Height,
-                    ClipLeft = settings.ClipLeft
+                    ClipLeft = settings.ClipLeft,
+                    DeLense = settings.ClipLeft
                 };
                 
                 string thumbfile = Path.ChangeExtension(settings.VideoFile, "thumbs");
