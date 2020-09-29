@@ -21,7 +21,7 @@ namespace ScriptPlayer.Shared.Scripts
 
         public abstract List<ScriptFileFormat> GetSupportedFormats();
 
-        public List<ScriptAction> Load(string filename, FunScriptMetaData metaData)
+        public List<ScriptAction> Load(string filename, FunScriptMetaData metaData = null)
         {
             WaitForFileReadable(filename);
             using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
