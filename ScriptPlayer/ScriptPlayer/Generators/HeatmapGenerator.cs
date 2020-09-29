@@ -47,7 +47,7 @@ namespace ScriptPlayer.Generators
                 //TODO
 
                 string script = _viewModel.GetScriptFile(settings.VideoFile);
-                var actions = _viewModel.LoadScriptActions(script);
+                var actions = _viewModel.LoadScriptActions(script, null);
 
                 if(actions == null || actions.Count == 0)
                 {

@@ -10,6 +10,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using JetBrains.Annotations;
 using Microsoft.VisualBasic.FileIO;
@@ -20,7 +22,7 @@ namespace ScriptPlayer.ViewModels
 {
     public class PlaylistViewModel : INotifyPropertyChanged, IDisposable
     {
-        private static PathComparer _pathComparer = new PathComparer();
+        private static readonly PathComparer PathComparer = new PathComparer();
 
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler<PlaylistEntry> PlayEntry;
@@ -72,6 +74,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<string>> RequestMediaFileName;
         public event EventHandler<RequestEventArgs<string>> RequestVideoFileName;
         public event EventHandler<RequestEventArgs<string>> RequestScriptFileName;
+        public event EventHandler<RequestEventArgs<string>> RequestHeatmapFileName;
         public event EventHandler<RequestEventArgs<string, string[]>> RequestAllRelatedFiles;
 
         public event EventHandler<RequestEventArgs<string>> RequestRenameFile;
@@ -532,7 +535,7 @@ namespace ScriptPlayer.ViewModels
                 if (relatedFiles == null || relatedFiles.Length == 0)
                     continue;
 
-                foreach (var kvp in relatedFiles.ToDictionary(k => k, v => GetNewPath(v, newDirectory), _pathComparer))
+                foreach (var kvp in relatedFiles.ToDictionary(k => k, v => GetNewPath(v, newDirectory), PathComparer))
                 {
                     if (!newNames.ContainsKey(kvp.Key))
                         newNames.Add(kvp.Key, kvp.Value);
@@ -545,7 +548,7 @@ namespace ScriptPlayer.ViewModels
 
                 foreach (string file in newNames.Keys)
                 {
-                    if (!_pathComparer.Equals(Path.GetDirectoryName(file), newDirectory))
+                    if (!PathComparer.Equals(Path.GetDirectoryName(file), newDirectory))
                         allAlreadyInNewDir = false;
                 }
 
@@ -621,11 +624,11 @@ namespace ScriptPlayer.ViewModels
             if (string.IsNullOrEmpty(newCommonName))
                 return;
 
-            Dictionary<string, string> newNames = null;
+            Dictionary<string, string> newNames;
 
             try
             {
-                newNames = relatedFiles.ToDictionary(k => k, v => GetNewName(v, newCommonName), _pathComparer);
+                newNames = relatedFiles.ToDictionary(k => k, v => GetNewName(v, newCommonName), PathComparer);
 
                 foreach (string oldFile in relatedFiles)
                 {
@@ -853,7 +856,35 @@ namespace ScriptPlayer.ViewModels
                 string scriptFile = OnRequestScriptFileName(entry.Fullname);
                 entry.HasScript = !string.IsNullOrWhiteSpace(scriptFile) && File.Exists(scriptFile);
 
+                string heatMap = OnRequestHeatmapFileName(entry.Fullname);
+                if (!string.IsNullOrEmpty(heatMap))
+                {
+                    entry.HeatMap = GetImage(heatMap);
+                }
+
                 entry.UpdateStatus();
+            }
+        }
+
+        private ImageSource GetImage(string path)
+        {
+            try
+            {
+                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+                {
+                    BitmapImage bitmapImage = new BitmapImage();
+                    bitmapImage.BeginInit();
+                    bitmapImage.StreamSource = stream;
+                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmapImage.EndInit();
+                    bitmapImage.Freeze();
+
+                    return bitmapImage;
+                }
+            }
+            catch
+            {
+                return null;
             }
         }
 
@@ -1507,6 +1538,12 @@ namespace ScriptPlayer.ViewModels
             NextOrPreviousChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        public void NotifyFileGenerated(string videoFile)
+        {
+            foreach(var entry in _entries.Where(e => string.Compare(e.Fullname, videoFile, StringComparison.InvariantCultureIgnoreCase) == 0).ToList())
+                _uncheckedPlaylistEntries.Enqueue(entry);
+        }
+
         public void SelectNewRandomEntry()
         {
             if (Shuffle)
@@ -1517,6 +1554,16 @@ namespace ScriptPlayer.ViewModels
         {
             RequestEventArgs<string> e = new RequestEventArgs<string>(initialValue);
             RequestDirectory?.Invoke(this, e);
+            if (!e.Handled)
+                return null;
+
+            return e.Value;
+        }
+
+        protected virtual string OnRequestHeatmapFileName(string initialValue = "")
+        {
+            RequestEventArgs<string> e = new RequestEventArgs<string>(initialValue);
+            RequestHeatmapFileName?.Invoke(this, e);
             if (!e.Handled)
                 return null;
 

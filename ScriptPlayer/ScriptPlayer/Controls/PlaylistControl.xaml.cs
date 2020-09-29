@@ -21,6 +21,15 @@ namespace ScriptPlayer.Controls
             ((PlaylistControl) d).ViewModelChanged((MainViewModel) e.OldValue, (MainViewModel) e.NewValue);
         }
 
+        public static readonly DependencyProperty ShowHeatmapProperty = DependencyProperty.Register(
+            "ShowHeatmap", typeof(bool), typeof(PlaylistControl), new PropertyMetadata(default(bool)));
+
+        public bool ShowHeatmap
+        {
+            get { return (bool) GetValue(ShowHeatmapProperty); }
+            set { SetValue(ShowHeatmapProperty, value); }
+        }
+
         private void ViewModelChanged(MainViewModel oldValue, MainViewModel newValue)
         {
             if (oldValue != null)
@@ -37,6 +46,12 @@ namespace ScriptPlayer.Controls
         public PlaylistControl()
         {
             InitializeComponent();
+            SizeChanged += OnSizeChanged;
+        }
+
+        private void OnSizeChanged(object sender, SizeChangedEventArgs sizeChangedEventArgs)
+        {
+            ShowHeatmap = this.ActualWidth > 350;
         }
 
         public MainViewModel ViewModel

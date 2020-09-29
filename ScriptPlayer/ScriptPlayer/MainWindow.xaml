@@ -354,6 +354,7 @@
                     <MenuItem Header="Shift" Command="{Binding ShiftScriptCommand}"/>
                     <MenuItem Header="Trim" Command="{Binding TrimScriptCommand}"/>
                     <Separator/>
+                    <MenuItem Header="Edit Meta-Data" Command="{Binding EditMetadataCommand}"/>
                     <MenuItem Header="Save as" Command="{Binding SaveScriptAsCommand}"/>
                 </MenuItem>
                 <MenuItem Header="Selection">
@@ -637,7 +638,7 @@
                         </TextBlock>
                     </StackPanel>
                 </Expander.Header>
-                <Grid Name="GirdPlaylistInner" MinWidth="150" MaxWidth="400">
+                <Grid Name="GirdPlaylistInner" MinWidth="150" MaxWidth="500">
                     <DockPanel LastChildFill="True">
                         <controls1:HorizontalStretcher StretchedParent="{Binding ElementName=GirdPlaylistInner}" DockPanel.Dock="Right" HorizontalAlignment="Right" FinishedDragging="SidePanel_FinishedDragging"/>
                         <controls1:PlaylistControl ViewModel="{Binding Path=.}" Margin="0" />

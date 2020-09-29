@@ -434,7 +434,10 @@ namespace ScriptPlayer.ViewModels
         private void WorkQueueOnJobFinished(object sender, GeneratorJobEventArgs eventArgs)
         {
             if (eventArgs.Result.Success)
+            {
                 RecheckForAdditionalFiles(false);
+                Playlist.NotifyFileGenerated(eventArgs.Job.VideoFileName);
+            }
         }
 
         private void GeneratePatterns()
@@ -480,11 +483,12 @@ namespace ScriptPlayer.ViewModels
                 Playlist.RequestMediaFileName += Playlist_RequestMediaFileName;
                 Playlist.RequestVideoFileName += Playlist_RequestVideoFileName;
                 Playlist.RequestScriptFileName += Playlist_RequestScriptFileName;
+                Playlist.RequestHeatmapFileName += PlaylistOnRequestHeatmapFileName;
                 Playlist.RequestAllRelatedFiles += PlaylistOnRequestAllRelatedFiles;
 
                 Playlist.RequestRenameFile += PlaylistOnRequestRenameFile;
                 Playlist.RequestDirectory += PlaylistOnRequestDirectory;
-
+                
                 Playlist.RequestGenerateThumbnails += PlaylistOnRequestGenerateThumbnails;
                 Playlist.RequestGenerateThumbnailBanners += PlaylistOnRequestGenerateThumbnailBanners;
                 Playlist.RequestGeneratePreviews += PlaylistOnRequestGeneratePreviews;
@@ -603,6 +607,12 @@ namespace ScriptPlayer.ViewModels
         {
             e.Handled = true;
             e.Value = GetVideoFile(e.Value);
+        }
+
+        private void PlaylistOnRequestHeatmapFileName(object sender, RequestEventArgs<string> e)
+        {
+            e.Handled = true;
+            e.Value = GetRelatedFile(e.Value, new[] {"png"});
         }
 
         private void PlaylistOnPropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
@@ -1722,6 +1732,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand DecreaseHandyStrokeLengthCommand { get; set; }
 
+        public ScriptplayerCommand EditMetadataCommand { get; set; }
+
         public PlaylistViewModel Playlist
         {
             get => _playlist;
@@ -2596,6 +2608,8 @@ namespace ScriptPlayer.ViewModels
 
             ShowGeneratorSettingsCommand = new ScriptplayerCommand(ModifyGeneratorSettings);
 
+            EditMetadataCommand = new ScriptplayerCommand(EditMetadata, IsScriptLoaded);
+
             ShowGeneratorProgressCommand = new ScriptplayerCommand(ShowGeneratorProgress);
 
             IncreaseHandyStrokeLengthCommand = new ScriptplayerCommand(IncreaseHandyStrokeLength)
@@ -3045,6 +3059,20 @@ namespace ScriptPlayer.ViewModels
                     GlobalCommandManager.GetShortcut(Key.MediaPreviousTrack, ModifierKeys.None, true)
                 }
             });
+        }
+
+        private void EditMetadata()
+        {
+            string previousScript = LoadedScript;
+
+            EditMetaDataDialog dialog = new EditMetaDataDialog(_scriptHandler.MetaData);
+            if (dialog.ShowDialog() != true)
+                return;
+
+            if (previousScript == LoadedScript)
+            {
+                _scriptHandler.MetaData = dialog.MetaData;
+            }
         }
 
         private void PreviousPattern()
@@ -4840,21 +4868,21 @@ namespace ScriptPlayer.ViewModels
                 LoadScriptOrFallback(_loadedScript, false, false);
         }
 
-        public List<ScriptAction> LoadScriptActions(string scriptFileName)
+        public List<ScriptAction> LoadScriptActions(string scriptFileName, FunScriptMetaData metaData)
         {
             ScriptLoader[] loaders = ScriptLoaderManager.GetLoaders(scriptFileName);
             if (loaders == null)
                 return null;
 
-            var result = LoadScriptActions(loaders, scriptFileName);
+            var result = LoadScriptActions(loaders, scriptFileName, metaData);
             if (result != null)
                 return result;
 
             ScriptLoader[] otherLoaders = ScriptLoaderManager.GetAllLoaders().Except(loaders).ToArray();
-            return LoadScriptActions(otherLoaders, scriptFileName);
+            return LoadScriptActions(otherLoaders, scriptFileName, metaData);
         }
 
-        private List<ScriptAction> LoadScriptActions(ScriptLoader[] loaders, string fileName)
+        private List<ScriptAction> LoadScriptActions(ScriptLoader[] loaders, string fileName, FunScriptMetaData metaData)
         {
             const long maxScriptSize = 4 * 1024 * 1024; //4 MB
 
@@ -4867,7 +4895,7 @@ namespace ScriptPlayer.ViewModels
             {
                 try
                 {
-                    actions = loader.Load(fileName);
+                    actions = loader.Load(fileName, metaData);
                     if (actions == null)
                         continue;
                     if (actions.Count == 0)
@@ -4970,6 +4998,7 @@ namespace ScriptPlayer.ViewModels
             long fileSize = new FileInfo(fileName).Length;
             
             List<ScriptAction> actions = null;
+            FunScriptMetaData metaData = new FunScriptMetaData();
 
             foreach (ScriptLoader loader in loaders)
             {
@@ -4978,7 +5007,7 @@ namespace ScriptPlayer.ViewModels
 
                 try
                 {
-                    actions = loader.Load(fileName);
+                    actions = loader.Load(fileName, metaData);
                     if (actions == null)
                         continue;
                     if (actions.Count == 0)
@@ -4996,7 +5025,7 @@ namespace ScriptPlayer.ViewModels
 
             if (actions == null) return false;
 
-            _scriptHandler.SetScript(actions, isFallback);
+            _scriptHandler.SetScript(actions, isFallback, metaData);
 
             RefreshChapters();
             RefreshManualDuration();

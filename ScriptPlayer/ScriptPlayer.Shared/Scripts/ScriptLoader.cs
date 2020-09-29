@@ -12,15 +12,20 @@ namespace ScriptPlayer.Shared.Scripts
 
         public static CultureInfo Culture = CultureInfo.InvariantCulture;
 
+        public virtual List<ScriptAction> Load(Stream stream, FunScriptMetaData metaData)
+        {
+            return Load(stream);
+        }
+
         public abstract List<ScriptAction> Load(Stream stream);
 
         public abstract List<ScriptFileFormat> GetSupportedFormats();
 
-        public List<ScriptAction> Load(string filename)
+        public List<ScriptAction> Load(string filename, FunScriptMetaData metaData)
         {
             WaitForFileReadable(filename);
             using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
-                return Load(stream);
+                return Load(stream, metaData);
         }
 
         private static void WaitForFileReadable(string filename)

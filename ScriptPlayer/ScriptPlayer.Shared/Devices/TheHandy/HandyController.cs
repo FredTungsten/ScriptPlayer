@@ -183,7 +183,7 @@ namespace ScriptPlayer.Shared.TheHandy
                 }
                 else
                 {
-                    onSuccess(resp);
+                    onSuccess?.Invoke(resp);
                 }
             }, false);
         }
@@ -427,13 +427,12 @@ namespace ScriptPlayer.Shared.TheHandy
 
         private void ResyncNow(TimeSpan time, bool hard)
         {
-            if (!IsScriptLoaded) return;
+            if (!IsScriptLoaded)
+                return;
+
             if (hard)
             {
-                SyncPlay(false, time);
-
-                if(_playing)
-                    SyncPlay(true, time);
+                SyncPlay(false, time, AfterHardSync);
             }
             else
             {
@@ -452,6 +451,12 @@ namespace ScriptPlayer.Shared.TheHandy
             }
 
             _lastResync = DateTime.Now;
+        }
+
+        private void AfterHardSync(HandyResponse handyResponse)
+        {
+            if (_playing)
+                SyncPlay(true, EstimateCurrentTime(), null);
         }
 
         private TimeSpan EstimateCurrentTime()
@@ -529,25 +534,25 @@ namespace ScriptPlayer.Shared.TheHandy
             if (playing == _playing || !IsScriptLoaded) return;
             _playing = playing;
 
-            SyncPlay(playing, progress);
+            SyncPlay(playing, progress, null);
         }
 
-        private void SyncPlay(bool playing, TimeSpan progress)
+        private void SyncPlay(bool playing, TimeSpan progress, Action<HandyResponse> continueWith)
         {
             SyncPlay(new HandyPlay
             {
                 play = playing,
                 serverTime = GetServerTimeEstimate(),
                 time = (int)progress.TotalMilliseconds
-            });
+            }, continueWith);
         }
 
         ///<remarks>/syncPlay</remarks>
-        private void SyncPlay(HandyPlay play)
+        private void SyncPlay(HandyPlay play, Action<HandyResponse> continueWith)
         {
             string url = GetQuery("syncPlay", play);
             Debug.WriteLine($"{nameof(SyncPlay)}: {url}");
-            SendGetRequest(url);
+            SendGetRequest(url, continueWith);
         }
 
         private string GetQuery(string path, object queryObject)

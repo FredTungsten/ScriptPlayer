@@ -39,6 +39,8 @@ namespace ScriptPlayer.Shared.Scripts
 
         public TimeSpan Delay { get; set; }
 
+        public FunScriptMetaData MetaData { get; set; }
+
         public ConversionMode ConversionMode
         {
             get => _conversionMode;
@@ -218,9 +220,10 @@ namespace ScriptPlayer.Shared.Scripts
             return _originalActions.AsReadOnly();
         }
 
-        public void SetScript(IEnumerable<ScriptAction> script, bool isFallback)
+        public void SetScript(IEnumerable<ScriptAction> script, bool isFallback, FunScriptMetaData metaData)
         {
             _isFallback = isFallback;
+            MetaData = metaData;
 
             List<ScriptAction> actions = new List<ScriptAction>(script);
             actions.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
@@ -258,7 +261,8 @@ namespace ScriptPlayer.Shared.Scripts
             {
                 Inverted = false,
                 Actions = sourceActions,
-                Range = sourceActions.Max(o => o.Position) - sourceActions.Min(o => o.Position)
+                Range = sourceActions.Max(o => o.Position) - sourceActions.Min(o => o.Position),
+                MetaData = MetaData
             };
 
             file.Save(filename);

@@ -45,6 +45,9 @@ namespace ScriptPlayer.Shared.Scripts
         [JsonProperty(PropertyName = "actions")]
         public List<FunScriptAction> Actions { get; set; }
 
+        [JsonProperty(PropertyName = "metadata")]
+        public FunScriptMetaData MetaData { get; set; }
+
         public FunScriptFile()
         {
             Inverted = false;
@@ -58,6 +61,59 @@ namespace ScriptPlayer.Shared.Scripts
             string content = JsonConvert.SerializeObject(this);
 
             File.WriteAllText(filename, content, new UTF8Encoding(false));
+        }
+    }
+
+    public class FunScriptMetaData
+    {
+        [JsonProperty(PropertyName = "creator")]
+        public string Creator { get; set; }
+
+        [JsonProperty(PropertyName = "original_name")]
+        public string OriginalName { get; set; }
+
+        [JsonProperty(PropertyName = "url")]
+        public string Url { get; set; }
+
+        [JsonProperty(PropertyName = "url_video")]
+        public string UrlVideo { get; set; }
+
+        [JsonProperty(PropertyName = "tags")]
+        public List<string> Tags { get; set; }
+
+        [JsonProperty(PropertyName = "performers")]
+        public List<string> Performers { get; set; }
+
+        [JsonProperty(PropertyName = "paid")]
+        public bool Paid { get; set; }
+
+        [JsonProperty(PropertyName = "comment")]
+        public string Comment { get; set; }
+
+        public FunScriptMetaData()
+        {
+            Tags = new List<string>();
+            Performers = new List<string>();
+        }
+
+        public void CopyTo(FunScriptMetaData metaData)
+        {
+            metaData.Url = Url;
+            metaData.UrlVideo = UrlVideo;
+            metaData.Comment = Comment;
+            metaData.Creator = Creator;
+            metaData.OriginalName = OriginalName;
+            metaData.Paid = Paid;
+
+            metaData.Performers = Performers == null ? new List<string>() : new List<string>(Performers);
+            metaData.Tags = Tags == null ? new List<string>() : new List<string>(Tags);
+        }
+
+        public FunScriptMetaData Duplicate()
+        {
+            FunScriptMetaData result = new FunScriptMetaData();
+            CopyTo(result);
+            return result;
         }
     }
 }

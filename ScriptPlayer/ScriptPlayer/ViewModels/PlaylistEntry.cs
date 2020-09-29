@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Media;
 using JetBrains.Annotations;
 
 namespace ScriptPlayer.ViewModels
@@ -14,6 +15,7 @@ namespace ScriptPlayer.ViewModels
         private string _shortname;
         private string _fullname;
         private bool _removed;
+        private ImageSource _heatMap;
 
         public PlaylistEntry()
         {
@@ -70,6 +72,17 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public ImageSource HeatMap
+        {
+            get => _heatMap;
+            set
+            {
+                if (Equals(value, _heatMap)) return;
+                _heatMap = value;
+                OnPropertyChanged();
+            }
+        }
+
         public TimeSpan? Duration
         {
             get => _duration;
@@ -101,6 +114,7 @@ namespace ScriptPlayer.ViewModels
         {
             Status = PlaylistEntryStatus.Loading;
             Duration = null;
+            HeatMap = null;
         }
 
         public bool HasScript
