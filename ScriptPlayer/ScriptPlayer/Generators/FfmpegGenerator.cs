@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Windows.Threading;
+using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Generators
 {
@@ -7,11 +8,14 @@ namespace ScriptPlayer.Generators
     {
         protected string FfmpegExePath { get; }
 
+        protected MainViewModel ViewModel { get; set; }
+
         protected abstract string ProcessingType { get; }
 
-        protected FfmpegGenerator(string ffmpegExePath)
+        protected FfmpegGenerator(MainViewModel viewModel)
         {
-            FfmpegExePath = ffmpegExePath;
+            ViewModel = viewModel;
+            FfmpegExePath = ViewModel.Settings.FfmpegPath;
         }
 
         public GeneratorJob CreateJob(TSettings settings)

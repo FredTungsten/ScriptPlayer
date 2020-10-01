@@ -5536,7 +5536,7 @@ namespace ScriptPlayer.ViewModels
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, "thumbs");
 
-                ThumbnailGenerator generator = new ThumbnailGenerator(Settings.FfmpegPath);
+                ThumbnailGenerator generator = new ThumbnailGenerator(this);
 
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
@@ -5570,7 +5570,7 @@ namespace ScriptPlayer.ViewModels
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, "jpg");
 
-                ThumbnailBannerGenerator generator = new ThumbnailBannerGenerator(Settings.FfmpegPath);
+                ThumbnailBannerGenerator generator = new ThumbnailBannerGenerator(this);
 
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
@@ -5605,7 +5605,7 @@ namespace ScriptPlayer.ViewModels
                     bool skipHeatmap = generalSettings.ApplyToOrSkip(video, heatmapSettings, "png");
                     if (!skipHeatmap)
                     {
-                        HeatmapGenerator heatmapGenerator = new HeatmapGenerator(this, Settings.FfmpegPath);
+                        HeatmapGenerator heatmapGenerator = new HeatmapGenerator(this);
                         WorkQueue.Enqueue(heatmapGenerator.CreateJob(heatmapSettings));
                     }
                 }
@@ -5616,7 +5616,7 @@ namespace ScriptPlayer.ViewModels
                     bool skipPreview = generalSettings.ApplyToOrSkip(video, previewSettings, "gif");
                     if (!skipPreview)
                     {
-                        PreviewGenerator previewGenerator = new PreviewGenerator(Settings.FfmpegPath);
+                        PreviewGenerator previewGenerator = new PreviewGenerator(this);
                         WorkQueue.Enqueue(previewGenerator.CreateJob(previewSettings));
                     }
                 }
@@ -5627,7 +5627,7 @@ namespace ScriptPlayer.ViewModels
                     bool skipThumbnails = generalSettings.ApplyToOrSkip(video, thumbnailSettings, "thumbs");
                     if (!skipThumbnails)
                     {
-                        ThumbnailGenerator thumbnailGenerator = new ThumbnailGenerator(Settings.FfmpegPath);
+                        ThumbnailGenerator thumbnailGenerator = new ThumbnailGenerator(this);
                         WorkQueue.Enqueue(thumbnailGenerator.CreateJob(thumbnailSettings));
                     }
                 }
@@ -5638,7 +5638,7 @@ namespace ScriptPlayer.ViewModels
                     bool skipBanner = generalSettings.ApplyToOrSkip(video, bannerSettings, "jpg");
                     if (!skipBanner)
                     {
-                        ThumbnailBannerGenerator bannerGenerator = new ThumbnailBannerGenerator(Settings.FfmpegPath);
+                        ThumbnailBannerGenerator bannerGenerator = new ThumbnailBannerGenerator(this);
                         WorkQueue.Enqueue(bannerGenerator.CreateJob(bannerSettings));
                     }
                 }
@@ -5681,7 +5681,7 @@ namespace ScriptPlayer.ViewModels
                 videoSettings.VideoFile = video;
                 videoSettings.OutputFile = Path.ChangeExtension(video, ".png");
 
-                HeatmapGenerator generator = new HeatmapGenerator(this, Settings.FfmpegPath);
+                HeatmapGenerator generator = new HeatmapGenerator(this);
 
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }
@@ -5735,7 +5735,7 @@ namespace ScriptPlayer.ViewModels
 
                 //videoSettings.GenerateRelativeTimeFrames(12, TimeSpan.FromSeconds(0.8));
 
-                PreviewGenerator generator = new PreviewGenerator(Settings.FfmpegPath);
+                PreviewGenerator generator = new PreviewGenerator(this);
 
                 WorkQueue.Enqueue(generator.CreateJob(videoSettings));
             }

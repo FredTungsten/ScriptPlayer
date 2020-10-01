@@ -1,10 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes.Wrappers;
+using ScriptPlayer.Shared.Scripts;
+using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Generators
 {
@@ -23,7 +29,7 @@ namespace ScriptPlayer.Generators
             {
                 Process(settings, entry);
             });
-
+            _thread.SetApartmentState(ApartmentState.STA);
             _thread.Start();
         }
 
@@ -40,11 +46,12 @@ namespace ScriptPlayer.Generators
                 _wrapper = new FfmpegWrapper(FfmpegExePath);
 
                 List<string> sectionFileNames = new List<string>();
+                List<string> overlayFileNames = new List<string>();
 
                 if (settings.TimeFrames.Any(tf => tf.IsFactor))
                 {
                     VideoInfo info = _wrapper.GetVideoInfo(settings.VideoFile);
-                   
+                    
                     if (!info.IsGoodEnough())
                     {
                         entry.State = JobStates.Done;
@@ -91,6 +98,88 @@ namespace ScriptPlayer.Generators
                         return GeneratorResult.Failed();
                 }
 
+                string script = ViewModel.GetScriptFile(settings.VideoFile);
+                var actions = ViewModel.LoadScriptActions(script, null)?.OfType<FunScriptAction>().ToList();
+
+                Size barSize = new Size(200, 20);
+
+                if (actions != null && actions.Count > 0)
+                {
+                    PositionBar bar = new PositionBar
+                    {
+                        Width = barSize.Width,
+                        Height = barSize.Height,
+                        TotalDisplayedDuration = TimeSpan.FromSeconds(5),
+                        Background = Brushes.Black,
+                        Positions = new PositionCollection(actions.Select(a => new TimedPosition()
+                        {
+                            Position = a.Position,
+                            TimeStamp = a.TimeStamp
+                        })),
+                        DrawCircles = false,
+                        DrawLines = false,
+                    };
+
+                    for (int i = 0; i < settings.TimeFrames.Count; i++)
+                    {
+                        TimeSpan start = settings.TimeFrames[i].StartTimeSpan;
+                        TimeSpan max = start + settings.TimeFrames[i].Duration;
+
+                        TimeSpan progress = start;
+
+                        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+                        Directory.CreateDirectory(tempDir);
+
+                        string overlayFileName = Path.Combine(Path.GetTempPath(),
+                            Path.GetFileName(settings.VideoFile) + $"-overlay_{i}.mkv");
+
+                        tempFiles.Add(overlayFileName);
+
+                        int frame = 0;
+
+                        while (progress <= max)
+                        {
+                            bar.Progress = progress;
+
+                            var bitmap = RenderToBitmap(bar, barSize);
+
+                            PngBitmapEncoder encoder = new PngBitmapEncoder();
+
+                            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+
+                            using(FileStream f = new FileStream(Path.Combine(tempDir, $"frame{frame:0000}.png"), FileMode.CreateNew))
+                                encoder.Save(f);
+
+                            frame++;
+
+                            progress += TimeSpan.FromSeconds(1.0 / settings.Framerate);
+                        }
+
+                        _wrapper.Execute(new FrameMergeArguments
+                        {
+                            Framerate = settings.Framerate,
+                            InputFile = Path.Combine(tempDir, "frame%04d.png"),
+                            OutputFile = overlayFileName
+                        });
+
+                        Directory.Delete(tempDir, true);
+
+                        string mergeFileName = Path.Combine(Path.GetTempPath(),
+                            Path.GetFileName(settings.VideoFile) + $"-merge_{i}.mkv");
+
+                        tempFiles.Add(mergeFileName);
+
+                        _wrapper.Execute(new VideoOverlayArguments
+                        {
+                            InputFile = sectionFileNames[i],
+                            Overlay = overlayFileName,
+                            OutputFile = mergeFileName
+                        });
+
+                        sectionFileNames[i] = mergeFileName;
+                    }
+                }
+                
                 entry.Update("Generating GIF (2/4): Merging Clips", 1 / 4.0);
 
                 string clipFileName = "";
@@ -167,7 +256,7 @@ namespace ScriptPlayer.Generators
 
                 return GeneratorResult.Failed();
             }
-            catch
+            catch(Exception e)
             {
                 entry.DoneType = JobDoneTypes.Failure;
                 return GeneratorResult.Failed();
@@ -185,6 +274,19 @@ namespace ScriptPlayer.Generators
                     if (File.Exists(tempFile))
                         File.Delete(tempFile);
             }
+        }
+
+        public BitmapSource RenderToBitmap(UIElement element, Size size)
+        {
+            element.Measure(size);
+            element.Arrange(new Rect(size));
+            element.UpdateLayout();
+
+            var bitmap = new RenderTargetBitmap(
+                (int)size.Width, (int)size.Height, 96, 96, PixelFormats.Default);
+
+            bitmap.Render(element);
+            return bitmap;
         }
 
         public override void Cancel()
@@ -205,8 +307,40 @@ namespace ScriptPlayer.Generators
             Done?.Invoke(this, e);
         }
 
-        public PreviewGenerator(string ffmpegExePath) : base(ffmpegExePath)
+        public PreviewGenerator(MainViewModel viewModel) : base(viewModel)
         {
         }
+    }
+
+    public class VideoOverlayArguments : FfmpegArguments
+    {
+        public string Overlay { get; set; }
+        public string OutputFile { get; set; }
+
+        public override string BuildArguments()
+        {
+            return
+                $"-i \"{InputFile}\" -i \"{Overlay}\" " +
+                $"-filter_complex overlay " +
+                $"\"{OutputFile}\"";
+        }
+    }
+
+    public class FrameMergeArguments : FfmpegArguments
+    {
+        public override string BuildArguments()
+        {
+            string framerate = Framerate.ToString("F2", CultureInfo.InvariantCulture);
+
+            return
+                "-y " + //Yes to override existing files
+                $"-i \"{InputFile}\" " + // Input File
+                $"-r {framerate} " +
+                "-vcodec libx264 -crf 0 " +
+                $"\"{OutputFile}\"";
+        }
+
+        public double Framerate { get; set; }
+        public string OutputFile { get; set; }
     }
 }

@@ -149,6 +149,9 @@ namespace ScriptPlayer.Shared.Scripts
 
                             for (int x = 0; x < relativeCustomPositions.Count; x++)
                             {
+                                if (x == relativeCustomPositions.Count - 1 && index != beats.Count - 1)
+                                    continue;
+
                                 actions.Add(new FunScriptAction
                                 {
                                     Position = (byte)((flips && !up) ? 99 - relativeCustomPositions[x].Item2 : relativeCustomPositions[x].Item2),

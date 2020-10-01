@@ -15,11 +15,10 @@ namespace ScriptPlayer.Generators
     {
         private bool _canceled;
         private FfmpegWrapper _wrapper;
-        private MainViewModel _viewModel;
-
-        public HeatmapGenerator(MainViewModel viewModel, string ffmpegExePath) : base(ffmpegExePath)
+        
+        public HeatmapGenerator(MainViewModel viewModel) : base(viewModel)
         {
-            _viewModel = viewModel;
+            
         }
 
         protected override string ProcessingType => "Heatmap";
@@ -46,8 +45,8 @@ namespace ScriptPlayer.Generators
 
                 //TODO
 
-                string script = _viewModel.GetScriptFile(settings.VideoFile);
-                var actions = _viewModel.LoadScriptActions(script, null);
+                string script = ViewModel.GetScriptFile(settings.VideoFile);
+                var actions = ViewModel.LoadScriptActions(script, null);
 
                 if(actions == null || actions.Count == 0)
                 {
@@ -57,7 +56,7 @@ namespace ScriptPlayer.Generators
                     return GeneratorResult.Failed();
                 }
 
-                List<TimeSpan> timeStamps = _viewModel.FilterDuplicates(actions.ToList()).Select(s => s.TimeStamp).ToList();
+                List<TimeSpan> timeStamps = ViewModel.FilterDuplicates(actions.ToList()).Select(s => s.TimeStamp).ToList();
                 Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.FromSeconds(10), TimeSpan.Zero, duration);
 
                 DrawingVisual visual = new DrawingVisual();

@@ -1629,7 +1629,7 @@ namespace ScriptPlayer.VideoSync
 
         private void ChangeRange()
         {
-            var positions = GetSelectedPositions();
+            var positions = GetSelectedPositions(false);
 
             if (positions.Count < 1)
                 return;
@@ -1681,12 +1681,17 @@ namespace ScriptPlayer.VideoSync
             return (byte)Math.Min(99, Math.Max(0, position));
         }
 
-        private List<TimedPosition> GetSelectedPositions()
+        private List<TimedPosition> GetSelectedPositions(bool includeOutside = true)
         {
             TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
             TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
 
-            return Positions.GetPositions(tBegin, tEnd).ToList();
+            var pos = Positions.GetPositions(tBegin, tEnd).ToList();
+
+            if (includeOutside)
+                return pos;
+
+            return pos.Where(p => p.TimeStamp >= tBegin && p.TimeStamp <= tEnd).ToList();
         }
 
         private void CopyBeats()
@@ -2640,6 +2645,34 @@ namespace ScriptPlayer.VideoSync
             }
 
             Positions = pos;
+        }
+
+        private void mnuSetCustomPatternFromSelection_Click(object sender, RoutedEventArgs e)
+        {
+            var positions = GetSelectedPositions(false);
+
+            if (positions.Count < 2)
+                return;
+
+            TimeSpan duration = positions.Last().TimeStamp - positions.First().TimeStamp;
+            TimeSpan offset = positions.First().TimeStamp;
+
+            TimeSpan targetDuration = TimeSpan.FromSeconds(9);
+            TimeSpan targetOffset = TimeSpan.FromSeconds(0.5);
+
+            double factor = targetDuration.Divide(duration);
+            TimeSpan shift = targetOffset - offset.Multiply(factor);
+
+            PositionCollection collection = new PositionCollection();
+
+            foreach(TimedPosition pos in positions)
+                collection.Add(new TimedPosition
+                {
+                    Position = pos.Position,
+                    TimeStamp = pos.TimeStamp.Multiply(factor) + shift
+                });
+
+            BeatConversionSettingsDialog.SetPattern(collection);
         }
     }
 

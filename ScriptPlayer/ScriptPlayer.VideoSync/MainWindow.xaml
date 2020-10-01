@@ -50,6 +50,8 @@
                 <MenuItem Header="Convert Selected Beats to Positions" Click="mnuSelectedBeatsToPositions_Click"/>
                 <MenuItem Header="Convert All Positions to Beats" Click="mnuPositionsToBeats_Click"/>
                 <Separator/>
+                <MenuItem Header="Set Selection as custom pattern" Click="mnuSetCustomPatternFromSelection_Click"/>
+                <Separator/>
                 <MenuItem Header="Load">
                     <MenuItem Header="beats.txt" Click="mnuLoad_Click"/>
                     <MenuItem Header="Funscript" Click="mnuLoadFun_Click" />

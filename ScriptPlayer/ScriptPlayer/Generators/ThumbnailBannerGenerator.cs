@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes.Wrappers;
+using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Generators
 {
@@ -191,7 +192,7 @@ namespace ScriptPlayer.Generators
                 typeface, fontSize, Brushes.Black, new NumberSubstitution(), TextFormattingMode.Display, 96);
         }
 
-        public ThumbnailBannerGenerator(string ffmpegExePath) : base(ffmpegExePath)
+        public ThumbnailBannerGenerator(MainViewModel viewModel) : base(viewModel)
         {
         }
 

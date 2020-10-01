@@ -48,7 +48,7 @@ namespace ScriptPlayer.Dialogs
 
         private void GeneratePreviewGif()
         {
-            _generator = new PreviewGenerator(ViewModel.Settings.FfmpegPath);
+            _generator = new PreviewGenerator(ViewModel);
             _generator.Done += GeneratorOnDone;
 
             GeneratorEntry entry = _generator.CreateEntry(_settings);

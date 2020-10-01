@@ -149,6 +149,7 @@ namespace ScriptPlayer.Generators
                 {
                     Name = "Generator Work Thread #" + i
                 };
+                _workerThreads[i].SetApartmentState(ApartmentState.STA);
             }
 
             _running = true;

@@ -3,6 +3,7 @@ using System.IO;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Classes.Wrappers;
+using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Generators
 {
@@ -97,7 +98,7 @@ namespace ScriptPlayer.Generators
             _wrapper?.Cancel();
         }
 
-        public ThumbnailGenerator(string ffmpegExePath) : base(ffmpegExePath)
+        public ThumbnailGenerator(MainViewModel viewModel) : base(viewModel)
         {
         }
     }

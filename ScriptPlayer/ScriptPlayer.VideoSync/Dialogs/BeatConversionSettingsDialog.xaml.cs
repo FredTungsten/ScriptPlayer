@@ -54,6 +54,11 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         private static PositionCollection _previousPattern;
 
+        public static void SetPattern(PositionCollection collection)
+        {
+            _previousPattern = collection;
+        }
+
         public ConversionSettings Result
         {
             get { return (ConversionSettings) GetValue(ResultProperty); }
