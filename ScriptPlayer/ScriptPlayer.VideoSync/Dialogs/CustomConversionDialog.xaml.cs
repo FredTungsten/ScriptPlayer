@@ -10,17 +10,27 @@ namespace ScriptPlayer.VideoSync.Dialogs
     public partial class CustomConversionDialog : Window
     {
         public static readonly DependencyProperty PositionsProperty = DependencyProperty.Register(
-            "Positions", typeof(PositionCollection), typeof(CustomConversionDialog), new PropertyMetadata(default(PositionCollection)));
+            "Positions", typeof(RelativePositionCollection), typeof(CustomConversionDialog), new PropertyMetadata(default(RelativePositionCollection)));
 
-        public PositionCollection Positions
+        public RelativePositionCollection Positions
         {
-            get => (PositionCollection) GetValue(PositionsProperty);
+            get => (RelativePositionCollection) GetValue(PositionsProperty);
             set => SetValue(PositionsProperty, value);
         }
 
-        public CustomConversionDialog(PositionCollection pattern)
+        public static readonly DependencyProperty BeatPatternProperty = DependencyProperty.Register(
+            "BeatPattern", typeof(bool[]), typeof(CustomConversionDialog), new PropertyMetadata(default(bool[])));
+
+        public bool[] BeatPattern
         {
-            Positions = pattern;
+            get { return (bool[]) GetValue(BeatPatternProperty); }
+            set { SetValue(BeatPatternProperty, value); }
+        }
+
+        public CustomConversionDialog(RelativePositionCollection collection, bool[] beatPattern)
+        {
+            Positions = collection;
+            BeatPattern = beatPattern;
             InitializeComponent();
         }
 
@@ -42,6 +52,15 @@ namespace ScriptPlayer.VideoSync.Dialogs
             }
 
             DialogResult = true;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            PatternFillOptionsDialog dialog = new PatternFillOptionsDialog(BeatPattern);
+            if (dialog.ShowDialog() != true)
+                return;
+
+            BeatPattern = dialog.Result;
         }
     }
 }

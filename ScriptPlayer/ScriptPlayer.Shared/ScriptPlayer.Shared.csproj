@@ -132,6 +132,7 @@
     <Compile Include="Controls\AwesomeCharacters.cs" />
     <Compile Include="Controls\AwesomePaths.cs" />
     <Compile Include="Controls\AwesomeTextBlock.cs" />
+    <Compile Include="Controls\BeatAndPositionBar.cs" />
     <Compile Include="Controls\BetterTooltip.cs" />
     <Compile Include="Controls\MediaWrapper.cs" />
     <Compile Include="Controls\PageSelector.cs" />

@@ -2657,19 +2657,13 @@ namespace ScriptPlayer.VideoSync
             TimeSpan duration = positions.Last().TimeStamp - positions.First().TimeStamp;
             TimeSpan offset = positions.First().TimeStamp;
 
-            TimeSpan targetDuration = TimeSpan.FromSeconds(9);
-            TimeSpan targetOffset = TimeSpan.FromSeconds(0.5);
-
-            double factor = targetDuration.Divide(duration);
-            TimeSpan shift = targetOffset - offset.Multiply(factor);
-
-            PositionCollection collection = new PositionCollection();
+            RelativePositionCollection collection = new RelativePositionCollection();
 
             foreach(TimedPosition pos in positions)
-                collection.Add(new TimedPosition
+                collection.Add(new RelativePosition
                 {
                     Position = pos.Position,
-                    TimeStamp = pos.TimeStamp.Multiply(factor) + shift
+                    RelativeTime = (pos.TimeStamp - offset).Divide(duration)
                 });
 
             BeatConversionSettingsDialog.SetPattern(collection);

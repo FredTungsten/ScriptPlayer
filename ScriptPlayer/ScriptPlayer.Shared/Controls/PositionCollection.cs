@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace ScriptPlayer.Shared
@@ -10,7 +9,6 @@ namespace ScriptPlayer.Shared
     {
         private readonly List<TimedPosition> _positions;
 
-        private static CultureInfo _culture = new CultureInfo("en-us");
         public PositionCollection()
         {
             _positions = new List<TimedPosition>();

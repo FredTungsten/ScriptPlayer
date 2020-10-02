@@ -27,7 +27,8 @@ namespace ScriptPlayer.Shared.Scripts
         public ConversionMode Mode { get; set; }
         public byte Min { get; set; }
         public byte Max { get; set; }
-        public PositionCollection CustomPositions { get; set; }
+        public RelativePositionCollection CustomPositions { get; set; }
+        public bool[] BeatPattern { get; set; }
     }
 
     public static class BeatsToFunScriptConverter
@@ -51,8 +52,8 @@ namespace ScriptPlayer.Shared.Scripts
             TimeSpan fastLimit = TimeSpan.FromMilliseconds(180);
             TimeSpan slowLimit = TimeSpan.FromMilliseconds(2000);
 
-            List<Tuple<double, byte>> relativeCustomPositions = new List<Tuple<double, byte>>();
             bool flips = false;
+            int beatIncrement = 1;
 
             switch (settings.Mode)
             {
@@ -113,28 +114,18 @@ namespace ScriptPlayer.Shared.Scripts
                     positionDown = settings.Min;
                     positionUp = settings.Max;
 
-                    TimeSpan customDuration = settings.CustomPositions.Last().TimeStamp -
-                                              settings.CustomPositions.First().TimeStamp;
-
                     flips = settings.CustomPositions.First().Position != settings.CustomPositions.Last().Position;
-
-                    foreach (TimedPosition pos in settings.CustomPositions)
-                    {
-                        double relativePosition =
-                            (pos.TimeStamp - settings.CustomPositions.First().TimeStamp).Divide(customDuration);
-
-                        relativeCustomPositions.Add(new Tuple<double, byte>(relativePosition, pos.Position));
-                    }
+                    beatIncrement = settings.BeatPattern.Count(b => b) - 1;
 
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(settings.Mode), settings.Mode, null);
             }
 
-            
+            if (beatIncrement < 1)
+                beatIncrement = 1;
 
-            
-            for (int index = 0; index < beats.Count; index++)
+            for (int index = 0; index < beats.Count; index += beatIncrement)
             {
                 TimeSpan timestamp = beats[index];
                 up ^= true;
@@ -147,15 +138,17 @@ namespace ScriptPlayer.Shared.Scripts
                         {
                             TimeSpan duration = timestamp - previousTimeStamp;
 
-                            for (int x = 0; x < relativeCustomPositions.Count; x++)
+                            for (int x = 0; x < settings.CustomPositions.Count; x++)
                             {
-                                if (x == relativeCustomPositions.Count - 1 && index != beats.Count - 1)
+                                if (x == settings.CustomPositions.Count - 1 && (index + beatIncrement < beats.Count))
                                     continue;
+
+                                var cpos = settings.CustomPositions[x];
 
                                 actions.Add(new FunScriptAction
                                 {
-                                    Position = (byte)((flips && !up) ? 99 - relativeCustomPositions[x].Item2 : relativeCustomPositions[x].Item2),
-                                    TimeStamp = previousTimeStamp + duration.Multiply(relativeCustomPositions[x].Item1)
+                                    Position = (byte)((flips && !up) ? 99 - cpos.Position : cpos.Position),
+                                    TimeStamp = previousTimeStamp + duration.Multiply(cpos.RelativeTime)
                                 });
                             }
                         }

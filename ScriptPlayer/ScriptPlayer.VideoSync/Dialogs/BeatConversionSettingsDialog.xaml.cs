@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
+using ScriptPlayer.VideoSync.Controls;
 
 namespace ScriptPlayer.VideoSync.Dialogs
 {
@@ -51,10 +52,11 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         public static readonly DependencyProperty ResultProperty = DependencyProperty.Register(
             "Result", typeof(ConversionSettings), typeof(BeatConversionSettingsDialog), new PropertyMetadata(default(ConversionSettings)));
+        
+        private static RelativePositionCollection _previousPattern;
+        private static bool[] _previousBeats;
 
-        private static PositionCollection _previousPattern;
-
-        public static void SetPattern(PositionCollection collection)
+        public static void SetPattern(RelativePositionCollection collection)
         {
             _previousPattern = collection;
         }
@@ -98,12 +100,17 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
             if (ConversionMode == ConversionMode.Custom)
             {
-                CustomConversionDialog dialog = new CustomConversionDialog(_previousPattern ?? new PositionCollection());
+                CustomConversionDialog dialog = new CustomConversionDialog(
+                    _previousPattern ?? new RelativePositionCollection(),
+                    _previousBeats ?? new []{true,true});
                 if (dialog.ShowDialog() != true)
                     return;
 
                 _previousPattern = dialog.Positions;
+                _previousBeats = dialog.BeatPattern;
+
                 Result.CustomPositions = dialog.Positions;
+                Result.BeatPattern = dialog.BeatPattern;
             }
 
             DialogResult = true;
