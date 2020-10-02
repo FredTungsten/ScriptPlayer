@@ -34,13 +34,17 @@ namespace ScriptPlayer.Controls
 
         private void OnEntryChanged()
         {
+            Clear();
+            RecheckLoadInfo();
+
+        }
+
+        private void Clear()
+        {
             player.Close();
             heatMap.Source = null;
             text.Text = "";
             _currentEntryLoaded = false;
-
-            RecheckLoadInfo();
-
         }
 
         public PlaylistEntry Entry
@@ -64,13 +68,13 @@ namespace ScriptPlayer.Controls
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
-            Debug.WriteLine("UNLOADED");
-            player.Close();
+            //Debug.WriteLine("UNLOADED");
+            Clear();
         }
 
         private void OnLoaded(object o, RoutedEventArgs routedEventArgs)
         {
-            Debug.WriteLine("LOADED");
+            //Debug.WriteLine("LOADED");
             RecheckLoadInfo();
         }
 
@@ -89,7 +93,10 @@ namespace ScriptPlayer.Controls
                 return;
 
             if (_currentEntryLoaded)
+            {
+                player.Start();
                 return;
+            }
 
             LoadMetadata();
         }
@@ -141,7 +148,7 @@ namespace ScriptPlayer.Controls
 
         protected override void OnInitialized(EventArgs e)
         {
-            Debug.WriteLine("ON INITIALIZED");
+            //Debug.WriteLine("ON INITIALIZED");
             base.OnInitialized(e);
         }
     }

@@ -10,6 +10,7 @@ namespace ScriptPlayer.Generators
         public int Height { get; set; }
         public int Width { get; set; }
         public double Framerate { get; set; }
+        public bool OverlayScriptPositions { get; set; }
 
         public List<TimeFrame> TimeFrames { get; set; }
 
@@ -20,7 +21,8 @@ namespace ScriptPlayer.Generators
             Height = 170;
             Width = -2;
             Framerate = 24;
-            
+
+            OverlayScriptPositions = false;
             SkipIfExists = true;
         }
 
@@ -54,7 +56,8 @@ namespace ScriptPlayer.Generators
                 Width = Width,
                 SkipIfExists = SkipIfExists,
                 ClipLeft = ClipLeft,
-                TimeFrames = TimeFrames.Select(t => t.Duplicate()).ToList()
+                TimeFrames = TimeFrames.Select(t => t.Duplicate()).ToList(),
+                OverlayScriptPositions = OverlayScriptPositions
             };
         }
 
@@ -69,6 +72,7 @@ namespace ScriptPlayer.Generators
             if (previewSettings.Width != Width) return false;
             if (previewSettings.Height != Height) return false;
             if (Math.Abs(previewSettings.Framerate - Framerate) > 0.01) return false;
+            if (OverlayScriptPositions != previewSettings.OverlayScriptPositions) return false;
 
             return true;
         }

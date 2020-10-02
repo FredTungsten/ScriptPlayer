@@ -56,5 +56,6 @@
         <TextBox HorizontalAlignment="Left" Height="19" Margin="260,163,0,0" TextWrapping="Wrap" Text="{Binding DurationEach}" VerticalAlignment="Top" Width="74"/>
         <CheckBox Content="Skip Existing" IsChecked="{Binding SkipExisting}" HorizontalAlignment="Left" Margin="10,201,0,0" VerticalAlignment="Top"/>
         <CheckBox Content="Only use left half" IsChecked="{Binding ClipLeft}" HorizontalAlignment="Left" Margin="10,88,0,0" VerticalAlignment="Top"/>
+        <CheckBox Content="Overlay Script Positions" IsChecked="{Binding OverlayScriptPositions}" HorizontalAlignment="Left" Margin="188,201,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

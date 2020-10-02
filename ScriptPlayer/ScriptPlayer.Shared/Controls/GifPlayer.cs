@@ -353,7 +353,7 @@ namespace ScriptPlayer.Shared
                 Start(Frames.Duration);
         }
 
-        public void Start(TimeSpan duration)
+        private void Start(TimeSpan duration)
         {
             BeginAnimation(ProgressProperty, new DoubleAnimation(0, 1, duration) { RepeatBehavior = RepeatBehavior.Forever });
         }

@@ -41,13 +41,15 @@ namespace ScriptPlayer.Generators
 
             List<string> tempFiles = new List<string>();
 
+            int totalSteps = settings.OverlayScriptPositions ? 5 : 4;
+            int stepsDone = 0;
+
             try
             {
                 _wrapper = new FfmpegWrapper(FfmpegExePath);
 
                 List<string> sectionFileNames = new List<string>();
-                List<string> overlayFileNames = new List<string>();
-
+                
                 if (settings.TimeFrames.Any(tf => tf.IsFactor))
                 {
                     VideoInfo info = _wrapper.GetVideoInfo(settings.VideoFile);
@@ -74,7 +76,9 @@ namespace ScriptPlayer.Generators
                     ClipLeft = settings.ClipLeft,
                     DeLense = settings.ClipLeft
                 };
-                
+
+                VideoInfo clipInfo = null;
+
                 for (int i = 0; i < settings.TimeFrames.Count; i++)
                 {
                     string sectionFileName = Path.Combine(Path.GetTempPath(),
@@ -88,101 +92,128 @@ namespace ScriptPlayer.Generators
                     clipArguments.StartTimeSpan = timeFrame.StartTimeSpan;
                     clipArguments.OutputFile = sectionFileName;
                     
-                    entry.Update($"Generating GIF (1/4): Clipping Video Section {i + 1}/{settings.TimeFrames.Count}",
-                        ((i / (double) settings.TimeFrames.Count)) / 4.0);
+                    entry.Update($"Generating GIF ({stepsDone + 1}/{totalSteps}): Clipping Video Section {i + 1}/{settings.TimeFrames.Count}",
+                        (stepsDone / (double)totalSteps) + ((i / (double) settings.TimeFrames.Count)) / totalSteps);
 
                     if(!_wrapper.Execute(clipArguments))
                         return GeneratorResult.Failed();
+
+                    if(clipInfo == null)
+                        clipInfo = _wrapper.GetVideoInfo(sectionFileName);
 
                     if (_canceled)
                         return GeneratorResult.Failed();
                 }
 
-                string script = ViewModel.GetScriptFile(settings.VideoFile);
-                var actions = ViewModel.LoadScriptActions(script, null)?.OfType<FunScriptAction>().ToList();
+                stepsDone++;
 
-                Size barSize = new Size(200, 20);
-
-                if (actions != null && actions.Count > 0)
+                if (settings.OverlayScriptPositions)
                 {
-                    PositionBar bar = new PositionBar
+
+                    string script = ViewModel.GetScriptFile(settings.VideoFile);
+                    var actions = ViewModel.LoadScriptActions(script, null)?.OfType<FunScriptAction>().ToList();
+
+                    Size barSize = new Size(clipInfo.Resolution.Horizontal, 20);
+
+                    if (actions != null && actions.Count > 0)
                     {
-                        Width = barSize.Width,
-                        Height = barSize.Height,
-                        TotalDisplayedDuration = TimeSpan.FromSeconds(5),
-                        Background = Brushes.Black,
-                        Positions = new PositionCollection(actions.Select(a => new TimedPosition()
+                        PositionBar bar = new PositionBar
                         {
-                            Position = a.Position,
-                            TimeStamp = a.TimeStamp
-                        })),
-                        DrawCircles = false,
-                        DrawLines = false,
-                    };
+                            Width = barSize.Width,
+                            Height = barSize.Height,
+                            TotalDisplayedDuration = TimeSpan.FromSeconds(5),
+                            Background = Brushes.Black,
+                            Positions = new PositionCollection(actions.Select(a => new TimedPosition()
+                            {
+                                Position = a.Position,
+                                TimeStamp = a.TimeStamp
+                            })),
+                            DrawCircles = false,
+                            DrawLines = false,
+                        };
 
-                    for (int i = 0; i < settings.TimeFrames.Count; i++)
-                    {
-                        TimeSpan start = settings.TimeFrames[i].StartTimeSpan;
-                        TimeSpan max = start + settings.TimeFrames[i].Duration;
-
-                        TimeSpan progress = start;
-
-                        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-                        Directory.CreateDirectory(tempDir);
-
-                        string overlayFileName = Path.Combine(Path.GetTempPath(),
-                            Path.GetFileName(settings.VideoFile) + $"-overlay_{i}.mkv");
-
-                        tempFiles.Add(overlayFileName);
-
-                        int frame = 0;
-
-                        while (progress <= max)
+                        for (int i = 0; i < settings.TimeFrames.Count; i++)
                         {
-                            bar.Progress = progress;
+                            TimeSpan start = settings.TimeFrames[i].StartTimeSpan;
+                            TimeSpan max = start + settings.TimeFrames[i].Duration;
 
-                            var bitmap = RenderToBitmap(bar, barSize);
+                            TimeSpan progress = start;
 
-                            PngBitmapEncoder encoder = new PngBitmapEncoder();
+                            string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+                            Directory.CreateDirectory(tempDir);
 
-                            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                            string overlayFileName = Path.Combine(Path.GetTempPath(),
+                                Path.GetFileName(settings.VideoFile) + $"-overlay_{i}.mkv");
 
-                            using(FileStream f = new FileStream(Path.Combine(tempDir, $"frame{frame:0000}.png"), FileMode.CreateNew))
-                                encoder.Save(f);
+                            tempFiles.Add(overlayFileName);
 
-                            frame++;
+                            int frame = 0;
 
-                            progress += TimeSpan.FromSeconds(1.0 / settings.Framerate);
+                            entry.Update($"Generating GIF ({stepsDone + 1}/{totalSteps}): Overlaying Positions {i + 1}/{settings.TimeFrames.Count}",
+                                (stepsDone / (double)totalSteps) + ((i / (double)settings.TimeFrames.Count)) / totalSteps);
+
+                            double expectedFrames = 1 + (settings.TimeFrames[i].Duration.TotalSeconds * clipInfo.FrameRate);
+
+                            while (progress <= max)
+                            {
+                                progress = start + TimeSpan.FromSeconds(frame / clipInfo.FrameRate);
+
+                                bar.Progress = progress;
+
+                                var bitmap = RenderToBitmap(bar, barSize);
+
+                                PngBitmapEncoder encoder = new PngBitmapEncoder();
+
+                                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+
+                                using (FileStream f = new FileStream(Path.Combine(tempDir, $"frame{frame:0000}.png"),
+                                    FileMode.CreateNew))
+                                    encoder.Save(f);
+
+                                frame++;
+                            }
+
+                            FrameMergeArguments frameMergeArguments = new FrameMergeArguments
+                            {
+                                Framerate = clipInfo.FrameRate,
+                                InputFile = Path.Combine(tempDir, "frame%04d.png"),
+                                OutputFile = overlayFileName
+                            };
+
+                            if (!_wrapper.Execute(frameMergeArguments))
+                                return GeneratorResult.Failed();
+
+                            var clipInfo2 = _wrapper.GetVideoInfo(overlayFileName);
+
+                            Directory.Delete(tempDir, true);
+
+                            string mergeFileName = Path.Combine(Path.GetTempPath(),
+                                Path.GetFileName(settings.VideoFile) + $"-merge_{i}.mkv");
+
+                            tempFiles.Add(mergeFileName);
+
+                            VideoOverlayArguments overlayArguments = new VideoOverlayArguments
+                            {
+                                InputFile = sectionFileNames[i],
+                                Overlay = overlayFileName,
+                                OutputFile = mergeFileName,
+                                PosX = 0,
+                                PosY = clipInfo.Resolution.Vertical - 20
+                            };
+
+                            if (!_wrapper.Execute(overlayArguments))
+                                return GeneratorResult.Failed();
+
+                            sectionFileNames[i] = mergeFileName;
                         }
-
-                        _wrapper.Execute(new FrameMergeArguments
-                        {
-                            Framerate = settings.Framerate,
-                            InputFile = Path.Combine(tempDir, "frame%04d.png"),
-                            OutputFile = overlayFileName
-                        });
-
-                        Directory.Delete(tempDir, true);
-
-                        string mergeFileName = Path.Combine(Path.GetTempPath(),
-                            Path.GetFileName(settings.VideoFile) + $"-merge_{i}.mkv");
-
-                        tempFiles.Add(mergeFileName);
-
-                        _wrapper.Execute(new VideoOverlayArguments
-                        {
-                            InputFile = sectionFileNames[i],
-                            Overlay = overlayFileName,
-                            OutputFile = mergeFileName
-                        });
-
-                        sectionFileNames[i] = mergeFileName;
                     }
-                }
-                
-                entry.Update("Generating GIF (2/4): Merging Clips", 1 / 4.0);
 
-                string clipFileName = "";
+                    stepsDone++;
+                }
+
+                entry.Update($"Generating GIF ({stepsDone + 1}/{totalSteps}): Merging Clips", stepsDone / (double)totalSteps);
+
+                string clipFileName;
 
                 if (sectionFileNames.Count == 1)
                 {
@@ -207,7 +238,9 @@ namespace ScriptPlayer.Generators
                         return GeneratorResult.Failed();
                 }
 
-                entry.Update("Generating GIF (3/4): Extracting Palette", 2 / 4.0);
+                stepsDone++;
+
+                entry.Update($"Generating GIF ({stepsDone + 1}/{totalSteps}): Extracting Palette", stepsDone / (double)totalSteps);
 
                 string paletteFile = clipFileName + "-palette.png";
 
@@ -225,7 +258,9 @@ namespace ScriptPlayer.Generators
                 if (_canceled)
                     return GeneratorResult.Failed();
 
-                entry.Update("Generating GIF (3/4): Creating GIF", 3 / 4.0);
+                stepsDone++;
+
+                entry.Update($"Generating GIF ({stepsDone + 1}/{totalSteps}): Creating GIF", stepsDone / (double)totalSteps);
 
                 string gifFileName = settings.OutputFile;
 
@@ -241,7 +276,9 @@ namespace ScriptPlayer.Generators
                 if (_canceled)
                     return GeneratorResult.Failed();
 
-                entry.Update("Done", 4 / 4.0);
+                stepsDone++;
+
+                entry.Update("Done", 1.0);
                 bool success = File.Exists(gifFileName);
 
                 if(success)
@@ -316,13 +353,16 @@ namespace ScriptPlayer.Generators
     {
         public string Overlay { get; set; }
         public string OutputFile { get; set; }
+        public int PosX { get; set; }
+        public int PosY { get; set; }
 
         public override string BuildArguments()
         {
             return
                 $"-i \"{InputFile}\" -i \"{Overlay}\" " +
-                $"-filter_complex overlay " +
-                $"\"{OutputFile}\"";
+                //$"-filter_complex \"[0:v]pad=iw:ih+20:0:0[main];[main][1:v]overlay=y=H-h[out]\" " +
+                $"-filter_complex \"[0:v][1:v]vstack[out]\" " +
+                $"-map \"[out]\" \"{OutputFile}\"";
         }
     }
 
@@ -333,9 +373,10 @@ namespace ScriptPlayer.Generators
             string framerate = Framerate.ToString("F2", CultureInfo.InvariantCulture);
 
             return
-                "-y " + //Yes to override existing files
-                $"-i \"{InputFile}\" " + // Input File
-                $"-r {framerate} " +
+                "-y " +                      //Yes to override existing files
+                $"-framerate {framerate} " + // Frmaerate in
+                $"-i \"{InputFile}\" " +     // Input File
+                $"-r {framerate} " +         // Framerate out
                 "-vcodec libx264 -crf 0 " +
                 $"\"{OutputFile}\"";
         }

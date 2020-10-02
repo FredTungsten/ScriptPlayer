@@ -130,6 +130,15 @@ namespace ScriptPlayer.Dialogs
             set { SetValue(ClipLeftProperty, value); }
         }
 
+        public static readonly DependencyProperty OverlayScriptPositionsProperty = DependencyProperty.Register(
+            "OverlayScriptPositions", typeof(bool), typeof(PreviewGeneratorSettingsDialog), new PropertyMetadata(default(bool)));
+
+        public bool OverlayScriptPositions
+        {
+            get { return (bool) GetValue(OverlayScriptPositionsProperty); }
+            set { SetValue(OverlayScriptPositionsProperty, value); }
+        }
+
         public PreviewGeneratorSettingsDialog(PreviewGeneratorSettings initialSettings)
         {
             if(initialSettings == null)
@@ -142,6 +151,7 @@ namespace ScriptPlayer.Dialogs
             FrameRate = initialSettings.Framerate;
             SkipExisting = initialSettings.SkipIfExists;
             ClipLeft = initialSettings.ClipLeft;
+            OverlayScriptPositions = initialSettings.OverlayScriptPositions;
 
             InitializeComponent();
 
@@ -187,7 +197,8 @@ namespace ScriptPlayer.Dialogs
                 Width = FrameAutoWidth ? -2 : FrameWidth,
                 Framerate = FrameRate,
                 SkipIfExists = SkipExisting,
-                ClipLeft = ClipLeft
+                ClipLeft = ClipLeft,
+                OverlayScriptPositions = OverlayScriptPositions,
             };
 
             if (rbMultiSections.IsChecked == true)
