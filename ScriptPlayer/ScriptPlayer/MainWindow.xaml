@@ -356,6 +356,7 @@
                     <Separator/>
                     <MenuItem Header="Edit Meta-Data" Command="{Binding EditMetadataCommand}"/>
                     <MenuItem Header="Save as" Command="{Binding SaveScriptAsCommand}"/>
+                    <MenuItem Header="Export as Handy CSV" Command="{Binding ExportHandyCsvCommand}"/>
                 </MenuItem>
                 <MenuItem Header="Selection">
                     <MenuItem Header="Set A" Command="{Binding SetLoopACommand}"/>

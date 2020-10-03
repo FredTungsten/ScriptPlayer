@@ -1718,6 +1718,8 @@ namespace ScriptPlayer.ViewModels
 
         public RelayCommand<bool> SetShowTimeLeftCommand { get; set; }
 
+        public ScriptplayerCommand ExportHandyCsvCommand { get; set; }
+
         public ScriptplayerCommand SaveScriptAsCommand { get; set; }
 
         public ScriptplayerCommand ShiftScriptCommand { get; set; }
@@ -2630,6 +2632,12 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Save Script As"
             };
 
+            ExportHandyCsvCommand = new ScriptplayerCommand(ExportHandyCsv, IsScriptLoaded)
+            {
+                CommandId = "ExportHandyCsv",
+                DisplayText = "Export as Handy CSV"
+            };
+
             ShowSettingsCommand = new ScriptplayerCommand(ShowSettings)
             {
                 CommandId = "ShowSettings",
@@ -3310,6 +3318,18 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             _scriptHandler.SaveAs(fileName);
+        }
+
+        private void ExportHandyCsv()
+        {
+            int filterId = 0;
+            string fileName = OnRequestFile("Handy CSV|*.csv", ref filterId, true);
+            if (string.IsNullOrEmpty(fileName))
+                return;
+
+            var actions = _scriptHandler.GetScript().ToList();
+            var csv = HandyController.GenerateCsvFromActions(actions);
+            File.WriteAllText(fileName, csv);
         }
 
         private void SetShowTimeLeft(bool showTimeLeft)

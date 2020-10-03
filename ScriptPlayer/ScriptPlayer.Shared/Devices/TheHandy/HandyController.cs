@@ -388,7 +388,7 @@ namespace ScriptPlayer.Shared.TheHandy
             }
         }
 
-        private string GenerateCsvFromActions(List<FunScriptAction> actions)
+        public static string GenerateCsvFromActions(List<FunScriptAction> actions)
         {
             StringBuilder builder = new StringBuilder(1024 * 1024);
             //builder.Append(@"""{""""type"""":""""handy""""}"",");
