@@ -2766,6 +2766,21 @@ namespace ScriptPlayer.VideoSync
                     lowest = lastValue;
             }
 
+            var last = positions.Last();
+
+            if (lastExtremeValue < last.Position)
+                result.Add(new TimedPosition
+                {
+                    TimeStamp = last.TimeStamp,
+                    Position = maxValueTo
+                });
+            else
+                result.Add(new TimedPosition
+                {
+                    TimeStamp = last.TimeStamp,
+                    Position = minValueTo
+                });
+
             return result;
         }
 

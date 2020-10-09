@@ -374,6 +374,8 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand<bool> SortByDurationCommand { get; set; }
         public RelayCommand<bool> SortByNameCommand { get; set; }
         public RelayCommand<bool> SortByPathCommand { get; set; }
+        public RelayCommand<bool> SortByMediaCreationTime { get; set; }
+        public RelayCommand<bool> SortByScriptCreationTime { get; set; }
         public RelayCommand SortShuffleCommand { get; set; }
         public RelayCommand GenerateThumbnailsForSelectedVideosCommand { get; set; }
         public RelayCommand GenerateThumbnailBannersForSelectedVideosCommand { get; set; }
@@ -408,6 +410,8 @@ namespace ScriptPlayer.ViewModels
             SortByDurationCommand = new RelayCommand<bool>(ExecuteSortByDuration, AreTheMultipleEntries);
             SortByNameCommand = new RelayCommand<bool>(ExecuteSortByName, AreTheMultipleEntries);
             SortByPathCommand = new RelayCommand<bool>(ExecuteSortByPath, AreTheMultipleEntries);
+            SortByMediaCreationTime = new RelayCommand<bool>(ExecuteSortByMediaCreationTime, AreTheMultipleEntries);
+            SortByScriptCreationTime = new RelayCommand<bool>(ExecuteSortByScriptCreationTime, AreTheMultipleEntries);
             SortShuffleCommand = new RelayCommand(ExecuteSortShuffle, AreTheMultipleEntries);
             GenerateThumbnailsForSelectedVideosCommand = new RelayCommand(ExecuteGenerateThumbnailsForSelectedVideos, AreEntriesSelected);
             GenerateThumbnailBannersForSelectedVideosCommand = new RelayCommand(ExecuteGenerateThumbnailBannersForSelectedVideos, AreEntriesSelected);
@@ -814,6 +818,16 @@ namespace ScriptPlayer.ViewModels
             SetEntries(Entries.OrderBy(e => e.Fullname), ascending);
         }
 
+        private void ExecuteSortByMediaCreationTime(bool ascending)
+        {
+            SetEntries(Entries.OrderBy(e => e.MediaCreationTime), ascending);
+        }
+
+        private void ExecuteSortByScriptCreationTime(bool ascending)
+        {
+            SetEntries(Entries.OrderBy(e => e.ScriptCreationTime), ascending);
+        }
+        
         private void SetEntries(IOrderedEnumerable<PlaylistEntry> entries, bool sortAscending)
         {
             Entries = new ObservableCollection<PlaylistEntry>(sortAscending ? entries : entries.Reverse());
@@ -839,6 +853,7 @@ namespace ScriptPlayer.ViewModels
                 if (!string.IsNullOrEmpty(mediaFile) && File.Exists(mediaFile))
                 {
                     entry.HasMedia = true;
+                    entry.MediaCreationTime = File.GetCreationTime(mediaFile);
 
                     if (entry.Duration == null)
                     {
@@ -851,10 +866,20 @@ namespace ScriptPlayer.ViewModels
                 {
                     entry.HasMedia = false;
                     entry.Duration = null;
+                    entry.MediaCreationTime = DateTime.MinValue;
                 }
 
                 string scriptFile = OnRequestScriptFileName(entry.Fullname);
-                entry.HasScript = !string.IsNullOrWhiteSpace(scriptFile) && File.Exists(scriptFile);
+                if (!string.IsNullOrWhiteSpace(scriptFile) && File.Exists(scriptFile))
+                {
+                    entry.HasScript = true;
+                    entry.ScriptCreationTime = File.GetCreationTime(scriptFile);
+                }
+                else
+                {
+                    entry.HasScript = false;
+                    entry.ScriptCreationTime = DateTime.MinValue;
+                }
 
                 string heatMap = OnRequestHeatmapFileName(entry.Fullname);
                 if (!string.IsNullOrEmpty(heatMap))

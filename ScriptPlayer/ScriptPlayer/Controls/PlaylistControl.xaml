@@ -81,6 +81,11 @@
                 <MenuItem Header="Path (ascending)"  Command="{Binding Playlist.SortByPathCommand}" CommandParameter="{shared:Boolean true}"/>
                 <MenuItem Header="Path (descending)"  Command="{Binding Playlist.SortByPathCommand}" CommandParameter="{shared:Boolean false}"/>
                 <Separator/>
+                <MenuItem Header="Creation time (Media, ascending)"  Command="{Binding Playlist.SortByMediaCreationTime}" CommandParameter="{shared:Boolean true}"/>
+                <MenuItem Header="Creation time (Media, descending)"  Command="{Binding Playlist.SortByMediaCreationTime}" CommandParameter="{shared:Boolean false}"/>
+                <MenuItem Header="Creation time (Script, ascending)"  Command="{Binding Playlist.SortByScriptCreationTime}" CommandParameter="{shared:Boolean true}"/>
+                <MenuItem Header="Creation time (Script, descending)"  Command="{Binding Playlist.SortByScriptCreationTime}" CommandParameter="{shared:Boolean false}"/>
+                <Separator/>
                 <MenuItem Header="Shuffle" Command="{Binding Playlist.SortShuffleCommand}"/>
             </MenuItem>
         </Menu>

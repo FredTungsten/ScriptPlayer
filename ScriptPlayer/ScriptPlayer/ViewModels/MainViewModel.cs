@@ -5715,7 +5715,7 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             PreviewGeneratorSettings settings = _lastPreviewSettings?.Duplicate();
-
+            
             if (currentlyLoaded)
             {
                 if (_loopA != TimeSpan.MinValue && _loopB != TimeSpan.MinValue)
@@ -5726,6 +5726,7 @@ namespace ScriptPlayer.ViewModels
                     TimeSpan tFrom = _loopB > _loopA ? _loopA : _loopB;
                     TimeSpan tTo = _loopB > _loopA ? _loopB : _loopA;
 
+                    settings.TimeFrames.Clear();
                     settings.TimeFrames.Add(new TimeFrame
                     {
                         StartTimeSpan = tFrom,

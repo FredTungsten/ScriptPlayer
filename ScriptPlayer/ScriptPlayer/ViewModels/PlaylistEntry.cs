@@ -16,6 +16,8 @@ namespace ScriptPlayer.ViewModels
         private string _fullname;
         private bool _removed;
         private ImageSource _heatMap;
+        private DateTime _mediaCreationTime;
+        private DateTime _scriptCreationTime;
 
         public PlaylistEntry()
         {
@@ -101,6 +103,28 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _hasMedia) return;
                 _hasMedia = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public DateTime MediaCreationTime
+        {
+            get => _mediaCreationTime;
+            set
+            {
+                if (value.Equals(_mediaCreationTime)) return;
+                _mediaCreationTime = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public DateTime ScriptCreationTime
+        {
+            get => _scriptCreationTime;
+            set
+            {
+                if (value.Equals(_scriptCreationTime)) return;
+                _scriptCreationTime = value;
                 OnPropertyChanged();
             }
         }
