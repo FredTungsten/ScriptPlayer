@@ -38,8 +38,6 @@ namespace ScriptPlayer.Shared.TheHandy
 
         public bool Connected { get; private set; }
 
-        private readonly HttpClient _http;
-
         private bool IsScriptLoaded { get; set; }
 
         private long _offsetAverage; // holds calculated offset that gets added to current unix time in ms to estimate api server time
@@ -112,11 +110,15 @@ namespace ScriptPlayer.Shared.TheHandy
         public HandyController()
         {
             _apiCallQueue = new BlockingTaskQueue();
+        }
 
-            _http = new HttpClient();
-            _http.DefaultRequestHeaders.Accept.Clear();
-            _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
+        private HttpClient GetClient()
+        {
+            HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
+            return client;
         }
 
         private string UrlFor(string path)
@@ -174,6 +176,9 @@ namespace ScriptPlayer.Shared.TheHandy
             SendGetRequest(url, message =>
             {
                 HandyResponse resp = message.Content.ReadAsAsync<HandyResponse>().Result;
+
+                ShowRateLimits(message.Headers);
+
                 if (!resp.success)
                 {
                     Debug.WriteLine($"error: cmd:{resp.cmd} - {resp.error} - SyncPrepare");
@@ -188,6 +193,24 @@ namespace ScriptPlayer.Shared.TheHandy
             }, false);
         }
 
+        private void ShowRateLimits(HttpResponseHeaders headers)
+        {
+            string rateLimit = GetFirstHeaderOrEmpty(headers, "X-RateLimit-Limit");
+            string rateLimitRemaining = GetFirstHeaderOrEmpty(headers, "X-RateLimit-Remaining");
+            string rateLimitReset = GetFirstHeaderOrEmpty(headers, "X-RateLimit-Reset");
+
+            // Doesn't work somehow ...
+            //Debug.WriteLine($"RateLimits: {rateLimitRemaining}/{rateLimit} until {rateLimitReset}");
+        }
+
+        private string GetFirstHeaderOrEmpty(HttpResponseHeaders headers, string name)
+        {
+            if (headers.Contains(name))
+                return headers.GetValues(name).FirstOrDefault() ?? "";
+
+            return "";
+        }
+
         private void SendGetRequest(string url, Action<HttpResponseMessage> resultCallback = null, bool ignoreConnected = false, bool waitForAnswer = true)
         {
             if (!ignoreConnected && !Connected)
@@ -197,45 +220,49 @@ namespace ScriptPlayer.Shared.TheHandy
 
             Task apiCall = new Task(() =>
             {
-                Task<HttpResponseMessage> request = _http.GetAsync(url);
-
-                if (!waitForAnswer)
+                using (var client = GetClient())
                 {
-                    request.Wait(1);
-                    return;
-                }
+                    Task<HttpResponseMessage> request = client.GetAsync(url);
 
-                Task call;
-
-                TimeSpan duration = DateTime.Now - sendTime;
-
-                if (resultCallback != null)
-                {
-                    Debug.WriteLine($"finished: {url} [{duration.TotalMilliseconds:F0}ms]");
-                    call = request.ContinueWith(r => resultCallback(r.Result));
-                }
-                else
-                {
-                    call = request.ContinueWith(r =>
+                    if (!waitForAnswer)
                     {
-                        HandyResponse resp = r.Result.Content.ReadAsAsync<HandyResponse>().Result;
-                        
-                        if (!resp.success)
-                        {
-                            Debug.WriteLine($"error: cmd:{resp.cmd} - {resp.error} - {url} [{duration.TotalMilliseconds:F0}ms]");
+                        request.Wait(1);
+                        return;
+                    }
 
-                            OnOsdRequest($"Error: {resp.error}", TimeSpan.FromSeconds(3), "HandyError");
+                    Task call;
 
-                            if (resp.error == "No machine connected")
-                                OnHandyDisconnected();
-                        }
-                        else
+                    TimeSpan duration = DateTime.Now - sendTime;
+
+                    if (resultCallback != null)
+                    {
+                        Debug.WriteLine($"finished: {url} [{duration.TotalMilliseconds:F0}ms]");
+                        call = request.ContinueWith(r => resultCallback(r.Result));
+                    }
+                    else
+                    {
+                        call = request.ContinueWith(r =>
                         {
-                            Debug.WriteLine($"success: {url} [{duration.TotalMilliseconds:F0}ms]");
-                        }
-                    });
+                            HandyResponse resp = r.Result.Content.ReadAsAsync<HandyResponse>().Result;
+                            ShowRateLimits(r.Result.Headers);
+
+                            if (!resp.success)
+                            {
+                                Debug.WriteLine($"error: cmd:{resp.cmd} - {resp.error} - {url} [{duration.TotalMilliseconds:F0}ms]");
+
+                                OnOsdRequest($"Error: {resp.error}", TimeSpan.FromSeconds(3), "HandyError");
+
+                                if (resp.error == "No machine connected")
+                                    OnHandyDisconnected();
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"success: {url} [{duration.TotalMilliseconds:F0}ms]");
+                            }
+                        });
+                    }
+                    call.Wait(); // wait for response
                 }
-                call.Wait(); // wait for response
             });
 
             _apiCallQueue.Enqueue(apiCall);
@@ -322,11 +349,12 @@ namespace ScriptPlayer.Shared.TheHandy
             fileContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
             requestContent.Add(fileContent, name, csvFileName);
 
-
-
-            var request = _http.PostAsync(uploadUrl, requestContent);
-            var response = request.Result.Content.ReadAsAsync<HandyUploadResponse>().Result;
-            return response;
+            using (var client = GetClient())
+            {
+                var request = client.PostAsync(uploadUrl, requestContent);
+                var response = request.Result.Content.ReadAsAsync<HandyUploadResponse>().Result;
+                return response;
+            }
         }
 
         public void SetScriptOffset(TimeSpan offset)
@@ -615,17 +643,20 @@ namespace ScriptPlayer.Shared.TheHandy
             const int maxSyncAttempts = 10;
             long offsetAggregated = 0;
 
-            for (int i = 0; i < maxSyncAttempts; i++)
+            using (var client = GetClient())
             {
-                long tSent = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                HttpResponseMessage result = _http.GetAsync(UrlFor("getServerTime")).Result;
-                long tReceived = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                long tTrip = tReceived - tSent;
+                for (int i = 0; i < maxSyncAttempts; i++)
+                {
+                    long tSent = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    HttpResponseMessage result = client.GetAsync(UrlFor("getServerTime")).Result;
+                    long tReceived = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    long tTrip = tReceived - tSent;
 
-                long tServerResponse = result.Content.ReadAsAsync<HandyTimeResponse>().Result.serverTime;
-                long tServerEstimate = tServerResponse + (tTrip / 2);
+                    long tServerResponse = result.Content.ReadAsAsync<HandyTimeResponse>().Result.serverTime;
+                    long tServerEstimate = tServerResponse + (tTrip / 2);
 
-                offsetAggregated += tServerEstimate - tReceived;
+                    offsetAggregated += tServerEstimate - tReceived;
+                }
             }
 
             _offsetAverage = (int)(offsetAggregated / (double)maxSyncAttempts);
@@ -646,7 +677,6 @@ namespace ScriptPlayer.Shared.TheHandy
         {
             _apiCallQueue.Cancel();
             LocalScriptServer?.Exit();
-            _http?.Dispose();
             _updateOffsetTask?.Dispose();
         }
     }
