@@ -52,6 +52,8 @@ namespace ScriptPlayer.Shared
                     _player.Play();
                 else
                     _player.Pause();
+
+                OnIsPlayingChanged(IsPlaying);
             }
 
             IsConnected = _player != null;

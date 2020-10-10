@@ -36,6 +36,8 @@ namespace ScriptPlayer.Shared.TheHandy
 
         private HandyScriptServer LocalScriptServer { get; set; }
 
+        public bool UseMultipleCommandQueues { get; set; } = true;
+
         public bool Connected { get; private set; }
 
         private bool IsScriptLoaded { get; set; }
@@ -54,7 +56,9 @@ namespace ScriptPlayer.Shared.TheHandy
         private readonly object _updateOffsetLock = new object();
 
         // api call queue ensures correct order of api calls
-        private readonly BlockingTaskQueue _apiCallQueue;
+        private readonly Dictionary<string, BlockingTaskQueue> _apiCallQueue = new Dictionary<string, BlockingTaskQueue>();
+        private readonly object _dictionaryLock = new object();
+
         private HandyHost _host;
         private DateTime _lastTimeAdjustement = DateTime.MinValue;
         private DateTime _lastResync = DateTime.Now;
@@ -109,7 +113,7 @@ namespace ScriptPlayer.Shared.TheHandy
 
         public HandyController()
         {
-            _apiCallQueue = new BlockingTaskQueue();
+            _apiCallQueue = new Dictionary<string, BlockingTaskQueue>();
         }
 
         private HttpClient GetClient()
@@ -224,11 +228,11 @@ namespace ScriptPlayer.Shared.TheHandy
                 {
                     Task<HttpResponseMessage> request = client.GetAsync(url);
 
-                    if (!waitForAnswer)
-                    {
-                        request.Wait(1);
-                        return;
-                    }
+                    //if (!waitForAnswer)
+                    //{
+                    //    request.Wait(1);
+                    //    return;
+                    //}
 
                     Task call;
 
@@ -265,7 +269,30 @@ namespace ScriptPlayer.Shared.TheHandy
                 }
             });
 
-            _apiCallQueue.Enqueue(apiCall);
+            string command = ExtractCommand(url);
+            Enqueue(command, apiCall);
+        }
+
+        private string ExtractCommand(string url)
+        {
+            Uri uri = new Uri(url);
+            return uri.Segments.Last();
+        }
+
+        private void Enqueue(string command, Task apiCall)
+        {
+            if (!UseMultipleCommandQueues)
+              command = "default";
+            // else
+            //    Debug.WriteLine("Command: " + command);
+
+            lock (_dictionaryLock)
+            {
+                if(!_apiCallQueue.ContainsKey(command))
+                    _apiCallQueue.Add(command, new BlockingTaskQueue());
+
+                _apiCallQueue[command].Enqueue(apiCall);
+            }
         }
 
         public void SetScript(string scriptTitle, IEnumerable<FunScriptAction> actions)
@@ -468,13 +495,14 @@ namespace ScriptPlayer.Shared.TheHandy
                 // https://www.reddit.com/r/handySupport/comments/hlljii/timeout_on_syncadjusttimestamp/
 
                 //SyncPlay(_playing, time);
+                // Update shoud be fixed in FW 2.12
 
                 SyncAdjust(new HandyAdjust
                 {
                     currentTime = (int)time.TotalMilliseconds,
                     serverTime = GetServerTimeEstimate(),
                     filter = 1.0f,
-                    timeout = 1
+                    timeout = 2000
                 });
             }
 
@@ -485,6 +513,8 @@ namespace ScriptPlayer.Shared.TheHandy
         {
             if (_playing)
                 SyncPlay(true, EstimateCurrentTime(), null);
+            else
+                Debug.WriteLine("HandyController.AfterHardSync, but _playing = false");
         }
 
         private TimeSpan EstimateCurrentTime()
@@ -559,8 +589,18 @@ namespace ScriptPlayer.Shared.TheHandy
         public void Play(bool playing, TimeSpan progress)
         {
             Debug.WriteLine($"HandyController.Play: {playing} @ {progress}");
-            if (playing == _playing || !IsScriptLoaded) return;
+            if (playing == _playing || !IsScriptLoaded)
+            {
+                if(playing == _playing)
+                    Debug.WriteLine("HandyController.Play, but playing == _playing");
+                else
+                    Debug.WriteLine("HandyController.Play, but !IsScriptLoading");
+
+                return;
+            }
+
             _playing = playing;
+            Debug.WriteLine("HandyController.Play, _playing = " + _playing);
 
             SyncPlay(playing, progress, null);
         }
@@ -675,7 +715,16 @@ namespace ScriptPlayer.Shared.TheHandy
 
         public void Dispose()
         {
-            _apiCallQueue.Cancel();
+            lock (_dictionaryLock)
+            {
+                foreach (var kvp in _apiCallQueue)
+                {
+                    kvp.Value.Cancel();
+                }
+
+                _apiCallQueue.Clear();
+            }
+            
             LocalScriptServer?.Exit();
             _updateOffsetTask?.Dispose();
         }
