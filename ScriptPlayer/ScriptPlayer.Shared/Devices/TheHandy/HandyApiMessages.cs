@@ -17,7 +17,7 @@ namespace ScriptPlayer.Shared.TheHandy
         public string latest { get; set; }
         public int mode { get; set; }
         public float position { get; set; }
-        public int stroke { get; set; }
+        public float stroke { get; set; }
         public float speed { get; set; }
     }
 
