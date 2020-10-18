@@ -394,6 +394,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <ToolBar Grid.Column="0" Background="#FFF0F0F0">
                     <!--<DockPanel Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type ToolBarPanel}}}">
@@ -443,7 +444,11 @@
                     </CheckBox>
                     <!--</DockPanel>-->
                 </ToolBar>
-                <Button Grid.Column="1" DockPanel.Dock="Right" Command="{Binding ShowGeneratorProgressCommand}" 
+                <CheckBox Grid.Column="1" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="30" HorizontalAlignment="Stretch"
+                          IsChecked="{Binding ElementName=MnuMain, Path=(shared:HideOnHover.IsActive), Mode=TwoWay, Converter={StaticResource Inverter}}">
+                    <TextBlock Text="🖈" Padding="0" Margin="0" FontSize="18"/>
+                </CheckBox>
+                <Button Grid.Column="2" DockPanel.Dock="Right" Command="{Binding ShowGeneratorProgressCommand}" 
                         HorizontalAlignment="Right" VerticalAlignment="Stretch">
                     <Button.Style>
                         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
@@ -516,6 +521,10 @@
                     </controls:AwesomeIcon.Style>
                 </controls:AwesomeIcon>
             </Button>
+            <CheckBox DockPanel.Dock="Right" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Focusable="False" Style="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}" Width="30" Height="30" HorizontalAlignment="Stretch"
+                      IsChecked="{Binding ElementName=PlayerControls, Path=(shared:HideOnHover.IsActive), Mode=TwoWay, Converter={StaticResource Inverter}}">
+                <TextBlock Text="🖈" Padding="0" Margin="0" FontSize="18"/>
+            </CheckBox>
             <TextBlock MouseLeftButtonDown="TimeDisplay_OnMouseLeftButtonDown" TextAlignment="Right" DockPanel.Dock="Right" VerticalAlignment="Center" Width="95" Margin="0,0,8,0">
                 <TextBlock.ContextMenu>
                     <ContextMenu shared:HideOnHover.OverridesHideOnHover="True">

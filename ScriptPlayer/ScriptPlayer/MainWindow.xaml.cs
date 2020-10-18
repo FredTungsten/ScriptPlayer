@@ -56,7 +56,7 @@ namespace ScriptPlayer
             if(!ViewModel.IsFullscreen)
                 SaveCurrentWindowRect();
 
-            SaveSidePanels();
+            SaveSidePanels(ViewModel.IsFullscreen);
 
             ViewModel.Dispose();
         }
@@ -90,7 +90,7 @@ namespace ScriptPlayer
             ViewModel.RequestShowGeneratorProgressDialog += ViewModelOnRequestShowGeneratorProgressDialog;
             ViewModel.RequestActivate += ViewModelOnRequestActivate;
             ViewModel.RequestShowSettings += ViewModelOnRequestShowSettings;
-            ViewModel.RequestSetWindowState += ViewModelOnRequestSetWindowState;
+            //ViewModel.RequestSetWindowState += ViewModelOnRequestSetWindowState;
             ViewModel.RequestMessageBox += ViewModelOnRequestMessageBox;
             ViewModel.RequestFile += ViewModelOnRequestFile;
             ViewModel.RequestFolder += ViewModelOnRequestFolder;
@@ -104,7 +104,7 @@ namespace ScriptPlayer
 
             if (ViewModel.InitialPlayerState != null)
             {
-                RestoreSidePanels(true);
+                RestoreSidePanels(true, false);
                 WindowState = ViewModel.InitialPlayerState.IsMaximized ? WindowState.Maximized : WindowState.Normal;
                 SetFullscreen(ViewModel.InitialPlayerState.IsFullscreen, false);
             }
@@ -114,8 +114,10 @@ namespace ScriptPlayer
             var hideonhoverDescriptor = DependencyPropertyDescriptor.FromProperty(HideOnHover.IsActiveProperty, typeof(Grid));
             hideonhoverDescriptor.AddValueChanged(GridPlaylist, HideOnHoverChanged);
             hideonhoverDescriptor.AddValueChanged(GridSettings, HideOnHoverChanged);
+            hideonhoverDescriptor.AddValueChanged(MnuMain, HideOnHoverChanged);
+            hideonhoverDescriptor.AddValueChanged(PlayerControls, HideOnHoverChanged);
 
-            UpdateVideoColumns();
+            UpdateVideoLayout();
         }
 
         private void ViewModel_RequestRename(object sender, RequestEventArgs<string> args)
@@ -135,7 +137,25 @@ namespace ScriptPlayer
 
         private void HideOnHoverChanged(object sender, EventArgs eventArgs)
         {
+            UpdateVideoLayout();
+        }
+
+        private void UpdateVideoLayout()
+        {
             UpdateVideoColumns();
+            UpdateVideoRows();
+        }
+
+        private void UpdateVideoRows()
+        {
+            bool hideMenu = HideOnHover.GetIsActive(MnuMain);
+            bool hideControls = HideOnHover.GetIsActive(PlayerControls);
+
+            int gridRow = hideMenu ? 0 : 1;
+            int grodRowSpan = 3 - (hideMenu ? 0 : 1) - (hideControls ? 0 : 1);
+
+            Grid.SetRow(GridVideo, gridRow);
+            Grid.SetRowSpan(GridVideo, grodRowSpan);
         }
 
         private void UpdateVideoColumns()
@@ -202,7 +222,7 @@ namespace ScriptPlayer
         {
             //TODO
             eventArgs.Handled = true;
-            eventArgs.Value = new HeatmapGeneratorSettings();
+            eventArgs.Value = eventArgs.Value;
         }
 
         private void ViewModelOnRequestPreviewGeneratorSettings(object sender, RequestEventArgs<PreviewGeneratorSettings> eventArgs)
@@ -263,29 +283,44 @@ namespace ScriptPlayer
             eventArgs.Handled = true;
         }
 
-        private void ViewModelOnRequestSetWindowState(object sender, WindowStateModel windowStateModel)
-        {
-            RestoreWindowState(windowStateModel);
-        }
+        //private void ViewModelOnRequestSetWindowState(object sender, WindowStateModel windowStateModel)
+        //{
+        //    RestoreWindowState(windowStateModel);
+        //}
 
         private void SidePanel_FinishedDragging(object sender, EventArgs e)
         {
-            SaveSidePanels();
+            SaveSidePanels(ViewModel.IsFullscreen);
         }
 
-        private void SaveSidePanels()
+        private void SaveSidePanels(bool isFullscreen)
         {
             if(_windowStateModel == null)
                 _windowStateModel = new WindowStateModel();
-            
-            _windowStateModel.PlaylistWidth = GirdPlaylistInner.Width;
-            _windowStateModel.SettingsWidth = GridSettingsInner.Width;
 
-            _windowStateModel.HidePlaylist = HideOnHover.GetIsActive(GridPlaylist);
-            _windowStateModel.HideSettings = HideOnHover.GetIsActive(GridSettings);
+            PanelsState panels = GetPanelsState();
 
-            _windowStateModel.ExpandPlaylist = ExpanderPlaylist.IsExpanded;
-            _windowStateModel.ExpandSettings = ExpanderSettings.IsExpanded;
+            if (isFullscreen)
+                _windowStateModel.PanelsFullscreen = panels;
+            else
+                _windowStateModel.Panels = panels;
+        }
+
+        private PanelsState GetPanelsState()
+        {
+            return new PanelsState
+            {
+                PlaylistWidth = GirdPlaylistInner.Width,
+                SettingsWidth = GridSettingsInner.Width,
+
+                HidePlaylist = HideOnHover.GetIsActive(GridPlaylist),
+                HideSettings = HideOnHover.GetIsActive(GridSettings),
+                HideMenu = HideOnHover.GetIsActive(MnuMain),
+                HideControls = HideOnHover.GetIsActive(PlayerControls),
+
+                ExpandPlaylist = ExpanderPlaylist.IsExpanded,
+                ExpandSettings = ExpanderSettings.IsExpanded
+            };
         }
 
         private void RestoreWindowState(WindowStateModel windowStateModel)
@@ -296,13 +331,13 @@ namespace ScriptPlayer
             _windowStateModel = windowStateModel;
 
             RestoreWindowRect(IsInitialized);
-            RestoreSidePanels(IsInitialized);
+            RestoreSidePanels(IsInitialized, false);
 
             if (IsInitialized)
                 SetFullscreen(windowStateModel.IsFullscreen, false);
         }
 
-        private void RestoreSidePanels(bool isInitialized)
+        private void RestoreSidePanels(bool isInitialized, bool isFullScreen)
         {
             if (!isInitialized)
                 return;
@@ -310,14 +345,24 @@ namespace ScriptPlayer
             if (_windowStateModel == null)
                 return;
 
-            GirdPlaylistInner.Width = _windowStateModel.PlaylistWidth;
-            GridSettingsInner.Width = _windowStateModel.SettingsWidth;
+            RestoreSidePanels(isFullScreen ? _windowStateModel.PanelsFullscreen : _windowStateModel.Panels);
+        }
 
-            HideOnHover.SetIsActive(GridPlaylist, _windowStateModel.HidePlaylist);
-            HideOnHover.SetIsActive(GridSettings, _windowStateModel.HideSettings);
+        private void RestoreSidePanels(PanelsState panelsState)
+        {
+            if (panelsState == null)
+                return;
 
-            ExpanderPlaylist.IsExpanded = _windowStateModel.ExpandPlaylist;
-            ExpanderSettings.IsExpanded = _windowStateModel.ExpandSettings;
+            GirdPlaylistInner.Width = panelsState.PlaylistWidth;
+            GridSettingsInner.Width = panelsState.SettingsWidth;
+
+            HideOnHover.SetIsActive(GridPlaylist, panelsState.HidePlaylist);
+            HideOnHover.SetIsActive(GridSettings, panelsState.HideSettings);
+            HideOnHover.SetIsActive(MnuMain, panelsState.HideMenu);
+            HideOnHover.SetIsActive(PlayerControls, panelsState.HideControls);
+
+            ExpanderPlaylist.IsExpanded = panelsState.ExpandPlaylist;
+            ExpanderSettings.IsExpanded = panelsState.ExpandSettings;
         }
 
         private void ViewModelOnRequestGetWindowState(object sender, RequestEventArgs<WindowStateModel> e)
@@ -514,6 +559,8 @@ namespace ScriptPlayer
 
             ViewModel.IsFullscreen = isFullscreen;
 
+            SaveSidePanels(currentlyFullScreen);
+
             if (ViewModel.IsFullscreen)
             {
                 if(updateRestorePosition && !currentlyFullScreen)
@@ -532,13 +579,13 @@ namespace ScriptPlayer
                 Left = screenBounds.Left;
                 Top = screenBounds.Top;
 
-                var offset = this.PointFromScreen(new System.Windows.Point(0, 0));
+                //var offset = this.PointFromScreen(new System.Windows.Point(0, 0));
                 
-                HideOnHover.SetIsActive(MnuMain, true);
-                HideOnHover.SetIsActive(PlayerControls, true);
+                //HideOnHover.SetIsActive(MnuMain, true);
+                //HideOnHover.SetIsActive(PlayerControls, true);
 
-                Grid.SetRow(GridVideo, 0);
-                Grid.SetRowSpan(GridVideo, 3);
+                //Grid.SetRow(GridVideo, 0);
+                //Grid.SetRowSpan(GridVideo, 3);
             }
             else
             {
@@ -549,14 +596,15 @@ namespace ScriptPlayer
 
                 RestoreWindowRect(true);
 
-                HideOnHover.SetIsActive(MnuMain, false);
-                HideOnHover.SetIsActive(PlayerControls, false);
+                //HideOnHover.SetIsActive(MnuMain, false);
+                //HideOnHover.SetIsActive(PlayerControls, false);
 
-                Grid.SetRow(GridVideo, 1);
-                Grid.SetRowSpan(GridVideo, 1);
+                //Grid.SetRow(GridVideo, 1);
+                //Grid.SetRowSpan(GridVideo, 1);
             }
 
             ViewModel.IsFullscreen = isFullscreen;
+            RestoreSidePanels(true, isFullscreen);
         }
 
         public Rectangle GetWindowRectangle()

@@ -20,22 +20,9 @@ namespace ScriptPlayer.ViewModels
 
         public double Y { get; set; }
 
-        public double SettingsWidth { get; set; }
-
-        public double PlaylistWidth { get; set; }
-
-        public bool HideSettings { get; set; }
-
-        public bool HidePlaylist { get; set; }
-
-        public bool ExpandSettings { get; set; }
-        public bool ExpandPlaylist { get; set; }
-
-        public WindowStateModel()
-        {
-            SettingsWidth = 200;
-            PlaylistWidth = 200;
-        }
+        public PanelsState Panels { get; set; }
+        
+        public PanelsState PanelsFullscreen { get; set; }
 
         [XmlIgnore]
         public Rect WindowPosition
@@ -67,12 +54,8 @@ namespace ScriptPlayer.ViewModels
                 Height = Height,
                 X = X,
                 Y = Y,
-                SettingsWidth = SettingsWidth,
-                PlaylistWidth = PlaylistWidth,
-                HidePlaylist = HidePlaylist,
-                HideSettings = HideSettings,
-                ExpandPlaylist = ExpandPlaylist,
-                ExpandSettings = ExpandSettings
+                Panels = Panels.Duplicate(),
+                PanelsFullscreen = PanelsFullscreen.Duplicate()
             };
         }
     }
@@ -125,6 +108,46 @@ namespace ScriptPlayer.ViewModels
                 Debug.WriteLine(e);
                 return null;
             }
+        }
+    }
+
+    public class PanelsState
+    {
+        public double SettingsWidth { get; set; }
+
+        public double PlaylistWidth { get; set; }
+
+        public bool HideSettings { get; set; }
+
+        public bool HidePlaylist { get; set; }
+
+        public bool HideMenu { get; set; }
+
+        public bool HideControls { get; set; }
+
+        public bool ExpandSettings { get; set; }
+
+        public bool ExpandPlaylist { get; set; }
+
+        public PanelsState()
+        {
+            SettingsWidth = 200;
+            PlaylistWidth = 200;
+        }
+
+        public PanelsState Duplicate()
+        {
+            return new PanelsState
+            {
+                SettingsWidth = SettingsWidth,
+                PlaylistWidth = PlaylistWidth,
+                HidePlaylist = HidePlaylist,
+                HideSettings = HideSettings,
+                HideMenu = HideMenu,
+                HideControls = HideControls,
+                ExpandPlaylist = ExpandPlaylist,
+                ExpandSettings = ExpandSettings
+            };
         }
     }
 }

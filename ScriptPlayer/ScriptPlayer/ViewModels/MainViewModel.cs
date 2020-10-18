@@ -90,7 +90,7 @@ namespace ScriptPlayer.ViewModels
         public GeneratorWorkQueue WorkQueue { get; }
 
         public WindowStateModel InitialPlayerState { get; private set; }
-
+        
         public bool IsFullscreen
         {
             get => _isFullscreen;
@@ -5464,10 +5464,10 @@ namespace ScriptPlayer.ViewModels
             IntermediateBeat?.Invoke(this, e);
         }
 
-        protected virtual void OnRequestSetWindowState(WindowStateModel e)
-        {
-            RequestSetWindowState?.Invoke(this, e);
-        }
+        //protected virtual void OnRequestSetWindowState(WindowStateModel e)
+        //{
+        //    RequestSetWindowState?.Invoke(this, e);
+        //}
 
         public void RecheckForAdditionalFiles(bool generateIfMissing)
         {
@@ -5605,11 +5605,13 @@ namespace ScriptPlayer.ViewModels
 
             var settings = GetDefaultGeneratorSettings();
 
-            GeneralGeneratorSettingsViewModel generalSettings = settings.General;
-            HeatmapGeneratorSettings defaultHeatmapSettings = settings.Heatmap.GetSettings(out string[] _);
-            PreviewGeneratorSettings defaultPreviewSettings = settings.Preview.GetSettings(out string[] _);
-            ThumbnailGeneratorSettings defaultThumbnailSettings = settings.Thumbnails.GetSettings(out string[] _);
-            ThumbnailBannerGeneratorSettings defaultThumbnailBannerSettings = settings.Banner.GetSettings(out string[] _);
+            GeneralGeneratorSettingsViewModel generalSettings = settings.General.Duplicate();
+            HeatmapGeneratorSettings defaultHeatmapSettings = settings.Heatmap.GetSettings(out string[] _).Duplicate();
+            PreviewGeneratorSettings defaultPreviewSettings = settings.Preview.GetSettings(out string[] _).Duplicate();
+            ThumbnailGeneratorSettings defaultThumbnailSettings = settings.Thumbnails.GetSettings(out string[] _).Duplicate();
+            ThumbnailBannerGeneratorSettings defaultThumbnailBannerSettings = settings.Banner.GetSettings(out string[] _).Duplicate();
+
+            generalSettings.ExistingFileStrategy = ExistingFileStrategy.Skip;
 
             foreach (string video in videos)
             {
@@ -5681,7 +5683,8 @@ namespace ScriptPlayer.ViewModels
             if (!CheckFfmpeg())
                 return;
 
-            HeatmapGeneratorSettings settings = _lastHeatmapSettings?.Duplicate();
+            var generalSettings = _previousGeneratorSettings?.Heatmap.GetSettings(out string[] _);
+            HeatmapGeneratorSettings settings = generalSettings?.Duplicate() ?? generalSettings ?? new HeatmapGeneratorSettings();
             settings = OnRequestHeatmapGeneratorSettings(settings);
 
             if (settings == null)
