@@ -55,40 +55,56 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         private void btnFull_Click(object sender, RoutedEventArgs e)
         {
-            MinValueFrom = 5;
-            MinValueTo = 5;
-            MaxValueFrom = 95;
-            MaxValueTo = 95;
+            MinValueFrom = 0;
+            MinValueTo = 0;
+            MaxValueFrom = 99;
+            MaxValueTo = 99;
         }
 
         private void btnTop2_Click(object sender, RoutedEventArgs e)
         {
             MinValueFrom = 35;
             MinValueTo = 35;
-            MaxValueFrom = 95;
-            MaxValueTo = 95;
+            MaxValueFrom = 99;
+            MaxValueTo = 99;
         }
 
         private void btnBottom2_Click(object sender, RoutedEventArgs e)
         {
-            MinValueFrom = 5;
-            MinValueTo = 5;
+            MinValueFrom = 0;
+            MinValueTo = 0;
             MaxValueFrom = 65;
             MaxValueTo = 65;
+        }
+
+        private void btnTop3_Click(object sender, RoutedEventArgs e)
+        {
+            MinValueFrom = 50;
+            MinValueTo = 50;
+            MaxValueFrom = 99;
+            MaxValueTo = 99;
+        }
+
+        private void btnBottom3_Click(object sender, RoutedEventArgs e)
+        {
+            MinValueFrom = 0;
+            MinValueTo = 0;
+            MaxValueFrom = 50;
+            MaxValueTo = 50;
         }
 
         private void btnTop1_Click(object sender, RoutedEventArgs e)
         {
             MinValueFrom = 65;
             MinValueTo = 65;
-            MaxValueFrom = 95;
-            MaxValueTo = 95;
+            MaxValueFrom = 99;
+            MaxValueTo = 99;
         }
 
         private void btnBottom1_Click(object sender, RoutedEventArgs e)
         {
-            MinValueFrom = 5;
-            MinValueTo = 5;
+            MinValueFrom = 0;
+            MinValueTo = 0;
             MaxValueFrom = 35;
             MaxValueTo = 35;
         }

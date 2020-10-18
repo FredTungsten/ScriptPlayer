@@ -142,7 +142,7 @@
                         LineColor="#FF00B9FF" LineWidth="3"  HighlightColor="Red"
                         TotalDisplayedDuration="{Binding BeatBarDuration}" Midpoint="{Binding BeatBarCenter}"/>
 
-                    <shared:PositionBar Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
+                    <shared:PositionBar Name="positionBar"  Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
                                     Midpoint="{Binding BeatBarCenter}" 
                     LineColor="Lime" Background="Black" Height="Auto" Grid.Row="3" TotalDisplayedDuration="{Binding BeatBarDuration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Positions="{Binding Positions}"/>
                 </Grid>

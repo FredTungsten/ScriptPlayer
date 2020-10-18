@@ -16,7 +16,7 @@ namespace ScriptPlayer.Shared
 
         public bool DrawLines
         {
-            get => (bool) GetValue(DrawLinesProperty);
+            get => (bool)GetValue(DrawLinesProperty);
             set => SetValue(DrawLinesProperty, value);
         }
 
@@ -25,7 +25,7 @@ namespace ScriptPlayer.Shared
 
         public bool DrawZero
         {
-            get => (bool) GetValue(DrawZeroProperty);
+            get => (bool)GetValue(DrawZeroProperty);
             set => SetValue(DrawZeroProperty, value);
         }
 
@@ -34,7 +34,7 @@ namespace ScriptPlayer.Shared
 
         public bool DrawCircles
         {
-            get => (bool) GetValue(DrawCirclesProperty);
+            get => (bool)GetValue(DrawCirclesProperty);
             set => SetValue(DrawCirclesProperty, value);
         }
 
@@ -43,7 +43,7 @@ namespace ScriptPlayer.Shared
 
         public TimeSpan MinCommandDelay
         {
-            get => (TimeSpan) GetValue(MinCommandDelayProperty);
+            get => (TimeSpan)GetValue(MinCommandDelayProperty);
             set => SetValue(MinCommandDelayProperty, value);
         }
 
@@ -115,7 +115,7 @@ namespace ScriptPlayer.Shared
 
         public bool IsReadOnly
         {
-            get => (bool) GetValue(IsReadOnlyProperty);
+            get => (bool)GetValue(IsReadOnlyProperty);
             set => SetValue(IsReadOnlyProperty, value);
         }
 
@@ -124,7 +124,7 @@ namespace ScriptPlayer.Shared
 
         public bool LockTimeStamp
         {
-            get => (bool) GetValue(LockTimeStampProperty);
+            get => (bool)GetValue(LockTimeStampProperty);
             set => SetValue(LockTimeStampProperty, value);
         }
 
@@ -193,7 +193,7 @@ namespace ScriptPlayer.Shared
 
             if (_position != null && _down)
             {
-                ((TextBlock) _positionPopup.Child).Text = $"{_position.Position} @ {_position.TimeStamp:g}";
+                ((TextBlock)_positionPopup.Child).Text = $"{_position.Position} @ {_position.TimeStamp:g}";
                 _positionPopup.IsOpen = true;
             }
             else
@@ -262,7 +262,7 @@ namespace ScriptPlayer.Shared
             {
                 TimedPosition pos = GetPositionFromPoint(_mousePos);
 
-                if(!LockTimeStamp)
+                if (!LockTimeStamp)
                     _position.TimeStamp = pos.TimeStamp;
 
                 _position.Position = pos.Position;
@@ -287,7 +287,7 @@ namespace ScriptPlayer.Shared
             double x = PositionToX(position.TimeStamp);
             double y = PositionToY(position.Position);
 
-            return new Point(x,y);
+            return new Point(x, y);
         }
 
         private double PositionToX(TimeSpan timeStamp)
@@ -304,7 +304,10 @@ namespace ScriptPlayer.Shared
         {
             TimeSpan timestamp = XToPosition(point.X);
             byte position = YToPosition(point.Y);
-            position = Math.Min((byte)99, Math.Max((byte)0, position));
+
+            int rounded = (int)(Math.Round(position / 5.0) * 5.0);
+
+            position = (byte)Math.Min(99, Math.Max(0, rounded));
 
             return new TimedPosition
             {
@@ -377,7 +380,7 @@ namespace ScriptPlayer.Shared
                         double speed = SpeedPredictor.PredictSpeed2(absoluteBeatPositions[i - 1].Position, absoluteBeatPositions[i].Position, duration) / 99.0;
 
                         Color color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap, speed);
-                        drawingContext.DrawLine(new Pen(new SolidColorBrush(color), 1), beatPoints[i-1], beatPoints[i] );
+                        drawingContext.DrawLine(new Pen(new SolidColorBrush(color), 1), beatPoints[i - 1], beatPoints[i]);
                     }
 
                     if (DrawCircles)

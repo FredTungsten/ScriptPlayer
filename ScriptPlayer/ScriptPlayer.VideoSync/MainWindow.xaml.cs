@@ -1585,7 +1585,7 @@ namespace ScriptPlayer.VideoSync
                     }
                 case Key.NumPad1:
                     {
-                        AddPositionNow(5);
+                        AddPositionNow(0);
                         break;
                     }
                 case Key.NumPad2:
@@ -1595,7 +1595,7 @@ namespace ScriptPlayer.VideoSync
                     }
                 case Key.NumPad3:
                     {
-                        AddPositionNow(95);
+                        AddPositionNow(99);
                         break;
                     }
                 default:
@@ -2075,6 +2075,8 @@ namespace ScriptPlayer.VideoSync
                 Position = position,
                 TimeStamp = timeSpan
             });
+
+            positionBar.InvalidateVisual();
         }
 
         private void SnapToClosestBeat()

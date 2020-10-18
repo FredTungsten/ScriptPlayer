@@ -74,8 +74,8 @@ namespace ScriptPlayer.VideoSync.Dialogs
             if (initialValues == null)
             {
                 ConversionMode = ConversionMode.UpOrDown;
-                MinValue = 5;
-                MaxValue = 95;
+                MinValue = 0;
+                MaxValue = 99;
             }
             else
             {
@@ -118,20 +118,20 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            MinValue = 5;
-            MaxValue = 95;
+            MinValue = 0;
+            MaxValue = 99;
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            MinValue = 35;
-            MaxValue = 95;
+            MinValue = 50;
+            MaxValue = 99;
         }
 
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
-            MinValue = 5;
-            MaxValue = 65;
+            MinValue = 0;
+            MaxValue = 50;
         }
     }
 }
