@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.TextFormatting;
 using Microsoft.Win32;
 using NAudio.Wave;
 using ScriptPlayer.Shared;
@@ -1475,6 +1476,11 @@ namespace ScriptPlayer.VideoSync
                         Fade();
                         break;
                     }
+                case Key.I:
+                    {
+                        Invert();
+                        break;
+                    }
                 case Key.N:
                     {
                         Normalize();
@@ -1605,6 +1611,38 @@ namespace ScriptPlayer.VideoSync
 
             if (handled)
                 e.Handled = true;
+        }
+
+        private void Invert()
+        {
+            var positions = GetSelectedPositions(false);
+
+            if (positions.Count < 1)
+                return;
+
+            List<TimedPosition> invertedPositions = new List<TimedPosition>();
+
+            foreach (var position in positions)
+            {
+                byte newPos;
+                if (position.Position == 99)
+                    newPos = 0;
+                else if (position.Position == 0)
+                    newPos = 99;
+                else
+                    newPos = (byte) (100 - position.Position);
+
+                invertedPositions.Add(new TimedPosition
+                {
+                    Position = newPos,
+                    TimeStamp = position.TimeStamp
+                });
+            }
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            ReplacePositions(positions, invertedPositions, tBegin, tEnd);
         }
 
         private void StretchSelection()

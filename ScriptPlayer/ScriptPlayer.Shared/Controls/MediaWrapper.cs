@@ -97,18 +97,34 @@ namespace ScriptPlayer.Shared.Controls
 
         public string LoadedMedia { get; private set; }
 
-        private readonly MediaPlayer _player;
+        private MediaPlayer _player;
 
         public MediaWrapper()
+        {
+            CreatePlayer();
+            
+            EmptyBrush = new SolidColorBrush(Colors.Black);
+            Resolution = new Resolution();
+        }
+
+        private void CreatePlayer()
         {
             _player = new MediaPlayer();
             _player.MediaOpened += MediaOpenedSuccess;
             _player.MediaFailed += MediaOpenedFailure;
             _player.MediaEnded += PlayerOnMediaEnded;
             _player.ScrubbingEnabled = true;
-            
-            EmptyBrush = new SolidColorBrush(Colors.Black);
-            Resolution = new Resolution();
+        }
+
+        private void DestroyPlayer()
+        {
+            _player.MediaOpened -= MediaOpenedSuccess;
+            _player.MediaFailed -= MediaOpenedFailure;
+            _player.MediaEnded -= PlayerOnMediaEnded;
+
+            _player.Stop();
+            _player.Close();
+            _player = null;
         }
 
         private void PlayerOnMediaEnded(object o, EventArgs eventArgs)
@@ -198,6 +214,12 @@ namespace ScriptPlayer.Shared.Controls
 
             Debug.WriteLine("Started Player in " + (DateTime.Now - startPlay));
 
+            if (position >= _player.NaturalDuration.TimeSpan)
+                position = _player.NaturalDuration.TimeSpan - TimeSpan.FromSeconds(10);
+
+            if(position <= TimeSpan.Zero)
+                position = TimeSpan.Zero;
+            
             Debug.WriteLine("Seeking " + position);
             _player.Position = position;
 
@@ -213,44 +235,58 @@ namespace ScriptPlayer.Shared.Controls
 
         public async Task OpenAndWaitFor(string filename)
         {
-            ManualResetEvent loadEvent = new ManualResetEvent(false);
-
-            void Success(object sender, EventArgs args)
+            if (filename == LoadedMedia)
             {
-                OnMediaSuccessfullyLoaded(filename);
-                loadEvent.Set();
+                Debug.WriteLine("File already loaded: " + filename);
+                return;
             }
 
-            void Failure(object sender, ExceptionEventArgs args)
-            {
-                loadEvent.Set();
-            }
+            bool success = false;
 
-            _player.MediaOpened += Success;
-            _player.MediaFailed += Failure;
-
-            try
+            int maxRetries = 3;
+            TimeSpan maxWaitTime = TimeSpan.FromSeconds(10);
+            
+            for (int i = 0; i < maxRetries; i++)
             {
-                if (filename == LoadedMedia)
+                ManualResetEvent loadEvent = new ManualResetEvent(false);
+
+                void Success(object sender, EventArgs args)
                 {
-                    Debug.WriteLine("File already loaded: " + filename);
-                    return;
+                    success = true;
+                    OnMediaSuccessfullyLoaded(filename);
+                    loadEvent.Set();
                 }
 
-                _player.Open(new Uri(filename, UriKind.Absolute));
-                _player.Play();
-
-                bool timeout = !await Task.Run(() => loadEvent.WaitOne(TimeSpan.FromSeconds(5)));
-
-                if (timeout)
+                void Failure(object sender, ExceptionEventArgs args)
                 {
-                    Debug.WriteLine("Timeout while opening " + filename);
+                    loadEvent.Set();
                 }
-            }
-            finally
-            {
-                _player.MediaOpened -= Success;
-                _player.MediaFailed -= Failure;
+
+                _player.MediaOpened += Success;
+                _player.MediaFailed += Failure;
+
+                try
+                {
+                    _player.Open(new Uri(filename, UriKind.Absolute));
+                    _player.Play();
+
+                    bool timeout = !await Task.Run(() => loadEvent.WaitOne(maxWaitTime));
+                    
+                    if (timeout)
+                    {
+                        Debug.WriteLine("Timeout while opening " + filename);
+                        break;
+                    }
+                    else if(success)
+                    {
+                        break;
+                    }
+                }
+                finally
+                {
+                    _player.MediaOpened -= Success;
+                    _player.MediaFailed -= Failure;
+                }
             }
         }
 
@@ -283,8 +319,7 @@ namespace ScriptPlayer.Shared.Controls
 
         public void Dispose()
         {
-            _player.Stop();
-            _player.Close();
+            DestroyPlayer();
         }
 
         protected virtual void OnMediaEnded()

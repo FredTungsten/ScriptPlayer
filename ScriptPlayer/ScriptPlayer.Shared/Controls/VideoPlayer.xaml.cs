@@ -354,15 +354,6 @@ namespace ScriptPlayer.Shared
 
                 await ProcessFileSeekEntry(seekEntry);
 
-                //if (seekEntry.FileName != OpenedFile)
-                //{
-                //    await ProcessFileSeekEntry(seekEntry);
-                //}
-                //else
-                //{
-                //    await ProcessPositionSeekEntry(seekEntry);
-                //}
-
                 return true;
             }
             finally
@@ -377,27 +368,6 @@ namespace ScriptPlayer.Shared
             }
         }
 
-        private async Task ProcessPositionSeekEntry(SeekEntry seekEntry)
-        {
-            ++_loadIteration;
-
-            TimeSpan position = ClampTimestamp(seekEntry.Position);
-
-            if (seekEntry.Duration == TimeSpan.Zero)
-            {
-                Player.Position = position;
-            }
-            else
-            {
-                TimeSpan diff = position - Player.Position;
-
-                if (position > Player.Position && diff < TimeSpan.FromSeconds(4))
-                    return;
-
-                await CrossFade(position, seekEntry.Duration, seekEntry.Priority);
-            }
-        }
-
         private async Task ProcessFileSeekEntry(SeekEntry seekEntry)
         {
             ulong iteration = ++_loadIteration;
@@ -406,12 +376,10 @@ namespace ScriptPlayer.Shared
             if (seekEntry.Duration == TimeSpan.Zero)
             {
                 OpenedFile = seekEntry.FileName;
-
+                
                 SetPrimaryPlayer(Player);
                 SetEventSource(Player);
                 await Player.Seek(seekEntry.FileName, seekEntry.Position);
-
-                //await Player.OpenAndWaitFor(seekEntry.FileName);
             }
             else
             {
@@ -424,12 +392,6 @@ namespace ScriptPlayer.Shared
                 if (iteration != _loadIteration) return;
 
                 await CrossFade(seekEntry.Position, seekEntry.Duration, seekEntry.Priority);
-
-                // This was to make sure the standbyplayer has the new video loaded (e.g. for seeking / gap-skipping
-                // Maybe we can do without
-
-                //if (iteration != _loadIteration) return;
-                //await StandByPlayer.OpenAndWaitFor(seekEntry.FileName);
             }
         }
 

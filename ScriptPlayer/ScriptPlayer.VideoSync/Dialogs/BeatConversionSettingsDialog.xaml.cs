@@ -102,7 +102,8 @@ namespace ScriptPlayer.VideoSync.Dialogs
             {
                 CustomConversionDialog dialog = new CustomConversionDialog(
                     _previousPattern ?? new RelativePositionCollection(),
-                    _previousBeats ?? new []{true,true});
+                    _previousBeats ?? new []{true,true}){Owner = this};
+
                 if (dialog.ShowDialog() != true)
                     return;
 

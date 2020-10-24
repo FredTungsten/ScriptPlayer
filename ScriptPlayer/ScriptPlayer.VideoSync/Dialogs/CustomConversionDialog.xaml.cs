@@ -54,13 +54,19 @@ namespace ScriptPlayer.VideoSync.Dialogs
             DialogResult = true;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnSetPattern_Click(object sender, RoutedEventArgs e)
         {
             PatternFillOptionsDialog dialog = new PatternFillOptionsDialog(BeatPattern);
             if (dialog.ShowDialog() != true)
                 return;
 
             BeatPattern = dialog.Result;
+        }
+
+        private void btnClearPattern_Click(object sender, RoutedEventArgs e)
+        {
+            BeatPattern = new[] {true, true};
+            Positions.Clear();
         }
     }
 }

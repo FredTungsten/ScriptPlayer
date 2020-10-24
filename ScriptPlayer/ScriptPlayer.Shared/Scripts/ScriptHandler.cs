@@ -229,6 +229,11 @@ namespace ScriptPlayer.Shared.Scripts
             actions.Sort((a, b) => a.TimeStamp.CompareTo(b.TimeStamp));
             _originalScript = actions;
 
+            if(actions.Count > 0)
+                _duration = actions.Last().TimeStamp;
+            else
+                _duration = TimeSpan.Zero;
+
             ProcessScript();
         }
 
