@@ -434,12 +434,12 @@ namespace ScriptPlayer.Shared.Scripts
                         goingUp ^= true;
                     }
 
-                    lastValue = _filledActions[index].Position;
-                    if (lastValue > highest)
-                        highest = lastValue;
-                    if (lastValue < lowest)
-                        lowest = lastValue;
                 }
+                lastValue = _filledActions[index].Position;
+                if (lastValue > highest)
+                    highest = lastValue;
+                if (lastValue < lowest)
+                    lowest = lastValue;
             }
 
             extendedActions.Add(_filledActions.Last().Duplicate());
