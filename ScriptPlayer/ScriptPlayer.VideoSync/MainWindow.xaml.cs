@@ -1450,6 +1450,11 @@ namespace ScriptPlayer.VideoSync
 
                         break;
                     }
+                case Key.B:
+                {
+                    Bump();
+                    break;
+                }
                 case Key.C:
                     {
                         //if (shift)
@@ -1613,6 +1618,37 @@ namespace ScriptPlayer.VideoSync
                 e.Handled = true;
         }
 
+        private void Bump()
+        {
+            var positions = GetSelectedPositions(false);
+
+            TimeSpan cutoff = TimeSpan.FromMilliseconds(_previousSuperNormalizeDuration);
+
+            List<TimedPosition> newPositions = new List<TimedPosition>();
+
+            TimedPosition previous = null;
+
+            foreach (TimedPosition t in positions)
+            {
+                if (previous != null)
+                {
+                    TimeSpan dist = t.TimeStamp - previous.TimeStamp;
+
+                    if(dist - cutoff > TimeSpan.FromMilliseconds(20))
+                        newPositions.Add(new TimedPosition
+                        {
+                            Position = t.Position,
+                            TimeStamp = previous.TimeStamp + cutoff
+                        });
+                }
+
+                newPositions.Add(t);
+                previous = t;
+            }
+
+            ReplacePositions(newPositions);
+        }
+
         private void Invert()
         {
             var positions = GetSelectedPositions(false);
@@ -1639,10 +1675,7 @@ namespace ScriptPlayer.VideoSync
                 });
             }
 
-            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
-            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
-
-            ReplacePositions(positions, invertedPositions, tBegin, tEnd);
+            ReplacePositions(invertedPositions);
         }
 
         private void StretchSelection()
@@ -1686,14 +1719,18 @@ namespace ScriptPlayer.VideoSync
             var stretchedPositions = RangeStretcher.Stretch(positions, dialog.MinValueFrom, dialog.MaxValueFrom,
                 dialog.MinValueTo, dialog.MaxValueTo);
 
+            ReplacePositions(stretchedPositions);
+        }
+
+        private void ReplacePositions(List<TimedPosition> newPositions)
+        {
             TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
             TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
 
-            ReplacePositions(positions, stretchedPositions, tBegin, tEnd);
-
+            ReplacePositions(newPositions, tBegin, tEnd);
         }
 
-        private void ReplacePositions(List<TimedPosition> positions, List<TimedPosition> newPositions, TimeSpan tBegin, TimeSpan tEnd)
+        private void ReplacePositions(List<TimedPosition> newPositions, TimeSpan tBegin, TimeSpan tEnd)
         {
             List<TimedPosition> excluded =
                 Positions.Where(p => p.TimeStamp < tBegin || p.TimeStamp > tEnd).ToList();
