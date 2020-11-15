@@ -6,6 +6,9 @@ namespace ScriptPlayer.Shared.Helpers
 {
     public static class FileFinder
     {
+        // Original Version: Directory-Preference over Extension Preference
+
+        /*
         public static string FindFile(string filename, string[] extensions, string[] additionalPaths)
         {
             if (string.IsNullOrEmpty(filename))
@@ -84,6 +87,90 @@ namespace ScriptPlayer.Shared.Helpers
                     string expectedPath = AppendExtension(basePath, extension);
                     if (File.Exists(expectedPath))
                         return expectedPath;
+                }
+            }
+
+            return null;
+        }
+
+        */
+
+        public static string FindFile(string filename, string[] extensions, string[] additionalPaths)
+        {
+            if (string.IsNullOrEmpty(filename))
+                return null;
+
+            string fileNameWithExtension = Path.GetFileName(filename);
+            
+            foreach (string extension in extensions)
+            {
+                string[] extArr = {extension};
+
+                //With removed second extension
+                string stripped = TrimExtension(filename, extArr);
+                if (File.Exists(stripped))
+                    return stripped;
+
+                //Same directory, appended Extension
+
+                string appended = AppendExtension(filename, extension);
+                if (File.Exists(appended))
+                    return appended;
+
+                string changed = Path.ChangeExtension(filename, extension);
+                if (File.Exists(changed))
+                    return changed;
+
+                if (additionalPaths == null)
+                    continue;
+
+                string fileNameWithoutSecondExtension = TrimExtension(Path.GetFileName(filename), extArr);
+
+                //Addtional Directories, stripped second extension
+                if (!string.IsNullOrWhiteSpace(fileNameWithoutSecondExtension))
+                {
+                    foreach (string path in additionalPaths)
+                    {
+                        if (!Directory.Exists(path)) continue;
+
+                        string newPath = Path.Combine(path, fileNameWithoutSecondExtension);
+                        if (File.Exists(newPath))
+                            return newPath;
+                    }
+                }
+
+                //Additional Directories, appended extension
+
+                if (string.IsNullOrWhiteSpace(fileNameWithExtension))
+                    continue;
+
+                foreach (string path in additionalPaths)
+                {
+                    if (!Directory.Exists(path)) continue;
+
+                    string basePath = Path.Combine(path, fileNameWithExtension);
+
+                    string expectedPath = AppendExtension(basePath, extension);
+                    if (File.Exists(expectedPath))
+                        return expectedPath;
+                    
+                }
+
+                //Additional Directories, exchanged extension
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filename);
+                if (string.IsNullOrWhiteSpace(fileNameWithoutExtension))
+                    return null;
+
+                foreach (string path in additionalPaths)
+                {
+                    if (!Directory.Exists(path)) continue;
+
+                    string basePath = Path.Combine(path, fileNameWithoutExtension);
+
+                    string expectedPath = AppendExtension(basePath, extension);
+                    if (File.Exists(expectedPath))
+                        return expectedPath;
+                    
                 }
             }
 
