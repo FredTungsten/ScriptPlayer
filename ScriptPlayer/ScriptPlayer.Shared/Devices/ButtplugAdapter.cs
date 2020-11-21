@@ -91,9 +91,10 @@ namespace ScriptPlayer.Shared
             //TODO
         }
 
-        private void Client_ErrorReceived(object sender, ButtplugExceptionEventArgs buttplugExceptionEventArgs)
+        private void Client_ErrorReceived(object sender, ButtplugExceptionEventArgs e)
         {
             //TODO
+            Debug.WriteLine("Buttplug.Client_ErrorReceived: " + e?.Exception?.ButtplugErrorMessage?.ErrorMessage);
         }
 
         private void RemoveDevice(ButtplugDevice device)

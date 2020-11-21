@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Buttplug.Client;
 
 namespace ScriptPlayer.Shared
@@ -20,17 +22,41 @@ namespace ScriptPlayer.Shared
 
         protected override async Task Set(DeviceCommandInformation information)
         {
-            await _buttplugAdapter.Set(_device, information);
+            try
+            {
+                await _buttplugAdapter.Set(_device, information);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                OnDisconnected(e);
+            }
         }
 
         public override async Task Set(IntermediateCommandInformation information)
         {
-            await _buttplugAdapter.Set(_device, information);
+            try
+            {
+                await _buttplugAdapter.Set(_device, information);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                OnDisconnected(e);
+            }
         }
 
         protected override void StopInternal()
         {
-            _buttplugAdapter.Stop(_device);
+            try
+            {
+                _buttplugAdapter.Stop(_device);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                OnDisconnected(e);
+            }
         }
     }
 }
