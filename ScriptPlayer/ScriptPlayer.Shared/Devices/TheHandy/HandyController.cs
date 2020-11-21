@@ -680,8 +680,13 @@ namespace ScriptPlayer.Shared.TheHandy
         public void CalcServerTimeOffset()
         {
             // due too an api rate limit of I think 60 request per minute I chose just 10 attempts instead of 30...
-            const int maxSyncAttempts = 10;
+            const int maxSyncAttempts = 20;
+            const int warmupAttempts = 2;
+
             long offsetAggregated = 0;
+
+            long minDelay = long.MaxValue;
+            long maxDelay = long.MinValue;
 
             using (var client = GetClient())
             {
@@ -691,15 +696,25 @@ namespace ScriptPlayer.Shared.TheHandy
                     HttpResponseMessage result = client.GetAsync(UrlFor("getServerTime")).Result;
                     long tReceived = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                     long tTrip = tReceived - tSent;
-
+                    
                     long tServerResponse = result.Content.ReadAsAsync<HandyTimeResponse>().Result.serverTime;
                     long tServerEstimate = tServerResponse + (tTrip / 2);
+                    long tOffset = tServerEstimate - tReceived;
 
-                    offsetAggregated += tServerEstimate - tReceived;
+                    if (i >= warmupAttempts)
+                        offsetAggregated += tOffset;
+
+                    if (tOffset > maxDelay)
+                        maxDelay = tOffset;
+
+                    if (tOffset < minDelay)
+                        minDelay = tOffset;
                 }
             }
 
-            _offsetAverage = (int)(offsetAggregated / (double)maxSyncAttempts);
+            _offsetAverage = (int)(offsetAggregated / (double)(maxSyncAttempts - warmupAttempts));
+
+            OnOsdRequest($"Handy Sync refreshed: {_offsetAverage}ms (min {minDelay}, max {maxDelay}", TimeSpan.FromSeconds(3), "HandySync");
         }
 
         private long GetServerTimeEstimate() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + _offsetAverage;
