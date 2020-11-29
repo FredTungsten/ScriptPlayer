@@ -83,7 +83,7 @@ namespace ScriptPlayer.Controls
                 return;
 
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            ViewModel.Playlist.AddEntries(files);
+            ViewModel.Playlist.AddEntries(false, files);
         }
 
         private void LstEntries_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

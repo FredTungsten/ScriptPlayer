@@ -48,7 +48,8 @@
         </Grid.RowDefinitions>
         <Menu Grid.Row="0" Background="White" DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:PlaylistControl}, Path=ViewModel}">
             <MenuItem Header="Playlist">
-                <MenuItem Header="Add Files" Command="{Binding AddScriptsToPlaylistCommand}"/>
+                <MenuItem Header="Add Files (first)" Command="{Binding AddScriptsToPlaylistFirstCommand}" />
+                <MenuItem Header="Add Files (last)" Command="{Binding AddScriptsToPlaylistCommand}" />
                 <MenuItem Header="Add Folder" Command="{Binding AddFolderToPlaylistCommand}"/>
                 <Separator/>
                 <MenuItem Header="Remove Missing Entries" Command="{Binding RemoveMissingEntriesFromPlaylistCommand}"/>

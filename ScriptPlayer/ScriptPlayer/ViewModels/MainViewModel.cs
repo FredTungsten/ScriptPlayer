@@ -1684,6 +1684,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand AddFunstimAudioCommand { get; set; }
 
+        public ScriptplayerCommand AddScriptsToPlaylistFirstCommand { get; set; }
+
         public ScriptplayerCommand AddScriptsToPlaylistCommand { get; set; }
 
         public ScriptplayerCommand AddFolderToPlaylistCommand { get; set; }
@@ -2693,10 +2695,16 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Open Video"
             };
 
-            AddScriptsToPlaylistCommand = new ScriptplayerCommand(AddFileToPlaylist)
+            AddScriptsToPlaylistCommand = new ScriptplayerCommand(AddFilesToPlaylist)
             {
                 CommandId = "AddFileToPlaylist",
-                DisplayText = "Add File To Playlist"
+                DisplayText = "Add File To Playlist (last)"
+            };
+
+            AddScriptsToPlaylistFirstCommand = new ScriptplayerCommand(AddFilesToPlaylistFirst)
+            {
+                CommandId = "AddFileToPlaylist",
+                DisplayText = "Add File To Playlist (first)"
             };
 
             AddFolderToPlaylistCommand = new ScriptplayerCommand(AddFolderToPlaylist)
@@ -3803,7 +3811,7 @@ namespace ScriptPlayer.ViewModels
 
             if (playlist == null) return;
 
-            Playlist.AddEntries(playlist.Entries.Select(ToPlaylistEntry));
+            Playlist.AddEntries(false, playlist.Entries.Select(ToPlaylistEntry));
         }
 
         private void LoadVideo(string videoFileName, bool checkForScript)
@@ -4833,7 +4841,7 @@ namespace ScriptPlayer.ViewModels
                     entries.Add(new PlaylistEntry(file));
             }
 
-            Playlist.AddEntries(entries);
+            Playlist.AddEntries(false, entries);
         }
 
         public string GetVideoFileOpenDialog()
@@ -4852,7 +4860,17 @@ namespace ScriptPlayer.ViewModels
             return OnRequestFile(mediaFilters, ref x, true);
         }
 
-        public void AddFileToPlaylist()
+        public void AddFilesToPlaylist()
+        {
+            AddFilesToPlaylist(false);
+        }
+
+        public void AddFilesToPlaylistFirst()
+        {
+            AddFilesToPlaylist(true);
+        }
+
+        private void AddFilesToPlaylist(bool first)
         {
             ScriptFileFormatCollection formats = ScriptLoaderManager.GetFormats();
 
@@ -4867,7 +4885,7 @@ namespace ScriptPlayer.ViewModels
             if (files == null)
                 return;
 
-            Playlist.AddEntries(files);
+            Playlist.AddEntries(first, files);
         }
 
         public void OpenScript()
@@ -5293,7 +5311,7 @@ namespace ScriptPlayer.ViewModels
             if (files == null || files.Length == 0)
                 return;
 
-            Playlist.AddEntries(files);
+            Playlist.AddEntries(false, files);
             LoadFile(files[0]);
         }
 

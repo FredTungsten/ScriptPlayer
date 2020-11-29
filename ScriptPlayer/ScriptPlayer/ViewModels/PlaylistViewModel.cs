@@ -1200,12 +1200,12 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public void AddEntries(string[] filenames)
+        public void AddEntries(bool first, string[] filenames)
         {
-            AddEntries(filenames.Select(fn => new PlaylistEntry(fn)));
+            AddEntries(first, filenames.Select(fn => new PlaylistEntry(fn)));
         }
 
-        public void AddEntries(IEnumerable<PlaylistEntry> entries)
+        public void AddEntries(bool first, IEnumerable<PlaylistEntry> entries)
         {
             try
             {
@@ -1220,7 +1220,11 @@ namespace ScriptPlayer.ViewModels
 
                     _addedDuringDefer = true;
                     EnsureMediaInfo(entry);
-                    Entries.Add(entry);
+
+                    if(first)
+                        Entries.Insert(0, entry);
+                    else
+                        Entries.Add(entry);
                 }
             }
             finally
