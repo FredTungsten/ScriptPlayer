@@ -2532,8 +2532,15 @@ namespace ScriptPlayer.VideoSync
             SetAllBeats(Positions.Select(p => p.TimeStamp));
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnRefreshHeatmapBeats_Click(object sender, RoutedEventArgs e)
         {
+            _usePositionsForHeatmap = false;
+            RefreshHeatMap();
+        }
+
+        private void btnRefreshHeatmapPositions_Click(object sender, RoutedEventArgs e)
+        {
+            _usePositionsForHeatmap = true;
             RefreshHeatMap();
         }
 
@@ -2542,7 +2549,18 @@ namespace ScriptPlayer.VideoSync
             if (videoPlayer == null)
                 return;
 
-            Brush heatmap = HeatMapGenerator.Generate2(Beats.ToList(), TimeSpan.FromSeconds(10), TimeSpan.Zero, videoPlayer.Duration);
+            List<TimeSpan> beats;
+
+            if (_usePositionsForHeatmap)
+            {
+                beats = Positions.Select(p => p.TimeStamp).ToList();
+            }
+            else
+            {
+                beats = Beats.ToList();
+            }
+
+            Brush heatmap = HeatMapGenerator.Generate2(beats, TimeSpan.FromSeconds(10), TimeSpan.Zero, videoPlayer.Duration);
             SeekBar.Background = heatmap;
         }
 
@@ -2630,6 +2648,7 @@ namespace ScriptPlayer.VideoSync
         private int RATE = 44100; // sample rate of the sound card
         private int BUFFERSIZE = (int)Math.Pow(2, 11); // must be a multiple of 2
         private double _previousSuperNormalizeDuration = 200;
+        private bool _usePositionsForHeatmap;
 
         private void mnuFrameSampler2_Click(object sender, RoutedEventArgs e)
         {
