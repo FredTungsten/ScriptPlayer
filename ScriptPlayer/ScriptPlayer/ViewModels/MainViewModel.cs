@@ -499,6 +499,8 @@ namespace ScriptPlayer.ViewModels
                 Playlist.NextOrPreviousChanged += PlaylistOnNextOrPreviousChanged;
             }
 
+            LoadGeneratorSettings();
+
             if (Settings.RememberPlaylist)
                 LoadPlaylist();
 
@@ -510,8 +512,6 @@ namespace ScriptPlayer.ViewModels
                 GlobalCommandManager.BuildDefaultShortcuts();
 
             UpdateRandomChapterTooltip();
-
-            LoadGeneratorSettings();
         }
 
         private void PlaylistOnRequestDirectory(object sender, RequestEventArgs<string> args)
@@ -2307,8 +2307,14 @@ namespace ScriptPlayer.ViewModels
 
         private string[] GetAdditionalPaths()
         {
-            string[] paths = Settings?.AdditionalPaths?.ToArray();
-            if (paths == null)
+            List<string> paths = Settings?.AdditionalPaths?.ToList() ?? new List<string>();
+
+            if(_previousGeneratorSettings != null)
+                if(_previousGeneratorSettings.General.SaveFilesToDifferentPath)
+                    if(Directory.Exists(_previousGeneratorSettings.General.SaveFilesToThisPath))
+                        paths.Add(_previousGeneratorSettings.General.SaveFilesToThisPath);
+
+            if (paths.Count == 0)
                 return null;
 
             List<string> result = new List<string>();

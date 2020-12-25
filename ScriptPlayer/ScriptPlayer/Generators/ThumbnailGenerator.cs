@@ -51,8 +51,8 @@ namespace ScriptPlayer.Generators
                     ClipLeft = settings.ClipLeft,
                     DeLense = settings.ClipLeft
                 };
-                
-                string thumbfile = Path.ChangeExtension(settings.VideoFile, "thumbs");
+
+                string thumbfile = settings.OutputFile; // Path.ChangeExtension(settings.VideoFile, "thumbs");
                 entry.Update("Extracting Frames", 0);
 
                 var frames =_wrapper.ExtractFrames(arguments);
