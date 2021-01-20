@@ -98,6 +98,7 @@
     </Compile>
     <Compile Include="Controls\BeatVisualizer.cs" />
     <Compile Include="Controls\DirectInputControl.cs" />
+    <Compile Include="Controls\HistogramControl.cs" />
     <Compile Include="Controls\SampleRectZoom.cs" />
     <Compile Include="Converters\ParameterToBooleanConverter.cs" />
     <Compile Include="Dialogs\BeatConversionSettingsDialog.xaml.cs">
@@ -120,6 +121,9 @@
     </Compile>
     <Compile Include="Dialogs\DoubleInputDialog.xaml.cs">
       <DependentUpon>DoubleInputDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\HistogramDialog.xaml.cs">
+      <DependentUpon>HistogramDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\NormalizationDialog.xaml.cs">
       <DependentUpon>NormalizationDialog.xaml</DependentUpon>
@@ -173,6 +177,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\FramePicture.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\HistogramDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

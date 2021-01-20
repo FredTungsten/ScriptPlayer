@@ -79,6 +79,8 @@
                 <MenuItem Header="Remove duplicate positions" Click="mnuRemoveDuplicate_Click"/>
                 <Separator/>
                 <MenuItem IsCheckable="true" Name="cckRecord" Header="Record from Live-Sampler"/>
+                <Separator/>
+                <MenuItem Header="Show histogram for selection" Click="mnuShowHistogramForSelection_Click"/>
             </MenuItem>
             <MenuItem Header="Edit">
                 <MenuItem Header="Normalize" InputGestureText="N"/>

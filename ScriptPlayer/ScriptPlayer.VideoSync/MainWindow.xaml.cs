@@ -18,7 +18,9 @@ using NAudio.Wave;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Scripts;
+using ScriptPlayer.VideoSync.Controls;
 using ScriptPlayer.VideoSync.Dialogs;
+using BeatProject = ScriptPlayer.Shared.BeatProject;
 using Brush = System.Windows.Media.Brush;
 
 namespace ScriptPlayer.VideoSync
@@ -2763,6 +2765,52 @@ namespace ScriptPlayer.VideoSync
                 });
 
             BeatConversionSettingsDialog.SetPattern(collection);
+        }
+
+        private void mnuShowHistogramForSelection_Click(object sender, RoutedEventArgs e)
+        {
+            var beats = GetSelectedBeats();
+
+            if (beats.Count < 2)
+                return;
+
+            Dictionary<int,int> durations = new Dictionary<int, int>();
+
+            int span = 10;
+
+            for (int i = 1; i < beats.Count; i++)
+            {
+                TimeSpan duration = beats[i] - beats[i - 1];
+                int rounded = span * (int) (duration.TotalMilliseconds / span);
+
+                if (durations.ContainsKey(rounded))
+                    durations[rounded] = durations[rounded] + 1;
+                else
+                    durations.Add(rounded, 1);
+            }
+
+            int min = durations.Keys.Min();
+            int max = durations.Keys.Max();
+
+            List<HistogramEntry> entries = new List<HistogramEntry>();
+
+            for (int val = min; val <= max; val += span)
+            {
+                var entry = new HistogramEntry
+                {
+                    Description = $"{val}-{val + span} ms",
+                    Label = val.ToString("D"),
+                };
+
+                if (durations.ContainsKey(val))
+                    entry.Value = durations[val];
+                else
+                    entry.Value = 0;
+
+                entries.Add(entry);
+            }
+
+            new HistogramDialog(entries){Owner = this}.ShowDialog();
         }
     }
 
