@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Windows;
 using ScriptPlayer.Shared;
 
@@ -9,8 +10,15 @@ namespace ScriptPlayer.VideoSync.Dialogs
     /// </summary>
     public partial class CustomConversionDialog : Window
     {
+        public event EventHandler ResultChanged;
+
         public static readonly DependencyProperty PositionsProperty = DependencyProperty.Register(
-            "Positions", typeof(RelativePositionCollection), typeof(CustomConversionDialog), new PropertyMetadata(default(RelativePositionCollection)));
+            "Positions", typeof(RelativePositionCollection), typeof(CustomConversionDialog), new PropertyMetadata(default(RelativePositionCollection), OnSettingsChanged));
+
+        private static void OnSettingsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((CustomConversionDialog)d).OnResultChanged();
+        }
 
         public RelativePositionCollection Positions
         {
@@ -19,18 +27,26 @@ namespace ScriptPlayer.VideoSync.Dialogs
         }
 
         public static readonly DependencyProperty BeatPatternProperty = DependencyProperty.Register(
-            "BeatPattern", typeof(bool[]), typeof(CustomConversionDialog), new PropertyMetadata(default(bool[])));
+            "BeatPattern", typeof(bool[]), typeof(CustomConversionDialog), new PropertyMetadata(default(bool[]), OnSettingsChanged));
 
         public bool[] BeatPattern
         {
-            get { return (bool[]) GetValue(BeatPatternProperty); }
-            set { SetValue(BeatPatternProperty, value); }
+            get => (bool[]) GetValue(BeatPatternProperty);
+            set => SetValue(BeatPatternProperty, value);
         }
 
-        public CustomConversionDialog(RelativePositionCollection collection, bool[] beatPattern)
+        private static RelativePositionCollection _previousPattern;
+        private static bool[] _previousBeats;
+
+        public static void SetPattern(RelativePositionCollection collection)
         {
-            Positions = collection;
-            BeatPattern = beatPattern;
+            _previousPattern = collection;
+        }
+
+        public CustomConversionDialog()
+        {
+            Positions = _previousPattern ?? new RelativePositionCollection();
+            BeatPattern = _previousBeats ?? new[] { true, true };
             InitializeComponent();
         }
 
@@ -51,6 +67,9 @@ namespace ScriptPlayer.VideoSync.Dialogs
                 return;
             }
 
+            _previousBeats = BeatPattern;
+            _previousPattern = Positions;
+
             DialogResult = true;
         }
 
@@ -67,6 +86,16 @@ namespace ScriptPlayer.VideoSync.Dialogs
         {
             BeatPattern = new[] {true, true};
             Positions.Clear();
+        }
+
+        protected virtual void OnResultChanged()
+        {
+            ResultChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void PositionBar_OnPositionsChanged(object sender, EventArgs e)
+        {
+            OnResultChanged();
         }
     }
 }

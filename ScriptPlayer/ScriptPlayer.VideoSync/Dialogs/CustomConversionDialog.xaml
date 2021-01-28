@@ -10,7 +10,7 @@
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="CustomConversionDialog" Height="269.969" Width="553.027" WindowStartupLocation="CenterOwner">
     <Grid>
-        <shared:BeatAndPositionBar BeatPattern="{Binding BeatPattern}" Positions="{Binding Positions}" x:Name="positionBar" Background="Black" Margin="10,10,10,35"/>
+        <shared:BeatAndPositionBar PositionsChanged="PositionBar_OnPositionsChanged" BeatPattern="{Binding BeatPattern}" Positions="{Binding Positions}" x:Name="positionBar" Background="Black" Margin="10,10,10,35"/>
         <Button Content="Ok" IsDefault="True" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75" Click="btnOk_Click"/>
         <Button Content="Cancel" IsCancel="True" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
         <Button Content="Set Pattern" Margin="10,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="btnSetPattern_Click"/>

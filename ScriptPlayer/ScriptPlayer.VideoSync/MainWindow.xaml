@@ -48,6 +48,7 @@
                 <Separator/>
                 <MenuItem Header="Convert All Beats to Positions" Click="mnuBeatsToPositions_Click"/>
                 <MenuItem Header="Convert Selected Beats to Positions" Click="mnuSelectedBeatsToPositions_Click"/>
+                <MenuItem Header="Convert Selected Beats to Custom Positions" Click="mnuSelectedBeatsToCustomPositions_Click"/>
                 <MenuItem Header="Convert All Positions to Beats" Click="mnuPositionsToBeats_Click"/>
                 <Separator/>
                 <MenuItem Header="Set Selection as custom pattern" Click="mnuSetCustomPatternFromSelection_Click"/>

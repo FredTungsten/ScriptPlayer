@@ -8,13 +8,14 @@
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared" x:Class="ScriptPlayer.VideoSync.Dialogs.BeatConversionSettingsDialog"
         mc:Ignorable="d"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Beat Conversion Settings" Height="149.682" Width="371.928">
+        Title="Beat Conversion Settings" Height="149.682" Width="371.928"
+    Loaded="BeatConversionSettingsDialog_OnLoaded">
     <Window.Resources>
         <converters:ConversionModeToNameConverter x:Key="ConversionConverter"/>
     </Window.Resources>
     <Grid>
         <TextBlock HorizontalAlignment="Left" Margin="10,16,0,0" TextWrapping="Wrap" Text="Mode" VerticalAlignment="Top"/>
-        <ComboBox ItemsSource="{Binding ConversionModes}" SelectedItem="{Binding ConversionMode}" Margin="112,10,10,0" VerticalAlignment="Top">
+        <ComboBox ItemsSource="{Binding ConversionModes}" SelectedItem="{Binding ConversionMode}" Margin="112,10,10,0" VerticalAlignment="Top" SelectionChanged="ComboBox_SelectionChanged">
             <ComboBox.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding ., Converter={StaticResource ConversionConverter}}"/>

@@ -977,6 +977,7 @@ namespace ScriptPlayer.VideoSync
         private void ClearPreview()
         {
             BeatBar.PreviewBeats = null;
+            positionBar.PreviewPositions = null;
         }
 
         private void PreviewFill(object sender, PatternEventArgs e)
@@ -2428,13 +2429,68 @@ namespace ScriptPlayer.VideoSync
             BeatConversionSettingsDialog dialog = new BeatConversionSettingsDialog(_previousConversionSettings);
             dialog.Owner = this;
             dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dialog.ResultChanged += DialogOnResultChanged_All;
 
-            if (dialog.ShowDialog() != true)
-                return;
+            try
+            {
+                if (dialog.ShowDialog() != true)
+                    return;
+            }
+            finally
+            {
+                dialog.ResultChanged -= DialogOnResultChanged_All;
+                ClearPreview();
+            }
 
             _previousConversionSettings = dialog.Result;
 
             ConvertBeats(_previousConversionSettings);
+        }
+
+        private void DialogOnResultChanged_All(object sender, EventArgs eventArgs)
+        {
+            var result = ((BeatConversionSettingsDialog)sender).Result;
+            UpdatePositionConversionPreview(result, true);
+        }
+
+        private void DialogOnResultChanged_Selected(object sender, EventArgs eventArgs)
+        {
+            var result = ((BeatConversionSettingsDialog)sender).Result;
+            UpdatePositionConversionPreview(result, false);
+        }
+
+        private void UpdatePositionConversionPreview(ConversionSettings settings, bool all)
+        {
+            TimeSpan tBegin;
+            TimeSpan tEnd;
+
+            if (!all)
+            {
+                tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+                tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+            }
+            else
+            {
+                tBegin = TimeSpan.MinValue;
+                tEnd = TimeSpan.MaxValue;
+            }
+
+            List<TimeSpan> beatsToConvert = Beats.GetBeats(tBegin, tEnd).ToList();
+
+            if (beatsToConvert.Count == 0)
+                return;
+
+            List<TimedPosition> otherPositions = Positions.Where(t => t.TimeStamp < tBegin || t.TimeStamp > tEnd).ToList();
+
+            int startIndex = Beats.IndexOf(beatsToConvert.First());
+
+            var convertedPositions = BeatsToFunScriptConverter.Convert(beatsToConvert, settings, startIndex);
+
+            positionBar.PreviewPositions = new PositionCollection(otherPositions.Concat(convertedPositions.Select(f => new TimedPosition
+            {
+                Position = f.Position,
+                TimeStamp = f.TimeStamp
+            })));
         }
 
         private void mnuSelectedBeatsToPositions_Click(object sender, RoutedEventArgs e)
@@ -2445,9 +2501,18 @@ namespace ScriptPlayer.VideoSync
             BeatConversionSettingsDialog dialog = new BeatConversionSettingsDialog(_previousConversionSettings);
             dialog.Owner = this;
             dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dialog.ResultChanged += DialogOnResultChanged_All;
 
-            if (dialog.ShowDialog() != true)
-                return;
+            try
+            {
+                if (dialog.ShowDialog() != true)
+                    return;
+            }
+            finally
+            {
+                dialog.ResultChanged -= DialogOnResultChanged_Selected;
+                ClearPreview();
+            }
 
             _previousConversionSettings = dialog.Result;
 
@@ -2463,6 +2528,85 @@ namespace ScriptPlayer.VideoSync
             var convertedPositions = BeatsToFunScriptConverter.Convert(beatsToConvert, _previousConversionSettings, startIndex);
 
             Positions = new PositionCollection(otherPositions.Concat(convertedPositions.Select(f => new TimedPosition
+            {
+                Position = f.Position,
+                TimeStamp = f.TimeStamp
+            })));
+        }
+
+
+        private void mnuSelectedBeatsToCustomPositions_Click(object sender, RoutedEventArgs e)
+        {
+            CustomConversionDialog dialog = new CustomConversionDialog
+                { Owner = this };
+
+            dialog.ResultChanged += CustomPositions_ResultChanged;
+
+            try
+            {
+                if (dialog.ShowDialog() != true)
+                    return;
+            }
+            finally
+            {
+                dialog.ResultChanged -= CustomPositions_ResultChanged;
+                ClearPreview();
+            }
+
+            ConversionSettings settings = new ConversionSettings
+            {
+                CustomPositions = dialog.Positions,
+                BeatPattern = dialog.BeatPattern,
+                Mode = ConversionMode.Custom
+            };
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> beatsToConvert = Beats.GetBeats(tBegin, tEnd).ToList();
+
+            if (beatsToConvert.Count == 0)
+                return;
+
+            List<TimedPosition> otherPositions = Positions.Where(t => t.TimeStamp < tBegin || t.TimeStamp > tEnd).ToList();
+
+            int startIndex = Beats.IndexOf(beatsToConvert.First());
+
+            var convertedPositions = BeatsToFunScriptConverter.Convert(beatsToConvert, settings, startIndex);
+
+            Positions = new PositionCollection(otherPositions.Concat(convertedPositions.Select(f => new TimedPosition
+            {
+                Position = f.Position,
+                TimeStamp = f.TimeStamp
+            })));
+        }
+
+        private void CustomPositions_ResultChanged(object sender, EventArgs eventArgs)
+        {
+            var dialog = ((CustomConversionDialog) sender);
+
+            ConversionSettings settings = new ConversionSettings
+            {
+                CustomPositions = dialog.Positions,
+                BeatPattern = dialog.BeatPattern,
+                Mode = ConversionMode.Custom
+            };
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> beatsToConvert = Beats.GetBeats(tBegin, tEnd).ToList();
+
+            if (beatsToConvert.Count == 0)
+                return;
+
+            List<TimedPosition> otherPositions = Positions.Where(t => t.TimeStamp < tBegin || t.TimeStamp > tEnd).ToList();
+
+            int startIndex = Beats.IndexOf(beatsToConvert.First());
+
+            var convertedPositions = BeatsToFunScriptConverter.Convert(beatsToConvert, settings, startIndex);
+
+            positionBar.PreviewPositions = new PositionCollection(otherPositions.Concat(convertedPositions.Select(f => new TimedPosition
             {
                 Position = f.Position,
                 TimeStamp = f.TimeStamp
@@ -2764,7 +2908,7 @@ namespace ScriptPlayer.VideoSync
                     RelativeTime = (pos.TimeStamp - offset).Divide(duration)
                 });
 
-            BeatConversionSettingsDialog.SetPattern(collection);
+            CustomConversionDialog.SetPattern(collection);
         }
 
         private void mnuShowHistogramForSelection_Click(object sender, RoutedEventArgs e)

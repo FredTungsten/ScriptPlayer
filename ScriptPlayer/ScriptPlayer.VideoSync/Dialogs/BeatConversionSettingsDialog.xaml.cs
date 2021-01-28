@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Controls;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
-using ScriptPlayer.VideoSync.Controls;
 
 namespace ScriptPlayer.VideoSync.Dialogs
 {
@@ -14,13 +13,15 @@ namespace ScriptPlayer.VideoSync.Dialogs
     /// </summary>
     public partial class BeatConversionSettingsDialog : Window
     {
+        public event EventHandler ResultChanged;
+
         public static readonly DependencyProperty ConversionModesProperty = DependencyProperty.Register(
             "ConversionModes", typeof(List<ConversionMode>), typeof(BeatConversionSettingsDialog), new PropertyMetadata(default(List<ConversionMode>)));
 
         public List<ConversionMode> ConversionModes
         {
-            get { return (List<ConversionMode>) GetValue(ConversionModesProperty); }
-            set { SetValue(ConversionModesProperty, value); }
+            get => (List<ConversionMode>) GetValue(ConversionModesProperty);
+            set => SetValue(ConversionModesProperty, value);
         }
 
         public static readonly DependencyProperty ConversionModeProperty = DependencyProperty.Register(
@@ -28,48 +29,43 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         public ConversionMode ConversionMode
         {
-            get { return (ConversionMode) GetValue(ConversionModeProperty); }
-            set { SetValue(ConversionModeProperty, value); }
+            get => (ConversionMode) GetValue(ConversionModeProperty);
+            set => SetValue(ConversionModeProperty, value);
         }
 
         public static readonly DependencyProperty MinValueProperty = DependencyProperty.Register(
-            "MinValue", typeof(Byte), typeof(BeatConversionSettingsDialog), new PropertyMetadata(default(Byte)));
+            "MinValue", typeof(byte), typeof(BeatConversionSettingsDialog), new PropertyMetadata(default(byte)));
 
-        public Byte MinValue
+        public byte MinValue
         {
-            get { return (Byte) GetValue(MinValueProperty); }
-            set { SetValue(MinValueProperty, value); }
+            get => (byte) GetValue(MinValueProperty);
+            set => SetValue(MinValueProperty, value);
         }
 
         public static readonly DependencyProperty MaxValueProperty = DependencyProperty.Register(
-            "MaxValue", typeof(Byte), typeof(BeatConversionSettingsDialog), new PropertyMetadata(default(Byte)));
+            "MaxValue", typeof(byte), typeof(BeatConversionSettingsDialog), new PropertyMetadata(default(byte)));
 
-        public Byte MaxValue
+        public byte MaxValue
         {
-            get { return (Byte) GetValue(MaxValueProperty); }
-            set { SetValue(MaxValueProperty, value); }
+            get => (byte) GetValue(MaxValueProperty);
+            set => SetValue(MaxValueProperty, value);
         }
 
         public static readonly DependencyProperty ResultProperty = DependencyProperty.Register(
             "Result", typeof(ConversionSettings), typeof(BeatConversionSettingsDialog), new PropertyMetadata(default(ConversionSettings)));
         
-        private static RelativePositionCollection _previousPattern;
-        private static bool[] _previousBeats;
-
-        public static void SetPattern(RelativePositionCollection collection)
-        {
-            _previousPattern = collection;
-        }
-
         public ConversionSettings Result
         {
-            get { return (ConversionSettings) GetValue(ResultProperty); }
-            set { SetValue(ResultProperty, value); }
+            get => (ConversionSettings) GetValue(ResultProperty);
+            set => SetValue(ResultProperty, value);
         }
 
         public BeatConversionSettingsDialog(ConversionSettings initialValues = null)
         {
-            ConversionModes = new List<ConversionMode>(Enum.GetValues(typeof(ConversionMode)).Cast<ConversionMode>());
+            ConversionModes = Enum.GetValues(typeof(ConversionMode))
+                    .Cast<ConversionMode>()
+                    .Except(new[]{ConversionMode.Custom})
+                    .ToList();
 
             if (initialValues == null)
             {
@@ -91,30 +87,19 @@ namespace ScriptPlayer.VideoSync.Dialogs
         {
             ((Button) sender).Focus();
 
+            UpdateResult();
+            
+            DialogResult = true;
+        }
+
+        private void UpdateResult()
+        {
             Result = new ConversionSettings
             {
                 Min = MinValue,
                 Max = MaxValue,
                 Mode = ConversionMode
             };
-
-            if (ConversionMode == ConversionMode.Custom)
-            {
-                CustomConversionDialog dialog = new CustomConversionDialog(
-                    _previousPattern ?? new RelativePositionCollection(),
-                    _previousBeats ?? new []{true,true}){Owner = this};
-
-                if (dialog.ShowDialog() != true)
-                    return;
-
-                _previousPattern = dialog.Positions;
-                _previousBeats = dialog.BeatPattern;
-
-                Result.CustomPositions = dialog.Positions;
-                Result.BeatPattern = dialog.BeatPattern;
-            }
-
-            DialogResult = true;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -133,6 +118,22 @@ namespace ScriptPlayer.VideoSync.Dialogs
         {
             MinValue = 0;
             MaxValue = 50;
+        }
+
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateResult();
+            OnResultChanged();
+        }
+
+        protected virtual void OnResultChanged()
+        {
+            ResultChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void BeatConversionSettingsDialog_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            OnResultChanged();
         }
     }
 }

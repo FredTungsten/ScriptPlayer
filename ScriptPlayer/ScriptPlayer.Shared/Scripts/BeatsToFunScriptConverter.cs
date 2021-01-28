@@ -114,6 +114,9 @@ namespace ScriptPlayer.Shared.Scripts
                     positionDown = settings.Min;
                     positionUp = settings.Max;
 
+                    if (settings.CustomPositions == null || settings.CustomPositions.Count == 0)
+                        return actions;
+
                     flips = settings.CustomPositions.First().Position != settings.CustomPositions.Last().Position;
                     beatIncrement = settings.BeatPattern.Count(b => b) - 1;
 

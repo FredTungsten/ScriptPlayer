@@ -7,12 +7,13 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using Windows.Media.Devices;
 
 namespace ScriptPlayer.Shared
 {
     public class BeatAndPositionBar : Control
     {
+        public event EventHandler PositionsChanged;
+
         public static readonly DependencyProperty LineColorProperty = DependencyProperty.Register(
             "LineColor", typeof(Color), typeof(BeatAndPositionBar), new PropertyMetadata(Colors.Lime, OnVisualPropertyChanged));
 
@@ -100,6 +101,7 @@ namespace ScriptPlayer.Shared
                     Positions.Remove(closest);
 
                 InvalidateVisual();
+                OnPositionsChanged();
             }
             // Shift = Add
             else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
@@ -174,6 +176,8 @@ namespace ScriptPlayer.Shared
             InvalidateVisual();
 
             ReleaseMouseCapture();
+
+            OnPositionsChanged();
         }
 
         private void UpdateSelectedPosition(bool final)
@@ -357,6 +361,11 @@ namespace ScriptPlayer.Shared
             }
 
             drawingContext.Pop();
+        }
+
+        protected virtual void OnPositionsChanged()
+        {
+            PositionsChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 

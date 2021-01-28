@@ -74,6 +74,15 @@ namespace ScriptPlayer.Shared
             set => SetValue(PositionsProperty, value);
         }
 
+        public static readonly DependencyProperty PreviewPositionsProperty = DependencyProperty.Register(
+            "PreviewPositions", typeof(PositionCollection), typeof(PositionBar), new PropertyMetadata(default(PositionCollection), OnVisualPropertyChanged));
+
+        public PositionCollection PreviewPositions
+        {
+            get => (PositionCollection) GetValue(PreviewPositionsProperty);
+            set => SetValue(PreviewPositionsProperty, value);
+        }
+        
         public static readonly DependencyProperty TotalDisplayedDurationProperty = DependencyProperty.Register(
             "TotalDisplayedDuration", typeof(TimeSpan), typeof(PositionBar), new PropertyMetadata(TimeSpan.FromSeconds(5), OnVisualPropertyChanged));
 
@@ -365,50 +374,66 @@ namespace ScriptPlayer.Shared
 
             if (Positions != null)
             {
-                TimeSpan timeFrom = Progress - TotalDisplayedDuration.Multiply(Midpoint);
-                TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
+                if (PreviewPositions != null)
+                    drawingContext.PushOpacity(0.2);
 
-                List<TimedPosition> absoluteBeatPositions = Positions.GetPositions(timeFrom, timeTo).ToList();
-                List<Point> beatPoints = absoluteBeatPositions.Select(GetPointFromPosition).ToList();
+                DrawPositions(drawingContext, Positions);
 
-                if (beatPoints.Count > 0)
-                {
-                    for (int i = 1; i < beatPoints.Count; i++)
-                    {
-                        TimeSpan duration = absoluteBeatPositions[i].TimeStamp - absoluteBeatPositions[i - 1].TimeStamp;
+                if (PreviewPositions != null)
+                    drawingContext.Pop();
+            }
 
-                        double speed = SpeedPredictor.PredictSpeed2(absoluteBeatPositions[i - 1].Position, absoluteBeatPositions[i].Position, duration) / 99.0;
-
-                        Color color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap, speed);
-                        drawingContext.DrawLine(new Pen(new SolidColorBrush(color), 1), beatPoints[i - 1], beatPoints[i]);
-                    }
-
-                    if (DrawCircles)
-                    {
-                        for (int i = 0; i < beatPoints.Count; i++)
-                        {
-                            Color color;
-
-                            if (i == 0)
-                                color = Colors.Lime;
-                            else
-                            {
-                                TimeSpan duration = absoluteBeatPositions[i].TimeStamp -
-                                                    absoluteBeatPositions[i - 1].TimeStamp;
-                                double durationFactor = MinCommandDelay.Divide(duration);
-                                color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap3, durationFactor);
-                            }
-
-                            Color fillColor = HeatMapGenerator.MixColors(color, Colors.Black, 0.5);
-
-                            drawingContext.DrawEllipse(new SolidColorBrush(fillColor),
-                                new Pen(new SolidColorBrush(color), 1), beatPoints[i], CircleRadius, CircleRadius);
-                        }
-                    }
-                }
+            if (PreviewPositions != null)
+            {
+                DrawPositions(drawingContext, PreviewPositions);
             }
 
             drawingContext.Pop();
+        }
+
+        private void DrawPositions(DrawingContext drawingContext, PositionCollection positions)
+        {
+            TimeSpan timeFrom = Progress - TotalDisplayedDuration.Multiply(Midpoint);
+            TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
+
+            List<TimedPosition> absoluteBeatPositions = positions.GetPositions(timeFrom, timeTo).ToList();
+            List<Point> beatPoints = absoluteBeatPositions.Select(GetPointFromPosition).ToList();
+
+            if (beatPoints.Count > 0)
+            {
+                for (int i = 1; i < beatPoints.Count; i++)
+                {
+                    TimeSpan duration = absoluteBeatPositions[i].TimeStamp - absoluteBeatPositions[i - 1].TimeStamp;
+
+                    double speed = SpeedPredictor.PredictSpeed2(absoluteBeatPositions[i - 1].Position, absoluteBeatPositions[i].Position, duration) / 99.0;
+
+                    Color color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap, speed);
+                    drawingContext.DrawLine(new Pen(new SolidColorBrush(color), 1), beatPoints[i - 1], beatPoints[i]);
+                }
+
+                if (DrawCircles)
+                {
+                    for (int i = 0; i < beatPoints.Count; i++)
+                    {
+                        Color color;
+
+                        if (i == 0)
+                            color = Colors.Lime;
+                        else
+                        {
+                            TimeSpan duration = absoluteBeatPositions[i].TimeStamp -
+                                                absoluteBeatPositions[i - 1].TimeStamp;
+                            double durationFactor = MinCommandDelay.Divide(duration);
+                            color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap3, durationFactor);
+                        }
+
+                        Color fillColor = HeatMapGenerator.MixColors(color, Colors.Black, 0.5);
+
+                        drawingContext.DrawEllipse(new SolidColorBrush(fillColor),
+                            new Pen(new SolidColorBrush(color), 1), beatPoints[i], CircleRadius, CircleRadius);
+                    }
+                }
+            }
         }
     }
 }

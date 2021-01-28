@@ -12,6 +12,8 @@ namespace ScriptPlayer.Shared
     /// </summary>
     public partial class RangeSlider : UserControl
     {
+        public event EventHandler ValuesChanged;
+
         public static readonly DependencyProperty InsideBrushProperty = DependencyProperty.Register(
             "InsideBrush", typeof(Brush), typeof(RangeSlider), new PropertyMetadata(Brushes.Lime));
 
@@ -155,6 +157,8 @@ namespace ScriptPlayer.Shared
 
             RectCenter.Width = Math.Abs(leftEdgeOfUpperThumb - rightEdgeOfLowerThumb);
             RectCenter.Margin = new Thickness(rightEdgeOfLowerThumb,8,0,8);
+
+            OnValuesChanged();
         }
 
         private double GetRelativeValue(double value, double minimum, double maximum)
@@ -210,6 +214,11 @@ namespace ScriptPlayer.Shared
                 LowerValue = (double) CoerceLowerValue(this, _startValue + delta);
             else
                 UpperValue = (double) CoerceUpperValue(this, _startValue + delta);
+        }
+
+        protected virtual void OnValuesChanged()
+        {
+            ValuesChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }
