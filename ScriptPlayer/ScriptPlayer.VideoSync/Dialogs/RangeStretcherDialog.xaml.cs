@@ -1,4 +1,7 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace ScriptPlayer.VideoSync.Dialogs
 {
@@ -53,76 +56,55 @@ namespace ScriptPlayer.VideoSync.Dialogs
             DialogResult = true;
         }
 
-        private void btnFull_Click(object sender, RoutedEventArgs e)
+        private void Button_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            MinValueFrom = 0;
+            Process(e.ChangedButton, ((Button) sender).Tag.ToString());
+        }
+
+        private void Process(MouseButton mouseButton, string tag)
+        {
+            int min;
+            int max;
+
+            int range = int.Parse(tag.Substring(1));
+
+            switch (tag[0])
+            {
+                case 'B':
+                    min = 0;
+                    max = range;
+                    break;
+                case 'T':
+                    min = 100 - range;
+                    max = 100;
+                    break;
+                case 'C':
+                    min = 50-range/2;
+                    max = 50+range/2;
+                    break;
+                default:
+                    return;
+            }
+
+            byte bmin = (byte)Math.Max(0, Math.Min(99, min));
+            byte bmax = (byte)Math.Max(0, Math.Min(99, max));
+
+            if (mouseButton == MouseButton.Left)
+            {
+                MinValueFrom = 0;
+                MaxValueFrom = 99;
+
+                MaxValueFrom = bmax;
+                MinValueFrom = bmin;
+            }
+
             MinValueTo = 0;
-            MaxValueFrom = 99;
             MaxValueTo = 99;
-        }
 
-        private void btnTop2_Click(object sender, RoutedEventArgs e)
-        {
-            MinValueFrom = 35;
-            MinValueTo = 35;
-            MaxValueFrom = 99;
-            MaxValueTo = 99;
-        }
+            MinValueTo = bmin;
+            MaxValueTo = bmax;
 
-        private void btnBottom2_Click(object sender, RoutedEventArgs e)
-        {
-            MinValueFrom = 0;
-            MinValueTo = 0;
-            MaxValueFrom = 65;
-            MaxValueTo = 65;
-        }
 
-        private void btnTop3_Click(object sender, RoutedEventArgs e)
-        {
-            MinValueFrom = 50;
-            MinValueTo = 50;
-            MaxValueFrom = 99;
-            MaxValueTo = 99;
-        }
-
-        private void btnBottom3_Click(object sender, RoutedEventArgs e)
-        {
-            MinValueFrom = 0;
-            MinValueTo = 0;
-            MaxValueFrom = 50;
-            MaxValueTo = 50;
-        }
-
-        private void btnTop1_Click(object sender, RoutedEventArgs e)
-        {
-            MinValueFrom = 65;
-            MinValueTo = 65;
-            MaxValueFrom = 99;
-            MaxValueTo = 99;
-        }
-
-        private void btnBottom1_Click(object sender, RoutedEventArgs e)
-        {
-            MinValueFrom = 0;
-            MinValueTo = 0;
-            MaxValueFrom = 35;
-            MaxValueTo = 35;
-        }
-
-        private void btnCenter1_Click(object sender, RoutedEventArgs e)
-        {
-            MinValueFrom = 35;
-            MinValueTo = 35;
-            MaxValueFrom = 65;
-            MaxValueTo = 65;
-        }
-
-        private void btnCenter2_Click(object sender, RoutedEventArgs e)
-        {
-            MinValueFrom = 20;
-            MinValueTo = 20;
-            MaxValueFrom = 80;
-            MaxValueTo = 80;
         }
     }
 }

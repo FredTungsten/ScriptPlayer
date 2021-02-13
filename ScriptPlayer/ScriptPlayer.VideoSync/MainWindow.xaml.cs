@@ -2956,6 +2956,20 @@ namespace ScriptPlayer.VideoSync
 
             new HistogramDialog(entries){Owner = this}.ShowDialog();
         }
+
+        private void mnuSelectedPositionsToBeats_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(this, "Are you sure you want to re-convert all SELECTED positions to beats?",
+                    "Confirmation required", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                return;
+
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> selectedBeats = Positions.GetPositions(tBegin, tEnd).Select(p => p.TimeStamp).ToList();
+
+            SetSelectedBeats(selectedBeats);
+        }
     }
 
     public enum PositionType

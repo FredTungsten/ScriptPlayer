@@ -2315,7 +2315,7 @@ namespace ScriptPlayer.ViewModels
                         paths.Add(_previousGeneratorSettings.General.SaveFilesToThisPath);
 
             if (paths.Count == 0)
-                return null;
+                return paths.ToArray();
 
             List<string> result = new List<string>();
 

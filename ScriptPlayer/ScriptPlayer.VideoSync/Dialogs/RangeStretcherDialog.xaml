@@ -7,7 +7,7 @@
         xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
         mc:Ignorable="d"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Range Stretcher" Height="188.261" Width="351.872">
+        Title="Range Stretcher" Height="185.07" Width="365.832">
     <Grid>
         <shared:RangeSlider Minimum="0" Maximum="99" LowerValue="{Binding Path=MinValueFrom, Mode=TwoWay}" UpperValue="{Binding Path=MaxValueFrom, Mode=TwoWay}" Height="20" Margin="112,10,50,0" VerticalAlignment="Top"/>
         <shared:RangeSlider Minimum="0" Maximum="99" LowerValue="{Binding Path=MinValueTo, Mode=TwoWay}" UpperValue="{Binding Path=MaxValueTo, Mode=TwoWay}" Height="20" Margin="112,35,50,0" VerticalAlignment="Top"/>
@@ -19,14 +19,18 @@
         <TextBlock HorizontalAlignment="Left" Margin="80,39,0,0" TextWrapping="Wrap" Text="{Binding MinValueTo}" VerticalAlignment="Top" Width="27"/>
         <TextBlock HorizontalAlignment="Left" Margin="301,14,0,0" TextWrapping="Wrap" Text="{Binding MaxValueFrom}" VerticalAlignment="Top" Width="27"/>
         <TextBlock HorizontalAlignment="Left" Margin="301,39,0,0" TextWrapping="Wrap" Text="{Binding MaxValueTo}" VerticalAlignment="Top" Width="27"/>
-        <Button Content="F" HorizontalAlignment="Left" Margin="9,0,0,10" Width="17" Click="btnFull_Click" Background="#FFFF00F3" Height="70" VerticalAlignment="Bottom"/>
-        <Button Content="T" HorizontalAlignment="Left" Margin="31,0,0,60" VerticalAlignment="Bottom" Width="17" Click="btnTop1_Click" Background="#FFFFC500"/>
-        <Button Content="B" HorizontalAlignment="Left" Margin="76,0,0,10" VerticalAlignment="Bottom" Width="17" Click="btnBottom1_Click" Background="#FF0097FF"/>
-        <Button Content="B" HorizontalAlignment="Left" Margin="31,0,0,10" VerticalAlignment="Bottom" Width="17" Click="btnBottom2_Click" Background="#FF0097FF" Height="45"/>
-        <Button Content="T" HorizontalAlignment="Left" Margin="76,0,0,35" VerticalAlignment="Bottom" Width="17" Click="btnTop2_Click" Background="#FFFFC500" Height="45"/>
-        <Button Content="C" HorizontalAlignment="Left" Margin="98,0,0,35" VerticalAlignment="Bottom" Width="17" Click="btnCenter1_Click" Background="#FFFF00F3"/>
-        <Button Content="C" HorizontalAlignment="Left" Margin="120,0,0,23" VerticalAlignment="Bottom" Width="17" Click="btnCenter2_Click" Background="#FFFF00F3" Height="44"/>
-        <Button Content="T" HorizontalAlignment="Left" Margin="53,0,0,48" VerticalAlignment="Bottom" Width="17" Click="btnTop3_Click" Background="#FFFFC500" Height="32"/>
-        <Button Content="B" HorizontalAlignment="Left" Margin="53,0,0,10" VerticalAlignment="Bottom" Width="17" Click="btnBottom3_Click" Background="#FF0097FF" Height="32"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="100" HorizontalAlignment="Left" Margin="9,0,0,10" Width="17"  Background="#FFFF00F3" Height="70" VerticalAlignment="Bottom" FontSize="8" Tag="C100"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="35" HorizontalAlignment="Left" Margin="52,0,0,60" VerticalAlignment="Bottom" Width="17" Background="#FFFFC500" FontSize="8" Height="20" Tag="T35"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="35" HorizontalAlignment="Left" Margin="97,0,0,10" VerticalAlignment="Bottom" Width="17"  Background="#FF0097FF" FontSize="8" Height="20" Tag="B35"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="65" HorizontalAlignment="Left" Margin="52,0,0,10" VerticalAlignment="Bottom" Width="17"  Background="#FF0097FF" Height="45" FontSize="8" Tag="B65"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="65" HorizontalAlignment="Left" Margin="97,0,0,35" VerticalAlignment="Bottom" Width="17"  Background="#FFFFC500" Height="45" FontSize="8" Tag="T65"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="30" HorizontalAlignment="Left" Margin="141,0,0,37" VerticalAlignment="Bottom" Width="17"  Background="#FFFF00F3" FontSize="8" Tag="C30"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="60" HorizontalAlignment="Left" Margin="163,0,0,23" VerticalAlignment="Bottom" Width="17"  Background="#FFFF00F3" Height="44" FontSize="8" Tag="C60"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="50" HorizontalAlignment="Left" Margin="74,0,0,48" VerticalAlignment="Bottom" Width="17"  Background="#FFFFC500" Height="32" FontSize="8" Tag="T50"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="50" HorizontalAlignment="Left" Margin="74,0,0,10" VerticalAlignment="Bottom" Width="17"  Background="#FF0097FF" Height="32" FontSize="8" Tag="B50"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="25" HorizontalAlignment="Left" Margin="119,0,0,10" VerticalAlignment="Bottom" Width="17"  Background="#FF0097FF" Height="13" FontSize="8" Tag="B25"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="75" HorizontalAlignment="Left" Margin="119,0,0,28" VerticalAlignment="Bottom" Width="17"  Background="#FFFFC500" Height="52" FontSize="8" Tag="T75"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="25" HorizontalAlignment="Left" Margin="31,0,0,65" VerticalAlignment="Bottom" Width="17" Background="#FFFFC500" Height="15" FontSize="8" Tag="T25"/>
+        <Button PreviewMouseDown="Button_MouseDown" Content="75" HorizontalAlignment="Left" Margin="31,0,0,10" VerticalAlignment="Bottom" Width="17"  Background="#FF0097FF" Height="50" FontSize="8" Tag="B75"/>
     </Grid>
 </Window>

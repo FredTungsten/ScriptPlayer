@@ -443,10 +443,10 @@ namespace ScriptPlayer.Shared
 
         private void TimeSourceOnIsPlayingChanged(object sender, bool isPlaying)
         {
-            if (isPlaying)
-            {
-                Debug.WriteLine("now playing");
-            }
+            //if (isPlaying)
+            //{
+            //    Debug.WriteLine("now playing");
+            //}
 
             SetIsPlaying(isPlaying);
         }
