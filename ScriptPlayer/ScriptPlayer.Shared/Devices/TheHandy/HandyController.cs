@@ -313,7 +313,7 @@ namespace ScriptPlayer.Shared.TheHandy
                         {
                             LocalScriptServer.LoadedScript = csvData;
                             IsScriptLoaded = true;
-                            scriptUrl = LocalScriptServer.ScriptHostUrl + "tmp.csv";
+                            scriptUrl = LocalScriptServer.ScriptHostUrl + DateTime.Now.ToString("yyyyMMddHHmmss") + ".tmp.csv";
                             break;
                         }
                     case HandyHost.HandyfeelingCom:
