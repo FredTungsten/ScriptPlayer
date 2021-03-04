@@ -361,7 +361,7 @@ namespace ScriptPlayer.Shared.TheHandy
         {
             const string uploadUrl = "https://www.handyfeeling.com/api/sync/upload";
             string name = Path.GetFileNameWithoutExtension(filename);
-            string csvFileName = $"{name}.csv";
+            string csvFileName = $"{name}_{DateTime.UtcNow:yyyyMMddHHmmssf}.csv";
 
             var requestContent = new MultipartFormDataContent();
 
