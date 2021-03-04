@@ -300,6 +300,8 @@ namespace ScriptPlayer.Shared.TheHandy
             string csvData = GenerateCsvFromActions(actions.ToList());
             long scriptSize = Encoding.UTF8.GetByteCount(csvData);
 
+            string filename = $"{Guid.NewGuid():N}_{DateTime.Now:yyyyMMddHHmmss}";
+
             Debug.WriteLine("Script-Size: " + scriptSize);
 
             // the maximum size for the script is 1MB
@@ -313,12 +315,12 @@ namespace ScriptPlayer.Shared.TheHandy
                         {
                             LocalScriptServer.LoadedScript = csvData;
                             IsScriptLoaded = true;
-                            scriptUrl = LocalScriptServer.ScriptHostUrl + DateTime.Now.ToString("yyyyMMddHHmmss") + ".tmp.csv";
+                            scriptUrl = $"{LocalScriptServer.ScriptHostUrl}_{filename}.tmp.csv";
                             break;
                         }
                     case HandyHost.HandyfeelingCom:
                         {
-                            HandyUploadResponse response = PostScriptToHandyfeeling(scriptTitle + ".csv", csvData);
+                            HandyUploadResponse response = PostScriptToHandyfeeling($"{filename}.csv", csvData);
 
                             if (response.success)
                             {
@@ -356,7 +358,7 @@ namespace ScriptPlayer.Shared.TheHandy
                     LocalScriptServer.LoadedScript = null;
             }
         }
-
+        
         private HandyUploadResponse PostScriptToHandyfeeling(string filename, string csv)
         {
             const string uploadUrl = "https://www.handyfeeling.com/api/sync/upload";
