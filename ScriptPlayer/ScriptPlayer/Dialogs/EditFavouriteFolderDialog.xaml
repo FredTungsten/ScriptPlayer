@@ -1,0 +1,25 @@
+﻿<Window x:Class="ScriptPlayer.Dialogs.EditFavouriteFolderDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="ToolWindow"
+        ResizeMode="NoResize"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="Favourite Folder" Height="134.818" Width="409.844">
+    <Grid>
+        <Button IsDefault="True" Click="btnOk_Click" Content="Ok" HorizontalAlignment="Right" Margin="0,0,90,10" VerticalAlignment="Bottom" Width="75"/>
+        <Button IsCancel="True" Click="btnCancel_Click" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,13,0,0" TextWrapping="Wrap" Text="Path" VerticalAlignment="Top"/>
+        <TextBox Text="{Binding Path}" Height="23" Margin="62,12,40,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        <Button Click="btnSelectPath_Click" Content="..." Margin="0,12,10,0" VerticalAlignment="Top" Height="23" HorizontalAlignment="Right" Width="25"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,41,0,0" TextWrapping="Wrap" Text="Name" VerticalAlignment="Top"/>
+        <TextBox Text="{Binding FolderName}" Height="23" Margin="62,40,10,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,69,0,0" TextWrapping="Wrap" Text="Default" VerticalAlignment="Top"/>
+        <CheckBox Name="cckDefault" IsChecked="{Binding IsDefault}" HorizontalAlignment="Left" Margin="62,70,0,0" VerticalAlignment="Top"/>
+
+    </Grid>
+</Window>

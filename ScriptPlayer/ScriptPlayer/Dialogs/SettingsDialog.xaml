@@ -71,7 +71,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Players" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Favourite Folders" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Style>
                     <Style TargetType="{x:Type controls:PageSelector}">
                         <Setter Property="Template">
@@ -710,6 +710,36 @@
                             </DockPanel>
                         </StackPanel>
                     </Grid>
+                    <Grid controls:PageSelector.ContentIdentifier="Favourite Folders">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeIcon Icon="Star_Regular"/>
+                        </controls:PageSelector.Header>
+
+                        <TextBlock Margin="10,10,10,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="Here you can manage all folders you regularly use, e.g. to move files to or load scripts from. Double-click entries to edit them."></TextBlock>
+                        <ListBox Margin="10,47,10,38" ItemsSource="{Binding Settings.FavouriteFolders}" SelectedItem="{Binding SelectedFavouriteFolder}">
+                            <ListBox.Resources>
+                                <Style TargetType="{x:Type ListBoxItem}">
+                                    <EventSetter Event="MouseDoubleClick" Handler="FavouriteFoldersEntry_MouseDoubleClick"/>
+                                </Style>
+                                <DataTemplate DataType="{x:Type viewModels:FavouriteFolder}">
+                                    <TextBlock Text="{Binding Name}" ToolTip="{Binding Path}" HorizontalAlignment="Stretch">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsDefault}" Value="True">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ListBox.Resources>
+                        </ListBox>
+
+                        <Button Content="+" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,38,10" Width="23" Click="BtnAddFolder_Click" Height="23"/>
+                        <Button Content="-" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10" Width="23" Click="BtnRemoveFolder_Click" Height="23"/>
+                    </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Paths">
                         <controls:PageSelector.Header>
                             <controls:AwesomeIcon Icon="Folder_Regular"/>
@@ -720,7 +750,6 @@
 
                         <Button Content="+" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,38,10" Width="23" Click="BtnAddPath_Click" Height="23"/>
                         <Button Content="-" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10" Width="23" Click="BtnRemovePath_Click" Height="23"/>
-                        <TextBox Height="23" Margin="10,0,66,10" TextWrapping="Wrap" Text="{Binding AdditionalPath}" VerticalAlignment="Bottom" RenderTransformOrigin="0.275,0.739"/>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Playlist">
                         <controls:PageSelector.Header>

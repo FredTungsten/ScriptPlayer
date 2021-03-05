@@ -106,8 +106,7 @@ namespace ScriptPlayer.Controls
             if (ViewModel.Playlist?.FilteredEntries == null || ViewModel.LoadedFiles == null)
                 return;
 
-            var entry = ViewModel.Playlist.FilteredEntries.FirstOrDefault(en =>
-                ViewModel.LoadedFiles.Contains(en.Fullname));
+            var entry = ViewModel.Playlist.GetFilteredEntry(ViewModel.LoadedFiles);
 
             if (entry == null)
                 return;

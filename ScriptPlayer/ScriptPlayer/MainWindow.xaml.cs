@@ -376,28 +376,12 @@ namespace ScriptPlayer
 
         private void ViewModelOnRequestFolder(object sender, RequestEventArgs<string> e)
         {
-            var dlg = new CommonOpenFileDialog
-            {
-                IsFolderPicker = true,
-                AddToMostRecentlyUsedList = true,
-                AllowNonFileSystemItems = false,
-                EnsureFileExists = true,
-                EnsurePathExists = true,
-                EnsureReadOnly = false,
-                EnsureValidNames = true,
-                Multiselect = false,
-                ShowPlacesList = true
-            };
-
-
-            if (!string.IsNullOrWhiteSpace(e.Value))
-                dlg.InitialDirectory = e.Value;
-
-            if (dlg.ShowDialog() != CommonFileDialogResult.Ok)
+            var dlg = new DirectorySelectorDialog(ViewModel){Owner = this};
+            if(dlg.ShowDialog() != true)
                 return;
-
+            
             e.Handled = true;
-            e.Value = dlg.FileName;
+            e.Value = dlg.SelectedDirectory;
         }
 
 

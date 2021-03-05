@@ -14,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using JetBrains.Annotations;
 using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using NAudio.Wave;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Controls;
@@ -95,13 +96,13 @@ namespace ScriptPlayer.Dialogs
             set => SetValue(SelectedAdditionalPathProperty, value);
         }
 
-        public static readonly DependencyProperty AdditionalPathProperty = DependencyProperty.Register(
-            "AdditionalPath", typeof(string), typeof(SettingsDialog), new PropertyMetadata(default(string)));
+        public static readonly DependencyProperty SelectedFavouriteFolderProperty = DependencyProperty.Register(
+            "SelectedFavouriteFolder", typeof(FavouriteFolder), typeof(SettingsDialog), new PropertyMetadata(default(FavouriteFolder)));
 
-        public string AdditionalPath
+        public FavouriteFolder SelectedFavouriteFolder
         {
-            get => (string)GetValue(AdditionalPathProperty);
-            set => SetValue(AdditionalPathProperty, value);
+            get => (FavouriteFolder) GetValue(SelectedFavouriteFolderProperty);
+            set => SetValue(SelectedFavouriteFolderProperty, value);
         }
 
         public static readonly DependencyProperty LocalAdressesProperty = DependencyProperty.Register(
@@ -414,24 +415,49 @@ namespace ScriptPlayer.Dialogs
 
         private void BtnAddPath_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(AdditionalPath))
+            string newPath = GetDirectory();
+            if (string.IsNullOrEmpty(newPath))
                 return;
 
-            if (Settings.AdditionalPaths.Contains(AdditionalPath))
+            if (string.IsNullOrWhiteSpace(newPath))
+                return;
+
+            if (Settings.AdditionalPaths.Contains(newPath))
             {
                 MessageBox.Show(this, "This path has already been added.", "Path already added", MessageBoxButton.OK,
                     MessageBoxImage.Information);
                 return;
             }
 
-            if (!IsValidDirectory(AdditionalPath))
+            if (!IsValidDirectory(newPath))
             {
                 MessageBox.Show("This directoy doesn't exist or is not accessible!", "Error", MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 return;
             }
 
-            Settings.AdditionalPaths.Add(AdditionalPath);
+            Settings.AdditionalPaths.Add(newPath);
+        }
+
+        private string GetDirectory()
+        {
+            var dlg = new CommonOpenFileDialog
+            {
+                IsFolderPicker = true,
+                AddToMostRecentlyUsedList = true,
+                AllowNonFileSystemItems = false,
+                EnsureFileExists = true,
+                EnsurePathExists = true,
+                EnsureReadOnly = false,
+                EnsureValidNames = true,
+                Multiselect = false,
+                ShowPlacesList = true
+            };
+
+            if (dlg.ShowDialog() != CommonFileDialogResult.Ok)
+                return null;
+
+            return dlg.FileName;
         }
 
         private static bool IsValidDirectory(string path)
@@ -723,6 +749,72 @@ namespace ScriptPlayer.Dialogs
         private void Window_Closed(object sender, EventArgs e)
         {
             GlobalCommandManager.IsEnabled = true;
+        }
+
+        private void FavouriteFoldersEntry_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (!(((ListBoxItem) sender).DataContext is FavouriteFolder folder))
+                return;
+
+            EditFavouriteFolderDialog dialog = new EditFavouriteFolderDialog(folder){Owner = this};
+            if (dialog.ShowDialog() != true)
+                return;
+
+            if (dialog.IsDefault)
+            {
+                foreach (FavouriteFolder fav in Settings.FavouriteFolders)
+                    fav.IsDefault = false;
+            }
+
+            folder.Path = dialog.Path;
+            folder.Name = dialog.FolderName;
+            folder.IsDefault = dialog.IsDefault;
+        }
+
+        private void BtnAddFolder_Click(object sender, RoutedEventArgs e)
+        {
+            EditFavouriteFolderDialog dialog = new EditFavouriteFolderDialog() { Owner = this };
+            if (dialog.ShowDialog() != true)
+                return;
+
+            if (dialog.IsDefault)
+            {
+                foreach (FavouriteFolder fav in Settings.FavouriteFolders)
+                    fav.IsDefault = false;
+            }
+
+            Settings.FavouriteFolders.Add(new FavouriteFolder{
+                Path = dialog.Path,
+                Name = dialog.FolderName,
+                IsDefault = dialog.IsDefault
+            });
+
+            CheckFavouriteDefault();
+        }
+
+        private void BtnRemoveFolder_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedFavouriteFolder == null) return;
+
+            int currentIndex = Settings.FavouriteFolders.IndexOf(SelectedFavouriteFolder);
+            Settings.FavouriteFolders.Remove(SelectedFavouriteFolder);
+            if (currentIndex >= Settings.FavouriteFolders.Count)
+                currentIndex--;
+
+            SelectedFavouriteFolder = currentIndex >= 0 ? Settings.FavouriteFolders[currentIndex] : null;
+
+            CheckFavouriteDefault();
+        }
+
+        private void CheckFavouriteDefault()
+        {
+            if (Settings.FavouriteFolders.Count == 0)
+                return;
+
+            if (Settings.FavouriteFolders.Any(f => f.IsDefault))
+                return;
+
+            Settings.FavouriteFolders.First().IsDefault = true;
         }
     }
 

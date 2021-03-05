@@ -473,8 +473,14 @@ namespace ScriptPlayer.ViewModels
 
         private void ExecuteRecycleCommand()
         {
-            List<string> allFiles = new List<string>();
             var entriesToDelete = _selectedEntries.ToList();
+
+            MoveToRecycleBin(entriesToDelete);
+        }
+
+        public void MoveToRecycleBin(List<PlaylistEntry> entriesToDelete)
+        {
+            List<string> allFiles = new List<string>();
 
             foreach (PlaylistEntry entry in entriesToDelete)
             {
@@ -527,9 +533,14 @@ namespace ScriptPlayer.ViewModels
             if (string.IsNullOrEmpty(newDirectory))
                 return;
 
-            Dictionary<string, string> newNames = new Dictionary<string, string>();
-
             var entriesToMove = _selectedEntries.ToList();
+
+            MoveEntriesToNewDirectory(entriesToMove, newDirectory, removeFromPlaylist, false);
+        }
+
+        public void MoveEntriesToNewDirectory(List<PlaylistEntry> entriesToMove, string newDirectory, bool removeFromPlaylist, bool playNext)
+        {
+            Dictionary<string, string> newNames = new Dictionary<string, string>();
 
             foreach (PlaylistEntry entry in entriesToMove)
             {
@@ -605,6 +616,9 @@ namespace ScriptPlayer.ViewModels
                         _uncheckedPlaylistEntries.Enqueue(entry);
                     }
                 }
+
+                if(playNext)
+                    PlayNextEntry();
             }
             catch (Exception ex)
             {
@@ -1287,9 +1301,26 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private PlaylistEntry GetEntry(string[] files)
+        public PlaylistEntry GetEntry(string[] files)
         {
+            if (files == null || files.Length == 0)
+                return null;
+
+            if (Entries == null || Entries.Count == 0)
+                return null;
+
             return Entries.FirstOrDefault(p => files.Contains(p.Fullname));
+        }
+
+        public PlaylistEntry GetFilteredEntry(string[] files)
+        {
+            if (files == null || files.Length == 0)
+                return null;
+
+            if (FilteredEntries == null || FilteredEntries.Count == 0)
+                return null;
+
+            return FilteredEntries.FirstOrDefault(p => files.Contains(p.Fullname));
         }
 
         public PlaylistEntry FirstEntry()

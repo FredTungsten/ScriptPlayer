@@ -109,6 +109,9 @@
     <Compile Include="Dialogs\DirectorySelectorDialog.xaml.cs">
       <DependentUpon>DirectorySelectorDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\EditFavouriteFolderDialog.xaml.cs">
+      <DependentUpon>EditFavouriteFolderDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\EditMetaDataDialog.xaml.cs">
       <DependentUpon>EditMetaDataDialog.xaml</DependentUpon>
     </Compile>
@@ -278,6 +281,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\DirectorySelectorDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\EditFavouriteFolderDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

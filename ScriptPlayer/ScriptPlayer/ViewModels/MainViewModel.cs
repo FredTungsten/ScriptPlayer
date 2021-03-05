@@ -3081,6 +3081,59 @@ namespace ScriptPlayer.ViewModels
                     GlobalCommandManager.GetShortcut(Key.MediaPreviousTrack, ModifierKeys.None, true)
                 }
             });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(()=>{ MoveRemoveNext(false, false); })
+            {
+                CommandId = "MoveCurrentToDefault",
+                DisplayText = "Move to default folder"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(() => { MoveRemoveNext(true, false); })
+            {
+                CommandId = "MoveCurrentToDefaultRemoveFromPlaylist",
+                DisplayText = "Move to default folder, remove from playlist"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(() => { MoveRemoveNext(true, true); })
+            {
+                CommandId = "MoveCurrentToDefaultRemoveFromPlaylistPlayNext",
+                DisplayText = "Move to default folder, remove from playlist, play next"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(() => { MoveToRecycleBin(); })
+            {
+                CommandId = "MoveCurrentToRecycleBinPlayNext",
+                DisplayText = "Move to recycle bin, play next"
+            });
+        }
+
+        private void MoveToRecycleBin()
+        {
+            if (!EntryLoaded())
+                return;
+
+            PlaylistEntry currentEntry = Playlist.GetEntry(LoadedFiles);
+            if (currentEntry == null)
+                return;
+
+            Playlist.PlayNextEntry();
+            Playlist.MoveToRecycleBin(new List<PlaylistEntry> { currentEntry });
+        }
+
+        private void MoveRemoveNext(bool removeFromPlaylist, bool playNext)
+        {
+            if (!EntryLoaded())
+                return;
+
+            string newDir = Settings.FavouriteFolders.FirstOrDefault(f => f.IsDefault)?.Path;
+            if (string.IsNullOrEmpty(newDir))
+                return;
+
+            PlaylistEntry currentEntry = Playlist.GetEntry(LoadedFiles);
+            if (currentEntry == null)
+                return;
+            
+            Playlist.MoveEntriesToNewDirectory(new List<PlaylistEntry>{currentEntry}, newDir, removeFromPlaylist, playNext);
         }
 
         private void EditMetadata()

@@ -5,12 +5,34 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         xmlns:local="clr-namespace:ScriptPlayer.Dialogs"
+        xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
         mc:Ignorable="d"
-        Title="Select directory" Height="393.75" Width="371.928">
+        ResizeMode="NoResize"
+        SizeToContent="Height"
+        Title="Select directory" Height="393.75" Width="371.928" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
     <Grid>
-        <Button Content="Pick from file system" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="344"/>
-        <TextBlock HorizontalAlignment="Left" Margin="10,35,0,0" TextWrapping="Wrap" Text="Favorites" VerticalAlignment="Top"/>
-        <ListBox HorizontalAlignment="Left" Height="114" Margin="10,56,0,0" VerticalAlignment="Top" Width="344"/>
+        <Button FontSize="14"  Height="30" Content="Pick from file system" Margin="10,10,10,0" VerticalAlignment="Top" Click="btnSelect_Click"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,45,0,0" TextWrapping="Wrap" Text="Favorites" VerticalAlignment="Top"/>
+        <ItemsControl ItemsSource="{Binding ViewModel.Settings.FavouriteFolders}"  Margin="10,66,10,42">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type viewModels:FavouriteFolder}">
+                    <Button Margin="0,3" HorizontalAlignment="Stretch" Height="30" Click="btnSelectFavourite_Click">
+                        <TextBlock FontSize="14" Text="{Binding Name}" ToolTip="{Binding Path}" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDefault}" Value="True">
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button Click="btnEditFavourites_Click" Content="Edit Favourites" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="97"/>
 
     </Grid>
 </Window>

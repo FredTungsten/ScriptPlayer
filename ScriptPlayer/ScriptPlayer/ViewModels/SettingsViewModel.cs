@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -24,6 +25,7 @@ namespace ScriptPlayer.ViewModels
         private string _buttplugUrl;
 
         private ObservableCollection<string> _additionalPaths = new ObservableCollection<string>();
+        private ObservableCollection<FavouriteFolder> _favouriteFolders = new ObservableCollection<FavouriteFolder>();
 
         private bool _checkForNewVersionOnStartup = true;
         private bool _autoSkip;
@@ -308,6 +310,7 @@ namespace ScriptPlayer.ViewModels
             }
 
             duplicate.AdditionalPaths = new ObservableCollection<string>(AdditionalPaths ?? new ObservableCollection<string>());
+            duplicate.FavouriteFolders = new ObservableCollection<FavouriteFolder>(FavouriteFolders?.Select(f => f.Duplicate()) ?? new ObservableCollection<FavouriteFolder>());
 
             return duplicate;
         }
@@ -550,6 +553,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (Equals(value, _additionalPaths)) return;
                 _additionalPaths = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ObservableCollection<FavouriteFolder> FavouriteFolders
+        {
+            get => _favouriteFolders;
+            set
+            {
+                if (Equals(value, _favouriteFolders)) return;
+                _favouriteFolders = value;
                 OnPropertyChanged();
             }
         }
@@ -1603,5 +1617,65 @@ namespace ScriptPlayer.ViewModels
         KeepLastScript = 1,
         ClearScript = 2,
         FallbackScript = 3
+    }
+
+    public class FavouriteFolder : INotifyPropertyChanged
+    {
+        private string _path;
+        private string _name;
+        private bool _isDefault;
+
+        public string Path
+        {
+            get => _path;
+            set
+            {
+                if (value == _path) return;
+                _path = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (value == _name) return;
+                _name = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsDefault
+        {
+            get => _isDefault;
+            set
+            {
+                if (value == _isDefault) return;
+                _isDefault = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public FavouriteFolder Duplicate()
+        {
+            return new FavouriteFolder
+            {
+                Path = Path,
+                Name = Name,
+                IsDefault = IsDefault
+            };
+        }
+
+        [field: XmlIgnore]
+        [field: NonSerialized]
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
