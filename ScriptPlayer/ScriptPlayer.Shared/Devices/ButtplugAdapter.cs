@@ -8,10 +8,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Buttplug;
 using Buttplug.Client;
 using Buttplug.Client.Connectors.WebsocketConnector;
-using Buttplug.Core;
-using Buttplug.Core.Messages;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared.Helpers;
 
@@ -60,16 +59,15 @@ namespace ScriptPlayer.Shared
 
             try
             {
-                var client = new ButtplugClient("ScriptPlayer", new ButtplugWebsocketConnector(new Uri(_url)));
+                var client = new ButtplugClient("ScriptPlayer");
                 client.DeviceAdded += Client_DeviceAdded;
                 client.DeviceRemoved += Client_DeviceRemoved;
                 client.ErrorReceived += Client_ErrorReceived;
-                client.Log += Client_Log;
                 client.PingTimeout += Client_PingTimeout;
                 client.ScanningFinished += Client_ScanningFinished;
                 client.ServerDisconnect += Client_ServerDisconnect;
 
-                await client.ConnectAsync();
+                await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri(_url)));
                 _client = client;
 
                 foreach (var buttplugClientDevice in _client.Devices)
@@ -104,11 +102,6 @@ namespace ScriptPlayer.Shared
         }
 
         private void Client_PingTimeout(object sender, EventArgs e)
-        {
-            //TODO
-        }
-
-        private void Client_Log(object sender, LogEventArgs logEventArgs)
         {
             //TODO
         }
@@ -156,7 +149,7 @@ namespace ScriptPlayer.Shared
         {
             if (_client == null) return;
 
-            if (device.AllowedMessages.ContainsKey(typeof(VibrateCmd)))
+            if (device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.VibrateCmd))
             {
                 double speed;
                 switch (VibratorConversionMode)
@@ -232,11 +225,11 @@ namespace ScriptPlayer.Shared
             {
                 await _clientLock.WaitAsync();
 
-                if (device.AllowedMessages.ContainsKey(typeof(FleshlightLaunchFW12Cmd)))
+                if (device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.LinearCmd))
                 {
-                    await device.SendFleshlightLaunchFW12Cmd(information.SpeedTransformed, information.PositionToTransformed);
+                    await device.SendLinearCmd(information.SpeedTransformed, information.PositionToTransformed);
                 }
-                else if (device.AllowedMessages.ContainsKey(typeof(VibrateCmd)))
+                else if (device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.VibrateCmd))
                 {
                     switch (VibratorConversionMode)
                     {
@@ -254,9 +247,9 @@ namespace ScriptPlayer.Shared
                             throw new ArgumentOutOfRangeException();
                     }
                 }
-                else if (device.AllowedMessages.ContainsKey(typeof(VorzeA10CycloneCmd)))
+                else if (device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.RotateCmd))
                 {
-                    await device.SendVorzeA10CycloneCmd(CommandConverter.LaunchToVorzeSpeed(information), information.PositionToTransformed > information.PositionFromTransformed);
+                    await device.SendRotateCmd(CommandConverter.LaunchToVorzeSpeed(information), information.PositionToTransformed > information.PositionFromTransformed);
                 }
             }
             catch (Exception e)
@@ -269,37 +262,17 @@ namespace ScriptPlayer.Shared
             }
         }
 
-        /*
-        private string LaunchToLovense(byte position, byte speed)
-        {
-            return "https://github.com/metafetish/lovesense-rs";
-        }
-        */
-
-        private async Task CheckResponse(ButtplugMessage response)
-        {
-            if (response is Error error)
-            {
-                if (error.ErrorCode == Error.ErrorClass.ERROR_UNKNOWN)
-                    await Disconnect();
-            }
-            else
-            {
-                //Console.WriteLine(response.Id);
-            }
-        }
-
         public async void Stop(ButtplugClientDevice device)
         {
-            if (_client == null) return;
+            if (_client == null)
+                return;
 
-            if (!device.AllowedMessages.ContainsKey(typeof(StopDeviceCmd))) return;
+            if (!device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.StopDeviceCmd))
+                return;
 
             try
             {
-                await device.StopDeviceCmd();
-                //ButtplugMessage response = await _client.SendDeviceMessage(device, new StopDeviceCmd(device.Index));
-                //await CheckResponse(response);
+                await device.SendStopDeviceCmd();
             }
             catch (Exception e)
             {
@@ -307,13 +280,13 @@ namespace ScriptPlayer.Shared
             }
         }
 
-
-
         public async Task Disconnect()
         {
             try
             {
-                if (!_client?.Connected ?? false) return;
+                if (!_client?.Connected ?? false)
+                    return;
+
                 await _client.DisconnectAsync();
             }
             catch (Exception e)
