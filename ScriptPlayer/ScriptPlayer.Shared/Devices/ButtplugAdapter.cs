@@ -227,9 +227,11 @@ namespace ScriptPlayer.Shared
 
                 if (device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.LinearCmd))
                 {
+                    double val = information.PositionToTransformed / (double)99;
+                    val = Math.Min(1.0, Math.Max(0, val));
+
                     await device.SendLinearCmd(
-                        (uint) information.DurationStretched.TotalMilliseconds, 
-                        information.PositionToTransformed);
+                        (uint) information.DurationStretched.TotalMilliseconds, val);
                 }
                 else if (device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.VibrateCmd))
                 {
