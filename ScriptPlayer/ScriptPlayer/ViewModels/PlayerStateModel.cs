@@ -55,7 +55,7 @@ namespace ScriptPlayer.ViewModels
                 X = X,
                 Y = Y,
                 Panels = Panels.Duplicate(),
-                PanelsFullscreen = PanelsFullscreen.Duplicate()
+                PanelsFullscreen = PanelsFullscreen?.Duplicate()
             };
         }
     }
