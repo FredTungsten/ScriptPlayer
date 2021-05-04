@@ -102,9 +102,11 @@ namespace ScriptPlayer.Shared
             double hue = BlendHue(hslA.Item1, hslB.Item1, progress);
             double saturation = hslA.Item2 * (1.0 - progress) + hslB.Item2 * progress;
             double luminosity = hslA.Item3 * (1.0 - progress) + hslB.Item3 * progress;
+            byte alpha = (byte) Math.Min(255,
+                Math.Max(0, Math.Round(colorA.A * (1.0 - progress) + colorB.A * progress)));
 
             var rgb = FromHsl(hue, saturation, luminosity);
-            return Color.FromRgb(rgb.Item1, rgb.Item2, rgb.Item3);
+            return Color.FromArgb(alpha, rgb.Item1, rgb.Item2, rgb.Item3);
         }
 
         private static double BlendHue(double hA, double hB, double progress)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace ScriptPlayer.Shared
 {
@@ -203,12 +204,125 @@ namespace ScriptPlayer.Shared
             return brush;
         }
 
+        public static Brush Generate3(List<TimedPosition> beats, TimeSpan gapDuration, TimeSpan timeFrom, TimeSpan timeTo, double multiplier, List<HeatMapEntry> stops)
+        {
+            List<List<TimedPosition>> segments = GetSegments(beats, gapDuration, timeFrom, timeTo);
+
+            TimeSpan fastest = TimeSpan.FromMilliseconds(200);
+            TimeSpan duration = timeTo - timeFrom;
+
+            stops.Add(new HeatMapEntry(Colors.Transparent, 0.0, 0, 0));
+
+            foreach (List<TimedPosition> segment in segments)
+            {
+                if (segment.Count == 1)
+                {
+                    TimeSpan stamp = segment.Single().TimeStamp;
+                    TimeSpan span = TimeSpan.FromSeconds(2);
+
+                    TimeSpan beginSegment = stamp - span;
+                    if (beginSegment < timeFrom)
+                        beginSegment = timeFrom;
+
+                    TimeSpan endSegment = stamp + span;
+                    if (endSegment > timeTo)
+                        endSegment = timeTo;
+
+                    FindMinMax(segment, 0, 0, out byte min, out byte max);
+
+                    stops.Add(new HeatMapEntry(Colors.Transparent, beginSegment.Divide(duration),min,max));
+                    stops.Add(new HeatMapEntry(Colors.DodgerBlue, beginSegment.Divide(duration), min, max));
+                    stops.Add(new HeatMapEntry(Colors.DodgerBlue, endSegment.Divide(duration), min, max));
+                    stops.Add(new HeatMapEntry(Colors.Transparent, endSegment.Divide(duration), min, max));
+                }
+                else
+                {
+                    TimeSpan span = segment.Last().TimeStamp - segment.First().TimeStamp;
+                    int segmentCount = (int)Math.Max(1, Math.Min((segment.Count - 1) / 12.0, span.Divide(duration.Divide(200))));
+
+                    stops.Add(new HeatMapEntry(Colors.Transparent, (segment.First().TimeStamp - timeFrom).Divide(duration),0,0));
+
+                    for (int i = 0; i < segmentCount; i++)
+                    {
+                        int startIndex = Math.Min(segment.Count - 1, (int)((i * (segment.Count - 1)) / (double)segmentCount));
+                        int endIndex = Math.Min(segment.Count - 1, (int)(((i + 1) * (segment.Count - 1)) / (double)segmentCount));
+                        int beatCount = endIndex - startIndex - 1;
+
+                        TimeSpan firstBeat = segment[startIndex].TimeStamp;
+                        TimeSpan lastBeat = segment[endIndex].TimeStamp;
+
+                        FindMinMax(segment, startIndex, endIndex, out byte min, out byte max);
+
+                        TimeSpan averageLength = (lastBeat - firstBeat).Divide(beatCount);
+                        double value = fastest.Divide(averageLength) * multiplier;
+
+                        value = Math.Min(1, Math.Max(0, value));
+                        Color color = GetColorAtPosition(HeatMap, value);
+
+                        double positionStart = firstBeat.Divide(duration);
+                        double positionEnd = lastBeat.Divide(duration);
+
+                        if (i == 0)
+                            stops.Add(new HeatMapEntry(color, positionStart, min, max));
+
+                        stops.Add(new HeatMapEntry(color, (positionEnd + positionStart) / 2.0, min, max));
+
+                        if (i == segmentCount - 1)
+                            stops.Add(new HeatMapEntry(color, positionEnd, min, max));
+                    }
+                    
+                    stops.Add(new HeatMapEntry(Colors.Transparent, (segment.Last().TimeStamp - timeFrom).Divide(duration),0,0));
+                }
+            }
+
+            stops.Add(new HeatMapEntry(Colors.Transparent, 1.0,0,0));
+
+            LinearGradientBrush brush = new LinearGradientBrush(FillGradients(stops), new Point(0, 0), new Point(1, 0));
+            brush.MappingMode = BrushMappingMode.RelativeToBoundingBox;
+
+            return brush;
+        }
+
+        private static void FindMinMax(List<TimedPosition> segment, int startIndex, int endIndex, out byte min, out byte max)
+        {
+            min = 255;
+            max = 0;
+
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                if (segment[i].Position > max)
+                    max = segment[i].Position;
+
+                if (segment[i].Position < min)
+                    min = segment[i].Position;
+            }
+
+            StretchMinMax(ref min, ref max);
+        }
+
+        private static void StretchMinMax(ref byte min, ref byte max, byte minSize = 10)
+        {
+            if (max - min >= minSize)
+                return;
+
+            if (min < minSize / 2)
+            {
+                min = 0;
+                max = minSize;
+            }
+            else if (max > 95)
+            {
+                max = 99;
+                min = (byte) (99 - minSize);
+            }
+        }
+
         public static List<List<TimeSpan>> GetSegments(List<TimeSpan> beats, TimeSpan gapDuration, TimeSpan timeFrom, TimeSpan timeTo)
         {
             List<List<TimeSpan>> segments = new List<List<TimeSpan>>();
 
             TimeSpan previous = timeFrom;
-            
+
             foreach (TimeSpan beat in beats)
             {
                 if (beat < timeFrom || beat > timeTo) continue;
@@ -223,6 +337,31 @@ namespace ScriptPlayer.Shared
 
                 segments.Last().Add(beat);
                 previous = beat;
+            }
+
+            return segments;
+        }
+
+        public static List<List<TimedPosition>> GetSegments(List<TimedPosition> beats, TimeSpan gapDuration, TimeSpan timeFrom, TimeSpan timeTo)
+        {
+            List<List<TimedPosition>> segments = new List<List<TimedPosition>>();
+
+            TimeSpan previous = timeFrom;
+
+            foreach (TimedPosition beat in beats)
+            {
+                if (beat.TimeStamp < timeFrom || beat.TimeStamp > timeTo) continue;
+
+                if (beat.TimeStamp - previous >= gapDuration)
+                {
+                    segments.Add(new List<TimedPosition>());
+                }
+
+                if (segments.Count == 0)
+                    segments.Add(new List<TimedPosition>());
+
+                segments.Last().Add(beat);
+                previous = beat.TimeStamp;
             }
 
             return segments;
@@ -259,6 +398,47 @@ namespace ScriptPlayer.Shared
                 result.Add(stop);
             }
             return result;
+        }
+
+        public static GradientStopCollection FillGradients(List<HeatMapEntry> stops)
+        {
+            GradientStopCollection result = new GradientStopCollection();
+            result.Add(stops[0].ToGradientStop());
+
+            for (int i = 1; i < stops.Count; i++)
+            {
+                GradientStop stop = stops[i].ToGradientStop();
+                GradientStop previous = stops[i - 1].ToGradientStop();
+
+                double progress = 0.5;
+                double offset = previous.Offset + (stop.Offset - previous.Offset) * progress;
+                Color color = HslConversion.Blend(previous.Color, stop.Color, progress);
+
+                result.Add(new GradientStop(color, offset));
+                result.Add(stop);
+            }
+            return result;
+        }
+    }
+
+    public class HeatMapEntry
+    {
+        public Color Color { get; set; }
+        public double Offset { get; set; }
+        public byte Min { get; set; }
+        public byte Max { get; set; }
+
+        public HeatMapEntry(Color color, double offset, byte min, byte max)
+        {
+            Color = color;
+            Offset = offset;
+            Min = min;
+            Max = max;
+        }
+
+        public GradientStop ToGradientStop()
+        {
+            return new GradientStop(Color, Offset);
         }
     }
 }

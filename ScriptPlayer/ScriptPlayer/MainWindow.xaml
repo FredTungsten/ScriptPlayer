@@ -626,6 +626,7 @@
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Settings.ShowHeatMap}" Value="True">
                                 <Setter Property="Overlay" Value="{Binding HeatMap}"/>
+                                <Setter Property="OverlayGeometry" Value="{Binding HeatMapLimits}"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>

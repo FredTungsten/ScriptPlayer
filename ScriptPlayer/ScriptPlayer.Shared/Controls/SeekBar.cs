@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -21,6 +22,15 @@ namespace ScriptPlayer.Shared
         public static readonly DependencyProperty OverlayOpacityProperty = DependencyProperty.Register(
             "OverlayOpacity", typeof(Brush), typeof(SeekBar),
             new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty OverlayGeometryProperty = DependencyProperty.Register(
+            "OverlayGeometry", typeof(List<HeatMapEntry>), typeof(SeekBar), new FrameworkPropertyMetadata(default(List<HeatMapEntry>), FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public List<HeatMapEntry> OverlayGeometry
+        {
+            get { return (List<HeatMapEntry>) GetValue(OverlayGeometryProperty); }
+            set { SetValue(OverlayGeometryProperty, value); }
+        }
 
         public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
             "Progress", typeof(TimeSpan), typeof(SeekBar),
@@ -229,7 +239,21 @@ namespace ScriptPlayer.Shared
 
             dc.PushOpacityMask(OverlayOpacity);
 
+            bool overlayGeometry = false;
+
+            if (OverlayGeometry != null && OverlayGeometry.Count >= 2)
+            {
+                Geometry geometry = GenerateGeometry(OverlayGeometry, rect);
+                overlayGeometry = true;
+
+                dc.PushClip(geometry);
+            }
+
+
             dc.DrawRectangle(Overlay, null, rect);
+
+            if(overlayGeometry)
+                dc.Pop();
 
             dc.Pop();
 
@@ -260,6 +284,38 @@ namespace ScriptPlayer.Shared
             }
 
             dc.Pop();
+        }
+
+        private Geometry GenerateGeometry(List<HeatMapEntry> overlayGeometry, Rect rect)
+        {
+            PathFigure figure = new PathFigure();
+            figure.IsClosed = true;
+
+            for (int i = 0; i < overlayGeometry.Count; i++)
+            {
+                double x = overlayGeometry[i].Offset * rect.Width + rect.X;
+                double y = ((99 - overlayGeometry[i].Max) / 99.0) * rect.Height + rect.Y;
+                Point p = new Point(x,y);
+
+                if (i == 0)
+                    figure.StartPoint = p;
+                else
+                    figure.Segments.Add(new LineSegment(p, true));
+            }
+
+            for (int i = overlayGeometry.Count - 1; i >= 0; i--)
+            {
+                double x = overlayGeometry[i].Offset * rect.Width + rect.X;
+                double y = ((99 - overlayGeometry[i].Min) / 99.0) * rect.Height + rect.Y;
+                Point p = new Point(x, y);
+
+                figure.Segments.Add(new LineSegment(p, true));
+            }
+
+            PathGeometry geometry = new PathGeometry();
+            geometry.Figures.Add(figure);
+
+            return geometry;
         }
 
         private double RoundLinePosition(double linePosition)
