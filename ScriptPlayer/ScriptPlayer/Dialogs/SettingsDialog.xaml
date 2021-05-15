@@ -200,6 +200,10 @@
                                 ConverterParameter={x:Static shared:VibratorConversionMode.SpeedFullDuration}}" Content="Use speed"/>
                             <RadioButton Margin="4" IsChecked="{Binding Settings.VibratorConversionMode, Converter={StaticResource BooleanConverter}, 
                                 ConverterParameter={x:Static shared:VibratorConversionMode.SpeedHalfDuration}}" Content="Use speed but stop after half the duration"/>
+                            <RadioButton Margin="4" IsChecked="{Binding Settings.VibratorConversionMode, Converter={StaticResource BooleanConverter}, 
+                                ConverterParameter={x:Static shared:VibratorConversionMode.SpeedTimesLengthFullDuration}}" Content="Use speed * length"/>
+                            <RadioButton Margin="4" IsChecked="{Binding Settings.VibratorConversionMode, Converter={StaticResource BooleanConverter}, 
+                                ConverterParameter={x:Static shared:VibratorConversionMode.SpeedTimesLengthHalfDuration}}" Content="Use speed * lengthbut stop after half the duration"/>
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="FFmpeg">

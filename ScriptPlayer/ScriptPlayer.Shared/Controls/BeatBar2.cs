@@ -33,8 +33,8 @@ namespace ScriptPlayer.Shared
 
         public bool SoundAfterBeat
         {
-            get { return (bool) GetValue(SoundAfterBeatProperty); }
-            set { SetValue(SoundAfterBeatProperty, value); }
+            get => (bool) GetValue(SoundAfterBeatProperty);
+            set => SetValue(SoundAfterBeatProperty, value);
         }
 
         public static readonly DependencyProperty SoundDelayProperty = DependencyProperty.Register(
@@ -42,8 +42,8 @@ namespace ScriptPlayer.Shared
 
         public double SoundDelay
         {
-            get { return (double) GetValue(SoundDelayProperty); }
-            set { SetValue(SoundDelayProperty, value); }
+            get => (double) GetValue(SoundDelayProperty);
+            set => SetValue(SoundDelayProperty, value);
         }
 
         public static readonly DependencyProperty BeatVolumeProperty = DependencyProperty.Register(
@@ -56,8 +56,8 @@ namespace ScriptPlayer.Shared
 
         public double BeatVolume
         {
-            get { return (double) GetValue(BeatVolumeProperty); }
-            set { SetValue(BeatVolumeProperty, value); }
+            get => (double) GetValue(BeatVolumeProperty);
+            set => SetValue(BeatVolumeProperty, value);
         }
 
         public static readonly DependencyProperty HighlightBeatsProperty = DependencyProperty.Register(
@@ -83,8 +83,8 @@ namespace ScriptPlayer.Shared
 
         public int PreviewHighlightInterval
         {
-            get { return (int) GetValue(PreviewHighlightIntervalProperty); }
-            set { SetValue(PreviewHighlightIntervalProperty, value); }
+            get => (int) GetValue(PreviewHighlightIntervalProperty);
+            set => SetValue(PreviewHighlightIntervalProperty, value);
         }
 
         public static readonly DependencyProperty HighlightOffsetProperty = DependencyProperty.Register(
@@ -161,8 +161,8 @@ namespace ScriptPlayer.Shared
 
         public BeatCollection PreviewBeats
         {
-            get { return (BeatCollection) GetValue(PreviewBeatsProperty); }
-            set { SetValue(PreviewBeatsProperty, value); }
+            get => (BeatCollection) GetValue(PreviewBeatsProperty);
+            set => SetValue(PreviewBeatsProperty, value);
         }
 
         public static readonly DependencyProperty TotalDisplayedDurationProperty = DependencyProperty.Register(
@@ -185,6 +185,15 @@ namespace ScriptPlayer.Shared
 
         public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
             "Progress", typeof(TimeSpan), typeof(BeatBar2), new PropertyMetadata(default(TimeSpan), OnVisualPropertyChanged));
+
+        public static readonly DependencyProperty SpeedRatioProperty = DependencyProperty.Register(
+            "SpeedRatio", typeof(double), typeof(BeatBar2), new PropertyMetadata((double)1.0));
+
+        public double SpeedRatio
+        {
+            get => (double) GetValue(SpeedRatioProperty);
+            set => SetValue(SpeedRatioProperty, value);
+        }
 
         private bool _rightdown;
         private double _lastMousePosition;
@@ -278,7 +287,13 @@ namespace ScriptPlayer.Shared
             List<TimeSpan> absolutePreviewPositions =
                 PreviewBeats?.GetBeats(timeFrom, timeTo).ToList() ?? new List<TimeSpan>();
 
+            //WTF weird ...
+            TimeSpan soundFileDelay = TimeSpan.FromMilliseconds(85 * Math.Max(0, 2 - SpeedRatio)); // TimeSpan.FromMilliseconds(100 + SpeedRatio < 1 ? 50 : 0);
+            
             TimeSpan delayedProgress = Progress.Subtract(TimeSpan.FromMilliseconds(SoundDelay));
+
+            delayedProgress = delayedProgress.Subtract(soundFileDelay);
+            
             bool isActive = absoluteBeatPositions.Any(b => delayedProgress >= b  && delayedProgress <= b.Add(FlashDuration));
 
             if (SoundAfterBeat)

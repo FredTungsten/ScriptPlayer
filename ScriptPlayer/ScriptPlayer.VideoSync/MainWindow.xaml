@@ -145,7 +145,8 @@
                         x:Name="BeatBar" Background="Transparent" Beats="{Binding Beats}" 
                         Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" 
                         LineColor="#FF00B9FF" LineWidth="3"  HighlightColor="Red"
-                        TotalDisplayedDuration="{Binding BeatBarDuration}" Midpoint="{Binding BeatBarCenter}"/>
+                        TotalDisplayedDuration="{Binding BeatBarDuration}" Midpoint="{Binding BeatBarCenter}"
+                        SpeedRatio="{Binding SpeedRatioModifier}"/>
 
                     <shared:PositionBar Name="positionBar"  Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
                                     Midpoint="{Binding BeatBarCenter}" 

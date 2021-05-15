@@ -45,5 +45,18 @@ namespace ScriptPlayer.Shared
 
             return result;
         }
+
+        public static double LaunchSpeedAndLengthToVibratorSpeed(byte speed, byte pFrom, byte pTo)
+        {
+            double length = Math.Abs(pFrom - pTo) / 99.0;
+            
+            const double max = 1.0;
+            const double min = 0.0;
+
+            double speedRelative = (speed + 1) / 100.0;
+            double result = min + (max - min) * speedRelative;
+
+            return Math.Min(max, Math.Max(min, result * length));
+        }
     }
 }

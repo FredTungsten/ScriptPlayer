@@ -192,6 +192,32 @@ namespace ScriptPlayer.Shared
                             speed = CommandConverter.LaunchSpeedToVibratorSpeed(information.DeviceInformation.SpeedTransformed);
                             break;
                         }
+                    case VibratorConversionMode.SpeedTimesLengthFullDuration:
+                    {
+                        speed = CommandConverter.LaunchSpeedAndLengthToVibratorSpeed(
+                            information.DeviceInformation.SpeedOriginal,
+                            information.DeviceInformation.PositionFromTransformed,
+                            information.DeviceInformation.PositionToTransformed);
+                        speed = information.DeviceInformation.TransformSpeed(speed);
+                            break;
+                    }
+                    case VibratorConversionMode.SpeedTimesLengthHalfDuration:
+                    {
+                        if (information.Progress < 0.5)
+                        {
+                            speed = CommandConverter.LaunchSpeedAndLengthToVibratorSpeed(
+                                information.DeviceInformation.SpeedOriginal,
+                                information.DeviceInformation.PositionFromTransformed,
+                                information.DeviceInformation.PositionToTransformed);
+                            speed = information.DeviceInformation.TransformSpeed(speed);
+                            }
+                        else
+                        {
+                            speed = 0.0;
+                        }
+
+                        break;
+                        }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -246,6 +272,13 @@ namespace ScriptPlayer.Shared
                         case VibratorConversionMode.SpeedHalfDuration:
                         case VibratorConversionMode.SpeedFullDuration:
                             await device.SendVibrateCmd(information.TransformSpeed(CommandConverter.LaunchSpeedToVibratorSpeed(information.SpeedTransformed)));
+                            break;
+                        case VibratorConversionMode.SpeedTimesLengthHalfDuration:
+                        case VibratorConversionMode.SpeedTimesLengthFullDuration:
+                            await device.SendVibrateCmd(information.TransformSpeed(CommandConverter.LaunchSpeedAndLengthToVibratorSpeed(
+                                information.SpeedOriginal,
+                                information.PositionFromTransformed,
+                                information.PositionToTransformed)));
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -359,7 +392,9 @@ namespace ScriptPlayer.Shared
         PositionToSpeed,
         PositionToSpeedInverted,
         SpeedHalfDuration,
-        SpeedFullDuration
+        SpeedFullDuration,
+        SpeedTimesLengthFullDuration,
+        SpeedTimesLengthHalfDuration,
     }
 
     public class ButtplugConnectionSettings
