@@ -33,8 +33,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Buttplug, Version=1.0.18.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Buttplug.1.0.18\lib\netstandard2.0\Buttplug.dll</HintPath>
+    <Reference Include="Buttplug, Version=2.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.2.0.2\lib\netstandard2.0\Buttplug.dll</HintPath>
     </Reference>
     <Reference Include="Buttplug.Client.Connectors.WebsocketConnector, Version=0.5.9.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Buttplug.Client.Connectors.WebsocketConnector.0.5.9\lib\netstandard2.0\Buttplug.Client.Connectors.WebsocketConnector.dll</HintPath>
@@ -42,8 +42,8 @@
     <Reference Include="deniszykov.WebSocketListener, Version=4.2.9.0, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
       <HintPath>..\packages\deniszykov.WebSocketListener.4.2.9\lib\net45\deniszykov.WebSocketListener.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Protobuf, Version=3.15.7.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Protobuf.3.15.7\lib\net45\Google.Protobuf.dll</HintPath>
+    <Reference Include="Google.Protobuf, Version=3.17.0.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Protobuf.3.17.0\lib\net45\Google.Protobuf.dll</HintPath>
     </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.11.24.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.11.24\lib\Net45\HtmlAgilityPack.dll</HintPath>
@@ -389,7 +389,9 @@
     <Resource Include="Fonts\Font Awesome 5 Brands-Regular-400.otf" />
     <Resource Include="Fonts\Font Awesome 5 Free-Regular-400.otf" />
     <Resource Include="Fonts\Font Awesome 5 Free-Solid-900.otf" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Devices\Controller.png" />
@@ -404,9 +406,9 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\MediaInfo.Native.19.9.0\build\MediaInfo.Native.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MediaInfo.Native.19.9.0\build\MediaInfo.Native.targets'))" />
-    <Error Condition="!Exists('..\packages\ButtplugRustFFI.1.0.16\build\ButtplugRustFFI.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ButtplugRustFFI.1.0.16\build\ButtplugRustFFI.targets'))" />
+    <Error Condition="!Exists('..\packages\ButtplugRustFFI.2.0.2\build\ButtplugRustFFI.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ButtplugRustFFI.2.0.2\build\ButtplugRustFFI.targets'))" />
   </Target>
-  <Import Project="..\packages\ButtplugRustFFI.1.0.16\build\ButtplugRustFFI.targets" Condition="Exists('..\packages\ButtplugRustFFI.1.0.16\build\ButtplugRustFFI.targets')" />
+  <Import Project="..\packages\ButtplugRustFFI.2.0.2\build\ButtplugRustFFI.targets" Condition="Exists('..\packages\ButtplugRustFFI.2.0.2\build\ButtplugRustFFI.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
