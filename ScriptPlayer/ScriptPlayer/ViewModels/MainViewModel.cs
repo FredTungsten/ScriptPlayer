@@ -321,7 +321,7 @@ namespace ScriptPlayer.ViewModels
         private FileSystemWatcher _fileWatcher;
         private AudioFileTimeSource _audioHandler;
         private string _loadedAudio;
-        private List<HeatMapEntry> _heatMapLimits;
+        private Geometry _heatMapBounds;
 
         public ObservableCollection<IDevice> Devices => _devices;
 
@@ -1594,13 +1594,13 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public List<HeatMapEntry> HeatMapLimits
+        public Geometry HeatMapBounds
         {
-            get => _heatMapLimits;
+            get => _heatMapBounds;
             set
             {
-                if (Equals(value, _heatMapLimits)) return;
-                _heatMapLimits = value;
+                if (Equals(value, _heatMapBounds)) return;
+                _heatMapBounds = value;
                 OnPropertyChanged();
             }
         }
@@ -4016,15 +4016,16 @@ namespace ScriptPlayer.ViewModels
             IEnumerable<FunScriptAction> actions = Settings.ShowFilledGapsInHeatMap ? _scriptHandler.GetScript() : _scriptHandler.GetUnfilledScript();
 
             List<FunScriptAction> timeStamps = FilterDuplicates(actions.ToList());
-            List<HeatMapEntry> limits = new List<HeatMapEntry>();
+
+
             Brush heatmap = HeatMapGenerator.Generate3(timeStamps.Select(t => new TimedPosition()
             {
                 Position = t.Position,
                 TimeStamp = t.TimeStamp
-            }).ToList(), _gapDuration, TimeSpan.Zero, TimeSource.Duration, TimeSource.PlaybackRate, limits);
+            }).ToList(), _gapDuration, TimeSpan.Zero, TimeSource.Duration, TimeSource.PlaybackRate, out Geometry bounds);
 
             HeatMap = heatmap;
-            HeatMapLimits = limits;
+            HeatMapBounds = bounds;
         }
 
         //TODO very similar to HeatMapGenerator.GetSegments --> unify?

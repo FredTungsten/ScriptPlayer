@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -204,14 +205,18 @@ namespace ScriptPlayer.Shared
             return brush;
         }
 
-        public static Brush Generate3(List<TimedPosition> beats, TimeSpan gapDuration, TimeSpan timeFrom, TimeSpan timeTo, double multiplier, List<HeatMapEntry> stops)
+        public static Brush Generate3(List<TimedPosition> beats, TimeSpan gapDuration, TimeSpan timeFrom, TimeSpan timeTo, double multiplier, out Geometry bounds)
         {
-            List<List<TimedPosition>> segments = GetSegments(beats, gapDuration, timeFrom, timeTo);
+            PositionCollection pc = new PositionCollection(beats);
+            List<TimedPosition> trimmedBeats = pc.GetPositions(timeFrom, timeTo).ToList();
+
+            List<HeatMapEntry> stops = new List<HeatMapEntry>();
+            List<List<TimedPosition>> segments = GetSegments(trimmedBeats, gapDuration, timeFrom, timeTo);
 
             TimeSpan fastest = TimeSpan.FromMilliseconds(200);
             TimeSpan duration = timeTo - timeFrom;
 
-            stops.Add(new HeatMapEntry(Colors.Transparent, 0.0, 0, 0));
+            stops.Add(new HeatMapEntry(Colors.Transparent, 0.0));
 
             foreach (List<TimedPosition> segment in segments)
             {
@@ -228,19 +233,17 @@ namespace ScriptPlayer.Shared
                     if (endSegment > timeTo)
                         endSegment = timeTo;
 
-                    FindMinMax(segment, 0, 0, out byte min, out byte max);
-
-                    stops.Add(new HeatMapEntry(Colors.Transparent, beginSegment.Divide(duration),min,max));
-                    stops.Add(new HeatMapEntry(Colors.DodgerBlue, beginSegment.Divide(duration), min, max));
-                    stops.Add(new HeatMapEntry(Colors.DodgerBlue, endSegment.Divide(duration), min, max));
-                    stops.Add(new HeatMapEntry(Colors.Transparent, endSegment.Divide(duration), min, max));
+                    stops.Add(new HeatMapEntry(Colors.Transparent, beginSegment.Divide(duration)));
+                    stops.Add(new HeatMapEntry(Colors.DodgerBlue, beginSegment.Divide(duration)));
+                    stops.Add(new HeatMapEntry(Colors.DodgerBlue, endSegment.Divide(duration)));
+                    stops.Add(new HeatMapEntry(Colors.Transparent, endSegment.Divide(duration)));
                 }
                 else
                 {
                     TimeSpan span = segment.Last().TimeStamp - segment.First().TimeStamp;
                     int segmentCount = (int)Math.Max(1, Math.Min((segment.Count - 1) / 12.0, span.Divide(duration.Divide(200))));
 
-                    stops.Add(new HeatMapEntry(Colors.Transparent, (segment.First().TimeStamp - timeFrom).Divide(duration),0,0));
+                    stops.Add(new HeatMapEntry(Colors.Transparent, (segment.First().TimeStamp - timeFrom).Divide(duration)));
 
                     for (int i = 0; i < segmentCount; i++)
                     {
@@ -250,8 +253,6 @@ namespace ScriptPlayer.Shared
 
                         TimeSpan firstBeat = segment[startIndex].TimeStamp;
                         TimeSpan lastBeat = segment[endIndex].TimeStamp;
-
-                        FindMinMax(segment, startIndex, endIndex, out byte min, out byte max);
 
                         TimeSpan averageLength = (lastBeat - firstBeat).Divide(beatCount);
                         double value = fastest.Divide(averageLength) * multiplier;
@@ -263,58 +264,188 @@ namespace ScriptPlayer.Shared
                         double positionEnd = lastBeat.Divide(duration);
 
                         if (i == 0)
-                            stops.Add(new HeatMapEntry(color, positionStart, min, max));
+                            stops.Add(new HeatMapEntry(color, positionStart));
 
-                        stops.Add(new HeatMapEntry(color, (positionEnd + positionStart) / 2.0, min, max));
+                        stops.Add(new HeatMapEntry(color, (positionEnd + positionStart) / 2.0));
 
                         if (i == segmentCount - 1)
-                            stops.Add(new HeatMapEntry(color, positionEnd, min, max));
+                            stops.Add(new HeatMapEntry(color, positionEnd));
                     }
-                    
-                    stops.Add(new HeatMapEntry(Colors.Transparent, (segment.Last().TimeStamp - timeFrom).Divide(duration),0,0));
+
+                    stops.Add(new HeatMapEntry(Colors.Transparent, (segment.Last().TimeStamp - timeFrom).Divide(duration)));
                 }
             }
 
-            stops.Add(new HeatMapEntry(Colors.Transparent, 1.0,0,0));
+            stops.Add(new HeatMapEntry(Colors.Transparent, 1.0));
 
             LinearGradientBrush brush = new LinearGradientBrush(FillGradients(stops), new Point(0, 0), new Point(1, 0));
             brush.MappingMode = BrushMappingMode.RelativeToBoundingBox;
 
+            GetMinMaxPositions(trimmedBeats, out List<TimedPosition> min, out List<TimedPosition> max);
+
+            bounds = BuildBoundsGeometry(timeFrom, timeTo, min, max);
+
             return brush;
         }
 
-        private static void FindMinMax(List<TimedPosition> segment, int startIndex, int endIndex, out byte min, out byte max)
+        private static Geometry BuildBoundsGeometry(TimeSpan timeFrom, TimeSpan timeTo, List<TimedPosition> min, List<TimedPosition> max)
         {
-            min = 255;
-            max = 0;
+            if (min == null || max == null)
+                return null;
 
-            for (int i = startIndex; i <= endIndex; i++)
+            if (min.Count + max.Count < 3)
+                return null;
+
+            int maxPoints = 1000;
+
+            min = LimitValues(min, maxPoints, timeFrom, timeTo, true);
+            max = LimitValues(max, maxPoints, timeFrom, timeTo, false);
+
+            PointCollection points = new PointCollection();
+
+            TimeSpan duration = timeTo - timeFrom;
+
+            foreach (TimedPosition pos in max.Concat(((IEnumerable<TimedPosition>)min).Reverse()))
             {
-                if (segment[i].Position > max)
-                    max = segment[i].Position;
-
-                if (segment[i].Position < min)
-                    min = segment[i].Position;
+                double x = (pos.TimeStamp - timeFrom).Divide(duration);
+                double y = 1.0 - pos.Position / 99.0;
+                points.Add(new Point(x, y));
             }
 
-            StretchMinMax(ref min, ref max);
+            PathFigure figure = new PathFigure();
+            figure.IsFilled = true;
+            figure.StartPoint = points[0];
+            figure.Segments.Add(new PolyLineSegment(points.Skip(1), true));
+
+            PathGeometry geometry = new PathGeometry();
+            geometry.Figures.Add(figure);
+
+            return geometry;
         }
 
-        private static void StretchMinMax(ref byte min, ref byte max, byte minSize = 10)
+        private static List<TimedPosition> LimitValues(List<TimedPosition> values, int count, TimeSpan timeFrom, TimeSpan timeTo, bool isMin)
         {
-            if (max - min >= minSize)
+            //if (values.Count <= count)
+            //    return values;
+
+            List<TimedPosition> result = new List<TimedPosition>();
+            result.Add(values.First());
+
+            PositionCollection positions = new PositionCollection(values);
+
+            TimeSpan duration = timeTo - timeFrom;
+            TimeSpan step = duration.Divide(count);
+
+            int indexMin = (int)Math.Floor((values.First().TimeStamp - timeFrom).Divide(step));
+            int indexMax = (int)Math.Floor((values.Last().TimeStamp - timeFrom).Divide(step));
+
+            for (int index = indexMin; index <= indexMax; index++)
+            {
+                TimeSpan tFrom = timeFrom + step.Multiply(index);
+                TimeSpan tTo = timeFrom + step.Multiply(index + 1);
+
+                var pos = positions.GetPositions(tFrom, tTo);
+
+                byte value;
+
+                if (isMin)
+                {
+                    value = (byte)Math.Max(0, pos.Min(p => p.Position) - 5);
+                }
+                else
+                {
+                    value = (byte)Math.Min(99, pos.Max(p => p.Position) + 5);
+                }
+
+                TimeSpan center = timeFrom + step.Multiply(index + 0.5);
+
+                result.Add(new TimedPosition
+                {
+                    Position = value,
+                    TimeStamp = center
+                });
+            }
+
+            result.Add(values.Last());
+
+            return result;
+        }
+
+        public static void GetMinMaxPositions(List<TimedPosition> positions, out List<TimedPosition> min, out List<TimedPosition> max)
+        {
+            min = new List<TimedPosition>();
+            max = new List<TimedPosition>();
+
+            if (positions == null || positions.Count < 1)
                 return;
 
-            if (min < minSize / 2)
+            TimeSpan start = positions[0].TimeStamp;
+            TimeSpan duration = positions.Last().TimeStamp - start;
+
+            int lastExtremeIndex = -1;
+            byte lastValue = positions[0].Position;
+            byte lastExtremeValue = lastValue;
+
+            byte lowest = lastValue;
+            byte highest = lastValue;
+
+            bool? goingUp = null;
+
+            for (int index = 0; index < positions.Count; index++)
             {
-                min = 0;
-                max = minSize;
+                // Direction unknown
+                if (goingUp == null)
+                {
+                    if (positions[index].Position < lastExtremeValue)
+                        goingUp = false;
+                    else if (positions[index].Position > lastExtremeValue)
+                        goingUp = true;
+                }
+                else
+                {
+                    if ((positions[index].Position < lastValue && (bool)goingUp)     //previous was highpoint
+                        || (positions[index].Position > lastValue && (bool)!goingUp) //previous was lowpoint
+                        || (index == positions.Count - 1))                           //last action
+                    {
+                        for (int i = lastExtremeIndex + 1; i < index; i++)
+                        {
+                            TimedPosition action = positions[i].Duplicate();
+
+                            if (positions[i].Position == lowest)
+                            {
+                                min.Add(action);
+                            }
+                            else if (positions[i].Position == highest)
+                            {
+                                max.Add(action);
+                            }
+
+                            // Only extreme Values for now ...
+                        }
+
+                        lastExtremeValue = positions[index - 1].Position;
+                        lastExtremeIndex = index - 1;
+
+                        highest = lastExtremeValue;
+                        lowest = lastExtremeValue;
+
+                        goingUp ^= true;
+                    }
+                }
+
+                lastValue = positions[index].Position;
+                if (lastValue > highest)
+                    highest = lastValue;
+                if (lastValue < lowest)
+                    lowest = lastValue;
             }
-            else if (max > 95)
-            {
-                max = 99;
-                min = (byte) (99 - minSize);
-            }
+
+            var last = positions.Last();
+
+            if (lastExtremeValue < last.Position)
+                max.Add(last.Duplicate());
+            else
+                min.Add(last.Duplicate());
         }
 
         public static List<List<TimeSpan>> GetSegments(List<TimeSpan> beats, TimeSpan gapDuration, TimeSpan timeFrom, TimeSpan timeTo)
@@ -425,15 +556,11 @@ namespace ScriptPlayer.Shared
     {
         public Color Color { get; set; }
         public double Offset { get; set; }
-        public byte Min { get; set; }
-        public byte Max { get; set; }
 
-        public HeatMapEntry(Color color, double offset, byte min, byte max)
+        public HeatMapEntry(Color color, double offset)
         {
             Color = color;
             Offset = offset;
-            Min = min;
-            Max = max;
         }
 
         public GradientStop ToGradientStop()
