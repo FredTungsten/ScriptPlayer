@@ -57,6 +57,8 @@ namespace ScriptPlayer.Shared
                 return true;
             }
 
+            await Disconnect();
+
             try
             {
                 var client = new ButtplugClient("ScriptPlayer");
@@ -67,9 +69,10 @@ namespace ScriptPlayer.Shared
                 client.ScanningFinished += Client_ScanningFinished;
                 client.ServerDisconnect += Client_ServerDisconnect;
 
-                await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri(_url)));
                 _client = client;
 
+                await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri(_url)));
+                
                 foreach (var buttplugClientDevice in _client.Devices)
                 {
                     AddDevice(buttplugClientDevice);
@@ -80,6 +83,7 @@ namespace ScriptPlayer.Shared
             catch (Exception e)
             {
                 RecordButtplugException("ButtplugAdapter.Connect", e);
+                _client.Dispose();
                 _client = null;
                 return false;
             }
@@ -87,6 +91,7 @@ namespace ScriptPlayer.Shared
 
         private void Client_ServerDisconnect(object sender, EventArgs e)
         {
+            _client?.Dispose();
             _client = null;
             foreach (var device in _devices.Values)
             {
@@ -321,10 +326,10 @@ namespace ScriptPlayer.Shared
         {
             try
             {
-                if (!_client?.Connected ?? false)
-                    return;
-
-                await _client.DisconnectAsync();
+                if (_client?.Connected ?? false)
+                    await _client.DisconnectAsync();
+                
+                _client?.Dispose();
             }
             catch (Exception e)
             {
