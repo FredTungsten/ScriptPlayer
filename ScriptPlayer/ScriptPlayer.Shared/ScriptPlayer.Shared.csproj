@@ -35,8 +35,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Buttplug, Version=2.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Buttplug.2.0.2\lib\netstandard2.0\Buttplug.dll</HintPath>
+    <Reference Include="Buttplug, Version=2.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.2.0.3\lib\netstandard2.0\Buttplug.dll</HintPath>
     </Reference>
     <Reference Include="Buttplug.Client.Connectors.WebsocketConnector, Version=0.5.9.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Buttplug.Client.Connectors.WebsocketConnector.0.5.9\lib\netstandard2.0\Buttplug.Client.Connectors.WebsocketConnector.dll</HintPath>
