@@ -1,4 +1,4 @@
-# The current release version 1.1.1 is a bit outdated.
+# The current release version 1.1.0 and preview 1.1.1 are a bit outdated.
 # Try [the latest beta](https://github.com/FredTungsten/ScriptPlayer/wiki/Downloading-Beta-Builds) instead.
 
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/FredTungsten/ScriptPlayer?branch=master&svg=true)](https://ci.appveyor.com/project/FredTungsten/ScriptPlayer/branch/master)
