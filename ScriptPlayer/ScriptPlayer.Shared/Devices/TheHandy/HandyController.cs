@@ -315,7 +315,7 @@ namespace ScriptPlayer.Shared.TheHandy
                         {
                             LocalScriptServer.LoadedScript = csvData;
                             IsScriptLoaded = true;
-                            scriptUrl = $"{LocalScriptServer.ScriptHostUrl}_{filename}.tmp.csv";
+                            scriptUrl = $"{LocalScriptServer.ScriptHostUrl}{filename}.csv";
                             break;
                         }
                     case HandyHost.HandyfeelingCom:
@@ -341,7 +341,7 @@ namespace ScriptPlayer.Shared.TheHandy
                 SetSyncMode();
                 SyncPrepare(new HandyPrepare
                 {
-                    name = scriptTitle,
+                    name = filename,// scriptTitle,
                     url = scriptUrl,
                     size = (int)scriptSize,
                     timeout = 20000
