@@ -10,6 +10,15 @@ namespace ScriptPlayer.VideoSync.Dialogs
     /// </summary>
     public partial class RangeStretcherDialog : Window
     {
+        public static readonly DependencyProperty MultiplyProperty = DependencyProperty.Register(
+            "Multiply", typeof(bool), typeof(RangeStretcherDialog), new PropertyMetadata(default(bool)));
+
+        public bool Multiply
+        {
+            get => (bool) GetValue(MultiplyProperty);
+            set => SetValue(MultiplyProperty, value);
+        }
+
         public static readonly DependencyProperty MinValueFromProperty = DependencyProperty.Register(
             "MinValueFrom", typeof(byte), typeof(RangeStretcherDialog), new PropertyMetadata(default(byte)));
 

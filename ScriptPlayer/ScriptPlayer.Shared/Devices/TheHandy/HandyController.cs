@@ -752,4 +752,10 @@ namespace ScriptPlayer.Shared.TheHandy
         Local = 0,
         HandyfeelingCom = 1
     }
+
+    public enum HandyConnectionMode
+    {
+        ApiV1,
+        ApiV2
+    }
 }

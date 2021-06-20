@@ -1719,10 +1719,21 @@ namespace ScriptPlayer.VideoSync
             if (dialog.ShowDialog() != true)
                 return;
 
-            var stretchedPositions = RangeStretcher.Stretch(positions, dialog.MinValueFrom, dialog.MaxValueFrom,
-                dialog.MinValueTo, dialog.MaxValueTo);
+            bool multiply = dialog.Multiply;
+            List<TimedPosition> newPositions;
 
-            ReplacePositions(stretchedPositions);
+            if (!multiply)
+            {
+                newPositions = RangeStretcher.Stretch(positions, dialog.MinValueFrom, dialog.MaxValueFrom,
+                    dialog.MinValueTo, dialog.MaxValueTo);
+            }
+            else
+            {
+                newPositions = RangeStretcher.Multiply(positions, dialog.MinValueFrom, dialog.MaxValueFrom,
+                    dialog.MinValueTo, dialog.MaxValueTo);
+            }
+
+            ReplacePositions(newPositions);
         }
 
         private void ReplacePositions(List<TimedPosition> newPositions)
@@ -2982,6 +2993,33 @@ namespace ScriptPlayer.VideoSync
 
     public static class RangeStretcher
     {
+        public static List<TimedPosition> Multiply(List<TimedPosition> positions, byte minValueFrom, byte maxValueFrom, byte minValueTo, byte maxValueTo, IEasingFunction easing = null)
+        {
+            List<TimedPosition> result = new List<TimedPosition>();
+
+            TimeSpan start = positions[0].TimeStamp;
+            TimeSpan duration = positions.Last().TimeStamp - start;
+
+            foreach (TimedPosition position in positions)
+            {
+                double progress = (position.TimeStamp - start).Divide(duration);
+                double min = minValueFrom * (1 - progress) + minValueTo * progress;
+                double max = maxValueFrom * (1 - progress) + maxValueTo * progress;
+                double range = max - min;
+
+                double pos = min + (position.Position / 99.0) * range;
+                byte bPos = (byte) Math.Min(99.0, Math.Max(0.0, pos));
+
+                result.Add(new TimedPosition
+                {
+                    TimeStamp = position.TimeStamp,
+                    Position = bPos
+                });
+            }
+
+            return result;
+        }
+
         public static List<TimedPosition> Stretch(List<TimedPosition> positions, byte minValueFrom, byte maxValueFrom, byte minValueTo, byte maxValueTo, IEasingFunction easing = null)
         {
             List<TimedPosition> result = new List<TimedPosition>();

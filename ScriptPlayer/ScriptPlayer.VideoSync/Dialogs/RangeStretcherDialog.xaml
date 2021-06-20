@@ -32,5 +32,7 @@
         <Button PreviewMouseDown="Button_MouseDown" Content="75" HorizontalAlignment="Left" Margin="119,0,0,28" VerticalAlignment="Bottom" Width="17"  Background="#FFFFC500" Height="52" FontSize="8" Tag="T75"/>
         <Button PreviewMouseDown="Button_MouseDown" Content="25" HorizontalAlignment="Left" Margin="31,0,0,65" VerticalAlignment="Bottom" Width="17" Background="#FFFFC500" Height="15" FontSize="8" Tag="T25"/>
         <Button PreviewMouseDown="Button_MouseDown" Content="75" HorizontalAlignment="Left" Margin="31,0,0,10" VerticalAlignment="Bottom" Width="17"  Background="#FF0097FF" Height="50" FontSize="8" Tag="B75"/>
+        <RadioButton IsChecked="True" x:Name="rbStretch" Content="Stretch" HorizontalAlignment="Left" Margin="193,74,0,0" VerticalAlignment="Top"/>
+        <RadioButton IsChecked="{Binding Multiply}" x:Name="rbMultiply" Content="Multiply" HorizontalAlignment="Left" Margin="193,94,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>
