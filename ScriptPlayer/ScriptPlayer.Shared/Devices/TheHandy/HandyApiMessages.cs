@@ -65,6 +65,14 @@ namespace ScriptPlayer.Shared.TheHandy
     }
 
     [UsedImplicitly]
+    internal class HandySetStrokeZone
+    {
+        public int min { get; set; }
+        public int max { get; set; }
+        public int? timeout { get; set; }
+    }
+
+    [UsedImplicitly]
     internal class HandyOffset
     {
         // required

@@ -1838,10 +1838,15 @@ namespace ScriptPlayer.ViewModels
                         UpdateHeatMap();
                         break;
                     }
-                case nameof(SettingsViewModel.FilterRange):
-                case nameof(SettingsViewModel.FilterMode):
                 case nameof(SettingsViewModel.MinPosition):
                 case nameof(SettingsViewModel.MaxPosition):
+                {
+                    UpdateFilter();
+                    UpdateRange();
+                    break;
+                }
+                case nameof(SettingsViewModel.FilterRange):
+                case nameof(SettingsViewModel.FilterMode):
                 case nameof(SettingsViewModel.InvertPosition):
                     {
                         UpdateFilter();
@@ -1952,6 +1957,13 @@ namespace ScriptPlayer.ViewModels
                     break;
                 }
             }
+        }
+
+        private void UpdateRange()
+        {
+            HandyController handyController = _controllers.OfType<HandyController>().FirstOrDefault();
+
+            handyController?.SetStrokeZone(Settings.MinPosition, Settings.MaxPosition);
         }
 
         private void UpdateHandySettings()

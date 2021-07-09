@@ -55,6 +55,11 @@ namespace ScriptPlayer.Shared.TheHandy
         private bool _resetOffsetTask;
         private readonly object _updateOffsetLock = new object();
 
+        private Task _updateRangeTask;
+        private HandySetStrokeZone _newZone;
+        private bool _resetRangeTask;
+        private readonly object _updateRangeLock = new object();
+
         // api call queue ensures correct order of api calls
         private readonly Dictionary<string, BlockingTaskQueue> _apiCallQueue = new Dictionary<string, BlockingTaskQueue>();
         private readonly object _dictionaryLock = new object();
@@ -386,25 +391,79 @@ namespace ScriptPlayer.Shared.TheHandy
             }
         }
 
+        public void SetStrokeZone(byte min, byte max)
+        {
+            if (max == 99)
+                max = 100;
+
+            lock (_updateRangeLock)
+            {
+                _newZone = new HandySetStrokeZone
+                {
+                    timeout = 4000,
+                    min = min,
+                    max = max
+                };
+
+                _resetRangeTask = true;
+
+                if (!_updateRangeTask?.IsCompleted ?? false)
+                    return;
+
+                //Set value must be stable
+                TimeSpan preSleep = TimeSpan.FromMilliseconds(200);
+
+                //Don't spam
+                TimeSpan postSleep = TimeSpan.FromMilliseconds(200);
+
+                _updateRangeTask = Task.Run(() =>
+                {
+                    Thread.Sleep(preSleep);
+
+                    while (_resetRangeTask)
+                    {
+                        Debug.WriteLine("range task waiting ...");
+                        _resetRangeTask = false;
+                        Thread.Sleep(postSleep);
+                    }
+
+                    Debug.WriteLine($"set range to {_newZone.min}-{_newZone.max}");
+                    SetStrokeZone(_newZone);
+                });
+            }
+        }
+
+        private void SetStrokeZone(HandySetStrokeZone stroke)
+        {
+            string url = GetQuery("setStrokeZone", stroke);
+            SendGetRequest(url);
+        }
+
         public void SetScriptOffset(TimeSpan offset)
         {
             lock (_updateOffsetLock)
             {
                 _newOffsetMs = (int)offset.TotalMilliseconds;
-                if (!_updateOffsetTask?.IsCompleted ?? false)
-                {
-                    _resetOffsetTask = true;
-                    return;
-                }
-
                 _resetOffsetTask = true;
+                if (!_updateOffsetTask?.IsCompleted ?? false)
+                    return;
+
+
+                //Set value must be stable
+                TimeSpan preSleep = TimeSpan.FromMilliseconds(200);
+
+                //Don't spam
+                TimeSpan postSleep = TimeSpan.FromMilliseconds(200);
+
                 _updateOffsetTask = Task.Run(() =>
                 {
+                    Thread.Sleep(preSleep);
+
                     while (_resetOffsetTask)
                     {
                         Debug.WriteLine("offset task waiting ...");
                         _resetOffsetTask = false;
-                        Thread.Sleep(200);
+                        Thread.Sleep(postSleep);
                     }
 
                     Debug.WriteLine($"set offset to {_newOffsetMs}");
@@ -553,16 +612,6 @@ namespace ScriptPlayer.Shared.TheHandy
                 {
                     OnOsdRequest("Stroke Length: " + status.stroke, TimeSpan.FromSeconds(2), "HandyStrokeLength");
                 }
-            });
-        }
-
-        public void SetStroke(int percent)
-        {
-            SetStroke(new HandySetStroke
-            {
-                timeout = 4000,
-                type = "%",
-                value = percent
             });
         }
 
