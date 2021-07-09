@@ -12,29 +12,19 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
 using ScriptPlayer.Shared.Interfaces;
+using ScriptPlayer.Shared.Properties;
 using ScriptPlayer.Shared.Scripts;
 
 namespace ScriptPlayer.Shared.TheHandy
 {
-    /*
-     
-    // Original author's (https://github.com/gagax1234/ScriptPlayer/tree/handy) comments: 
-
-    // reference: https://app.swaggerhub.com/apis/alexandera/handy-api/1.0.0#/
-    // implementing the handy as a device doesn't really work because of it's unique videosync api
-    // implementing it as a timesource would make sense but prevent using other timesources...
-
-    // hopefully in the future the handy will receive an api to send commands to it via bluetooth or LAN 
-    // in which case it would integrate nicely into ScriptPlayer
-
-    public class HandyController : DeviceController, ISyncBasedDevice, IDisposable
+    public class HandyController2 : DeviceController, ISyncBasedDevice, IDisposable
     {
         private static readonly TimeSpan MaxOffset = TimeSpan.FromMilliseconds(500);
         private static readonly TimeSpan ResyncIntervall = TimeSpan.FromSeconds(10);
 
         public delegate void OsdRequestEventHandler(string text, TimeSpan duration, string designation = null);
 
-        public event OsdRequestEventHandler OsdRequest;
+        public event HandyController2.OsdRequestEventHandler OsdRequest;
 
         private HandyScriptServer LocalScriptServer { get; set; }
 
@@ -43,6 +33,7 @@ namespace ScriptPlayer.Shared.TheHandy
         public bool Connected { get; private set; }
 
         private bool IsScriptLoaded { get; set; }
+        private bool IsCurrentScriptDownloaded { get; set; }
 
         private long _offsetAverage; // holds calculated offset that gets added to current unix time in ms to estimate api server time
 
@@ -113,7 +104,7 @@ namespace ScriptPlayer.Shared.TheHandy
             }
         }
 
-        public HandyController()
+        public HandyController2()
         {
             _apiCallQueue = new Dictionary<string, BlockingTaskQueue>();
         }
@@ -124,30 +115,31 @@ namespace ScriptPlayer.Shared.TheHandy
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
+            client.DefaultRequestHeaders.Add("X-Connection-Key", HandyHelper.DeviceId);
             return client;
         }
 
         private string UrlFor(string path)
         {
-            return $"{HandyHelper.ConnectionBaseUrl}{path}";
+            return $"https://www.handyfeeling.com/api/handy/v2/{path}";
         }
 
         public void CheckConnected(Action<bool> successCallback = null) => UpdateConnectionStatus(successCallback);
 
         public void UpdateConnectionStatus(Action<bool> successCallback = null)
         {
-            SendGetRequest(UrlFor("getStatus"), async response =>
+            SendGetRequest(UrlFor("connected"), async response =>
             {
                 if (!response.IsSuccessStatusCode)
                     return;
 
-                HandyResponse status = await response.Content.ReadAsAsync<HandyResponse>();
+                Handy2ConnectedResult status = await response.Content.ReadAsAsync<Handy2ConnectedResult>();
 
-                if (status.success)
+                if (status.connected)
                 {
                     CalcServerTimeOffset();
-                    SetSyncMode();
-
+                    SetMode(Handy2Mode.Hssp);
+                    
                     OnHandyConnected();
                 }
                 else
@@ -177,26 +169,50 @@ namespace ScriptPlayer.Shared.TheHandy
             OnDeviceFound(this);
         }
 
-        private void SendGetRequest(string url, Action<HandyResponse> onSuccess)
+        private void SendPutRequest<T>(string url, object data, Action<T> onSuccess) where T : Handy2Response
+        {
+            SendPutRequest(url, data, message =>
+            {
+                T resp = message.Content.ReadAsAsync<T>().Result;
+                Handy2Response response = resp as Handy2Response;
+
+                if (response.error != null)
+                {
+                    HandleError(url, response.error);
+                }
+                else
+                {
+                    onSuccess?.Invoke(resp);
+                }
+            });
+        }
+
+        private void SendGetRequest<T>(string url, Action<T> onSuccess) where T : Handy2Response
         {
             SendGetRequest(url, message =>
             {
-                HandyResponse resp = message.Content.ReadAsAsync<HandyResponse>().Result;
-
-                ShowRateLimits(message.Headers);
-
-                if (!resp.success)
+                T resp = message.Content.ReadAsAsync<T>().Result;
+                Handy2Response response = resp as Handy2Response;
+                
+                if (response.error != null)
                 {
-                    Debug.WriteLine($"error: cmd:{resp.cmd} - {resp.error} - SyncPrepare");
-
-                    if (resp.error == "No machine connected")
-                        OnHandyDisconnected();
+                    HandleError(url, response.error);
                 }
                 else
                 {
                     onSuccess?.Invoke(resp);
                 }
             }, false);
+        }
+
+        private void HandleError(string url, Handy2Error error)
+        {
+            Debug.WriteLine($"error: cmd:{error.code} - {error.message} - {url}");
+
+            OnOsdRequest($"Error: {error}", TimeSpan.FromSeconds(3), "HandyError");
+
+            if (error.code == 1001)
+                OnHandyDisconnected();
         }
 
         private void ShowRateLimits(HttpResponseHeaders headers)
@@ -217,7 +233,7 @@ namespace ScriptPlayer.Shared.TheHandy
             return "";
         }
 
-        private void SendGetRequest(string url, Action<HttpResponseMessage> resultCallback = null, bool ignoreConnected = false, bool waitForAnswer = true)
+        private void SendPutRequest(string url, object data, Action<HttpResponseMessage> resultCallback = null, bool ignoreConnected = false)
         {
             if (!ignoreConnected && !Connected)
                 return;
@@ -228,13 +244,12 @@ namespace ScriptPlayer.Shared.TheHandy
             {
                 using (var client = GetClient())
                 {
-                    Task<HttpResponseMessage> request = client.GetAsync(url);
+                    Task<HttpResponseMessage> request;
 
-                    //if (!waitForAnswer)
-                    //{
-                    //    request.Wait(1);
-                    //    return;
-                    //}
+                    if (data != null)
+                        request = client.PutAsJsonAsync(url, data);
+                    else
+                        request = client.PutAsync(url, null);
 
                     Task call;
 
@@ -249,17 +264,59 @@ namespace ScriptPlayer.Shared.TheHandy
                     {
                         call = request.ContinueWith(r =>
                         {
-                            HandyResponse resp = r.Result.Content.ReadAsAsync<HandyResponse>().Result;
+                            Handy2Response resp = r.Result.Content.ReadAsAsync<Handy2Response>().Result;
                             ShowRateLimits(r.Result.Headers);
 
-                            if (!resp.success)
+                            if (resp.error != null)
                             {
-                                Debug.WriteLine($"error: cmd:{resp.cmd} - {resp.error} - {url} [{duration.TotalMilliseconds:F0}ms]");
+                                HandleError(url, resp.error);
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"success: {url} [{duration.TotalMilliseconds:F0}ms]");
+                            }
+                        });
+                    }
+                    call.Wait(); // wait for response
+                }
+            });
 
-                                OnOsdRequest($"Error: {resp.error}", TimeSpan.FromSeconds(3), "HandyError");
+            string command = ExtractCommand(url);
+            Enqueue(command, apiCall);
+        }
 
-                                if (resp.error == "No machine connected")
-                                    OnHandyDisconnected();
+        private void SendGetRequest(string url, Action<HttpResponseMessage> resultCallback = null, bool ignoreConnected = false, bool waitForAnswer = true)
+        {
+            if (!ignoreConnected && !Connected)
+                return;
+
+            DateTime sendTime = DateTime.Now;
+
+            Task apiCall = new Task(() =>
+            {
+                using (var client = GetClient())
+                {
+                    Task<HttpResponseMessage> request = client.GetAsync(url);
+
+                    Task call;
+
+                    TimeSpan duration = DateTime.Now - sendTime;
+
+                    if (resultCallback != null)
+                    {
+                        Debug.WriteLine($"finished: {url} [{duration.TotalMilliseconds:F0}ms]");
+                        call = request.ContinueWith(r => resultCallback(r.Result));
+                    }
+                    else
+                    {
+                        call = request.ContinueWith(r =>
+                        {
+                            Handy2Response resp = r.Result.Content.ReadAsAsync<Handy2Response>().Result;
+                            ShowRateLimits(r.Result.Headers);
+
+                            if (resp.error != null)
+                            {
+                                HandleError(url, resp.error);
                             }
                             else
                             {
@@ -284,13 +341,13 @@ namespace ScriptPlayer.Shared.TheHandy
         private void Enqueue(string command, Task apiCall)
         {
             if (!UseMultipleCommandQueues)
-              command = "default";
+                command = "default";
             // else
             //    Debug.WriteLine("Command: " + command);
 
             lock (_dictionaryLock)
             {
-                if(!_apiCallQueue.ContainsKey(command))
+                if (!_apiCallQueue.ContainsKey(command))
                     _apiCallQueue.Add(command, new BlockingTaskQueue());
 
                 _apiCallQueue[command].Enqueue(apiCall);
@@ -299,6 +356,8 @@ namespace ScriptPlayer.Shared.TheHandy
 
         public void SetScript(string scriptTitle, IEnumerable<FunScriptAction> actions)
         {
+            IsCurrentScriptDownloaded = false;
+
             string csvData = GenerateCsvFromActions(actions.ToList());
             long scriptSize = Encoding.UTF8.GetByteCount(csvData);
 
@@ -340,14 +399,8 @@ namespace ScriptPlayer.Shared.TheHandy
                         }
                 }
 
-                SetSyncMode();
-                SyncPrepare(new HandyPrepare
-                {
-                    name = filename,// scriptTitle,
-                    url = scriptUrl,
-                    size = (int)scriptSize,
-                    timeout = 20000
-                });
+                SetMode(Handy2Mode.Hssp);
+                HsspSetup(scriptUrl, "");
             }
             else
             {
@@ -360,7 +413,7 @@ namespace ScriptPlayer.Shared.TheHandy
                     LocalScriptServer.LoadedScript = null;
             }
         }
-        
+
         private HandyUploadResponse PostScriptToHandyfeeling(string filename, string csv)
         {
             const string uploadUrl = "https://www.handyfeeling.com/api/sync/upload";
@@ -410,19 +463,16 @@ namespace ScriptPlayer.Shared.TheHandy
                     }
 
                     Debug.WriteLine($"set offset to {_newOffsetMs}");
-                    SyncOffset(new HandyOffset
-                    {
-                        offset = _newOffsetMs
-                    });
+                    SyncOffset(_newOffsetMs);
                 });
             }
         }
 
-        private void SyncOffset(HandyOffset offset)
+        private void SyncOffset(int offset)
         {
-            string url = GetQuery("syncOffset", offset);
+            string url = UrlFor("hssp/offset");
             Debug.WriteLine($"{nameof(SyncOffset)}: {url}");
-            SendGetRequest(url);
+            SendPutRequest(url, new Handy2SetOffsetRequest{ offset = offset});
         }
 
         private static void ScaleScript(List<FunScriptAction> actions)
@@ -486,40 +536,38 @@ namespace ScriptPlayer.Shared.TheHandy
 
         private void ResyncNow(TimeSpan time, bool hard)
         {
-            if (!IsScriptLoaded)
+            if (!IsScriptLoaded || !IsCurrentScriptDownloaded)
                 return;
 
-            if (hard)
-            {
-                SyncPlay(false, time, AfterHardSync);
-            }
-            else
-            {
-                // Handy doesn't respond  to this command so I'll just let it run into a (very short) timeout
-                // https://www.reddit.com/r/handySupport/comments/hlljii/timeout_on_syncadjusttimestamp/
+            HsspPlay(time, null);
 
-                //SyncPlay(_playing, time);
-                // Update shoud be fixed in FW 2.12
+            //HsspSync();
 
-                SyncAdjust(new HandyAdjust
-                {
-                    currentTime = (int)time.TotalMilliseconds,
-                    serverTime = GetServerTimeEstimate(),
-                    filter = 1.0f,
-                    timeout = 2000
-                });
-            }
+            //if (hard)
+            //{
+            //    HsspPlay(time, AfterHardSync);
+            //}
+            //else
+            //{
+            //    // Handy doesn't respond  to this command so I'll just let it run into a (very short) timeout
+            //    // https://www.reddit.com/r/handySupport/comments/hlljii/timeout_on_syncadjusttimestamp/
+
+            //    //HsspPlay(_playing, time);
+            //    // Update shoud be fixed in FW 2.12
+
+            //    HsspSync();
+            //}
 
             _lastResync = DateTime.Now;
         }
 
-        private void AfterHardSync(HandyResponse handyResponse)
-        {
-            if (_playing)
-                SyncPlay(true, EstimateCurrentTime(), null);
-            else
-                Debug.WriteLine("HandyController.AfterHardSync, but _playing = false");
-        }
+        //private void AfterHardSync(Handy2Response handyResponse)
+        //{
+        //    if (_playing)
+        //        HsspPlay(true, EstimateCurrentTime(), null);
+        //    else
+        //        Debug.WriteLine("HandyController.AfterHardSync, but _playing = false");
+        //}
 
         private TimeSpan EstimateCurrentTime()
         {
@@ -538,64 +586,53 @@ namespace ScriptPlayer.Shared.TheHandy
             _lastTimeAdjustement = DateTime.Now;
         }
 
-        public void StepStroke(bool stepUp)
+        public void SetMinMax(int min, int max)
         {
-            SendGetRequest(GetQuery("stepStroke", new
+            SetSlide(new Handy2SetSlideRequest
             {
-                step = stepUp,
-                timeout = 5000
-            }), async response =>
-            {
-                if (!response.IsSuccessStatusCode)
-                    return;
-
-                HandyResponse status = await response.Content.ReadAsAsync<HandyResponse>();
-
-                if (status.success)
-                {
-                    OnOsdRequest("Stroke Length: " + status.stroke, TimeSpan.FromSeconds(2), "HandyStrokeLength");
-                }
+                min = Math.Min(1.0, Math.Max(0.0, min / 100.0)),
+                max = Math.Min(1.0, Math.Max(0.0, max / 100.0)),
             });
         }
 
-        public void SetStroke(int percent)
+        private void SetSlide(Handy2SetSlideRequest stroke)
         {
-            SetStroke(new HandySetStroke
-            {
-                timeout = 4000,
-                type = "%",
-                value = percent
-            });
-        }
-
-        private void SetStroke(HandySetStroke stroke)
-        {
-            string url = GetQuery("setStroke", stroke);
-            SendGetRequest(url);
+            string url = UrlFor("slide");
+            SendPutRequest(url, stroke);
         }
 
         ///<remarks>/syncPrepare</remarks> 
-        private void SyncPrepare(HandyPrepare prep)
+        private void HsspSetup(string scriptUrl, string hash)
         {
-            string url = GetQuery("syncPrepare", prep);
-            Debug.WriteLine($"{nameof(SyncPrepare)}: {url}");
-            SendGetRequest(url, SyncPrepareFinished);
+            Handy2HsspSetup setup = new Handy2HsspSetup
+            {
+                url = scriptUrl
+            };
+
+            string url = UrlFor("hssp/setup");
+            Debug.WriteLine($"{nameof(HsspSetup)}: {url}");
+            SendPutRequest<Handy2Response>(url, setup, HsspSetupFinished);
         }
 
-        private void SyncPrepareFinished(HandyResponse resp)
+        private void HsspSetupFinished(Handy2Response resp)
         {
+            Handy2HsspSetupResult result = (Handy2HsspSetupResult) resp.result;
+
             TimeSpan time = EstimateCurrentTime();
-            Debug.WriteLine($"success: (SyncPrepare), resyncing @ " + time.ToString("g"));
+            Debug.WriteLine($"success: (HsspSetup -> {result}), resyncing @ " + time.ToString("g"));
             OnOsdRequest("Handy finished downloading Script", TimeSpan.FromSeconds(3), "Handy");
+
+            IsCurrentScriptDownloaded = true;
+
             ResyncNow(time, true);
         }
 
         public void Play(bool playing, TimeSpan progress)
         {
             Debug.WriteLine($"HandyController.Play: {playing} @ {progress}");
-            if (playing == _playing || !IsScriptLoaded)
+            if (playing == _playing || !IsScriptLoaded || !IsCurrentScriptDownloaded)
             {
-                if(playing == _playing)
+                if (playing == _playing)
                     Debug.WriteLine("HandyController.Play, but playing == _playing");
                 else
                     Debug.WriteLine("HandyController.Play, but !IsScriptLoading");
@@ -606,25 +643,33 @@ namespace ScriptPlayer.Shared.TheHandy
             _playing = playing;
             Debug.WriteLine("HandyController.Play, _playing = " + _playing);
 
-            SyncPlay(playing, progress, null);
+            if (playing)
+                HsspPlay(progress, null);
+            else
+                HsspStop();
         }
 
-        private void SyncPlay(bool playing, TimeSpan progress, Action<HandyResponse> continueWith)
+        private void HsspStop()
         {
-            SyncPlay(new HandyPlay
+            string url = UrlFor("hssp/stop");
+            SendPutRequest(url, null);
+        }
+
+        private void HsspPlay(TimeSpan progress, Action<Handy2Response> continueWith)
+        {
+            HsspPlay(new Handy2HsspPlayRequest
             {
-                play = playing,
-                serverTime = GetServerTimeEstimate(),
-                time = (int)progress.TotalMilliseconds
+                estimatedServerTime = GetServerTimeEstimate(),
+                startTime = (long)progress.TotalMilliseconds
             }, continueWith);
         }
 
         ///<remarks>/syncPlay</remarks>
-        private void SyncPlay(HandyPlay play, Action<HandyResponse> continueWith)
+        private void HsspPlay(Handy2HsspPlayRequest play, Action<Handy2Response> continueWith)
         {
-            string url = GetQuery("syncPlay", play);
-            Debug.WriteLine($"{nameof(SyncPlay)}: {url}");
-            SendGetRequest(url, continueWith);
+            string url = UrlFor("hssp/play");
+            Debug.WriteLine($"{nameof(HsspPlay)}: {url}");
+            SendPutRequest(url, play, continueWith);
         }
 
         private string GetQuery(string path, object queryObject)
@@ -655,18 +700,29 @@ namespace ScriptPlayer.Shared.TheHandy
         }
 
         ///<remarks>/syncAdjustTimestamp</remarks>
-        private void SyncAdjust(HandyAdjust adjust)
+        private void HsspSync(int syncCount = 6)
         {
-            string url = GetQuery("syncAdjustTimestamp", adjust);
-            Debug.WriteLine($"{nameof(SyncAdjust)}: {url}");
-            SendGetRequest(url, null, false, false);
+            string url = GetQuery("hssp/sync", new {syncCount = syncCount});
+            Debug.WriteLine($"{nameof(HsspSync)}: {url}");
+            SendGetRequest<Handy2Response>(url, AfterHsspSync);
         }
 
-        private void SetSyncMode()
+        private void AfterHsspSync(Handy2Response response)
         {
-            string url = GetQuery("setMode", new { mode = 4 });
-            Debug.WriteLine($"{nameof(SetSyncMode)}: {url}");
-            SendGetRequest(url);
+            Handy2SyncResult result = (Handy2SyncResult) response.result;
+        }
+
+        private void SetMode(Handy2Mode mode)
+        {
+            string url = UrlFor("mode");
+            Debug.WriteLine($"{nameof(SetMode)}: {url}");
+            SendPutRequest<Handy2ModeUpdateResponse>(url, new Handy2ModeUpdateRequest{mode = (int)mode}, AfterSetMode);
+        }
+
+        private void AfterSetMode(Handy2ModeUpdateResponse response)
+        {
+            Handy2ModeUpdateResult result = (Handy2ModeUpdateResult) response.result;
+            HsspSync();
         }
 
         /// <summary>
@@ -697,11 +753,11 @@ namespace ScriptPlayer.Shared.TheHandy
                 for (int i = 0; i < maxSyncAttempts; i++)
                 {
                     long tSent = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    HttpResponseMessage result = client.GetAsync(UrlFor("getServerTime")).Result;
+                    HttpResponseMessage result = client.GetAsync(UrlFor("servertime")).Result;
                     long tReceived = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                     long tTrip = tReceived - tSent;
-                    
-                    long tServerResponse = result.Content.ReadAsAsync<HandyTimeResponse>().Result.serverTime;
+
+                    long tServerResponse = result.Content.ReadAsAsync<Handy2ServerTimeResponse>().Result.serverTime;
                     long tServerEstimate = tServerResponse + (tTrip / 2);
                     long tOffset = tServerEstimate - tReceived;
 
@@ -743,18 +799,29 @@ namespace ScriptPlayer.Shared.TheHandy
 
                 _apiCallQueue.Clear();
             }
-            
+
             LocalScriptServer?.Exit();
             _updateOffsetTask?.Dispose();
         }
     }
 
-    
 
-    public enum HandyConnectionMode
+    public enum HandyHost
     {
-        ApiV1,
-        ApiV2
+        Local = 0,
+        HandyfeelingCom = 1
     }
-    */
+
+    [UsedImplicitly]
+    internal class HandyUploadResponse
+    {
+        public bool success { get; set; }
+        public bool? converted { get; set; }
+        public string filename { get; set; }
+        public string info { get; set; }
+        public string orginalfile { get; set; }
+        public int size { get; set; }
+        public string url { get; set; }
+        public string error { get; set; }
+    }
 }

@@ -1455,7 +1455,7 @@ namespace ScriptPlayer.VideoSync
                     }
                 case Key.B:
                 {
-                    Bump();
+                    Bump(shift);
                     break;
                 }
                 case Key.C:
@@ -1621,7 +1621,7 @@ namespace ScriptPlayer.VideoSync
                 e.Handled = true;
         }
 
-        private void Bump()
+        private void Bump(bool useShorterDuration)
         {
             var positions = GetSelectedPositions(false);
 

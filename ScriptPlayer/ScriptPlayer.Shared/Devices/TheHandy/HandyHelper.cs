@@ -2,6 +2,7 @@
 {
     public static class HandyHelper {
         private const string _connectionUrlBaseFormat = @"https://www.handyfeeling.com/api/v1/{0}/";
+
         private static string _connectionUrlWithId = null;
         private const string DefaultDeviceKey = "NO_KEY";
         public static bool IsDeviceKeySet => DeviceId != DefaultDeviceKey;

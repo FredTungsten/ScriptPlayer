@@ -18,14 +18,14 @@ namespace ScriptPlayer.Shared.TheHandy
         
         private HttpListener _server;
         private Thread _serveScriptThread; // thread running the http server hosting the script
-        private HandyController _controller;
+        private HandyController2 _controller2;
         private bool IsScriptLoaded => !string.IsNullOrWhiteSpace(LoadedScript);
 
         public event EventHandler ScriptDownloadFinished;
 
-        public HandyScriptServer(HandyController handyController)
+        public HandyScriptServer(HandyController2 handyController)
         {
-            _controller = handyController;
+            _controller2 = handyController;
             LocalIp = GetLocalIp();
         }
 
@@ -126,7 +126,7 @@ namespace ScriptPlayer.Shared.TheHandy
                 {
                     HttpListenerContext context = _server.GetContext();
 
-                    _controller?.OnOsdRequest("Script Download started", TimeSpan.FromSeconds(3), "ScriptServer");
+                    _controller2?.OnOsdRequest("Script Download started", TimeSpan.FromSeconds(3), "ScriptServer");
 
                     HttpListenerRequest request = context.Request;
                     response = context.Response;
@@ -152,7 +152,7 @@ namespace ScriptPlayer.Shared.TheHandy
                 output.Write(buffer, 0, buffer.Length);
                 output.Close();
 
-                _controller?.OnOsdRequest("Script Download finished", TimeSpan.FromSeconds(3), "ScriptServer");
+                _controller2?.OnOsdRequest("Script Download finished", TimeSpan.FromSeconds(3), "ScriptServer");
                 OnScriptDownloadFinished();
             }
             _server.Stop();

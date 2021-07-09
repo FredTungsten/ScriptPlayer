@@ -4,6 +4,7 @@
 
 namespace ScriptPlayer.Shared.TheHandy
 {
+    /*
     [UsedImplicitly]
     internal class HandyResponse
     {
@@ -88,5 +89,5 @@ namespace ScriptPlayer.Shared.TheHandy
     internal class HandyTimeResponse
     {
         public long serverTime { get; set; }
-    }
+    }*/
 }

@@ -1744,10 +1744,6 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand ShowGeneratorProgressCommand { get; set; }
 
-        public ScriptplayerCommand IncreaseHandyStrokeLengthCommand { get; set; }
-
-        public ScriptplayerCommand DecreaseHandyStrokeLengthCommand { get; set; }
-
         public ScriptplayerCommand EditMetadataCommand { get; set; }
 
         public PlaylistViewModel Playlist
@@ -1838,10 +1834,15 @@ namespace ScriptPlayer.ViewModels
                         UpdateHeatMap();
                         break;
                     }
-                case nameof(SettingsViewModel.FilterRange):
-                case nameof(SettingsViewModel.FilterMode):
                 case nameof(SettingsViewModel.MinPosition):
                 case nameof(SettingsViewModel.MaxPosition):
+                {
+                    UpdateRange();
+                    UpdateFilter();
+                    break;
+                }
+                case nameof(SettingsViewModel.FilterRange):
+                case nameof(SettingsViewModel.FilterMode):
                 case nameof(SettingsViewModel.InvertPosition):
                     {
                         UpdateFilter();
@@ -1954,9 +1955,16 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        private void UpdateRange()
+        {
+            HandyController2 handyController = _controllers.OfType<HandyController2>().FirstOrDefault();
+
+            handyController?.SetMinMax(Settings.MinPosition, Settings.MaxPosition);
+        }
+
         private void UpdateHandySettings()
         {
-            HandyController handyController = _controllers.OfType<HandyController>().FirstOrDefault();
+            HandyController2 handyController = _controllers.OfType<HandyController2>().FirstOrDefault();
 
             handyController?.UpdateSettings(Settings.HandyDeviceId, Settings.HandyScriptHost, Settings.HandyLocalIp,
                 Settings.HandyLocalPort);
@@ -2634,18 +2642,6 @@ namespace ScriptPlayer.ViewModels
 
             ShowGeneratorProgressCommand = new ScriptplayerCommand(ShowGeneratorProgress);
 
-            IncreaseHandyStrokeLengthCommand = new ScriptplayerCommand(IncreaseHandyStrokeLength)
-            {
-                CommandId = "IncreaseHandyStrokeLength",
-                DisplayText = "Increase Handy Stroke Length"
-            }; 
-
-            DecreaseHandyStrokeLengthCommand = new ScriptplayerCommand(DecreaseHandyStrokeLength)
-            {
-                CommandId = "DecreaseHandyStrokeLength",
-                DisplayText = "Decrease Handy Stroke Length"
-            };
-
             SaveScriptAsCommand = new ScriptplayerCommand(SaveScriptAs, IsScriptLoaded)
             {
                 CommandId = "SaveScriptAs",
@@ -2834,9 +2830,7 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterCommand(VolumeUpCommand);
             GlobalCommandManager.RegisterCommand(VolumeDownCommand);
             GlobalCommandManager.RegisterCommand(ToggleFullScreenCommand);
-            GlobalCommandManager.RegisterCommand(IncreaseHandyStrokeLengthCommand);
-            GlobalCommandManager.RegisterCommand(DecreaseHandyStrokeLengthCommand);
-
+            
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(ToggleCommandSourceVideoPattern)
             {
                 CommandId = "ToggleCommandSourceVideoPattern",
@@ -3203,25 +3197,6 @@ namespace ScriptPlayer.ViewModels
             OsdShowMessage("Source: " + CommandSource, TimeSpan.FromSeconds(3), "Source");
         }
 
-        private void IncreaseHandyStrokeLength()
-        {
-            ModifyHandyStrokeLength(true);
-        }
-
-        private void ModifyHandyStrokeLength(bool increase)
-        {
-            var handyController = _controllers.OfType<HandyController>().FirstOrDefault();
-            if (handyController == null)
-                return;
-
-            handyController.StepStroke(increase);
-        }
-
-        private void DecreaseHandyStrokeLength()
-        {
-            ModifyHandyStrokeLength(false);
-        }
-
         private void DecreaseMinSpeed()
         {
             if (Settings.MinSpeed > 0)
@@ -3407,7 +3382,7 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             var actions = _scriptHandler.GetScript().ToList();
-            var csv = HandyController.GenerateCsvFromActions(actions);
+            var csv = HandyController2.GenerateCsvFromActions(actions);
             File.WriteAllText(fileName, csv);
         }
 
@@ -3816,7 +3791,7 @@ namespace ScriptPlayer.ViewModels
 
         private void InitializeHandyController()
         {
-            HandyController handyController = _controllers.OfType<HandyController>().FirstOrDefault();
+            HandyController2 handyController = _controllers.OfType<HandyController2>().FirstOrDefault();
             if (handyController != null)
             {
                 handyController.UpdateConnectionStatus();
@@ -3830,7 +3805,7 @@ namespace ScriptPlayer.ViewModels
                     return;
             }
 
-            handyController = new HandyController();
+            handyController = new HandyController2();
             handyController.OsdRequest += HandyOnOsdRequest;
             handyController.DeviceFound += DeviceController_DeviceFound;
             handyController.DeviceRemoved += DeviceController_DeviceRemoved;

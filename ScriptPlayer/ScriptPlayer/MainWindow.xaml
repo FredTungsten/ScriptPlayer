@@ -699,14 +699,6 @@
                                             <TextBlock Margin="4,0" Text="{Binding Settings.MaxPosition}" DockPanel.Dock="Right"/>
                                         </DockPanel>
                                         <TextBlock>The Handy Stroke Length</TextBlock>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Button Margin="2" HorizontalAlignment="Stretch" Grid.Column="0" Content="-" Command="{Binding DecreaseHandyStrokeLengthCommand}"/>
-                                            <Button Margin="2" HorizontalAlignment="Stretch" Grid.Column="1" Content="+" Command="{Binding IncreaseHandyStrokeLengthCommand}"/>
-                                        </Grid>
                                         <CheckBox Margin="4" Content="Invert Positions" IsChecked="{Binding Settings.InvertPosition}"/>
                                         <CheckBox Margin="4" Content="Enable Auto Homing" IsChecked="{Binding Settings.AutoHomingEnabled}"/>
 

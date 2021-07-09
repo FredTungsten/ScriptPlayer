@@ -224,6 +224,7 @@
     <Compile Include="Devices\TheHandy\HandyApi2Messages.cs" />
     <Compile Include="Devices\TheHandy\HandyApiMessages.cs" />
     <Compile Include="Devices\TheHandy\HandyController.cs" />
+    <Compile Include="Devices\TheHandy\HandyController2.cs" />
     <Compile Include="Devices\TheHandy\HandyHelper.cs" />
     <Compile Include="Devices\TheHandy\HandyScriptServer.cs" />
     <Compile Include="Dialogs\BeatPatternEditor.xaml.cs">

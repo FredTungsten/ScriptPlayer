@@ -5,14 +5,27 @@ namespace ScriptPlayer.Shared.TheHandy
     internal class Handy2Response
     {
         public int result { get; set; }
+        public Handy2Error error { get; set; }
+    }
+
+    internal class Handy2Error
+    {
+        public int code { get; set; }
+        public string name { get; set; }
+        public string message { get; set; }
+        public bool connected { get; set; }
     }
 
     internal class Handy2ModeUpdateRequest
     {
         public int mode { get; set; }
     }
-    
 
+    internal class Handy2ModeUpdateResponse : Handy2Response
+    {
+        private int state { get; set; }
+    }
+    
     internal enum Handy2ModeUpdateResult
     {
         Error = -1,
@@ -36,6 +49,18 @@ namespace ScriptPlayer.Shared.TheHandy
         SyncRequired = -20,
     }
 
+    internal class Handy2HsspPlayRequest
+    {
+        public long estimatedServerTime { get; set; }
+        public long startTime { get; set; }
+    }
+
+    internal enum Handy2HsspPlayResult
+    {
+        Success = 0,
+        Failure = -1,
+    }
+
     internal enum Handy2SyncResult
     {
         Success = 0,
@@ -50,6 +75,27 @@ namespace ScriptPlayer.Shared.TheHandy
     internal class Handy2HsspSetup
     {
         public string url { get; set;}
-        public string sha256 { get; set; }
+        //public string sha256 { get; set; }
+    }
+
+    internal class Handy2ConnectedResult
+    {
+        public bool connected { get; set; }
+    }
+
+    internal class Handy2ServerTimeResponse : Handy2Response
+    {
+        public long serverTime { get; set; }
+    }
+
+    internal class Handy2SetSlideRequest
+    {
+        public double min { get; set; }
+        public double max { get; set; }
+    }
+
+    internal class Handy2SetOffsetRequest
+    {
+        public int offset { get; set; }
     }
 }
