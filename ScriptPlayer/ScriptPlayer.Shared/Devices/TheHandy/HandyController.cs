@@ -610,7 +610,7 @@ namespace ScriptPlayer.Shared.TheHandy
 
                 if (status.success)
                 {
-                    OnOsdRequest("Stroke Length: " + status.stroke, TimeSpan.FromSeconds(2), "HandyStrokeLength");
+                    OnOsdRequest("Stroke Length: " + Math.Round(status.strokePercent), TimeSpan.FromSeconds(2), "HandyStrokeLength");
                 }
             });
         }

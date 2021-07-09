@@ -18,6 +18,7 @@ namespace ScriptPlayer.Shared.TheHandy
         public int mode { get; set; }
         public float position { get; set; }
         public float stroke { get; set; }
+        public float strokePercent { get; set; }
         public float speed { get; set; }
     }
 
