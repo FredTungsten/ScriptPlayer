@@ -512,11 +512,38 @@ namespace ScriptPlayer.Shared.TheHandy
 
             ScaleScript(actions);
 
+            bool wiggle = true;
+
+            if (wiggle)
+                WiggleScript(actions);
+
             foreach (FunScriptAction action in actions)
             {
                 builder.Append($"\n{action.TimeStamp.TotalMilliseconds:F0},{action.Position}");
             }
             return builder.ToString();
+        }
+
+        private static void WiggleScript(List<FunScriptAction> actions)
+        {
+            TimeSpan minWiggle = TimeSpan.FromMilliseconds(100);
+            TimeSpan maxWiggle = TimeSpan.FromSeconds(4.5);
+
+
+            for (int i = 1; i < actions.Count; i++)
+            {
+                var previous = actions[i - 1];
+                var current = actions[i];
+
+                if (previous.Position != current.Position)
+                    continue;
+
+                TimeSpan duration = current.TimeStamp - previous.TimeStamp;
+                if (duration < minWiggle || duration > maxWiggle)
+                    continue;
+
+                current.Position = (byte) (current.Position > 0 ? current.Position - 1 : 1);
+            }
         }
 
         public void Resync(TimeSpan time)
