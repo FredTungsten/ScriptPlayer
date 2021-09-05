@@ -114,6 +114,15 @@ namespace ScriptPlayer.Dialogs
             set => SetValue(LocalAdressesProperty, value);
         }
 
+        public static readonly DependencyProperty ShowCommandIdsProperty = DependencyProperty.Register(
+            "ShowCommandIds", typeof(bool), typeof(SettingsDialog), new PropertyMetadata(default(bool)));
+
+        public bool ShowCommandIds
+        {
+            get => (bool) GetValue(ShowCommandIdsProperty);
+            set => SetValue(ShowCommandIdsProperty, value);
+        }
+
         public static readonly DependencyProperty SettingsProperty = DependencyProperty.Register(
             "Settings", typeof(SettingsViewModel), typeof(SettingsDialog), new PropertyMetadata(default(SettingsViewModel)));
 
@@ -815,6 +824,19 @@ namespace ScriptPlayer.Dialogs
                 return;
 
             Settings.FavouriteFolders.First().IsDefault = true;
+        }
+
+        private void MnuCopyCommandId_OnClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string commandId = ((InputMappingViewModel) ((MenuItem) sender).DataContext).CommandId;
+                Clipboard.SetText(commandId);
+            }
+            catch
+            {
+                //
+            }
         }
     }
 

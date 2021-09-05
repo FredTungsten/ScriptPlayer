@@ -3865,9 +3865,17 @@ namespace ScriptPlayer.ViewModels
             if (!original)
                 OnRequestActivate();
 
-            string fileToLoad = args[1];
-            if (File.Exists(fileToLoad))
-                LoadFile(fileToLoad);
+            if (args.Length == 2 && !args[1].StartsWith("-"))
+            {
+                // Open file
+                string fileToLoad = args[1];
+                if (File.Exists(fileToLoad))
+                    LoadFile(fileToLoad);
+            }
+            else if (args.Length > 2 && args[1] == "-c")
+            {
+                GlobalCommandManager.ExecuteCommand(args[2]);
+            }
         }
 
         public void LoadFile(string fileToLoad)

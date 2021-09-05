@@ -156,10 +156,15 @@ namespace ScriptPlayer.Shared
 
             Debug.WriteLine($"Processing '{shortcut}' (global = {isGlobal}) => {mapping.CommandId}");
 
-            if (!Commands.ContainsKey(mapping.CommandId))
+            return ExecuteCommand(mapping.CommandId);
+        }
+
+        public static bool ExecuteCommand(string commandId)
+        {
+            if (!Commands.ContainsKey(commandId))
                 return false;
 
-            ScriptplayerCommand command = Commands[mapping.CommandId];
+            ScriptplayerCommand command = Commands[commandId];
             if (!command.CanExecute(null))
                 return false;
 

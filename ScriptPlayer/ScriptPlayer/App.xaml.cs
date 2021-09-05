@@ -17,6 +17,8 @@ namespace ScriptPlayer
     {
         public App()
         {
+            DateTime start = DateTime.Now;
+
             if (AppDomain.CurrentDomain.FriendlyName.EndsWith(".vshost.exe"))
                 return;
 
@@ -24,7 +26,13 @@ namespace ScriptPlayer
             AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
 
             if (!InstanceHandler.Startup("ScriptPlayer-Instance", "ScriptPlayer-CommandLinePipe"))
+            {
+                string debugMessage = $"CLI ExecutionTime = {(DateTime.Now - start).TotalSeconds:f3}s";
+
+                Debug.WriteLine(debugMessage);
+                Console.WriteLine(debugMessage);
                 Environment.Exit(0);
+            }
         }
 
         private void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs args)
