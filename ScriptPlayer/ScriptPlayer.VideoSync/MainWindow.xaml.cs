@@ -14,7 +14,6 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
 using Microsoft.Win32;
-using NAudio.Wave;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Scripts;
@@ -2802,68 +2801,8 @@ namespace ScriptPlayer.VideoSync
             BeatBar.SoundAfterBeat = true;
         }
 
-        private int RATE = 44100; // sample rate of the sound card
-        private int BUFFERSIZE = (int)Math.Pow(2, 11); // must be a multiple of 2
         private double _previousSuperNormalizeDuration = 200;
         private bool _usePositionsForHeatmap;
-
-        private void mnuFrameSampler2_Click(object sender, RoutedEventArgs e)
-        {
-            MediaFoundationReader provider = new MediaFoundationReader(_videoFile);
-
-            int frameSize = BUFFERSIZE;
-            var audioBytes = new byte[frameSize];
-            provider.Read(audioBytes, 0, frameSize);
-
-            // return if there's nothing new to plot
-            if (audioBytes.Length == 0)
-                return;
-
-            if (audioBytes[frameSize - 2] == 0)
-                return;
-
-            // incoming data is 16-bit (2 bytes per audio point)
-            int BYTES_PER_POINT = 2;
-
-            // create a (32-bit) int array ready to fill with the 16-bit data
-            int graphPointCount = audioBytes.Length / BYTES_PER_POINT;
-
-            // create double arrays to hold the data we will graph
-            double[] pcm = new double[graphPointCount];
-            double[] fft = new double[graphPointCount];
-            double[] fftReal = new double[graphPointCount / 2];
-
-            // populate Xs and Ys with double data
-            for (int i = 0; i < graphPointCount; i++)
-            {
-                // read the int16 from the two bytes
-                Int16 val = BitConverter.ToInt16(audioBytes, i * 2);
-
-                // store the value in Ys as a percent (+/- 100% = 200%)
-                pcm[i] = (double)(val) / Math.Pow(2, 16) * 200.0;
-            }
-
-            // calculate the full FFT
-            fft = FFT(pcm);
-
-            // determine horizontal axis units for graphs
-            double pcmPointSpacingMs = RATE / 1000;
-            double fftMaxFreq = RATE / 2;
-            double fftPointSpacingHz = fftMaxFreq / graphPointCount;
-        }
-
-        public double[] FFT(double[] data)
-        {
-            double[] fft = new double[data.Length];
-            System.Numerics.Complex[] fftComplex = new System.Numerics.Complex[data.Length];
-            for (int i = 0; i < data.Length; i++)
-                fftComplex[i] = new System.Numerics.Complex(data[i], 0.0);
-
-            Accord.Math.FourierTransform.FFT(fftComplex, Accord.Math.FourierTransform.Direction.Forward);
-            for (int i = 0; i < data.Length; i++)
-                fft[i] = fftComplex[i].Magnitude;
-            return fft;
-        }
 
         private void mnuTrimBeats_Click(object sender, RoutedEventArgs e)
         {

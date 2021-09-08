@@ -2751,8 +2751,8 @@ namespace ScriptPlayer.ViewModels
 
             ConnectHandyDirectlyCommand = new ScriptplayerCommand(ConnectHandyDirectly)
             {
-                CommandId = "ConenctHandyDirectly",
-                DisplayText = "Connect to Handy directly"
+                CommandId = "ConnectHandyDirectly",
+                DisplayText = "Connect to Handy directly",
             };
 
             AddEstimAudioCommand = new ScriptplayerCommand(AddEstimAudioDevice)

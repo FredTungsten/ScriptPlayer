@@ -149,7 +149,6 @@
     <Compile Include="Classes\BlockingQueue.cs" />
     <Compile Include="Controls\AwesomeCharacters.cs" />
     <Compile Include="Controls\AwesomePaths.cs" />
-    <Compile Include="Controls\AwesomeTextBlock.cs" />
     <Compile Include="Controls\BeatAndPositionBar.cs" />
     <Compile Include="Controls\BetterTooltip.cs" />
     <Compile Include="Controls\MediaWrapper.cs" />
@@ -389,9 +388,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <Resource Include="Fonts\Font Awesome 5 Brands-Regular-400.otf" />
-    <Resource Include="Fonts\Font Awesome 5 Free-Regular-400.otf" />
-    <Resource Include="Fonts\Font Awesome 5 Free-Solid-900.otf" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>

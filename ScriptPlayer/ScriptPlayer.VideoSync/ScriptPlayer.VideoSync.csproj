@@ -60,26 +60,16 @@
     <Reference Include="Accord, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.3.8.2-alpha\lib\net462\Accord.dll</HintPath>
     </Reference>
-    <Reference Include="Accord.Math, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Math.3.8.2-alpha\lib\net462\Accord.Math.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Math.Core, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Math.3.8.2-alpha\lib\net462\Accord.Math.Core.dll</HintPath>
-    </Reference>
     <Reference Include="Accord.Video, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.Video.3.8.2-alpha\lib\net462\Accord.Video.dll</HintPath>
     </Reference>
     <Reference Include="Accord.Video.FFMPEG, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=x86">
       <HintPath>..\packages\Accord.Video.FFMPEG.3.8.2-alpha\lib\net462\Accord.Video.FFMPEG.dll</HintPath>
     </Reference>
-    <Reference Include="NAudio, Version=1.10.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NAudio.1.10.0\lib\net35\NAudio.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xaml">
@@ -94,9 +84,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="AudioTests.xaml.cs">
-      <DependentUpon>AudioTests.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Controls\BeatVisualizer.cs" />
     <Compile Include="Controls\DirectInputControl.cs" />
     <Compile Include="Controls\HistogramControl.cs" />
@@ -137,10 +124,6 @@
     </Compile>
     <Compile Include="Extensions\DoubleMarkup.cs" />
     <Compile Include="Properties\Annotations.cs" />
-    <Page Include="AudioTests.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Dialogs\BeatConversionSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

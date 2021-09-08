@@ -114,15 +114,6 @@ namespace ScriptPlayer.Dialogs
             set => SetValue(LocalAdressesProperty, value);
         }
 
-        public static readonly DependencyProperty ShowCommandIdsProperty = DependencyProperty.Register(
-            "ShowCommandIds", typeof(bool), typeof(SettingsDialog), new PropertyMetadata(default(bool)));
-
-        public bool ShowCommandIds
-        {
-            get => (bool) GetValue(ShowCommandIdsProperty);
-            set => SetValue(ShowCommandIdsProperty, value);
-        }
-
         public static readonly DependencyProperty SettingsProperty = DependencyProperty.Register(
             "Settings", typeof(SettingsViewModel), typeof(SettingsDialog), new PropertyMetadata(default(SettingsViewModel)));
 
