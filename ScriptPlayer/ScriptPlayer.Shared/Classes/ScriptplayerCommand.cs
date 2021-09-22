@@ -17,4 +17,36 @@ namespace ScriptPlayer.Shared
         {
         }
     }
+
+    public class ActionResult
+    {
+        public ActionResult(bool success, string message)
+        {
+            Success = success;
+            Message = message;
+        }
+
+        public bool Success { get; set; }
+        public string Message { get; set; }
+    }
+
+    public class ScriptPlayerAction
+    {
+        public delegate ActionResult ActionDelegate(string[] parameters);
+
+        public string Name { get; }
+
+        private ActionDelegate _action;
+
+        public ScriptPlayerAction(string name, ActionDelegate action)
+        {
+            Name = name;
+            _action = action;
+        }
+
+        public void Execute(string[] parameters, out ActionResult result)
+        {
+            result = _action.Invoke(parameters);
+        }
+    }
 }

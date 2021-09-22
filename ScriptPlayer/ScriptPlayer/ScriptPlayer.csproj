@@ -220,6 +220,7 @@
     <Compile Include="ViewModels\HeatmapGeneratorSettingsViewModel.cs" />
     <Compile Include="ViewModels\InstanceHandler.cs" />
     <Compile Include="ViewModels\KeyAndModifiers.cs" />
+    <Compile Include="ViewModels\MainViewModel.Commands.cs" />
     <Compile Include="ViewModels\PlaybackMode.cs" />
     <Compile Include="ViewModels\PlayerStateModel.cs" />
     <Compile Include="ViewModels\PreviewGeneratorSettingsViewModel.cs" />
@@ -455,6 +456,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ScriptPlayer.Ipc\ScriptPlayer.Ipc.csproj">
+      <Project>{1c299420-2055-48d6-8db7-e297709cc9d3}</Project>
+      <Name>ScriptPlayer.Ipc</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ScriptPlayer.Shared\ScriptPlayer.Shared.csproj">
       <Project>{E6533970-6370-4CDE-B7A8-A9E3F15BF26A}</Project>
       <Name>ScriptPlayer.Shared</Name>

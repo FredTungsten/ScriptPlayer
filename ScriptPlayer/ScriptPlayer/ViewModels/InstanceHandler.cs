@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Threading;
+using ScriptPlayer.Ipc;
 using ScriptPlayer.Shared;
 
 namespace ScriptPlayer.ViewModels
@@ -38,16 +40,16 @@ namespace ScriptPlayer.ViewModels
                 return true;
             }
 
-            // entire commandline
-            string commandLine = Environment.CommandLine;
-
-            // pass it on to the other instance
+            string[] args = Environment.GetCommandLineArgs();
+            if (args.Length != 2)
+                return false;
+            
+            // pass file on to the other instance
             using (NamedPipeClientStream client = new NamedPipeClientStream(".", pipeName, PipeDirection.Out, PipeOptions.Asynchronous))
-            using (StreamWriter writer = new StreamWriter(client))
             {
-                client.Connect(3000); // 3000ms timeout
-                writer.WriteLine(commandLine);
-                writer.Flush();
+                StreamString io = new StreamString(client);
+                client.Connect(500); // 500ms timeout
+                io.WriteString($"OpenFile \"{args[0]}\"");
             }
 
             return false;
@@ -59,7 +61,7 @@ namespace ScriptPlayer.ViewModels
             {
                 while (!_shutdown)
                 {
-                    using (_pipeServer = new NamedPipeServerStream(_pipeName, PipeDirection.In, 10,
+                    using (_pipeServer = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, 10,
                         PipeTransmissionMode.Message, PipeOptions.Asynchronous))
                     {
                         await _pipeServer.WaitForConnectionAsync(_cancellationSource.Token);
@@ -67,13 +69,18 @@ namespace ScriptPlayer.ViewModels
                         if (!_pipeServer.IsConnected)
                             return;
 
-                        using (StreamReader reader = new StreamReader(_pipeServer))
+                        StreamString io = new StreamString(_pipeServer);
+                        while (_pipeServer.IsConnected)
                         {
-                            while (!reader.EndOfStream)
+                            string commandLine = io.ReadString();
+                            if (commandLine == null)
+                                break;
+
+                            Debug.WriteLine("Command received via NamedPipe: " + commandLine);
+                            if (!string.IsNullOrWhiteSpace(commandLine))
                             {
-                                string commandLine = await reader.ReadLineAsync();
-                                if (!string.IsNullOrWhiteSpace(commandLine))
-                                    CommandLineQueue.Enqueue(commandLine);
+                                CommandLineQueue.Enqueue(commandLine);
+                                io.WriteString("OK");
                             }
                         }
                     }

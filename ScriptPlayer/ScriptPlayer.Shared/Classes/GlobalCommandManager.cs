@@ -30,6 +30,7 @@ namespace ScriptPlayer.Shared
         {
             CommandMappings = new List<InputMapping>();
             Commands = new Dictionary<string, ScriptplayerCommand>();
+            Actions = new Dictionary<string, ScriptPlayerAction>();
         }
 
         public static bool IsEnabled { get; set; } = true;
@@ -41,6 +42,13 @@ namespace ScriptPlayer.Shared
         public static void RegisterCommand(ScriptplayerCommand command)
         {
             Commands.Add(command.CommandId, command);
+        }
+
+        public static Dictionary<string, ScriptPlayerAction> Actions { get; set; }
+
+        public static void RegisterAction(ScriptPlayerAction action)
+        {
+            Actions.Add(action.Name, action);
         }
 
         public static bool LoadMappings(string path)
@@ -159,7 +167,25 @@ namespace ScriptPlayer.Shared
             return ExecuteCommand(mapping.CommandId);
         }
 
-        public static bool ExecuteCommand(string commandId)
+        public static bool Execute(string[] args)
+        {
+            if (args == null || args.Length == 0)
+                return false;
+
+            if (args.Length == 1)
+            {
+                if (ExecuteCommand(args[0]))
+                    return true;
+            }
+            
+            if (!Actions.ContainsKey(args[0]))
+                return false;
+
+            Actions[args[0]].Execute(args.Skip(1).ToArray(), out ActionResult result);
+            return result.Success;
+        }
+
+        private static bool ExecuteCommand(string commandId)
         {
             if (!Commands.ContainsKey(commandId))
                 return false;

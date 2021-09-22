@@ -808,7 +808,7 @@
                                     <Separator/>
 
                                     <TextBlock Margin="4,8,4,4" HorizontalAlignment="Center" Text="Debug" FontSize="20"/>
-                                    <Button Click="btnReloadScript_Click">Reload Script</Button>
+                                    <Button Command="{Binding ReloadScriptCommand}">Reload Script</Button>
                                     <CheckBox Margin="4" IsChecked="{Binding Settings.AutoReloadScript}">Auto Reload Script</CheckBox>
                                     <CheckBox Margin="4" IsChecked="{Binding Settings.ShowHeatMap}">Show Heat Map</CheckBox>
                                     <CheckBox Margin="4" IsChecked="{Binding Settings.ShowScriptPositions}">Show Script Positions</CheckBox>

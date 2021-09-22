@@ -847,11 +847,6 @@ namespace ScriptPlayer
             ViewModel.FilesDropped(files);
         }
 
-        private void btnReloadScript_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.ReloadScript();
-        }
-
         private void MnuDownloadButtplug_Click(object sender, RoutedEventArgs e)
         {
             Process.Start(ButtplugAdapter.GetDownloadUrl());
