@@ -1,12 +1,12 @@
 ﻿using ScriptPlayer.Ipc;
 
-namespace ScriptPlayer.Cli
+namespace ScriptPlayer.Console
 {
     internal static class Program
     {
         private static void Main()
         {
-            SpConsole.Run();   
+            SpConsole.Run();
         }
     }
 }

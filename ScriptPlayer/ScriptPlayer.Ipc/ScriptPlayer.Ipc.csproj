@@ -41,6 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandLineHelper.cs" />
+    <Compile Include="ConsoleHelper.cs" />
+    <Compile Include="SpConsole.cs" />
     <Compile Include="StreamString.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

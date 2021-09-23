@@ -34,6 +34,7 @@ Source: "ScriptPlayer\ScriptPlayer\bin\{#Configuration}\*.config"; DestDir: "{ap
 Source: "ScriptPlayer\ScriptPlayer\bin\{#Configuration}\Licenses\*.txt"; DestDir: "{app}\Licenses"
 ;CLI
 Source: "ScriptPlayer\ScriptPlayer.Cli\bin\{#Configuration}\spcli.exe"; DestDir: "{app}"
+Source: "ScriptPlayer\ScriptPlayer.Console\bin\{#Configuration}\spcon.exe"; DestDir: "{app}"
 
 [Icons]
 Name: "{commonprograms}\ScriptPlayer"; Filename: "{app}\ScriptPlayer.exe"
