@@ -167,22 +167,22 @@ namespace ScriptPlayer.Shared
             return ExecuteCommand(mapping.CommandId);
         }
 
-        public static bool Execute(string[] args)
+        public static ActionResult Execute(string[] args)
         {
             if (args == null || args.Length == 0)
-                return false;
+                return new ActionResult(false, "Command empty");
 
             if (args.Length == 1)
             {
                 if (ExecuteCommand(args[0]))
-                    return true;
+                    return new ActionResult(true, "Executed");
             }
             
             if (!Actions.ContainsKey(args[0]))
-                return false;
+                return new ActionResult(false, "Unknown Command");
 
             Actions[args[0]].Execute(args.Skip(1).ToArray(), out ActionResult result);
-            return result.Success;
+            return result;
         }
 
         private static bool ExecuteCommand(string commandId)

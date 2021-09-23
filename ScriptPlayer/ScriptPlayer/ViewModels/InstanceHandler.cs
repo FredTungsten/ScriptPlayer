@@ -8,11 +8,39 @@ using ScriptPlayer.Shared;
 
 namespace ScriptPlayer.ViewModels
 {
+    public class ExternalCommand
+    {
+        public string Command { get; private set; }
+
+        public ActionResult Result { get; private set; }
+
+        private ManualResetEvent ResetEvent { get; set; }
+
+        public ExternalCommand(string command)
+        {
+            Command = command;
+            ResetEvent = new ManualResetEvent(false);
+        }
+
+        public void SetResult(ActionResult result)
+        {
+            Result = result;
+            ResetEvent.Set();
+        }
+
+        public ActionResult WaitForResult(TimeSpan timeout)
+        {
+            if (!ResetEvent.WaitOne(timeout))
+                return new ActionResult(false, "Timeout");
+            return Result;
+        }
+    }
+
     public static class InstanceHandler
     {
-        private static readonly BlockingQueue<string> CommandLineQueue = new BlockingQueue<string>();
+        private static readonly BlockingQueue<ExternalCommand> CommandLineQueue = new BlockingQueue<ExternalCommand>();
 
-        public static event EventHandler<string> CommandLineReceived;
+        public static event EventHandler<ExternalCommand> CommandLineReceived;
 
         private static Mutex _singleInstanceMutex;
         private static NamedPipeServerStream _pipeServer;
@@ -49,7 +77,7 @@ namespace ScriptPlayer.ViewModels
             {
                 StreamString io = new StreamString(client);
                 client.Connect(500); // 500ms timeout
-                io.WriteString($"OpenFile \"{args[0]}\"");
+                io.WriteString($"OpenFile \"{args[1]}\"");
             }
 
             return false;
@@ -61,28 +89,38 @@ namespace ScriptPlayer.ViewModels
             {
                 while (!_shutdown)
                 {
-                    using (_pipeServer = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, 10,
-                        PipeTransmissionMode.Message, PipeOptions.Asynchronous))
+                    try
                     {
-                        await _pipeServer.WaitForConnectionAsync(_cancellationSource.Token);
-
-                        if (!_pipeServer.IsConnected)
-                            return;
-
-                        StreamString io = new StreamString(_pipeServer);
-                        while (_pipeServer.IsConnected)
+                        using (_pipeServer = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, 10,
+                            PipeTransmissionMode.Message, PipeOptions.Asynchronous))
                         {
-                            string commandLine = io.ReadString();
-                            if (commandLine == null)
-                                break;
+                            await _pipeServer.WaitForConnectionAsync(_cancellationSource.Token);
 
-                            Debug.WriteLine("Command received via NamedPipe: " + commandLine);
-                            if (!string.IsNullOrWhiteSpace(commandLine))
+                            if (!_pipeServer.IsConnected || _shutdown)
+                                return;
+
+                            StreamString io = new StreamString(_pipeServer);
+                            while (_pipeServer.IsConnected)
                             {
-                                CommandLineQueue.Enqueue(commandLine);
-                                io.WriteString("OK");
+                                string commandLine = io.ReadString();
+                                if (commandLine == null || _shutdown)
+                                    break;
+
+                                Debug.WriteLine("Command received via NamedPipe: " + commandLine);
+                                if (!string.IsNullOrWhiteSpace(commandLine))
+                                {
+                                    ExternalCommand command = new ExternalCommand(commandLine);
+                                    CommandLineQueue.Enqueue(command);
+
+                                    var result = command.WaitForResult(TimeSpan.FromMilliseconds(2000));
+                                    io.WriteString((result.Success ? "OK" : "FAIL") + ":" + result.Message);
+                                }
                             }
                         }
+                    }
+                    catch(Exception ex)
+                    {
+                        Debug.WriteLine("InstanceHandler.ProducerLoop: " + ex.Message);
                     }
                 }
             }
@@ -104,11 +142,11 @@ namespace ScriptPlayer.ViewModels
         {
             while (!_shutdown)
             {
-                string line = CommandLineQueue.Dequeue();
-                if (line == null)
+                ExternalCommand command = CommandLineQueue.Dequeue();
+                if (command == null)
                     return;
 
-                OnCommandLineReceived(line);
+                OnCommandLineReceived(command);
             }
         }
 
@@ -135,9 +173,9 @@ namespace ScriptPlayer.ViewModels
             _enabled = false;
         }
 
-        private static void OnCommandLineReceived(string commandLine)
+        private static void OnCommandLineReceived(ExternalCommand command)
         {
-            CommandLineReceived?.Invoke(null, commandLine);
+            CommandLineReceived?.Invoke(null, command);
         }
     }
 }

@@ -1232,25 +1232,26 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void InstanceHandlerOnCommandLineReceived(object sender, string commandLine)
+        private void InstanceHandlerOnCommandLineReceived(object sender, ExternalCommand externalCommand)
         {
-            Debug.WriteLine("Received Commandline: " + commandLine);
-            PassCommandLineAlong(commandLine);
+            Debug.WriteLine("Received Commandline: " + externalCommand.Command);
+            PassCommandLineAlong(externalCommand);
         }
 
-        private void PassCommandLineAlong(string commandLine)
+        private void PassCommandLineAlong(ExternalCommand command)
         {
             if (!Application.Current.CheckAccess())
             {
                 Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    PassCommandLineAlong(commandLine);
+                    PassCommandLineAlong(command);
                 }));
                 return;
             }
 
-            string[] args = CommandLineSplitter.CommandLineToArgs(commandLine);
-            ProcessCommand(args, false);
+            string[] args = CommandLineSplitter.CommandLineToArgs(command.Command);
+            var result = GlobalCommandManager.Execute(args);
+            command.SetResult(result);
         }
 
         public void LoadPlayerState()
@@ -3278,19 +3279,8 @@ namespace ScriptPlayer.ViewModels
             if(args.Length == 2)
             {
                 string[] command = {"OpenFile", args[1]};
-                ProcessCommand(command, true);
+                GlobalCommandManager.Execute(command);
             }
-        }
-
-        private void ProcessCommand(string[] args, bool original)
-        {
-            if (args.Length == 0)
-                return;
-
-            GlobalCommandManager.Execute(args);
-
-            //if (!original)
-            //    OnRequestActivate();
         }
 
         public void LoadFile(string fileToLoad)
