@@ -6,7 +6,7 @@ namespace ScriptPlayer.Cli
     {
         private static void Main()
         {
-            SpConsole.Run();   
+            SpConsole.Run(false);   
         }
     }
 }

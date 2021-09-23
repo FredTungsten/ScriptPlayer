@@ -6,7 +6,7 @@ namespace ScriptPlayer.Console
     {
         private static void Main()
         {
-            SpConsole.Run();
+            SpConsole.Run(true);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
@@ -8,7 +9,7 @@ namespace ScriptPlayer.Ipc
 {
     public static class SpConsole
     {
-        public static void Run()
+        public static void Run(bool assumeInteractive)
         {
             try
             {
@@ -24,46 +25,34 @@ namespace ScriptPlayer.Ipc
                 //    throw new Exception("Command line arguments couln't be reconstructed :(");
                 //}
 
-                if (args.Length < 2)
-                    return;
-
-                string myArgument = args[1];
+                string myArgument = args.Length > 1 ? args[1] : "";
                 bool interactive;
+                int argnum = 2;
 
                 switch (myArgument)
                 {
                     case "-c":
                         interactive = false;
-                        if (args.Length < 3)
-                        {
-                            Console.WriteLine("Not enought parameters for command mode");
-                            return;
-                        }
-
                         break;
                     case "-i":
                         interactive = true;
-                        if (args.Length > 2)
-                        {
-                            Console.WriteLine("Too many parameters for interactive mode");
-                            return;
-                        }
-
-                        Console.WriteLine("# Interactive Mode - enter 'exit' to close");
                         break;
                     case "-h":
                         PrintHelp();
                         return;
                     default:
-                        Console.WriteLine($"Unknown mode switch '{myArgument}'");
-                        PrintHelp();
-                        return;
+                        interactive = assumeInteractive;
+                        argnum = 1;
+                        break;
                 }
 
                 // Only pass on the other arguments
-                string commandLine = CommandLineHelper.ArgsToCommandline(args.Skip(2));
+                string commandLine = CommandLineHelper.ArgsToCommandline(args.Skip(argnum));
                 if (string.IsNullOrEmpty(commandLine) && !interactive)
                     return;
+
+                if(interactive)
+                    Console.WriteLine("# Interactive Mode - enter 'exit' to close");
 
                 // pass it on to the other instance
                 using (NamedPipeClientStream client = new NamedPipeClientStream(".", "ScriptPlayer-CommandLinePipe",
@@ -93,6 +82,7 @@ namespace ScriptPlayer.Ipc
                     }
                     catch (Exception e)
                     {
+                        Console.Error.WriteLine(e.Message);
                         Debug.WriteLine("Couldn't send commandline to ScriptPlayer: " + e.Message);
                     }
                 }
@@ -110,6 +100,7 @@ namespace ScriptPlayer.Ipc
             Console.WriteLine("Usage:");
             Console.WriteLine("Interactive Mode:    -i");
             Console.WriteLine("Single Command Mode: -c <Command> [Parameters]");
+            Console.WriteLine("Show this:           -h");
         }
     }
 }
