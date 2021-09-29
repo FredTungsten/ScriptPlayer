@@ -2684,23 +2684,7 @@ namespace ScriptPlayer.ViewModels
             OsdShowMessage("Min Speed: " + Settings.MinSpeed, TimeSpan.FromSeconds(2), "MaxSpeed");
         }
 
-        private void DecreasePatternSpeed()
-        {
-            if (Settings.PatternSpeed < TimeSpan.FromMilliseconds(1000))
-                Settings.PatternSpeed = TimeSpan.FromMilliseconds(Math.Min(1000, (int)Settings.PatternSpeed.TotalMilliseconds + 25));
-
-            OsdShowMessage("Pattern Speed: " + Settings.PatternSpeed.TotalMilliseconds.ToString("F0") + " ms / command", TimeSpan.FromSeconds(2), "PatternSpeed");
-        }
-
-        private void IncreasePatternSpeed()
-        {
-            if (Settings.PatternSpeed > TimeSpan.FromMilliseconds(100))
-                Settings.PatternSpeed = TimeSpan.FromMilliseconds(Math.Max(100, (int)Settings.PatternSpeed.TotalMilliseconds - 25));
-
-            OsdShowMessage("Pattern Speed: " + Settings.PatternSpeed.TotalMilliseconds.ToString("F0") + " ms / command", TimeSpan.FromSeconds(2), "PatternSpeed");
-        }
-
-        private void AddEstimAudioDevice()
+       private void AddEstimAudioDevice()
         {
             var controller = _controllers.OfType<EStimAudioController>().FirstOrDefault();
 

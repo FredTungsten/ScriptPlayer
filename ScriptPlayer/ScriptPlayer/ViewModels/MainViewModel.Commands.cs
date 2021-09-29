@@ -636,6 +636,40 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterAction(new ScriptPlayerAction("Seek", SeekAction));
             GlobalCommandManager.RegisterAction(new ScriptPlayerAction("SetRange", SetRangeAction));
             GlobalCommandManager.RegisterAction(new ScriptPlayerAction("SetRangeExtender", SetRangeExtenderAction));
+            GlobalCommandManager.RegisterAction(new ScriptPlayerAction("SetPatternSpeed", SetPatternSpeedAction));
+        }
+
+        private ActionResult SetPatternSpeedAction(string[] args)
+        {
+            if (args.Length != 1)
+                return new ActionResult(false, "Expected one parameter, got " + args.Length);
+
+            ArInt value = new ArInt();
+            if (!value.TryParse(args[0]))
+                return new ActionResult(false, "Invalid parameter value (can't parse)");
+
+            SetPatternSpeed(value);
+
+            return new ActionResult(true, "Pattern Speed set");
+        }
+
+        private void SetPatternSpeed(ArInt value)
+        {
+            int newValue = value.Adjust((int) Settings.PatternSpeed.TotalMilliseconds, 100, 1000);
+
+            Settings.PatternSpeed = TimeSpan.FromMilliseconds(newValue);
+
+            OsdShowMessage("Pattern Speed: " + Settings.PatternSpeed.TotalMilliseconds.ToString("F0") + " ms / command", TimeSpan.FromSeconds(2), "PatternSpeed");
+        }
+
+        private void DecreasePatternSpeed()
+        {
+            SetPatternSpeed(new ArInt(25, true));
+        }
+
+        private void IncreasePatternSpeed()
+        {
+            SetPatternSpeed(new ArInt(-25, true));
         }
 
         private ActionResult SetRangeExtenderAction(string[] args)
@@ -801,6 +835,12 @@ namespace ScriptPlayer.ViewModels
         {
             Value = value;
             IsRelative = isRelative;
+        }
+
+        public int Adjust(int baseValue, int min, int max)
+        {
+            int newValue = IsRelative ? baseValue + Value : Value;
+            return Math.Min(max, Math.Max(min, newValue));
         }
     }
 
