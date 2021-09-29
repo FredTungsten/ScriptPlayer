@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.IO;
 using System.Windows.Input;
@@ -495,7 +496,17 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Decrease Max Speed",
             });
 
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseRangeExtender)
+            {
+                CommandId = "IncreaseRangeExtender",
+                DisplayText = "Increase Range Extender",
+            });
 
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreaseRangeExtender)
+            {
+                CommandId = "DecreaseRangeExtender",
+                DisplayText = "Decrease Range Extender",
+            });
 
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(Play, CanTogglePlayback)
             {
@@ -608,11 +619,51 @@ namespace ScriptPlayer.ViewModels
             InitializeActions();
         }
 
+        private void IncreaseRangeExtender()
+        {
+            SetRangeExtender(new ArInt(5, true));
+        }
+
+
+        private void DecreaseRangeExtender()
+        {
+            SetRangeExtender(new ArInt(-5, true));
+        }
+        
         private void InitializeActions()
         {
             GlobalCommandManager.RegisterAction(new ScriptPlayerAction("OpenFile", OpenFileAction));
             GlobalCommandManager.RegisterAction(new ScriptPlayerAction("Seek", SeekAction));
             GlobalCommandManager.RegisterAction(new ScriptPlayerAction("SetRange", SetRangeAction));
+            GlobalCommandManager.RegisterAction(new ScriptPlayerAction("SetRangeExtender", SetRangeExtenderAction));
+        }
+
+        private ActionResult SetRangeExtenderAction(string[] args)
+        {
+            if(args.Length != 1)
+                return new ActionResult(false, "Expected one parameter, got " + args.Length);
+
+            ArInt value = new ArInt();
+            if(!value.TryParse(args[0]))
+                return new ActionResult(false, "Invalid parameter value (can't parse)");
+
+            SetRangeExtender(value);
+            
+            return new ActionResult(true, "Range Extender set");
+        }
+
+        private void SetRangeExtender(ArInt value)
+        {
+            int newValue;
+
+            if (value.IsRelative)
+                newValue = Settings.RangeExtender + value.Value;
+            else
+                newValue = value.Value;
+
+            newValue = Math.Min(99, Math.Max(0, newValue));
+
+            Settings.RangeExtender = newValue;
         }
 
         private ActionResult SetRangeAction(string[] args)
@@ -728,5 +779,63 @@ namespace ScriptPlayer.ViewModels
 
             return new ActionResult(true, "Loading file");
         }
+    }
+
+    public class ArInt : ArValue<int>
+    {
+        protected override bool TryParseInternal(string value, bool negate, out int parsedValue)
+        {
+            bool success = int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out parsedValue);
+
+            if (success && negate)
+                parsedValue = -parsedValue;
+
+            return success;
+        }
+
+
+        public ArInt()
+        { }
+
+        public ArInt(int value, bool isRelative)
+        {
+            Value = value;
+            IsRelative = isRelative;
+        }
+    }
+
+    public abstract class ArValue<T>
+    {
+        public bool IsRelative { get; protected set; }
+
+        public T Value { get; protected set; }
+
+        public bool TryParse(string value)
+        {
+            bool isNegative = false;
+            IsRelative = false;
+
+            if (!string.IsNullOrEmpty(value))
+            {
+                if (value.StartsWith("-"))
+                {
+                    isNegative = true;
+                    IsRelative = true;
+                    value = value.Substring(1);
+                }
+                else if (value.StartsWith("+"))
+                {
+                    isNegative = false;
+                    IsRelative = true;
+                    value = value.Substring(1);
+                }
+            }
+            
+            bool success = TryParseInternal(value, isNegative, out T parsedValue);
+            Value = success ? parsedValue : default(T);
+            return success;
+        }
+
+        protected abstract bool TryParseInternal(string value, bool negate, out T parsedValue);
     }
 }
