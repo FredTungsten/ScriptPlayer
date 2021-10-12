@@ -1112,6 +1112,10 @@ namespace ScriptPlayer.ViewModels
             TryFindMatchingScript(videoFileName);
             TryFindMatchingThumbnails(videoFileName, true);
 
+            // We meed to explicitly reload the audio file because the time source does not change when file on remote player changes
+
+            ReloadAudio(videoFileName);
+            
             UpdateGeneratorPriority();
         }
 
@@ -1901,9 +1905,9 @@ namespace ScriptPlayer.ViewModels
             _audioHandler.Delay = Settings.AudioDelay;
         }
 
-        private void ReloadAudio()
+        private void ReloadAudio(string VideoFileName = null)
         {
-            TryFindMatchingAudio(LoadedVideo);
+            TryFindMatchingAudio(LoadedVideo ?? VideoFileName);
             if(TimeSource?.IsPlaying ?? false)
                 _audioHandler?.Play();
 
