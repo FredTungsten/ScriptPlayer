@@ -3164,8 +3164,6 @@ namespace ScriptPlayer.ViewModels
             if (!TimeSource.CanOpenMedia) return;
 
             LoadFile(playlistEntry.Fullname);
-            /*if (EntryLoaded())
-                Play();*/
         }
 
         [NotifyPropertyChangedInvocator]

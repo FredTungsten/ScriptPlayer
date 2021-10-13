@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Windows.Input;
 using ScriptPlayer.Shared;
 
@@ -621,39 +621,25 @@ namespace ScriptPlayer.ViewModels
 
         private void IncreaseRangeExtender()
         {
-            SetRangeExtender(new ArInt(5, true));
+            SetRangeExtenderAction(new ArInt(5, true));
         }
 
 
         private void DecreaseRangeExtender()
         {
-            SetRangeExtender(new ArInt(-5, true));
+            SetRangeExtenderAction(new ArInt(-5, true));
         }
         
         private void InitializeActions()
         {
-            GlobalCommandManager.RegisterAction(new ScriptPlayerAction("OpenFile", OpenFileAction));
-            GlobalCommandManager.RegisterAction(new ScriptPlayerAction("Seek", SeekAction));
-            GlobalCommandManager.RegisterAction(new ScriptPlayerAction("SetRange", SetRangeAction));
-            GlobalCommandManager.RegisterAction(new ScriptPlayerAction("SetRangeExtender", SetRangeExtenderAction));
-            GlobalCommandManager.RegisterAction(new ScriptPlayerAction("SetPatternSpeed", SetPatternSpeedAction));
+            GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("OpenFile", new Func<string, ActionResult>(OpenFileAction)));
+            GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("Seek", new Func<ArTimeSpan, ActionResult>(SeekAction)));
+            GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("SetRange", new Func<byte, byte, ActionResult>(SetRangeAction)));
+            GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("SetRangeExtender", new Action<ArInt>(SetRangeExtenderAction)));
+            GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("SetPatternSpeed", new Action<ArInt>(SetPatternSpeedAction)));
         }
 
-        private ActionResult SetPatternSpeedAction(string[] args)
-        {
-            if (args.Length != 1)
-                return new ActionResult(false, "Expected one parameter, got " + args.Length);
-
-            ArInt value = new ArInt();
-            if (!value.TryParse(args[0]))
-                return new ActionResult(false, "Invalid parameter value (can't parse)");
-
-            SetPatternSpeed(value);
-
-            return new ActionResult(true, "Pattern Speed set");
-        }
-
-        private void SetPatternSpeed(ArInt value)
+        private void SetPatternSpeedAction(ArInt value)
         {
             int newValue = value.Adjust((int) Settings.PatternSpeed.TotalMilliseconds, 100, 1000);
 
@@ -664,29 +650,15 @@ namespace ScriptPlayer.ViewModels
 
         private void DecreasePatternSpeed()
         {
-            SetPatternSpeed(new ArInt(25, true));
+            SetPatternSpeedAction(new ArInt(25, true));
         }
 
         private void IncreasePatternSpeed()
         {
-            SetPatternSpeed(new ArInt(-25, true));
+            SetPatternSpeedAction(new ArInt(-25, true));
         }
-
-        private ActionResult SetRangeExtenderAction(string[] args)
-        {
-            if(args.Length != 1)
-                return new ActionResult(false, "Expected one parameter, got " + args.Length);
-
-            ArInt value = new ArInt();
-            if(!value.TryParse(args[0]))
-                return new ActionResult(false, "Invalid parameter value (can't parse)");
-
-            SetRangeExtender(value);
-            
-            return new ActionResult(true, "Range Extender set");
-        }
-
-        private void SetRangeExtender(ArInt value)
+        
+        private void SetRangeExtenderAction(ArInt value)
         {
             int newValue;
 
@@ -700,15 +672,9 @@ namespace ScriptPlayer.ViewModels
             Settings.RangeExtender = newValue;
         }
 
-        private ActionResult SetRangeAction(string[] args)
+        private ActionResult SetRangeAction(byte min, byte max)
         {
-            if(args.Length != 2)
-                return new ActionResult(false, "Expected two parameters, got " + args.Length);
-
-            if(!byte.TryParse(args[0], out byte min) || !byte.TryParse(args[1], out byte max))
-                return new ActionResult(false, "Invalid parameter value (can't parse)");
-
-            if(min > 100 ||max > 100 || min > max)
+            if(min > 100 || max > 100 || min > max)
                 return new ActionResult(false, "Invalid parameter value (out of range 0-100)");
 
             if (min == 100)
@@ -723,49 +689,44 @@ namespace ScriptPlayer.ViewModels
             return new ActionResult(true, "Range set");
         }
 
-        private ActionResult SeekAction(string[] args)
+        private ActionResult SeekAction(ArTimeSpan value)
         {
-            if (args.Length != 1)
-                return new ActionResult(false, "Expected one parameter, got " + args.Length);
+            TimeSpan newValue;
+            if (value.IsRelative)
+                newValue = TimeSource.Progress + value.Value;
+            else
+                newValue = value.Value;
 
-            TimeSpan timespan = ParseTimespan(args[0], out bool isRelative, out bool success);
+            if (newValue < TimeSpan.Zero)
+                newValue = TimeSpan.Zero;
 
-            if(!success)
-                return new ActionResult(false, "Couln't parse timespan");
+            if (newValue > TimeSource.Duration)
+                newValue = TimeSource.Duration;
 
-            if (isRelative)
-                timespan += TimeSource.Progress;
-
-            if(timespan < TimeSpan.Zero)
-                timespan = TimeSpan.Zero;
-
-            if (timespan > TimeSource.Duration)
-                timespan = TimeSource.Duration;
-
-            Seek(timespan, 1);
+            Seek(newValue, 1);
 
             return new ActionResult(true, "Seeking");
         }
 
-        private TimeSpan ParseTimespan(string arg, out bool isRelative, out bool success)
+        private ActionResult OpenFileAction(string filename)
         {
-            isRelative = false;
-            success = true;
+            if (!File.Exists(filename))
+                return new ActionResult(false, "File doesn't exist");
+
+            LoadFile(filename);
+
+            return new ActionResult(true, "Loading file");
+        }
+    }
+
+    public class ArTimeSpan : ArValue<TimeSpan>
+    {
+        protected override bool TryParseInternal(string arg, bool negate, out TimeSpan parsedValue)
+        {
+            parsedValue = TimeSpan.Zero;
 
             if (string.IsNullOrWhiteSpace(arg))
-            {
-                success = false;    
-                return TimeSpan.Zero;
-            }
-
-            bool isNegative = false;
-
-            if (arg.StartsWith("-") || arg.StartsWith("+"))
-            {
-                isNegative = arg.StartsWith("-");
-                isRelative = true;
-                arg = arg.Substring(1);
-            }
+                return false;
 
             TimeSpan result;
 
@@ -779,7 +740,7 @@ namespace ScriptPlayer.ViewModels
                     "h\\:mm\\:ss\\.ff",
                     "h\\:mm\\:ss\\.f",
                     "h\\:mm\\:ss",
-                
+
                     "m\\:ss\\.fff",
                     "m\\:ss\\.ff",
                     "m\\:ss\\.f",
@@ -790,28 +751,20 @@ namespace ScriptPlayer.ViewModels
                     result = ts1;
                 else
                 {
-                    success = false;
-                    return TimeSpan.Zero;
+                    return false;
                 }
             }
 
-            if (isNegative)
-                return result.Negate();
+            if (negate)
+            {
+                parsedValue = result.Negate();
+            }
+            else
+            {
+                parsedValue = result;
+            }
 
-            return result;
-        }
-
-        private ActionResult OpenFileAction(string[] args)
-        {
-            if (args.Length != 1)
-                return new ActionResult(false, "Expected one parameter, got " + args.Length);
-
-            if (!File.Exists(args[0]))
-                return new ActionResult(false, "File doesn't exist");
-
-            LoadFile(args[0]);
-
-            return new ActionResult(true, "Loading file");
+            return true;
         }
     }
 
@@ -865,7 +818,6 @@ namespace ScriptPlayer.ViewModels
                 }
                 else if (value.StartsWith("+"))
                 {
-                    isNegative = false;
                     IsRelative = true;
                     value = value.Substring(1);
                 }
@@ -877,5 +829,137 @@ namespace ScriptPlayer.ViewModels
         }
 
         protected abstract bool TryParseInternal(string value, bool negate, out T parsedValue);
+    }
+
+    public class ScriptPlayerDelegateAction : ScriptPlayerAction
+    {
+        public override string Name { get; }
+        private readonly Delegate _action;
+
+        public ScriptPlayerDelegateAction(string name, Delegate action)
+        {
+            if (action.Method.ReturnType != typeof(void) && action.Method.ReturnType != typeof(string))
+            {
+                if (!typeof(ActionResult).IsAssignableFrom(action.Method.ReturnType))
+                    throw new Exception(action.Method.Name + " doesn't return a " + nameof(ActionResult) + ", string or void");
+            }
+
+            Name = name;
+            _action = action;
+        }
+
+        public override ActionResult Execute(string[] parameters)
+        {
+            try
+            {
+                ParameterInfo[] methodParams = _action.Method.GetParameters();
+                object[] invokationParameters = new object[methodParams.Length];
+
+                for (int i = 0; i < methodParams.Length; i++)
+                {
+                    if (parameters.Length > i)
+                    {
+                        object parameterValue = ConvertParameter(parameters[i], methodParams[i].ParameterType,
+                            out bool success);
+                        if (success)
+                            invokationParameters[i] = parameterValue;
+                        else
+                        {
+                            return new ActionResult(false, $"Parameter {i} couln't be parsed");
+                        }
+                    }
+                    else
+                    {
+                        object defaultValue = GetDefaultValue(methodParams[i], out bool hasDefault);
+                        if (hasDefault)
+                            invokationParameters[i] = defaultValue;
+                        else
+                        {
+                            return new ActionResult(false, $"Parameter {i} is missing");
+                        }
+                    }
+                }
+
+                if (_action.Method.ReturnType == typeof(void))
+                {
+                    _action.DynamicInvoke(invokationParameters);
+                    return new ActionResult(true, "Success");
+                }
+
+                if (_action.Method.ReturnType == typeof(string))
+                {
+                    string message = (string)_action.DynamicInvoke(invokationParameters);
+                    return new ActionResult(true, message);
+                }
+
+                return (ActionResult)_action.DynamicInvoke(invokationParameters);
+            }
+            catch(Exception ex)
+            {
+                return new ActionResult(false, ex.Message);
+            }
+        }
+
+        private object GetDefaultValue(ParameterInfo methodParam, out bool hasDefault)
+        {
+            if (methodParam.HasDefaultValue)
+            {
+                hasDefault = true;
+                return methodParam.DefaultValue;
+            }
+            
+            hasDefault = false;
+            return null;
+        }
+
+        private object ConvertParameter(string value, Type targetType, out bool success)
+        {
+            success = true;
+
+            try
+            {
+
+                if (typeof(IConvertible).IsAssignableFrom(targetType))
+                {
+                    return Convert.ChangeType(value, targetType);
+                }
+
+                if (targetType == typeof(string))
+                {
+                    return value;
+                }
+
+                if (targetType == typeof(ArTimeSpan))
+                {
+                    ArTimeSpan result = new ArTimeSpan();
+                    if (!result.TryParse(value))
+                    {
+                        success = false;
+                        return null;
+                    }
+
+                    return result;
+                }
+
+                if (targetType == typeof(ArInt))
+                {
+                    ArInt result = new ArInt();
+                    if (!result.TryParse(value))
+                    {
+                        success = false;
+                        return null;
+                    }
+
+                    return result;
+                }
+            }
+            catch
+            {
+                //
+            }
+
+            success = false;
+            return false;
+        }
     }
 }

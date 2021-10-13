@@ -39,9 +39,10 @@ namespace ScriptPlayer.Shared
 
         public static Dictionary<string, ScriptplayerCommand> Commands { get; set; }
 
-        public static void RegisterCommand(ScriptplayerCommand command)
+        public static ScriptplayerCommand RegisterCommand(ScriptplayerCommand command)
         {
             Commands.Add(command.CommandId, command);
+            return command;
         }
 
         public static Dictionary<string, ScriptPlayerAction> Actions { get; set; }
@@ -181,8 +182,7 @@ namespace ScriptPlayer.Shared
             if (!Actions.ContainsKey(args[0]))
                 return new ActionResult(false, "Unknown Command");
 
-            Actions[args[0]].Execute(args.Skip(1).ToArray(), out ActionResult result);
-            return result;
+            return Actions[args[0]].Execute(args.Skip(1).ToArray());
         }
 
         private static bool ExecuteCommand(string commandId)

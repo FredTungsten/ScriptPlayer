@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace ScriptPlayer.Shared
 {
@@ -30,23 +31,10 @@ namespace ScriptPlayer.Shared
         public string Message { get; set; }
     }
 
-    public class ScriptPlayerAction
+    public abstract class ScriptPlayerAction
     {
-        public delegate ActionResult ActionDelegate(string[] parameters);
+        public abstract string Name { get; }
 
-        public string Name { get; }
-
-        private ActionDelegate _action;
-
-        public ScriptPlayerAction(string name, ActionDelegate action)
-        {
-            Name = name;
-            _action = action;
-        }
-
-        public void Execute(string[] parameters, out ActionResult result)
-        {
-            result = _action.Invoke(parameters);
-        }
+        public abstract ActionResult Execute(string[] parameters);
     }
 }
