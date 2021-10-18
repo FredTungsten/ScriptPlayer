@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
+using Newtonsoft.Json;
 using ScriptPlayer.Shared.Interfaces;
 using ScriptPlayer.Shared.Scripts;
 
@@ -366,28 +367,42 @@ namespace ScriptPlayer.Shared.TheHandy
         
         private HandyUploadResponse PostScriptToHandyfeeling(string filename, string csv)
         {
-            const string uploadUrl = "https://www.handyfeeling.com/api/sync/upload";
-            string name = Path.GetFileNameWithoutExtension(filename);
-            string csvFileName = $"{name}_{DateTime.UtcNow:yyyyMMddHHmmssf}.csv";
-
-            var requestContent = new MultipartFormDataContent();
-
-            var fileContent = new StreamContent(new MemoryStream(Encoding.UTF8.GetBytes(csv)));
-
-            fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+            try
             {
-                Name = "syncFile",
-                FileName = "\"" + csvFileName + "\""
-            };
+                const string uploadUrl = "https://www.handyfeeling.com/api/sync/upload";
+                string name = Path.GetFileNameWithoutExtension(filename);
+                string csvFileName = $"{name}_{DateTime.UtcNow:yyyyMMddHHmmssf}.csv";
 
-            fileContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
-            requestContent.Add(fileContent, name, csvFileName);
+                var requestContent = new MultipartFormDataContent();
 
-            using (var client = GetClient())
+                var fileContent = new StreamContent(new MemoryStream(Encoding.UTF8.GetBytes(csv)));
+
+                fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+                {
+                    Name = "syncFile",
+                    FileName = "\"" + csvFileName + "\""
+                };
+
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
+                requestContent.Add(fileContent, name, csvFileName);
+
+                using (var client = GetClient())
+                {
+                    var request = client.PostAsync(uploadUrl, requestContent);
+                    var responseString = request.Result.Content.ReadAsStringAsync().Result;
+                    HandyUploadResponse response = JsonConvert.DeserializeObject<HandyUploadResponse>(responseString);
+                    return response;
+                }
+            }
+            catch(Exception ex)
             {
-                var request = client.PostAsync(uploadUrl, requestContent);
-                var response = request.Result.Content.ReadAsAsync<HandyUploadResponse>().Result;
-                return response;
+                return new HandyUploadResponse
+                {
+                    converted = false,
+                    error = ex.Message,
+                    info = "Try local script hosting or connecting via bluetooth instead",
+                    success = false
+                };
             }
         }
 
