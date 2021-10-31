@@ -458,7 +458,7 @@ namespace ScriptPlayer.Shared.TheHandy
         {
             lock (_updateOffsetLock)
             {
-                _newOffsetMs = (int)offset.TotalMilliseconds;
+                _newOffsetMs = -(int)offset.TotalMilliseconds;
                 _resetOffsetTask = true;
                 if (!_updateOffsetTask?.IsCompleted ?? false)
                     return;
