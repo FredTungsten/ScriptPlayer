@@ -30,6 +30,5 @@
                 </Grid>
             </Grid>
         </Border>
-        <shared:OverlayFadeout x:Name="Fadeout" HorizontalAlignment="Center" VerticalAlignment="Center"/>
     </Grid>
 </UserControl>

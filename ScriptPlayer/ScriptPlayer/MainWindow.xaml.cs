@@ -100,6 +100,7 @@ namespace ScriptPlayer
             ViewModel.Beat += ViewModel_Beat;
 
             ViewModel.VideoPlayer = VideoPlayer;
+            ViewModel.SubtitleDisplay = subtitleDisplay;
             ViewModel.Load();
 
             if (ViewModel.InitialPlayerState != null)

@@ -153,6 +153,7 @@
     <Compile Include="Controls\BetterTooltip.cs" />
     <Compile Include="Controls\MediaWrapper.cs" />
     <Compile Include="Controls\PageSelector.cs" />
+    <Compile Include="Controls\SubtitleDisplay.cs" />
     <Compile Include="Controls\ThumbnailPreview.cs" />
     <Compile Include="Controls\AwesomeIcon.xaml.cs">
       <DependentUpon>AwesomeIcon.xaml</DependentUpon>
@@ -303,6 +304,7 @@
     <Compile Include="Sounds\SoundResources.cs" />
     <Compile Include="Beats\SpeedPredictor.cs" />
     <Compile Include="Helpers\SystemIdlePreventer.cs" />
+    <Compile Include="Subtitles\SubtitleHandler.cs" />
     <Compile Include="TimeSource\AudioFileTimeSource.cs" />
     <Compile Include="TimeSource\CompositionTargetClock.cs" />
     <Compile Include="TimeSource\DeoVrTimeSource.cs" />

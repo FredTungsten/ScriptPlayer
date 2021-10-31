@@ -26,6 +26,7 @@ using ScriptPlayer.Generators;
 using ScriptPlayer.Shared.Devices;
 using ScriptPlayer.Shared.Estim;
 using ScriptPlayer.Shared.Interfaces;
+using ScriptPlayer.Shared.Subtitles;
 using ScriptPlayer.Shared.TheHandy;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
@@ -1183,6 +1184,9 @@ namespace ScriptPlayer.ViewModels
             InstanceHandler.EnableEvents();
 
             UpdateVideoCrop();
+
+            //var loader = new SrtSubtitleLoader();
+            //SubtitleDisplay.SetSubtitles(loader.LoadEntriesFromFile(@"D:\Videos\CH\~Test\subtitles\BibleBlack.srt"));
         }
 
         private void AutoConnectButtplug()
@@ -4918,6 +4922,8 @@ namespace ScriptPlayer.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        public SubtitleDisplay SubtitleDisplay { get; set; }
 
         protected virtual void OsdShowMessage(string text, TimeSpan duration, string designation = null)
         {

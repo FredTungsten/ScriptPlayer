@@ -32,8 +32,15 @@ namespace ScriptPlayer.Generators
         {
             entry.State = JobStates.Processing;
             var result = ProcessInternal(settings, entry);
-            entry.State = JobStates.Done;
 
+            if (!result.Success)
+            {
+                entry.DoneType = JobDoneTypes.Failure;
+            }
+
+            entry.Update(result.Success ? "Done" : "Failed", 1.0);
+            entry.State = JobStates.Done;
+            
             return result;
         }
 

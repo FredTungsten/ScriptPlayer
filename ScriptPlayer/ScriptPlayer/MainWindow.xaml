@@ -226,6 +226,11 @@
                     </Grid>
                 </Viewbox>
             </Grid>
+            
+            <!-- SUBTITLES -->
+            <Grid>
+                <shared:SubtitleDisplay TimeSource="{Binding TimeSource}" Name="subtitleDisplay" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"></shared:SubtitleDisplay>
+            </Grid>
 
             <!-- SCRIPT POSITIONS -->
             <ProgressBar Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" Minimum="0" Maximum="1" Value="{Binding CurrentPosition}" Orientation="Vertical" HorizontalAlignment="Left" Margin="10,10,0,10" Width="32">
