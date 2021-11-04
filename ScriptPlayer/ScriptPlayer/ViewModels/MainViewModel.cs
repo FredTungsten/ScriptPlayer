@@ -865,7 +865,7 @@ namespace ScriptPlayer.ViewModels
                             SimpleTcpConnectionSettings settings =
                                 OnRequestSimpleTcpConnectionSettings(new SimpleTcpConnectionSettings()
                                 {
-                                    IpAndPort = MpcTimeSource.DefaultEndpoint
+                                    IpAndPort = DeoVrTimeSource.DefaultEndpoint
                                 });
 
                             if (settings == null)
