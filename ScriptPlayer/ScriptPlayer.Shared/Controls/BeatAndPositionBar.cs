@@ -12,6 +12,15 @@ namespace ScriptPlayer.Shared
 {
     public class BeatAndPositionBar : Control
     {
+        public static readonly DependencyProperty IsReadonlyProperty = DependencyProperty.Register(
+            "IsReadonly", typeof(bool), typeof(BeatAndPositionBar), new PropertyMetadata(default(bool)));
+
+        public bool IsReadonly
+        {
+            get { return (bool) GetValue(IsReadonlyProperty); }
+            set { SetValue(IsReadonlyProperty, value); }
+        }
+
         public event EventHandler PositionsChanged;
 
         public static readonly DependencyProperty LineColorProperty = DependencyProperty.Register(
@@ -42,11 +51,11 @@ namespace ScriptPlayer.Shared
         }
 
         public static readonly DependencyProperty BeatPatternProperty = DependencyProperty.Register(
-            "BeatPattern", typeof(bool[]), typeof(BeatAndPositionBar), new PropertyMetadata(default(bool[]), OnVisualPropertyChanged));
+            "BeatPattern", typeof(IList<bool>), typeof(BeatAndPositionBar), new PropertyMetadata(default(IList<bool>), OnVisualPropertyChanged));
 
-        public bool[] BeatPattern
+        public IList<bool> BeatPattern
         {
-            get { return (bool[]) GetValue(BeatPatternProperty); }
+            get { return (IList<bool>) GetValue(BeatPatternProperty); }
             set { SetValue(BeatPatternProperty, value); }
         }
 
@@ -85,58 +94,65 @@ namespace ScriptPlayer.Shared
 
         protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)
         {
-            LockTimeStamp = !LockTimeStamp;
+            if (!IsReadonly)
+            {
+                LockTimeStamp = !LockTimeStamp;
+            }
+
             base.OnMouseRightButtonDown(e);
         }
 
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
-            _mousePos = e.GetPosition(this);
-
-            // Control = Remove
-            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            if (!IsReadonly)
             {
-                RelativePosition closest = GetClosestPosition(_mousePos);
-                if (closest != null)
-                    Positions.Remove(closest);
+                _mousePos = e.GetPosition(this);
 
-                InvalidateVisual();
-                OnPositionsChanged();
-            }
-            // Shift = Add
-            else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
-            {
-                RelativePosition newPos = GetPositionFromPoint(_mousePos);
-                Positions.Add(newPos);
+                // Control = Remove
+                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                {
+                    RelativePosition closest = GetClosestPosition(_mousePos);
+                    if (closest != null)
+                        Positions.Remove(closest);
 
-                _position = newPos;
-                _down = true;
+                    InvalidateVisual();
+                    OnPositionsChanged();
+                }
+                // Shift = Add
+                else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+                {
+                    RelativePosition newPos = GetPositionFromPoint(_mousePos);
+                    Positions.Add(newPos);
 
-                CaptureMouse();
+                    _position = newPos;
+                    _down = true;
 
-                InvalidateVisual();
-            }
-            // Neither = Move
-            else
-            {
-                RelativePosition closest = GetClosestPosition(_mousePos);
-                if (closest == null)
-                    return;
+                    CaptureMouse();
 
-                _position = closest;
-                _down = true;
+                    InvalidateVisual();
+                }
+                // Neither = Move
+                else
+                {
+                    RelativePosition closest = GetClosestPosition(_mousePos);
+                    if (closest == null)
+                        return;
 
-                CaptureMouse();
-            }
+                    _position = closest;
+                    _down = true;
 
-            if (_position != null && _down)
-            {
-                ((TextBlock)_positionPopup.Child).Text = $"{_position.Position} @ {_position.RelativeTime:P}";
-                _positionPopup.IsOpen = true;
-            }
-            else
-            {
-                _positionPopup.IsOpen = false;
+                    CaptureMouse();
+                }
+
+                if (_position != null && _down)
+                {
+                    ((TextBlock) _positionPopup.Child).Text = $"{_position.Position} @ {_position.RelativeTime:P}";
+                    _positionPopup.IsOpen = true;
+                }
+                else
+                {
+                    _positionPopup.IsOpen = false;
+                }
             }
         }
 
@@ -171,13 +187,20 @@ namespace ScriptPlayer.Shared
 
             _positionPopup.IsOpen = false;
             _down = false;
-            _mousePos = e.GetPosition(this);
-            UpdateSelectedPosition(true);
-            InvalidateVisual();
+
+            if (!IsReadonly)
+            {
+                _mousePos = e.GetPosition(this);
+                UpdateSelectedPosition(true);
+                InvalidateVisual();
+            }
 
             ReleaseMouseCapture();
 
-            OnPositionsChanged();
+            if (!IsReadonly)
+            {
+                OnPositionsChanged();
+            }
         }
 
         private void UpdateSelectedPosition(bool final)
@@ -206,6 +229,9 @@ namespace ScriptPlayer.Shared
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
+            if (IsReadonly)
+                return;
+
             if (!_down) return;
 
             _mousePos = e.GetPosition(this);
@@ -243,8 +269,8 @@ namespace ScriptPlayer.Shared
 
                 List<double> snapPositions = new List<double>();
 
-                for(int i = 0; i < (BeatPattern.Length -1) * 4; i++)
-                    snapPositions.Add(PositionToX(i / (double)((BeatPattern.Length - 1) * 4)));
+                for(int i = 0; i < (BeatPattern.Count -1) * 4; i++)
+                    snapPositions.Add(PositionToX(i / (double)((BeatPattern.Count - 1) * 4)));
 
                 double minRange = double.MaxValue;
                 double minPos = 0;
@@ -319,9 +345,9 @@ namespace ScriptPlayer.Shared
 
                 int subdivisions = 4;
 
-                for(int i = 0; i < (BeatPattern.Length - 1) * subdivisions; i++)
+                for(int i = 0; i < (BeatPattern.Count - 1) * subdivisions; i++)
                 {
-                    double x = (ActualWidth / ((BeatPattern.Length - 1) * subdivisions )) * i;
+                    double x = (ActualWidth / ((BeatPattern.Count - 1) * subdivisions )) * i;
 
                     Pen pen = noline;
 
@@ -497,6 +523,23 @@ namespace ScriptPlayer.Shared
         public RelativePositionCollection Duplicate()
         {
             return new RelativePositionCollection(_positions);
+        }
+
+        public bool IsIdenticalTo(RelativePositionCollection other)
+        {
+            if (other.Count != Count)
+                return false;
+
+            for (int i = 0; i < Count; i++)
+            {
+                if (other[i].Position != this[i].Position)
+                    return false;
+
+                if (Math.Abs(other[i].RelativeTime - this[i].RelativeTime) > double.Epsilon)
+                    return false;
+            }
+
+            return true;
         }
     }
 }

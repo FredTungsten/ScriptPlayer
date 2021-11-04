@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -12,7 +11,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-using System.Windows.Media.TextFormatting;
 using Microsoft.Win32;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes;
@@ -1503,6 +1501,11 @@ namespace ScriptPlayer.VideoSync
                         PatternFill();
                         break;
                     }
+                case Key.Q:
+                    {
+                        ConvertToCustomPositions();
+                        break;
+                    }
                 case Key.R:
                     {
                         ChangeRange();
@@ -2547,6 +2550,11 @@ namespace ScriptPlayer.VideoSync
 
         private void mnuSelectedBeatsToCustomPositions_Click(object sender, RoutedEventArgs e)
         {
+            ConvertToCustomPositions();
+        }
+
+        private void ConvertToCustomPositions()
+        {
             CustomConversionDialog dialog = new CustomConversionDialog
                 { Owner = this };
 
@@ -2565,11 +2573,16 @@ namespace ScriptPlayer.VideoSync
 
             ConversionSettings settings = new ConversionSettings
             {
-                CustomPositions = dialog.Positions,
-                BeatPattern = dialog.BeatPattern,
+                CustomPositions = dialog.Settings.Positions,
+                BeatPattern = dialog.Settings.Pattern,
                 Mode = ConversionMode.Custom
             };
 
+            ConvertSelectedBeatsToCustomPositions(settings);
+        }
+
+        private void ConvertSelectedBeatsToCustomPositions(ConversionSettings settings)
+        {
             TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
             TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
 
@@ -2597,8 +2610,8 @@ namespace ScriptPlayer.VideoSync
 
             ConversionSettings settings = new ConversionSettings
             {
-                CustomPositions = dialog.Positions,
-                BeatPattern = dialog.BeatPattern,
+                CustomPositions = dialog.Settings.Positions,
+                BeatPattern = dialog.Settings.Pattern,
                 Mode = ConversionMode.Custom
             };
 
