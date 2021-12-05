@@ -230,7 +230,7 @@
                                     <Bold>ffmpeg.exe</Bold>
                                     <Run> contained in the build.</Run>
                                 </TextBlock>
-                                <TextBlock Text="Autmatically generate:" Margin="0,10,0,0"/>
+                                <TextBlock Text="Automatically generate:" Margin="0,10,0,0"/>
                                 <CheckBox Margin="4" IsChecked="{Binding Settings.AutogenerateThumbnails}" Content="Thumbnails for opened videos"/>
                                 <CheckBox Margin="4" IsChecked="{Binding Settings.AutogenerateAllForPlaylist}" Content="Thumbnails, Heatmap &amp; Preview for videos in playlist"/>
                             </StackPanel>

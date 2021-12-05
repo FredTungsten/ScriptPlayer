@@ -283,7 +283,7 @@ namespace ScriptPlayer.Shared
             TimeSpan timeFrom = Progress - TotalDisplayedDuration.Multiply(Midpoint);
             TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
 
-            List<TimeSpan> absoluteBeatPositions = Beats?.GetBeats(timeFrom, timeTo).ToList() ?? new List<TimeSpan>();
+            List<TimeSpan> absoluteBeatPositions = Beats?.GetBeats(timeFrom.Add(TimeSpan.FromSeconds(-1)), timeTo.Add(TimeSpan.FromSeconds(1))).ToList() ?? new List<TimeSpan>();
             List<TimeSpan> absolutePreviewPositions =
                 PreviewBeats?.GetBeats(timeFrom, timeTo).ToList() ?? new List<TimeSpan>();
 
