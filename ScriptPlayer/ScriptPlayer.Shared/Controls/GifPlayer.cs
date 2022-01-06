@@ -89,15 +89,14 @@ namespace ScriptPlayer.Shared
             for (int i = 0; i < Frames.Count; i++)
             {
                 var frame = Frames[i];
-                if (frame == null)
-                    return;
+                if (frame?.CompleteImage == null)
+                    break;
+
+                index = i;
 
                 duration += frame.Delay;
                 if (duration > progress)
-                {
-                    index = i;
                     break;
-                }
             }
 
             if (index == _index)
@@ -193,15 +192,30 @@ namespace ScriptPlayer.Shared
                     InvalidateArrange();
                     break;
                 }
+                case LoadStates.FrameMetadata:
+                {
+                    break;
+                }
+                //case LoadStates.FirstFrame:
+                //{
+                //    InvalidateVisual();
+                //    break;
+                //}
+                //case LoadStates.Complete:
+                //{
+                //    if (AutoPlay)
+                //        Start();
+                //    break;
+                //}
                 case LoadStates.FirstFrame:
                 {
                     InvalidateVisual();
+                    if (AutoPlay)
+                        Start();
                     break;
                 }
                 case LoadStates.Complete:
                 {
-                    if (AutoPlay)
-                        Start();
                     break;
                 }
                 default:
@@ -297,7 +311,7 @@ namespace ScriptPlayer.Shared
                     scaledSize.Width,
                     scaledSize.Height);
 
-                drawingContext.DrawImage(frame.Image, final);
+                drawingContext.DrawImage(frame.CompleteImage, final);
             }
 
             if (ShowProgress)
@@ -389,20 +403,23 @@ namespace ScriptPlayer.Shared
 
     public class GifFrame
     {
-        public BitmapSource Image { get; set; }
+        public BitmapSource CompleteImage { get; set; }
         public ushort Left { get; set; }
         public ushort Top { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
         public int Delay { get; set; }
+        public Rect PartialRect => new Rect(Left, Top, Width, Height);
+        public byte Disposal { get; set; }
     }
 
     public enum LoadStates
     {
         None = 0,
         BasicInformation = 1,
-        FirstFrame = 2,
-        Complete = 3
+        FrameMetadata = 2,
+        FirstFrame = 3,
+        Complete = 4
     }
 
     public class GifFrameCollection
@@ -462,12 +479,43 @@ namespace ScriptPlayer.Shared
 
             Width = decoder.Frames[0].PixelWidth;
             Height = decoder.Frames[0].PixelHeight;
+            var frameRect = new Rect(0, 0, Width, Height);
             _frames = new GifFrame[decoder.Frames.Count];
 
             LoadState = LoadStates.BasicInformation;
-            //Debug.WriteLine($"Basic Decode done after {(DateTime.Now - start).TotalMilliseconds:f2}");
+            Debug.WriteLine($"Basic Decode done after {(DateTime.Now - start).TotalMilliseconds:f2}");
 
-            int duration = 0;
+            int totalDuration = 0;
+
+            for (int index = 0; index < decoder.Frames.Count; index++)
+            {
+                BitmapFrame frame = decoder.Frames[index];
+                BitmapMetadata metadata = frame.Metadata as BitmapMetadata;
+                int frameDelay = (ushort)metadata.GetQuery("/grctlext/Delay") * 10;
+                //byte disposal = (byte) metadata.GetQuery("/grctlext/Disposal"); //seems to be mostly "combine" 
+                ushort left = (ushort)metadata.GetQuery("/imgdesc/Left");
+                ushort top = (ushort)metadata.GetQuery("/imgdesc/Top");
+                int width = frame.PixelWidth;
+                int height = frame.PixelHeight;
+
+                _frames[index] = new GifFrame
+                {
+                    CompleteImage = null,
+                    Height = height,
+                    Left = left,
+                    Top = top,
+                    Width = width,
+                    Delay = frameDelay,
+                    //Disposal = disposal
+                };
+
+                totalDuration += frameDelay;
+            }
+            
+            Duration = TimeSpan.FromMilliseconds(totalDuration);
+
+            LoadState = LoadStates.FrameMetadata;
+            //Debug.WriteLine($"Frame metadata done after {(DateTime.Now - start).TotalMilliseconds:f2}");
 
             BitmapSource previousRenderResult = null;
 
@@ -477,19 +525,14 @@ namespace ScriptPlayer.Shared
                     return;
 
                 BitmapFrame frame = decoder.Frames[index];
-                BitmapMetadata metadata = frame.Metadata as BitmapMetadata;
-                int delay = (ushort)metadata.GetQuery("/grctlext/Delay") * 10;
-                ushort left = (ushort)metadata.GetQuery("/imgdesc/Left");
-                ushort top = (ushort)metadata.GetQuery("/imgdesc/Top");
-                int width = frame.PixelWidth;
-                int height = frame.PixelHeight;
 
                 DrawingVisual drawingVisual = new DrawingVisual();
                 using (DrawingContext dc = drawingVisual.RenderOpen())
                 {
                     if (previousRenderResult != null)
-                        dc.DrawImage(previousRenderResult, new Rect(0, 0, Width, Height));
-                    dc.DrawImage(frame, new Rect(left, top, width, height));
+                        dc.DrawImage(previousRenderResult, frameRect);
+
+                    dc.DrawImage(frame, _frames[index].PartialRect);
                 }
 
                 RenderTargetBitmap bitmap = new RenderTargetBitmap(Width, Height, 96, 96, PixelFormats.Pbgra32);
@@ -497,19 +540,10 @@ namespace ScriptPlayer.Shared
                 bitmap.Freeze();
 
                 previousRenderResult = bitmap;
+                
+                _frames[index].CompleteImage = previousRenderResult;
 
-                _frames[index] = new GifFrame
-                {
-                    Image = previousRenderResult,
-                    Height = height,
-                    Left = left,
-                    Top = top,
-                    Width = width,
-                    Delay = delay
-                };
-
-                duration += delay;
-
+                
                 if (index != 0)
                     continue;
 
@@ -517,7 +551,6 @@ namespace ScriptPlayer.Shared
                 //Debug.WriteLine($"First Frame done after {(DateTime.Now - start).TotalMilliseconds:f2}");
             }
 
-            Duration = TimeSpan.FromMilliseconds(duration);
             LoadState = LoadStates.Complete;
             //Debug.WriteLine($"All Decode done after {(DateTime.Now - start).TotalMilliseconds:f2}");
         }
