@@ -483,7 +483,7 @@ namespace ScriptPlayer.Shared
             _frames = new GifFrame[decoder.Frames.Count];
 
             LoadState = LoadStates.BasicInformation;
-            Debug.WriteLine($"Basic Decode done after {(DateTime.Now - start).TotalMilliseconds:f2}");
+            //Debug.WriteLine($"Basic Decode done after {(DateTime.Now - start).TotalMilliseconds:f2}");
 
             int totalDuration = 0;
 
@@ -542,7 +542,6 @@ namespace ScriptPlayer.Shared
                 previousRenderResult = bitmap;
                 
                 _frames[index].CompleteImage = previousRenderResult;
-
                 
                 if (index != 0)
                     continue;
