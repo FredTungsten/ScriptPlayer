@@ -1486,6 +1486,11 @@ namespace ScriptPlayer.VideoSync
                         Invert();
                         break;
                     }
+                case Key.L:
+                    {
+                        Limit();
+                        break;
+                    }
                 case Key.N:
                     {
                         Normalize();
@@ -1621,6 +1626,71 @@ namespace ScriptPlayer.VideoSync
 
             if (handled)
                 e.Handled = true;
+        }
+
+        private void Limit()
+        {
+            DoubleInputDialog dialog = new DoubleInputDialog(_previousSpeedLimit) { Owner = this };
+            if (dialog.ShowDialog() != true)
+                return;
+
+            _previousSpeedLimit = dialog.Result;
+
+            Limit(_previousSpeedLimit);
+        }
+
+        private void Limit(double distancePerSecond)
+        {
+            var positions = GetSelectedPositions(false);
+
+            if (positions.Count < 2)
+                return;
+
+            List<TimedPosition> newPositions = new List<TimedPosition>();
+            newPositions.Add(positions[0]);
+
+            TimedPosition prev = positions[0];
+
+            for (int i = 1; i < positions.Count; i++)
+            {
+                TimedPosition a = positions[i-1];
+                TimedPosition b = positions[i];
+                TimedPosition r = new TimedPosition
+                {
+                    TimeStamp = b.TimeStamp
+                };
+                
+                double diff = (b.TimeStamp - a.TimeStamp).TotalSeconds;
+
+                if (diff <= 0.0)
+                    continue;
+
+                int dist = Math.Abs(a.Position - b.Position);
+                int maxDist = Math.Min(99, (int)Math.Floor(diff * distancePerSecond));
+                int newPos;
+
+                if (a.Position == b.Position)
+                {
+                    newPos = prev.Position;
+                }
+                else
+                {
+                    int moveDist = Math.Min(dist, maxDist);
+                    
+                    if (b.Position > a.Position)
+                        newPos = prev.Position + moveDist;
+                    else
+                        newPos = prev.Position - moveDist;
+
+                    newPos = Math.Min(99, Math.Max(0, newPos));
+                }
+
+                r.Position = (byte)newPos;
+                newPositions.Add(r);
+                prev = r;
+            }
+            
+            ReplacePositions(newPositions);
         }
 
         private void Bump()
@@ -2816,6 +2886,7 @@ namespace ScriptPlayer.VideoSync
 
         private double _previousSuperNormalizeDuration = 200;
         private bool _usePositionsForHeatmap;
+        private double _previousSpeedLimit = 400;
 
         private void mnuTrimBeats_Click(object sender, RoutedEventArgs e)
         {
