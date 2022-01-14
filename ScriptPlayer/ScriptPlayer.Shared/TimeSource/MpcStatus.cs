@@ -1,5 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Net;
+using System.Text;
 using HtmlAgilityPack;
 
 namespace ScriptPlayer.Shared
@@ -35,7 +38,7 @@ namespace ScriptPlayer.Shared
                 document.LoadHtml(statusHtml);
 
                 File = document.GetElementbyId("file").InnerText;
-                FilePath = document.GetElementbyId("filepath").InnerText;
+                FilePath = WebUtility.UrlDecode(document.GetElementbyId("filepatharg").InnerText); //document.GetElementbyId("filepath").InnerText;
                 FileDir = document.GetElementbyId("filedir").InnerText;
                 State = (MpcPlaybackState)int.Parse(document.GetElementbyId("State").InnerText);
                 Position = long.Parse(document.GetElementbyId("position").InnerText);
