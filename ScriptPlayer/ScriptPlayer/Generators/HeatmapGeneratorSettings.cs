@@ -8,11 +8,17 @@
 
         public bool AddShadow { get; set; }
 
+        public bool TransparentBackground { get; set; }
+
+        public bool MovementRange { get; set; }
+
         public HeatmapGeneratorSettings Duplicate()
         {
             return new HeatmapGeneratorSettings
             {
                 AddShadow = AddShadow,
+                MovementRange = MovementRange,
+                TransparentBackground = TransparentBackground,
                 Height = Height,
                 SkipIfExists = SkipIfExists,
                 Width = Width
@@ -38,6 +44,8 @@
             if (heatmapSettings.Width != Width) return false;
             if (heatmapSettings.Height != Height) return false;
             if (heatmapSettings.AddShadow != AddShadow) return false;
+            if (heatmapSettings.TransparentBackground != TransparentBackground) return false;
+            if (heatmapSettings.MovementRange != MovementRange) return false;
 
             return true;
         }

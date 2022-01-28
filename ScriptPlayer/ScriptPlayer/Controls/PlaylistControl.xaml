@@ -129,8 +129,9 @@
                                 </Style.Triggers>
                             </Style>
                         </DockPanel.Style>
-                        <Image Visibility="{Binding Converter={StaticResource booleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:PlaylistControl}}, Path=ShowHeatmap}" 
-                               Source="{Binding HeatMap}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" DockPanel.Dock="Right" Stretch="Fill" Width="100"/>
+                        <Grid Background="Black" DockPanel.Dock="Right" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="100" Visibility="{Binding Converter={StaticResource booleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:PlaylistControl}}, Path=ShowHeatmap}">
+                            <Image Source="{Binding HeatMap}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
+                        </Grid>
                         <TextBlock Text="{Binding Path=Duration, Converter={StaticResource DurationConverter}}" DockPanel.Dock="Right" Margin="8,0,2,0" />
                         <TextBlock Text="{Binding Shortname}" DockPanel.Dock="Left" TextTrimming="CharacterEllipsis"  Margin="2,0,0,0"/>
                     </DockPanel>

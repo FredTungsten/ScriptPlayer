@@ -129,6 +129,8 @@
                     <TextBox Text="{Binding Heatmap.Height}"  HorizontalAlignment="Left" Height="19" Margin="82,33,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="74"/>
                     <TextBlock HorizontalAlignment="Left" Margin="161,34,0,0" TextWrapping="Wrap" Text="px" VerticalAlignment="Top"/>
                     <CheckBox Content="Shadow" IsChecked="{Binding Heatmap.AddShadow}" HorizontalAlignment="Left" Margin="10,55,0,0" VerticalAlignment="Top"/>
+                    <CheckBox Content="Movement Range" IsChecked="{Binding Heatmap.ShowMovementRange}" HorizontalAlignment="Left" Margin="10,75,0,0" VerticalAlignment="Top"/>
+                    <CheckBox Content="Transparent BAckground" IsChecked="{Binding Heatmap.TransparentBackground}" HorizontalAlignment="Left" Margin="10,95,0,0" VerticalAlignment="Top"/>
                 </Grid>
             </TabItem>
         </TabControl>

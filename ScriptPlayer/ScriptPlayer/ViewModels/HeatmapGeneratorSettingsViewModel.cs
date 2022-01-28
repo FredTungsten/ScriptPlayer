@@ -13,6 +13,8 @@ namespace ScriptPlayer.ViewModels
         private int _width;
         private int _height;
         private bool _addShadow;
+        private bool _showMovementRange;
+        private bool _transparentBackground;
 
         [XmlElement("Width")]
         public int Width
@@ -50,6 +52,30 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        [XmlElement("ShowMovementRange")]
+        public bool ShowMovementRange
+        {
+            get => _showMovementRange;
+            set
+            {
+                if (value == _showMovementRange) return;
+                _showMovementRange = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [XmlElement("TransparentBackground")]
+        public bool TransparentBackground
+        {
+            get => _transparentBackground;
+            set
+            {
+                if (value == _transparentBackground) return;
+                _transparentBackground = value;
+                OnPropertyChanged();
+            }
+        }
+
         public HeatmapGeneratorSettingsViewModel()
         {
             Width = 400;
@@ -79,7 +105,9 @@ namespace ScriptPlayer.ViewModels
             {
                 Width = Width,
                 Height = Height,
-                AddShadow = true
+                AddShadow = AddShadow,
+                TransparentBackground = TransparentBackground,
+                MovementRange = ShowMovementRange
             };
         }
 
@@ -97,8 +125,9 @@ namespace ScriptPlayer.ViewModels
             {
                 Width = Width,
                 Height = Height,
-                AddShadow = AddShadow
-
+                AddShadow = AddShadow,
+                ShowMovementRange = ShowMovementRange,
+                TransparentBackground = TransparentBackground
             };
         }
     }

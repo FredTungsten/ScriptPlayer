@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Classes.Wrappers;
+using ScriptPlayer.Shared.Scripts;
 using ScriptPlayer.ViewModels;
 
 namespace ScriptPlayer.Generators
@@ -56,15 +57,32 @@ namespace ScriptPlayer.Generators
                     return GeneratorResult.Failed();
                 }
 
-                List<TimeSpan> timeStamps = ViewModel.FilterDuplicates(actions.ToList()).Select(s => s.TimeStamp).ToList();
-                Brush heatmap = HeatMapGenerator.Generate2(timeStamps, TimeSpan.FromSeconds(10), TimeSpan.Zero, duration);
+                List<TimedPosition> timeStamps = ViewModel.FilterDuplicates(actions.ToList()).Cast<FunScriptAction>().Select(f => new
+                    TimedPosition
+                    {
+                        Position = f.Position,
+                        TimeStamp = f.TimeStamp
+                    }).ToList();
+
+                Brush heatmap = HeatMapGenerator.Generate3(timeStamps, TimeSpan.FromSeconds(10), TimeSpan.Zero, duration, 1.0, out Geometry bounds);
+                bounds.Transform = new ScaleTransform(settings.Width, settings.Height);
+                var rect = new Rect(0, 0, settings.Width, settings.Height);
 
                 DrawingVisual visual = new DrawingVisual();
                 using (DrawingContext context = visual.RenderOpen())
                 {
-                    var rect = new Rect(0, 0, settings.Width, settings.Height);
-                    context.DrawRectangle(heatmap, null, rect);
+                    if (!settings.TransparentBackground)
+                    {
+                        context.DrawRectangle(Brushes.Black, null, rect);
+                    }
 
+                    if (settings.MovementRange)
+                    {
+                        context.PushClip(bounds);
+                    }
+
+                    context.DrawRectangle(heatmap, null, rect);
+                    
                     if (settings.AddShadow)
                     {
                         LinearGradientBrush shadow = new LinearGradientBrush();
@@ -77,6 +95,11 @@ namespace ScriptPlayer.Generators
                         shadow.GradientStops.Add(new GradientStop(Color.FromArgb(0xFF - 0x50, 0, 0, 0), 1));
 
                         context.DrawRectangle(shadow, null, rect);
+                    }
+
+                    if (settings.MovementRange)
+                    {
+                        context.Pop();
                     }
                 }
 

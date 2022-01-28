@@ -13,7 +13,8 @@
         mc:Ignorable="d" WindowStyle="None"
         DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Focusable="False"
-        Title="{Binding Title}" Height="77.224" Width="233.686" Loaded="Window_Loaded" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+        AllowsTransparency="True"
+        Title="{Binding Title}" Height="80"  MinHeight="80" MaxHeight="80" MinWidth="250" Width="250" Loaded="Window_Loaded" WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <converters:TimeLeftConverter x:Key="TimeLeftConverter"/>
         <converters1:ConversionModeToNameConverter x:Key="ConversionConverter"/>
@@ -22,7 +23,7 @@
         <converters1:BooleanInverter x:Key="Inverter"/>
         <converters:EqualsConverter x:Key="EqualsConverter"/>
         <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
-        
+
 
 
         <Style TargetType="Button" BasedOn="{StaticResource NonFocusableButton}" x:Key="FlatButton">
@@ -39,8 +40,8 @@
     <Border BorderThickness="1" BorderBrush="DarkSlateGray">
         <Grid Background="Black">
             <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Grid Background="Black" Grid.Row="0" MouseDown="TopGird_MouseDown">
@@ -66,6 +67,7 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Settings.ShowHeatMap}" Value="True">
                                     <Setter Property="Overlay" Value="{Binding HeatMap}"/>
+                                    <Setter Property="OverlayGeometry" Value="{Binding HeatMapBounds}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>

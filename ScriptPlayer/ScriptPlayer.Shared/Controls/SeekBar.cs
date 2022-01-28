@@ -391,17 +391,22 @@ namespace ScriptPlayer.Shared
             //Debug.WriteLine($"Size: {popupSize.Width:f0} x {popupSize.Height:f0}, offset = {offset.X:f0}/{offset.Y:f0}");
             //Debug.WriteLine($"x = {offset.X} - {offset.X + popupSize.Width}");
 
-            double verticalOffset = -popupSize.Height - offset.Y;
+            double verticalOffsetTop = -popupSize.Height - offset.Y;
+            double verticalOffsetBottom = ActualHeight - offset.Y;
             double horizontalOffset = _calculatedHorizontalOffset - offset.X;
 
-            double left = _window.TranslatePoint(new Point(0, 0), this).X;
-            double right = _window.TranslatePoint(new Point(_window.ActualWidth, 0), this).X - popupSize.Width;
+            Point topLeft = _window.TranslatePoint(new Point(0, 0), this);
+            Point bottomRight = _window.TranslatePoint(new Point(_window.ActualWidth, _window.ActualHeight), this);
+
+            double left = topLeft.X;
+            double right = bottomRight.X - popupSize.Width;
 
             horizontalOffset = Math.Min(right, Math.Max(left, horizontalOffset));
 
             return new[]
             {
-                new CustomPopupPlacement(new Point(horizontalOffset, verticalOffset), PopupPrimaryAxis.Horizontal), 
+                new CustomPopupPlacement(new Point(horizontalOffset, verticalOffsetTop), PopupPrimaryAxis.Horizontal),
+                new CustomPopupPlacement(new Point(horizontalOffset, verticalOffsetBottom), PopupPrimaryAxis.Horizontal),
             };
         }
 
