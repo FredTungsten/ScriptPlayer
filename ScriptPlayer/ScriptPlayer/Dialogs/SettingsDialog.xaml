@@ -76,7 +76,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Input Mappings" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Paths" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Style>
                     <Style TargetType="{x:Type controls:PageSelector}">
                         <Setter Property="Template">
@@ -760,8 +760,13 @@
                             <controls:AwesomeIcon Icon="Folder_Regular"/>
                         </controls:PageSelector.Header>
 
-                        <TextBlock Margin="10,10,10,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="If you don't want to keep all your files (e.g. scripts and videos) in the same directory, you can specify additional paths for ScriptPlayer to search matching files in.&#x0a;Add a * to the end of a path to include all subdirectories too."></TextBlock>
-                        <ListBox Margin="10,84,10,38" ItemsSource="{Binding Settings.AdditionalPaths}" SelectedItem="{Binding SelectedAdditionalPath}"/>
+                        <TextBlock Margin="10,10,10,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="If you don't want to keep all your files (e.g. scripts and videos) in the same directory, you can specify additional paths for ScriptPlayer to search matching files in.&#x0a;Activate the * setting to include all subdirectories too."></TextBlock>
+                        <DataGrid AutoGenerateColumns="False" Margin="10,84,10,38" ItemsSource="{Binding AdditionalPaths}" SelectedItem="{Binding SelectedAdditionalPath}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="*"/>
+                                <DataGridCheckBoxColumn Header="*" Binding="{Binding IncludeSubDirectories}" MinWidth="30"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
 
                         <Button Content="+" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,38,10" Width="23" Click="BtnAddPath_Click" Height="23"/>
                         <Button Content="-" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10" Width="23" Click="BtnRemovePath_Click" Height="23"/>

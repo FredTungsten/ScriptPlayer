@@ -88,11 +88,11 @@ namespace ScriptPlayer.Dialogs
         }
 
         public static readonly DependencyProperty SelectedAdditionalPathProperty = DependencyProperty.Register(
-            "SelectedAdditionalPath", typeof(string), typeof(SettingsDialog), new PropertyMetadata(default(string)));
+            "SelectedAdditionalPath", typeof(AdditionalPathView), typeof(SettingsDialog), new PropertyMetadata(default(AdditionalPathView)));
 
-        public string SelectedAdditionalPath
+        public AdditionalPathView SelectedAdditionalPath
         {
-            get => (string)GetValue(SelectedAdditionalPathProperty);
+            get => (AdditionalPathView)GetValue(SelectedAdditionalPathProperty);
             set => SetValue(SelectedAdditionalPathProperty, value);
         }
 
@@ -147,6 +147,15 @@ namespace ScriptPlayer.Dialogs
             UpdatePageTitle();
         }
 
+        public static readonly DependencyProperty AdditionalPathsProperty = DependencyProperty.Register(
+            "AdditionalPaths", typeof(ObservableCollection<AdditionalPathView>), typeof(SettingsDialog), new PropertyMetadata(default(ObservableCollection<AdditionalPathView>)));
+
+        public ObservableCollection<AdditionalPathView> AdditionalPaths
+        {
+            get { return (ObservableCollection<AdditionalPathView>) GetValue(AdditionalPathsProperty); }
+            set { SetValue(AdditionalPathsProperty, value); }
+        }
+
         private void UpdatePageTitle()
         {
             SettingsTitle = BuildSettingsPath();
@@ -176,6 +185,8 @@ namespace ScriptPlayer.Dialogs
             InitializeAudio();
             InitializeLocalAddresses();
 
+            LoadAdditionalPaths();
+            
             CreateInputMappings(GlobalCommandManager.CommandMappings);
             
             InitializeComponent();
@@ -183,6 +194,11 @@ namespace ScriptPlayer.Dialogs
             Pages = BuildPages(PageSelector);
             SelectedPage = FindPage(selectedPage) ?? FindPage(_lastSelected) ?? Pages.FirstOrDefault();
             UpdateFilter();
+        }
+
+        private void LoadAdditionalPaths()
+        {
+            AdditionalPaths = new ObservableCollection<AdditionalPathView>(Settings.AdditionalPaths.Select(p => new AdditionalPathView(p)));
         }
 
         private void InitializeLocalAddresses()
@@ -398,19 +414,20 @@ namespace ScriptPlayer.Dialogs
             ((Button)sender).Focus();
             ApplyInputMappings();
             Settings.EstimAudioDevice = SelectedAudioDevice?.DeviceId ?? "";
+            Settings.AdditionalPaths = new ObservableCollection<string>(AdditionalPaths.Select(p => p.ToPath()));
             DialogResult = true;
         }
 
         private void BtnRemovePath_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(SelectedAdditionalPath)) return;
+            if (SelectedAdditionalPath == null) return;
 
-            int currentIndex = Settings.AdditionalPaths.IndexOf(SelectedAdditionalPath);
-            Settings.AdditionalPaths.Remove(SelectedAdditionalPath);
-            if (currentIndex >= Settings.AdditionalPaths.Count)
+            int currentIndex = AdditionalPaths.IndexOf(SelectedAdditionalPath);
+            AdditionalPaths.Remove(SelectedAdditionalPath);
+            if (currentIndex >= AdditionalPaths.Count)
                 currentIndex--;
 
-            SelectedAdditionalPath = currentIndex >= 0 ? Settings.AdditionalPaths[currentIndex] : null;
+            SelectedAdditionalPath = currentIndex >= 0 ? AdditionalPaths[currentIndex] : null;
         }
 
         private void BtnAddPath_Click(object sender, RoutedEventArgs e)
@@ -422,7 +439,7 @@ namespace ScriptPlayer.Dialogs
             if (string.IsNullOrWhiteSpace(newPath))
                 return;
 
-            if (Settings.AdditionalPaths.Contains(newPath))
+            if (AdditionalPaths.Any(p => p.Path == newPath))
             {
                 MessageBox.Show(this, "This path has already been added.", "Path already added", MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -436,7 +453,7 @@ namespace ScriptPlayer.Dialogs
                 return;
             }
 
-            Settings.AdditionalPaths.Add(newPath);
+            AdditionalPaths.Add(new AdditionalPathView(newPath));
         }
 
         private string GetDirectory()
@@ -528,6 +545,7 @@ namespace ScriptPlayer.Dialogs
                     "Confirm Reset", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
 
             Settings = new SettingsViewModel();
+            LoadAdditionalPaths();
         }
 
         private void BtnKodiDefault_Click(object sender, RoutedEventArgs e)
@@ -907,4 +925,52 @@ namespace ScriptPlayer.Dialogs
         public string DeviceId { get; set; }
         public string Description { get; set; }
     }
+
+    public class AdditionalPathView : INotifyPropertyChanged
+    {
+        private bool _includeSubDirectories;
+        private string _path;
+
+        public AdditionalPathView(string s)
+        {
+            Path = s.TrimEnd('*');
+            IncludeSubDirectories = s.EndsWith("*");
+        }
+
+        public string ToPath()
+        {
+            return Path + (IncludeSubDirectories ? "*" : "");
+        }
+
+        public string Path
+        {
+            get => _path;
+            set
+            {
+                if (value == _path) return;
+                _path = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IncludeSubDirectories
+        {
+            get => _includeSubDirectories;
+            set
+            {
+                if (value == _includeSubDirectories) return;
+                _includeSubDirectories = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
 }
