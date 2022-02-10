@@ -895,7 +895,7 @@ namespace ScriptPlayer
         private void BtnShowLoadedFiles_Click(object sender, RoutedEventArgs e)
         {
             string message 
-                = "Video:\n" + (ViewModel.LoadedVideo ?? "None") + "\n\n"
+                = "Media:\n" + (ViewModel.LoadedMedia ?? "None") + "\n\n"
                 + "Script:\n" + (ViewModel.LoadedScript ?? "None") + "\n\n"
                 + "Audio:\n" + (ViewModel.LoadedAudio ?? "None");
 
