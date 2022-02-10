@@ -38,6 +38,7 @@ namespace ScriptPlayer.Dialogs
                 new ExtendedAttributionEntry("Gagax1234", "Auto-Homing, The Handy"),
                 new ExtendedAttributionEntry("Net005", "Zoom Player"),
                 new ExtendedAttributionEntry("Raser1", "Layout for docked-mode"),
+                new ExtendedAttributionEntry("space-nuko", "Standalone audio support"),
                 new ExtendedAttributionEntry("Milovana", "Community", new Link("Homepage", "https://milovana.com/")),
                 new ExtendedAttributionEntry("EroScripts", "Community", new Link("Homepage", "https://discuss.eroscripts.com/")),
                 new ExtendedAttributionEntry("RTS", "Community", new Link("Homepage", "http://realtouchscripts.com/")),
