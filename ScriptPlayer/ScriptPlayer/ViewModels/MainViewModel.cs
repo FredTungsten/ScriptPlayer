@@ -66,7 +66,7 @@ namespace ScriptPlayer.ViewModels
             {"mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf", "webm", "flv", "m2ts"};
 
         private readonly string[] _supportedAudioExtensions =
-            {"mp3", "wav"};
+            {"mp3", "m4a", "wav", "flac", "opus"};
 
         private readonly string[] _supportedMediaExtensions;
 
@@ -375,7 +375,7 @@ namespace ScriptPlayer.ViewModels
             WorkQueue.JobFinished += WorkQueueOnJobFinished;
             WorkQueue.Start(threadCount);
 
-            _supportedMediaExtensions = _supportedVideoExtensions.ToArray();
+            _supportedMediaExtensions = _supportedVideoExtensions.Concat(_supportedAudioExtensions).ToArray();
 
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             Version = new VersionViewModel();
@@ -2095,8 +2095,7 @@ namespace ScriptPlayer.ViewModels
         public void OpenVideo()
         {
             string videoFilters =
-                $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}|" +
-                "All Files|*.*";
+                GetMediaFilters() + "|All Files|*.*";
 
             string selectedFile = OnRequestFile(videoFilters, ref _lastVideoFilterIndex);
             if (selectedFile == null)
@@ -3273,13 +3272,21 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public void LoadFile(string fileToLoad)
+        private static string GetExtension(string filename)
         {
-            string extension = Path.GetExtension(fileToLoad);
+            string extension = Path.GetExtension(filename);
             if (string.IsNullOrWhiteSpace(extension))
-                return;
+                return extension;
 
             extension = extension.TrimStart('.').ToLower();
+            return extension;
+        }
+
+        public void LoadFile(string fileToLoad)
+        {
+            string extension = GetExtension(fileToLoad);
+            if (string.IsNullOrWhiteSpace(extension))
+                return;
 
             if (extension == "m3u")
                 LoadPlaylist(fileToLoad);
@@ -3312,7 +3319,10 @@ namespace ScriptPlayer.ViewModels
                 if (checkForScript)
                     TryFindMatchingScript(videoFileName);
 
-                TryFindMatchingAudio(videoFileName);
+                string extension = GetExtension(videoFileName);
+
+                if (_supportedVideoExtensions.Contains(extension))
+                    TryFindMatchingAudio(videoFileName);
 
                 TryFindMatchingThumbnails(videoFileName, true);
 
@@ -4353,9 +4363,14 @@ namespace ScriptPlayer.ViewModels
             Playlist.AddEntries(false, entries);
         }
 
+        private string GetMediaFilters()
+        {
+            return $"Media Files|{string.Join(";", _supportedMediaExtensions.Select(v => $"*.{v}"))}";
+        }
+
         public string GetVideoFileOpenDialog()
         {
-            string mediaFilters = $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}";
+            string mediaFilters = GetMediaFilters();
 
             int x = 0;
             return OnRequestFile(mediaFilters, ref x, false);
@@ -4383,8 +4398,7 @@ namespace ScriptPlayer.ViewModels
         {
             ScriptFileFormatCollection formats = ScriptLoaderManager.GetFormats();
 
-            string mediaFilters =
-                $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}";
+            string mediaFilters = GetMediaFilters();
 
             string scriptFilters = formats.BuildFilter(true);
 
