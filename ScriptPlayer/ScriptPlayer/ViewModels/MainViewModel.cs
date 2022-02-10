@@ -66,7 +66,7 @@ namespace ScriptPlayer.ViewModels
             {"mp4", "mpg", "mpeg", "m4v", "avi", "mkv", "mp4v", "mov", "wmv", "asf", "webm", "flv", "m2ts"};
 
         private readonly string[] _supportedAudioExtensions =
-            {"mp3", "wav"};
+            {"mp3", "m4a", "wav", "flac", "opus"};
 
         private readonly string[] _supportedMediaExtensions;
 
@@ -163,13 +163,13 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public string LoadedVideo
+        public string LoadedMedia
         {
-            get => _loadedVideo;
+            get => _loadedMedia;
             private set
             {
-                if (value == _loadedVideo) return;
-                _loadedVideo = value;
+                if (value == _loadedMedia) return;
+                _loadedMedia = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(LoadedFiles));
 
@@ -269,7 +269,7 @@ namespace ScriptPlayer.ViewModels
         private bool _canDirectConnectLaunch;
         private SettingsViewModel _settings;
         private string _loadedScript;
-        private string _loadedVideo;
+        private string _loadedMedia;
 
         private bool IsSeeking
         {
@@ -375,7 +375,7 @@ namespace ScriptPlayer.ViewModels
             WorkQueue.JobFinished += WorkQueueOnJobFinished;
             WorkQueue.Start(threadCount);
 
-            _supportedMediaExtensions = _supportedVideoExtensions.ToArray();
+            _supportedMediaExtensions = _supportedVideoExtensions.Concat(_supportedAudioExtensions).ToArray();
 
             ButtplugApiVersion = ButtplugAdapter.GetButtplugApiVersion();
             Version = new VersionViewModel();
@@ -736,7 +736,7 @@ namespace ScriptPlayer.ViewModels
                 Title = "";
 
                 LoadedScript = null;
-                LoadedVideo = null;
+                LoadedMedia = null;
 
                 switch (newValue)
                 {
@@ -1124,8 +1124,8 @@ namespace ScriptPlayer.ViewModels
         {
             List<string> prioritizedVideos = new List<string>();
 
-            if(!string.IsNullOrEmpty(LoadedVideo))
-                prioritizedVideos.Add(LoadedVideo);
+            if(!string.IsNullOrEmpty(LoadedMedia))
+                prioritizedVideos.Add(LoadedMedia);
 
             if (Playlist.NextEntry != null)
             {
@@ -1671,7 +1671,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public string[] LoadedFiles => new[] { LoadedVideo, LoadedScript, LoadedAudio };
+        public string[] LoadedFiles => new[] { LoadedMedia, LoadedScript, LoadedAudio };
 
         public RelayCommand<TimeDisplayMode> SetTimeDisplayModeCommand { get; set; }
 
@@ -1911,7 +1911,7 @@ namespace ScriptPlayer.ViewModels
 
         private void ReloadAudio(string VideoFileName = null)
         {
-            TryFindMatchingAudio(LoadedVideo ?? VideoFileName);
+            TryFindMatchingAudio(LoadedMedia ?? VideoFileName);
             if(TimeSource?.IsPlaying ?? false)
                 _audioHandler?.Play();
 
@@ -2095,14 +2095,13 @@ namespace ScriptPlayer.ViewModels
         public void OpenVideo()
         {
             string videoFilters =
-                $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}|" +
-                "All Files|*.*";
+                GetMediaFilters() + "|All Files|*.*";
 
             string selectedFile = OnRequestFile(videoFilters, ref _lastVideoFilterIndex);
             if (selectedFile == null)
                 return;
 
-            LoadVideo(selectedFile, true);
+            LoadMedia(selectedFile, true);
         }
 
 
@@ -2126,7 +2125,7 @@ namespace ScriptPlayer.ViewModels
             if (PlaybackMode != PlaybackMode.Local)
                 return !string.IsNullOrWhiteSpace(LoadedScript);
 
-            return !string.IsNullOrWhiteSpace(LoadedVideo);
+            return !string.IsNullOrWhiteSpace(LoadedMedia);
         }
 
         public void TogglePlayback()
@@ -2333,7 +2332,7 @@ namespace ScriptPlayer.ViewModels
                 return;
             }
 
-            LoadVideo(videoFile, false);
+            LoadMedia(videoFile, false);
         }
 
         private string[] GetMediaExtensions()
@@ -2397,10 +2396,10 @@ namespace ScriptPlayer.ViewModels
 
         private bool IsMatchingVideoLoaded(string scriptFileName)
         {
-            if (IsAnyEmpty(LoadedVideo, scriptFileName))
+            if (IsAnyEmpty(LoadedMedia, scriptFileName))
                 return false;
 
-            return CheckIfExtensionsMatchOrHaveCommonName(scriptFileName, LoadedVideo);
+            return CheckIfExtensionsMatchOrHaveCommonName(scriptFileName, LoadedMedia);
         }
 
         private static bool IsAnyEmpty(params string[] strings)
@@ -3273,18 +3272,26 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public void LoadFile(string fileToLoad)
+        private static string GetExtension(string filename)
         {
-            string extension = Path.GetExtension(fileToLoad);
+            string extension = Path.GetExtension(filename);
             if (string.IsNullOrWhiteSpace(extension))
-                return;
+                return extension;
 
             extension = extension.TrimStart('.').ToLower();
+            return extension;
+        }
+
+        public void LoadFile(string fileToLoad)
+        {
+            string extension = GetExtension(fileToLoad);
+            if (string.IsNullOrWhiteSpace(extension))
+                return;
 
             if (extension == "m3u")
                 LoadPlaylist(fileToLoad);
             else if (_supportedMediaExtensions.Contains(extension))
-                LoadVideo(fileToLoad, true);
+                LoadMedia(fileToLoad, true);
             else if (_supportedScriptExtensions.Contains(extension))
                 LoadScriptOrFallback(fileToLoad, true);
         }
@@ -3303,20 +3310,23 @@ namespace ScriptPlayer.ViewModels
             Playlist.AddEntries(false, playlist.Entries.Select(ToPlaylistEntry));
         }
 
-        private void LoadVideo(string videoFileName, bool checkForScript)
+        private void LoadMedia(string mediaFileName, bool checkForScript)
         {
             try
             {
                 _loading = true;
 
                 if (checkForScript)
-                    TryFindMatchingScript(videoFileName);
+                    TryFindMatchingScript(mediaFileName);
 
-                TryFindMatchingAudio(videoFileName);
+                string extension = GetExtension(mediaFileName);
 
-                TryFindMatchingThumbnails(videoFileName, true);
+                if (_supportedVideoExtensions.Contains(extension))
+                    TryFindMatchingAudio(mediaFileName);
 
-                LoadedVideo = videoFileName;
+                TryFindMatchingThumbnails(mediaFileName, true);
+
+                LoadedMedia = mediaFileName;
 
                 TimeSpan start = TimeSpan.Zero;
                 SelectedRange = null;
@@ -3337,13 +3347,13 @@ namespace ScriptPlayer.ViewModels
                 if (PlaybackMode == PlaybackMode.Local)
                 {
                     HideBanner();
-                    VideoPlayer.Open(videoFileName, start, Settings.SoftSeekFiles ? Settings.SoftSeekFilesDuration : TimeSpan.Zero);
+                    VideoPlayer.Open(mediaFileName, start, Settings.SoftSeekFiles ? Settings.SoftSeekFilesDuration : TimeSpan.Zero);
                 }
                 
-                Title = Path.GetFileNameWithoutExtension(videoFileName);
+                Title = Path.GetFileNameWithoutExtension(mediaFileName);
 
                 if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
-                    OsdShowMessage($"Loaded {Path.GetFileName(videoFileName)}", TimeSpan.FromSeconds(4),
+                    OsdShowMessage($"Loaded {Path.GetFileName(mediaFileName)}", TimeSpan.FromSeconds(4),
                         "VideoLoaded");
 
                 //Play();
@@ -3983,11 +3993,11 @@ namespace ScriptPlayer.ViewModels
 
             try
             {
-                if (string.IsNullOrWhiteSpace(LoadedVideo))
+                if (string.IsNullOrWhiteSpace(LoadedMedia))
                     return;
 
                 TimeSpan position = TimeSource.Progress;
-                string logFile = Path.ChangeExtension(LoadedVideo, ".log");
+                string logFile = Path.ChangeExtension(LoadedMedia, ".log");
                 if (logFile == null)
                     return;
 
@@ -4353,9 +4363,14 @@ namespace ScriptPlayer.ViewModels
             Playlist.AddEntries(false, entries);
         }
 
+        private string GetMediaFilters()
+        {
+            return $"Media Files|{string.Join(";", _supportedMediaExtensions.Select(v => $"*.{v}"))}";
+        }
+
         public string GetVideoFileOpenDialog()
         {
-            string mediaFilters = $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}";
+            string mediaFilters = GetMediaFilters();
 
             int x = 0;
             return OnRequestFile(mediaFilters, ref x, false);
@@ -4383,8 +4398,7 @@ namespace ScriptPlayer.ViewModels
         {
             ScriptFileFormatCollection formats = ScriptLoaderManager.GetFormats();
 
-            string mediaFilters =
-                $"Video Files|{string.Join(";", _supportedVideoExtensions.Select(v => $"*.{v}"))}";
+            string mediaFilters = GetMediaFilters();
 
             string scriptFilters = formats.BuildFilter(true);
 
@@ -5009,7 +5023,7 @@ namespace ScriptPlayer.ViewModels
                 return;
             }
 
-            TryFindMatchingThumbnails(LoadedVideo, generateIfMissing);
+            TryFindMatchingThumbnails(LoadedMedia, generateIfMissing);
         }
 
         public void GenerateThumbnailsForLoadedVideo()
@@ -5017,7 +5031,7 @@ namespace ScriptPlayer.ViewModels
             if (!IsVideoLoaded())
                 return;
 
-            GenerateThumbnails(true, true, LoadedVideo);
+            GenerateThumbnails(true, true, LoadedMedia);
         }
 
         public void GenerateThumbnailBannerForLoadedVideo()
@@ -5025,7 +5039,7 @@ namespace ScriptPlayer.ViewModels
             if (!IsVideoLoaded())
                 return;
 
-            GenerateThumbnailBanners(LoadedVideo);
+            GenerateThumbnailBanners(LoadedMedia);
         }
 
         public void GeneratePreviewForLoadedVideo()
@@ -5033,7 +5047,7 @@ namespace ScriptPlayer.ViewModels
             if (!IsVideoLoaded())
                 return;
 
-            GeneratePreviews(true, LoadedVideo);
+            GeneratePreviews(true, LoadedMedia);
         }
 
         public void GenerateHeatmapForLoadedVideo()
@@ -5041,7 +5055,7 @@ namespace ScriptPlayer.ViewModels
             if (!IsVideoLoaded())
                 return;
 
-            GenerateHeatmaps(LoadedVideo);
+            GenerateHeatmaps(LoadedMedia);
         }
 
         public void GenerateAllForLoadedVideo()
@@ -5049,7 +5063,7 @@ namespace ScriptPlayer.ViewModels
             if (!IsVideoLoaded())
                 return;
 
-            GenerateAll(true, LoadedVideo);
+            GenerateAll(true, LoadedMedia);
         }
 
         private void GenerateThumbnails(bool askUserForSettings, bool showProgressDialog, params string[] videos)
@@ -5325,7 +5339,7 @@ namespace ScriptPlayer.ViewModels
 
         private bool IsVideoLoaded()
         {
-            return !string.IsNullOrEmpty(LoadedVideo);
+            return !string.IsNullOrEmpty(LoadedMedia);
         }
 
         protected virtual TimeSpan OnRequestScriptShiftTimespan(TimeSpan initialValue)
