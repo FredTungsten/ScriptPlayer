@@ -777,9 +777,13 @@ namespace ScriptPlayer.Shared.TheHandy
             const int warmupAttempts = 2;
 
             long offsetAggregated = 0;
+            long pingAggregated = 0;
 
             long minDelay = long.MaxValue;
             long maxDelay = long.MinValue;
+
+            long minPing = long.MaxValue;
+            long maxPing = long.MinValue;
 
             using (var client = GetClient())
             {
@@ -794,20 +798,33 @@ namespace ScriptPlayer.Shared.TheHandy
                     long tServerEstimate = tServerResponse + (tTrip / 2);
                     long tOffset = tServerEstimate - tReceived;
 
-                    if (i >= warmupAttempts)
-                        offsetAggregated += tOffset;
-
+                    if (i < warmupAttempts)
+                        continue;
+                    
+                    offsetAggregated += tOffset;
+                    pingAggregated += tTrip;
+                    
                     if (tOffset > maxDelay)
                         maxDelay = tOffset;
 
                     if (tOffset < minDelay)
                         minDelay = tOffset;
+
+                    if (tTrip > maxPing)
+                        maxPing = tTrip;
+
+                    if (tTrip < minPing)
+                        minPing = tTrip;
                 }
             }
 
             _offsetAverage = (int)(offsetAggregated / (double)(maxSyncAttempts - warmupAttempts));
+            long offsetJitter = maxDelay - minDelay;
 
-            OnOsdRequest($"Handy Sync refreshed: {_offsetAverage}ms (min {minDelay}, max {maxDelay}", TimeSpan.FromSeconds(3), "HandySync");
+            long pingAverag = (int) (pingAggregated / (double) (maxSyncAttempts - warmupAttempts));
+            long pingJitter = maxPing - minPing;
+
+            OnOsdRequest($"Handy Sync refreshed: offset {_offsetAverage}ms, ping {minPing}-{maxPing}ms", TimeSpan.FromSeconds(3), "HandySync");
         }
 
         private long GetServerTimeEstimate() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + _offsetAverage;
