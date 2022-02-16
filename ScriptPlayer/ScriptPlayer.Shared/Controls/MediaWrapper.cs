@@ -214,8 +214,9 @@ namespace ScriptPlayer.Shared.Controls
 
             Debug.WriteLine("Started Player in " + (DateTime.Now - startPlay));
 
-            if (position >= _player.NaturalDuration.TimeSpan)
-                position = _player.NaturalDuration.TimeSpan - TimeSpan.FromSeconds(10);
+            if(_player.NaturalDuration.HasTimeSpan)
+                if (position >= _player.NaturalDuration.TimeSpan)
+                    position = _player.NaturalDuration.TimeSpan - TimeSpan.FromSeconds(10);
 
             if(position <= TimeSpan.Zero)
                 position = TimeSpan.Zero;
