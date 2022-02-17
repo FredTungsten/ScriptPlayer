@@ -368,6 +368,9 @@ namespace ScriptPlayer
 
         private void ViewModelOnRequestGetWindowState(object sender, RequestEventArgs<WindowStateModel> e)
         {
+            if (_windowStateModel == null)
+                _windowStateModel = new WindowStateModel();
+
             WindowStateModel stateModel = _windowStateModel.Duplicate();
             stateModel.IsFullscreen = ViewModel.IsFullscreen;
 

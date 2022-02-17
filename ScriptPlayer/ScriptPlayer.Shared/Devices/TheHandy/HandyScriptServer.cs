@@ -15,7 +15,7 @@ namespace ScriptPlayer.Shared.TheHandy
         public string ScriptHostUrl => $"http://{LocalIp}:{ServeScriptPort}/script/";
         public bool HttpServerRunning => _serveScriptThread != null && _serveScriptThread.IsAlive;
         public string LoadedScript { get; set; }
-        
+
         private HttpListener _server;
         private Thread _serveScriptThread; // thread running the http server hosting the script
         private HandyController _controller;
@@ -107,7 +107,7 @@ namespace ScriptPlayer.Shared.TheHandy
                     _server.Prefixes.Add(prefix);
                     _server.Start();
                 }
-                catch(HttpListenerException ex)
+                catch (HttpListenerException ex)
                 {
                     // Still can't start?
                     MessageBox.Show($"Error hosting script: \"{ex.Message}\" (Try as Administrator)", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -133,27 +133,36 @@ namespace ScriptPlayer.Shared.TheHandy
                 }
                 catch (Exception) { break; }
 
-                // Construct a response.
-                byte[] buffer;
-                if (IsScriptLoaded)
+                try
                 {
-                    string responseString = LoadedScript;
-                    buffer = Encoding.UTF8.GetBytes(responseString);
-                    response.ContentType = "text/csv";
-                }
-                else
-                {
-                    buffer = Encoding.UTF8.GetBytes("No script loaded.\nLoad a script and refresh to download.\nThe handy will fetch the script the same way.");
-                    response.ContentType = "text/plain";
-                }
-                // Get a response stream and write the response to it.
-                response.ContentLength64 = buffer.Length;
-                System.IO.Stream output = response.OutputStream;
-                output.Write(buffer, 0, buffer.Length);
-                output.Close();
 
-                _controller?.OnOsdRequest("Script Download finished", TimeSpan.FromSeconds(3), "ScriptServer");
-                OnScriptDownloadFinished();
+                    // Construct a response.
+                    byte[] buffer;
+                    if (IsScriptLoaded)
+                    {
+                        string responseString = LoadedScript;
+                        buffer = Encoding.UTF8.GetBytes(responseString);
+                        response.ContentType = "text/csv";
+                    }
+                    else
+                    {
+                        buffer = Encoding.UTF8.GetBytes("No script loaded.\nLoad a script and refresh to download.\nThe handy will fetch the script the same way.");
+                        response.ContentType = "text/plain";
+                    }
+
+                    // Get a response stream and write the response to it.
+                    response.ContentLength64 = buffer.Length;
+                    System.IO.Stream output = response.OutputStream;
+                    output.Write(buffer, 0, buffer.Length);
+                    output.Close();
+
+                    _controller?.OnOsdRequest("Script Download finished", TimeSpan.FromSeconds(3), "ScriptServer");
+                    OnScriptDownloadFinished();
+                }
+                catch (Exception)
+                {
+                    _controller?.OnOsdRequest("Script download failed! Handy disconnected during download.", TimeSpan.FromSeconds(3), "ScriptServer");
+                }
             }
             _server.Stop();
         }
