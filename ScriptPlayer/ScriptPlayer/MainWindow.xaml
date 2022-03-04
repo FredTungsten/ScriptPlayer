@@ -770,7 +770,7 @@
 
                                     <StackPanel Margin="4" ToolTip="Minimal delay between two script commands">
                                         <TextBlock Margin="0" Text="Min Command Delay" TextAlignment="Center"/>
-                                        <Slider LargeChange="1" Margin="0,4" Minimum="10" Maximum="300"  Value="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"  IsSnapToTickEnabled="True" TickFrequency="1"/>
+                                        <Slider LargeChange="5" Margin="0,4" Minimum="1" Maximum="50"  Value="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"  IsSnapToTickEnabled="True" TickFrequency="1"/>
                                         <TextBlock Margin="0" Text="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}" TextAlignment="Center"/>
                                     </StackPanel>
 
