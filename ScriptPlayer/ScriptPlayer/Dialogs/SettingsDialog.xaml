@@ -721,7 +721,7 @@
                             <DockPanel Margin="4" ToolTip="Minimal delay between two script commands">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Min Command Delay"/>
                                 <TextBlock Style="{StaticResource SettingValue}" Text="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}, StringFormat={}{0:f0} ms}"/>
-                                <Slider LargeChange="1" Margin="0,4" Minimum="10" Maximum="300"  Value="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"  IsSnapToTickEnabled="True" TickFrequency="1"/>
+                                <Slider LargeChange="5" Margin="0,4" Minimum="1" Maximum="250"  Value="{Binding Path=Settings.CommandDelay, Converter={StaticResource MillisecondsConverter}}"  SmallChange="1"  IsSnapToTickEnabled="True" TickFrequency="1"/>
                             </DockPanel>
                         </StackPanel>
                     </Grid>
