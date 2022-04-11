@@ -46,7 +46,7 @@ namespace ScriptPlayer.Shared
 
             _waveOut = new WaveOut(WaveCallbackInfo.FunctionCallback());
             _waveOut.DeviceNumber = GetDeviceNumber(device);
-            _waveOut.DesiredLatency = 50;
+            _waveOut.DesiredLatency = 100;
             _waveOut.Init(_baStream);
         }
 
@@ -113,7 +113,7 @@ namespace ScriptPlayer.Shared
 
         public void Resync(TimeSpan timeSpan)
         {
-            _position = timeSpan - Delay;
+            _position = timeSpan - Delay + TimeSpan.FromMilliseconds(_waveOut.DesiredLatency);
 
             if (_position >= _rdr.TotalTime)
             {
