@@ -46,7 +46,7 @@ namespace ScriptPlayer.Shared
 
             _waveOut = new WaveOut(WaveCallbackInfo.FunctionCallback());
             _waveOut.DeviceNumber = GetDeviceNumber(device);
-            _waveOut.DesiredLatency = 100;
+            _waveOut.DesiredLatency = 150;
             _waveOut.Init(_baStream);
         }
 
@@ -113,7 +113,7 @@ namespace ScriptPlayer.Shared
 
         public void Resync(TimeSpan timeSpan)
         {
-            _position = timeSpan - Delay + TimeSpan.FromMilliseconds(_waveOut.DesiredLatency);
+            _position = timeSpan - Delay;
 
             if (_position >= _rdr.TotalTime)
             {
@@ -121,7 +121,7 @@ namespace ScriptPlayer.Shared
                 return;
             }
 
-            double maxDesync = TimeSpan.FromMilliseconds(50).TotalSeconds;
+            double maxDesync = TimeSpan.FromMilliseconds(_waveOut.DesiredLatency).TotalSeconds;
             TimeSpan currentPosition = _rdr.CurrentTime;
             TimeSpan desync = currentPosition - _position;
             if (Math.Abs(desync.TotalSeconds) > maxDesync)
