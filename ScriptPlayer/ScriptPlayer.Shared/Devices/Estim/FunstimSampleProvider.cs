@@ -98,8 +98,16 @@ class FunstimSampleProvider : ISampleProvider
                     }
                 }
 
-                // fade in
-                volume = (volume * (filterLength - 1) + targetVolume) / filterLength;
+                // fade in (unless fade time is 0)
+
+                if (filterLength > 0)
+                {
+                    volume = (volume * (filterLength - 1) + targetVolume) / filterLength;
+                }
+                else
+                {
+                    volume = 1.0f;
+                }
             }
 
             if (volume > 1.0f)
