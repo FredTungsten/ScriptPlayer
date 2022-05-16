@@ -42,7 +42,7 @@ class FunstimSampleProvider : ISampleProvider
     {
         int diff = Math.Abs((int)timer.ElapsedMilliseconds - this.durationMs);
 
-        if (diff > 100 || startPosition != this.endPosition)
+        if (diff > 100 || Math.Abs(startPosition - this.endPosition)>10)
         {
             Debug.WriteLine("diff: " + diff);
             Debug.WriteLine("start: " + startPosition + ", previous end: " + this.endPosition);
