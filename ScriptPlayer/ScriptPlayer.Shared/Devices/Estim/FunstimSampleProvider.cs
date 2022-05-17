@@ -106,7 +106,7 @@ class FunstimSampleProvider : ISampleProvider
                 }
                 else
                 {
-                    volume = 1.0f;
+                    volume = targetVolume;
                 }
             }
 
