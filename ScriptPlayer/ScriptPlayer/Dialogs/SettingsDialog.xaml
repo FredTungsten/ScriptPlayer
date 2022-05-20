@@ -138,6 +138,12 @@
                             </DockPanel>
 
                             <DockPanel>
+                                <TextBlock Style="{StaticResource SettingName}" Text="Ramp Intensity"/>
+                                <TextBlock Style="{StaticResource SettingValue}" Text="{Binding Path=Settings.FunstimRamp, StringFormat={}{0:f0} %}"/>
+                                <Slider Value="{Binding Path=Settings.FunstimRamp}" Margin="8,4" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10" IsSnapToTickEnabled="False" TickFrequency="100"/>
+                            </DockPanel>
+
+                            <DockPanel>
                                 <CheckBox Margin="128,0" IsChecked="{Binding Settings.FunstimFadeOnPause}" Content="Fade out during pauses"/>
                             </DockPanel>
                         </StackPanel>

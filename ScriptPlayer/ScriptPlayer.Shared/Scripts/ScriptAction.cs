@@ -7,6 +7,7 @@ namespace ScriptPlayer.Shared.Scripts
     {
         [JsonIgnore]
         public TimeSpan TimeStamp;
+        public TimeSpan MediaDuration;
 
         [JsonIgnore]
         public bool OriginalAction { get; set; }

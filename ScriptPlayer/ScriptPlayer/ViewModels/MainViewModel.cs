@@ -2717,6 +2717,7 @@ namespace ScriptPlayer.ViewModels
             controller.SetDevice(dialog.SelectedDevice, new FunstimParameters() {
                 Frequencies = Settings.FunstimFrequencies,
                 FadeMs = Settings.FunstimFadeMs,
+                RampPercent = Settings.FunstimRamp,
                 FadeOnPause = Settings.FunstimFadeOnPause,
             });
         }
@@ -3668,6 +3669,8 @@ namespace ScriptPlayer.ViewModels
                     SpeedMultiplier = Settings.SpeedMultiplier,
                     SpeedMin = Settings.MinSpeed / 99.0,
                     SpeedMax = Settings.MaxSpeed / 99.0,
+                    TimeStamp = eventArgs.CurrentAction.TimeStamp,
+                    MediaDuration = TimeSource.Duration,
                 };
 
                 SetDevices(info);

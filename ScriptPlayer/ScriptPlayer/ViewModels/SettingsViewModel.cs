@@ -250,6 +250,7 @@ namespace ScriptPlayer.ViewModels
         private string _estimAudioDevice;
         private string _funstimFrequencies = "420,520,620";
         private TimeSpan _funstimFadeMs = TimeSpan.FromMilliseconds(1000);
+        private int _funstimRamp = 0;
         private bool _funstimFadeOnPause;
         private TimeSpan _audioDelay;
         private string _deoVrEndpoint;
@@ -957,6 +958,26 @@ namespace ScriptPlayer.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        [XmlElement("FunstimRamp")]
+        public int FunstimFadeRampWrapper
+        {
+            get => _funstimRamp;
+            set => FunstimRamp = value;
+        }
+
+        [XmlIgnore]
+        public int FunstimRamp
+        {
+            get => _funstimRamp;
+            set
+            {
+                if (value.Equals(_funstimRamp)) return;
+                _funstimRamp = value;
+                OnPropertyChanged();
+            }
+        }
+
 
         [XmlElement("CommandDelay")]
         public long CommandDelayWrapper

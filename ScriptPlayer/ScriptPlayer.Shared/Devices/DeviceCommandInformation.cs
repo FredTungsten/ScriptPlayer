@@ -12,6 +12,9 @@ namespace ScriptPlayer.Shared
         public byte PositionToOriginal;
         public byte SpeedOriginal;
 
+        public TimeSpan TimeStamp;
+        public TimeSpan MediaDuration;
+
         public TimeSpan Duration;
         public double SpeedMultiplier { get; set; } = 1;
         public double SpeedMin { get; set; } = 0;

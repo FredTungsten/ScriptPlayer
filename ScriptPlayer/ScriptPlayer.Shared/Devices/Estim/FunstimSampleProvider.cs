@@ -16,6 +16,10 @@ class FunstimSampleProvider : ISampleProvider
     private long sampleCount;
     private long startSample;
 
+    private float startRamp;
+    private float endRamp;
+    private float scaleRamp;
+
     private int startPosition;
     private int endPosition;
     private int durationMs;
@@ -23,12 +27,13 @@ class FunstimSampleProvider : ISampleProvider
     private double speedMultiplier;
     private float volume = 0.0f;
 
-    public FunstimSampleProvider(List<int> frequencies, int fadeMs, bool fadeOnPause, int sampleRate = 44100)
+    public FunstimSampleProvider(List<int> frequencies, int fadeMs, int rampPercent, bool fadeOnPause, int sampleRate = 44100)
     {
         this.radsPerSample = frequencies.ConvertAll(f => (f * Math.PI * 2) / sampleRate);
         this.fadeSamples = (fadeMs * sampleRate) / 1000.0f;
         this.sampleRate = sampleRate;
         this.fadeOnPause = fadeOnPause;
+        this.scaleRamp = rampPercent/100.0f;
 
         numSamples = 1;
         sampleCount = (int)fadeSamples * 10;
@@ -38,11 +43,11 @@ class FunstimSampleProvider : ISampleProvider
         WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 2);
     }
 
-    public void Action(int startPosition, int endPosition, int durationMs, double speedMultiplier)
+    public void Action(int startPosition, int endPosition, int durationMs, double speedMultiplier, TimeSpan timeStamp, TimeSpan mediaDuration)
     {
         int diff = Math.Abs((int)timer.ElapsedMilliseconds - this.durationMs);
 
-        if (diff > 100 || startPosition != this.endPosition)
+        if (diff > 100 || Math.Abs(startPosition - this.endPosition)>10)
         {
             Debug.WriteLine("diff: " + diff);
             Debug.WriteLine("start: " + startPosition + ", previous end: " + this.endPosition);
@@ -54,6 +59,9 @@ class FunstimSampleProvider : ISampleProvider
         this.endPosition = endPosition;
         this.durationMs = durationMs;
         this.speedMultiplier = speedMultiplier;
+
+        this.startRamp = (float) (timeStamp.TotalMilliseconds / mediaDuration.TotalMilliseconds) * scaleRamp + (1-scaleRamp);
+        this.endRamp = (float) ((timeStamp.TotalMilliseconds + durationMs) / mediaDuration.TotalMilliseconds) * scaleRamp + (1-scaleRamp);
 
         numSamples = (durationMs * sampleRate) / 1000;
 
@@ -70,11 +78,14 @@ class FunstimSampleProvider : ISampleProvider
         {
             long sample = sampleCount - startSample;
             double position = (sample * endPosition + (numSamples - sample) * startPosition) / numSamples;
+            float rampVolume = (sample * endRamp + (numSamples - sample) * startRamp) / numSamples;
+
             int filterLength = (int)fadeSamples * 2;
 
             if (sample > numSamples)
             {
                 position = endPosition;
+                rampVolume = endRamp;
 
                 if (sample > numSamples + count)
                 {
@@ -98,8 +109,16 @@ class FunstimSampleProvider : ISampleProvider
                     }
                 }
 
-                // fade in
-                volume = (volume * (filterLength - 1) + targetVolume) / filterLength;
+                // fade in (unless fade time is 0)
+
+                if (filterLength > 0)
+                {
+                    volume = (volume * (filterLength - 1) + targetVolume) / filterLength;
+                }
+                else
+                {
+                    volume = targetVolume;
+                }
             }
 
             if (volume > 1.0f)
@@ -115,8 +134,8 @@ class FunstimSampleProvider : ISampleProvider
             float left = (float)radsPerSample.Aggregate(0.0, (a, r) => a + Math.Sin(sampleCount * r));
             float right = -(float)radsPerSample.Aggregate(0.0, (a, r) => a + Math.Sin(sampleCount * r + ((position * speedMultiplier) / 99.0) * Math.PI));
 
-            buffer[offset + i * 2] = (volume * left * 0.9f) / radsPerSample.Count;
-            buffer[offset + i * 2 + 1] = (volume * right * 0.9f) / radsPerSample.Count;
+            buffer[offset + i * 2] = (rampVolume * volume * left * 0.9f) / radsPerSample.Count;
+            buffer[offset + i * 2 + 1] = (rampVolume * volume * right * 0.9f) / radsPerSample.Count;
 
             sampleCount++;
         }

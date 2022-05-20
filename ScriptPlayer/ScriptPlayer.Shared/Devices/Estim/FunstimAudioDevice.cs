@@ -21,7 +21,7 @@ namespace ScriptPlayer.Shared.Estim
             {
                 List<int> frequencies = Array.ConvertAll(parameters.Frequencies.Split(','), int.Parse).Where(x => x != 0).ToList();
 
-                _provider = new FunstimSampleProvider(frequencies, (int)parameters.FadeMs.TotalMilliseconds, parameters.FadeOnPause);
+                _provider = new FunstimSampleProvider(frequencies, (int)parameters.FadeMs.TotalMilliseconds, (int)parameters.RampPercent, parameters.FadeOnPause);
 
                 _soundOut.Init(_provider);
                 _soundOut.Play();
@@ -46,7 +46,7 @@ namespace ScriptPlayer.Shared.Estim
 
         protected override Task Set(DeviceCommandInformation information)
         {
-            _provider?.Action(information.PositionFromTransformed, information.PositionToTransformed, (int)information.Duration.TotalMilliseconds, information.SpeedMultiplier);
+            _provider?.Action(information.PositionFromTransformed, information.PositionToTransformed, (int)information.Duration.TotalMilliseconds, information.SpeedMultiplier, information.TimeStamp, information.MediaDuration);
             return Task.CompletedTask;
         }
 
@@ -71,6 +71,7 @@ namespace ScriptPlayer.Shared.Estim
     {
         public string Frequencies { get; set; }
         public TimeSpan FadeMs { get; set; }
+        public int RampPercent { get; set; }
         public bool FadeOnPause { get; set; }
     }
 }

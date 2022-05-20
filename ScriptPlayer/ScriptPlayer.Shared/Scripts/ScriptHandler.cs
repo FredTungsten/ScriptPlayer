@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -688,6 +689,8 @@ namespace ScriptPlayer.Shared.Scripts
 
                 if (passedIndex > 0)
                     args.RawPreviousAction = _filledActions[passedIndex - 1];
+
+                Debug.WriteLine($"{DateTime.Now:HH:mm:ss.fff}: Action");
 
                 OnScriptActionRaised(args);
             }
