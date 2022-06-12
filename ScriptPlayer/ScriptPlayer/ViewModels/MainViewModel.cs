@@ -16,6 +16,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -1093,6 +1094,21 @@ namespace ScriptPlayer.ViewModels
 
             _previouslyOpenedVideoFile = videoFileName;
 
+
+            videoFileName = HttpUtility.UrlEncode(videoFileName);
+
+            if (Settings.UrlDecodeFilenames)
+            {
+                try
+                {
+                    videoFileName = HttpUtility.UrlDecode(videoFileName);
+                }
+                catch
+                {
+                    //Might fail for not encided names - and that's ok
+                }
+            }
+
             if (Settings.FuzzyMatchingEnabled)
             {
                 try
@@ -1109,6 +1125,7 @@ namespace ScriptPlayer.ViewModels
                     //
                 }
             }
+
 
             TryFindMatchingScript(videoFileName);
             TryFindMatchingThumbnails(videoFileName, true);

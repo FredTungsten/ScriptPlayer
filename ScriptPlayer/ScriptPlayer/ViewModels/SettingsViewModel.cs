@@ -257,6 +257,7 @@ namespace ScriptPlayer.ViewModels
         private HandyHost _handyScriptHost;
         private string _handyLocalIp;
         private int _handyLocalPort;
+        private bool _urlDecodeFilenames;
 
         public SettingsViewModel()
         {
@@ -1397,6 +1398,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _autoShowGeneratorProgress) return;
                 _autoShowGeneratorProgress = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool UrlDecodeFilenames
+        {
+            get => _urlDecodeFilenames;
+            set
+            {
+                if (value == _urlDecodeFilenames) return;
+                _urlDecodeFilenames = value;
                 OnPropertyChanged();
             }
         }
