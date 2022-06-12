@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("ScriptPlayer")]
-[assembly: AssemblyCopyright("Copyright © Fred Tungsten 2017")]
+[assembly: AssemblyCopyright("Copyright © Fred Tungsten 2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
