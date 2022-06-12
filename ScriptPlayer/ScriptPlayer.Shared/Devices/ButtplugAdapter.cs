@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Buttplug;
-using Buttplug.Client;
-using Buttplug.Client.Connectors.WebsocketConnector;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared.Helpers;
 

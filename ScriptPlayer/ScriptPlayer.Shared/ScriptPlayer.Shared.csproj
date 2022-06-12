@@ -38,12 +38,6 @@
     <Reference Include="Buttplug, Version=2.0.6.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Buttplug.2.0.6\lib\net47\Buttplug.dll</HintPath>
     </Reference>
-    <Reference Include="Buttplug.Client.Connectors.WebsocketConnector, Version=0.5.9.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Buttplug.Client.Connectors.WebsocketConnector.0.5.9\lib\netstandard2.0\Buttplug.Client.Connectors.WebsocketConnector.dll</HintPath>
-    </Reference>
-    <Reference Include="deniszykov.WebSocketListener, Version=4.2.9.0, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
-      <HintPath>..\packages\deniszykov.WebSocketListener.4.2.9\lib\net45\deniszykov.WebSocketListener.dll</HintPath>
-    </Reference>
     <Reference Include="Google.Protobuf, Version=3.19.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Protobuf.3.19.1\lib\net45\Google.Protobuf.dll</HintPath>
     </Reference>
