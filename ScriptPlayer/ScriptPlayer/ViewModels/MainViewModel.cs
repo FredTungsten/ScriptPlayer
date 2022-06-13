@@ -1094,9 +1094,6 @@ namespace ScriptPlayer.ViewModels
 
             _previouslyOpenedVideoFile = videoFileName;
 
-
-            videoFileName = HttpUtility.UrlEncode(videoFileName);
-
             if (Settings.UrlDecodeFilenames)
             {
                 try
@@ -1105,7 +1102,7 @@ namespace ScriptPlayer.ViewModels
                 }
                 catch
                 {
-                    //Might fail for not encided names - and that's ok
+                    //Might fail for not encoded names - and that's ok
                 }
             }
 
