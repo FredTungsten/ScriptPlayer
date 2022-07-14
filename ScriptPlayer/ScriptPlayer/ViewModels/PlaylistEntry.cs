@@ -18,6 +18,7 @@ namespace ScriptPlayer.ViewModels
         private ImageSource _heatMap;
         private DateTime _mediaCreationTime;
         private DateTime _scriptCreationTime;
+        private bool _playing;
 
         public PlaylistEntry()
         {
@@ -48,6 +49,17 @@ namespace ScriptPlayer.ViewModels
                 if (value == _fullname) return;
                 _fullname = value;
                 Shortname = System.IO.Path.GetFileNameWithoutExtension(_fullname);
+                OnPropertyChanged();
+            }
+        }
+
+        public bool Playing
+        {
+            get => _playing;
+            set
+            {
+                if (value == _playing) return;
+                _playing = value;
                 OnPropertyChanged();
             }
         }

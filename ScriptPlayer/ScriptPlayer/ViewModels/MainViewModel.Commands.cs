@@ -49,6 +49,8 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand AddScriptsToPlaylistCommand { get; set; }
 
+        public ScriptplayerCommand AddFolderToPlaylistFirstCommand { get; set; }
+
         public ScriptplayerCommand AddFolderToPlaylistCommand { get; set; }
 
         public ScriptplayerCommand RemoveMissingEntriesFromPlaylistCommand { get; set; }
@@ -206,10 +208,16 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Add File To Playlist (first)"
             };
 
-            AddFolderToPlaylistCommand = new ScriptplayerCommand(AddFolderToPlaylist)
+            AddFolderToPlaylistCommand = new ScriptplayerCommand(() => AddFolderToPlaylist(false))
             {
                 CommandId = "AddFolderToPlaylist",
-                DisplayText = "Add Folder To Playlist"
+                DisplayText = "Add Folder To Playlist (last)"
+            };
+
+            AddFolderToPlaylistFirstCommand = new ScriptplayerCommand(() => AddFolderToPlaylist(true))
+            {
+                CommandId = "AddFolderToPlaylistFirst",
+                DisplayText = "Add Folder To Playlist (first)"
             };
 
             ConnectLaunchDirectlyCommand = new ScriptplayerCommand(ConnectLaunchDirectly)
@@ -716,6 +724,11 @@ namespace ScriptPlayer.ViewModels
             LoadFile(filename);
 
             return new ActionResult(true, "Loading file");
+        }
+
+        private void InitializePlaylistCommands(PlaylistViewModel playlist)
+        {
+            GlobalCommandManager.RegisterCommand(playlist.RemoveSelectedEntryCommand);
         }
     }
 

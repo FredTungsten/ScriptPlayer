@@ -360,7 +360,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand MoveCommand { get; set; }
         public RelayCommand MoveAndRemoveCommand { get; set; }
         public RelayCommand RecycleCommand { get; set; }
-        public RelayCommand DeleteCommand { get; set; }
+        public ScriptplayerCommand DeleteCommand { get; set; }
 
         public RelayCommand PlayNextEntryCommand { get; set; }
         public RelayCommand PlayPreviousEntryCommand { get; set; }
@@ -368,7 +368,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand MoveSelectedEntryDownCommand { get; set; }
         public RelayCommand MoveSelectedEntryFirstCommand { get; set; }
         public RelayCommand MoveSelectedEntryLastCommand { get; set; }
-        public RelayCommand RemoveSelectedEntryCommand { get; set; }
+        public ScriptplayerCommand RemoveSelectedEntryCommand { get; set; }
 
         public RelayCommand ClearPlaylistCommand { get; set; }
         public RelayCommand<bool> SortByDurationCommand { get; set; }
@@ -393,20 +393,24 @@ namespace ScriptPlayer.ViewModels
             SelectedEntries = new List<PlaylistEntry>();
 
             RenameCommand = new RelayCommand<PlaylistEntry>(ExecuteRenameCommand, SingleEntrySelected);
-            MoveCommand = new RelayCommand(ExecuteMoveCommand, SelectionIsNotEmpty);
-            MoveAndRemoveCommand = new RelayCommand(ExecuteMoveAndRemoveCommand, SelectionIsNotEmpty);
-            DeleteCommand = new RelayCommand(ExecuteDeleteCommand, SelectionIsNotEmpty);
-            RecycleCommand = new RelayCommand(ExecuteRecycleCommand, SelectionIsNotEmpty);
+            MoveCommand = new ScriptplayerCommand(ExecuteMoveCommand, SelectionIsNotEmpty);
+            MoveAndRemoveCommand = new ScriptplayerCommand(ExecuteMoveAndRemoveCommand, SelectionIsNotEmpty);
+            DeleteCommand = new ScriptplayerCommand(ExecuteDeleteCommand, SelectionIsNotEmpty);
+            RecycleCommand = new ScriptplayerCommand(ExecuteRecycleCommand, SelectionIsNotEmpty);
 
             OpenInExplorerCommand = new RelayCommand<PlaylistEntry>(ExecuteOpenInExplorer, EntryNotNull);
-            MoveSelectedEntryDownCommand = new RelayCommand(ExecuteMoveSelectedEntryDown, CanMoveSelectedEntryDown);
-            MoveSelectedEntryUpCommand = new RelayCommand(ExecuteMoveSelectedEntryUp, CanMoveSelectedEntryUp);
-            MoveSelectedEntryLastCommand = new RelayCommand(ExecuteMoveSelectedEntryLast, CanMoveSelectedEntryDown);
-            MoveSelectedEntryFirstCommand = new RelayCommand(ExecuteMoveSelectedEntryFirst, CanMoveSelectedEntryUp);
-            RemoveSelectedEntryCommand = new RelayCommand(ExecuteRemoveSelectedEntry, SelectionIsNotEmpty);
-            ClearPlaylistCommand = new RelayCommand(ExecuteClearPlaylist, CanClearPlaylist);
-            PlayNextEntryCommand = new RelayCommand(ExecutePlayNextEntry, CanPlayNextEntry);
-            PlayPreviousEntryCommand = new RelayCommand(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
+            MoveSelectedEntryDownCommand = new ScriptplayerCommand(ExecuteMoveSelectedEntryDown, CanMoveSelectedEntryDown);
+            MoveSelectedEntryUpCommand = new ScriptplayerCommand(ExecuteMoveSelectedEntryUp, CanMoveSelectedEntryUp);
+            MoveSelectedEntryLastCommand = new ScriptplayerCommand(ExecuteMoveSelectedEntryLast, CanMoveSelectedEntryDown);
+            MoveSelectedEntryFirstCommand = new ScriptplayerCommand(ExecuteMoveSelectedEntryFirst, CanMoveSelectedEntryUp);
+            RemoveSelectedEntryCommand = new ScriptplayerCommand(ExecuteRemoveSelectedEntry, SelectionIsNotEmpty)
+            {
+                CommandId = "RemoveSelectedPlaylistEntries",
+                DisplayText = "Remove Selected Playlist Entries",
+            };
+            ClearPlaylistCommand = new ScriptplayerCommand(ExecuteClearPlaylist, CanClearPlaylist);
+            PlayNextEntryCommand = new ScriptplayerCommand(ExecutePlayNextEntry, CanPlayNextEntry);
+            PlayPreviousEntryCommand = new ScriptplayerCommand(ExecutePlayPreviousEntry, CanPlayPreviousEntry);
             SortByDurationCommand = new RelayCommand<bool>(ExecuteSortByDuration, AreTheMultipleEntries);
             SortByNameCommand = new RelayCommand<bool>(ExecuteSortByName, AreTheMultipleEntries);
             SortByPathCommand = new RelayCommand<bool>(ExecuteSortByPath, AreTheMultipleEntries);
@@ -1253,12 +1257,13 @@ namespace ScriptPlayer.ViewModels
             if (existingEntry == CurrentEntry)
                 return;
 
-            if (existingEntry == null)
+            foreach (PlaylistEntry entry in Entries)
             {
-
+                entry.Playing = entry == existingEntry;
             }
 
             CurrentEntry = existingEntry;
+
             PreviousEntry = GetPreviousEntry();
             NextEntry = GetNextEntry();
         }
@@ -1430,12 +1435,16 @@ namespace ScriptPlayer.ViewModels
         {
             PreviousEntry = CurrentEntry;
 
-            SelectedEntry = entry;
+            if(SelectEntryOnPlay)
+                SelectedEntry = entry;
+
             CurrentEntry = entry;
             UpdateNextEntry();
 
             PlayEntry?.Invoke(this, entry);
         }
+
+        public bool SelectEntryOnPlay { get; set; } = true;
 
 
         [NotifyPropertyChangedInvocator]

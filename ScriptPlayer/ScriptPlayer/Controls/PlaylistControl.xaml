@@ -50,7 +50,8 @@
             <MenuItem Header="Playlist">
                 <MenuItem Header="Add Files (first)" Command="{Binding AddScriptsToPlaylistFirstCommand}" />
                 <MenuItem Header="Add Files (last)" Command="{Binding AddScriptsToPlaylistCommand}" />
-                <MenuItem Header="Add Folder" Command="{Binding AddFolderToPlaylistCommand}"/>
+                <MenuItem Header="Add Folder (first)" Command="{Binding AddFolderToPlaylistFirstCommand}"/>
+                <MenuItem Header="Add Folder (last)" Command="{Binding AddFolderToPlaylistCommand}"/>
                 <Separator/>
                 <MenuItem Header="Remove Missing Entries" Command="{Binding RemoveMissingEntriesFromPlaylistCommand}"/>
                 <MenuItem Header="Remove Incomplete Entries" Command="{Binding RemoveIncompleteEntriesFromPlaylistCommand}"/>
@@ -125,6 +126,9 @@
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.MissingFile}">
                                         <Setter Property="TextElement.Foreground" Value="Red"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Playing}" Value="True">
+                                        <Setter Property="TextElement.FontWeight" Value="Bold"></Setter>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>

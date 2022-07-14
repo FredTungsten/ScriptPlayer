@@ -511,6 +511,8 @@ namespace ScriptPlayer.ViewModels
             Playlist.RandomChapters = Settings.RandomChapters;
             Playlist.Shuffle = Settings.ShufflePlaylist;
 
+            InitializePlaylistCommands(Playlist);
+
             if (!GlobalCommandManager.LoadMappings(GetCommandMappingsFilePath()))
                 GlobalCommandManager.BuildDefaultShortcuts();
 
@@ -4361,7 +4363,7 @@ namespace ScriptPlayer.ViewModels
             return e.Handled ? e.Result : MessageBoxResult.None;
         }
 
-        public void AddFolderToPlaylist()
+        public void AddFolderToPlaylist(bool first)
         {
             string folder = OnRequestFolder(_lastFolder);
             if (string.IsNullOrWhiteSpace(folder))
@@ -4377,7 +4379,7 @@ namespace ScriptPlayer.ViewModels
                     entries.Add(new PlaylistEntry(file));
             }
 
-            Playlist.AddEntries(false, entries);
+            Playlist.AddEntries(first, entries);
         }
 
         private string GetMediaFilters()
