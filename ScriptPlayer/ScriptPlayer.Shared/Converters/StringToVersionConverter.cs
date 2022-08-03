@@ -15,8 +15,9 @@ namespace ScriptPlayer.Shared.Converters
         {
             try
             {
-                if(Version.TryParse(reader.Value.ToString(), out Version version))
-                    return version;
+                if(reader?.Value != null)
+                    if(Version.TryParse(reader.Value.ToString(), out Version version))
+                        return version;
             }
             catch
             {
