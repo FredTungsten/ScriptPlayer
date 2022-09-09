@@ -1,8 +1,8 @@
-# The current release version 1.1.0 and preview 1.1.1 are a bit outdated.
-# Try [the latest beta](https://github.com/FredTungsten/ScriptPlayer/wiki/Downloading-Beta-Builds) instead.
+# [Latest beta can be found here](https://github.com/FredTungsten/ScriptPlayer/wiki/Downloading-Beta-Builds).
 
 If you want to use ScriptPlayer with [Intiface/Buttplug](https://intiface.com/desktop/), make sure to also install the [Visual C Redistributables](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
+If you want to generate preview-gifs and thumbnails for your videos, download and install [FFMPEG](https://ffmpeg.org/download.html#build-windows)
 
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/FredTungsten/ScriptPlayer?branch=master&svg=true)](https://ci.appveyor.com/project/FredTungsten/ScriptPlayer/branch/master)
 [![Current Version](https://img.shields.io/github/release/FredTungsten/ScriptPlayer.svg?maxAge=3600)](https://github.com/FredTungsten/ScriptPlayer/releases)
