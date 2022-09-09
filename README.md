@@ -1,4 +1,5 @@
-# [Latest beta can be found here](https://github.com/FredTungsten/ScriptPlayer/wiki/Downloading-Beta-Builds).
+# [Latest release can be found here](https://github.com/FredTungsten/ScriptPlayer/releases)
+# [Latest beta can be found here](https://github.com/FredTungsten/ScriptPlayer/wiki/Downloading-Beta-Builds)
 
 If you want to use ScriptPlayer with [Intiface/Buttplug](https://intiface.com/desktop/), make sure to also install the [Visual C Redistributables](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
