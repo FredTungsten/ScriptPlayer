@@ -12,16 +12,14 @@ namespace ScriptPlayer.Shared
 {
     public class LaunchBluetooth : DeviceController
     {
-        private readonly Dictionary<ulong, DateTime> _lastChecked = new Dictionary<ulong, DateTime>();
-        private readonly List<ulong> _nonLaunchDevices = new List<ulong>();
+        private bool connectionInProgress;
 
-        private readonly object _discoverylocker = new object();
-        private bool _discover;
         public BluetoothLEAdvertisementWatcher BleWatcher { get; set; }
         
-        public void ScanForDevices()
+        public void Start()
         {
-            Start();
+            Debug.WriteLine("Start watching for BLE devices ...");
+            BleWatcher.Start();
         }
 
         public LaunchBluetooth()
@@ -32,34 +30,6 @@ namespace ScriptPlayer.Shared
             };
 
             BleWatcher.Received += BleReceived;
-        }
-
-        public void Start()
-        {
-            lock (_discoverylocker)
-            {
-                if (_discover)
-                    return;
-
-                _lastChecked.Clear();
-                _nonLaunchDevices.Clear();
-
-                Debug.WriteLine("Start watching for BLE devices ...");
-                _discover = true;
-                BleWatcher.Start();
-            }
-        }
-
-        public void Stop()
-        {
-            lock (_discoverylocker)
-            {
-                if (!_discover)
-                    return;
-
-                _discover = false;
-                BleWatcher.Stop();
-            }
         }
 
         public static bool IsLaunchPaired()
@@ -84,50 +54,23 @@ namespace ScriptPlayer.Shared
             if (w == null) return;
             if (btAdv == null) return;
 
-            TimeSpan minTimeBetweenChecks = TimeSpan.FromSeconds(10);
-
-            lock (_discoverylocker)
-            {
-                if (!_discover) return;
-                //Stop();
-
-                if(_nonLaunchDevices.Contains(btAdv.BluetoothAddress))
-                    return;
-
-                if(!_lastChecked.ContainsKey(btAdv.BluetoothAddress))
-                    _lastChecked.Add(btAdv.BluetoothAddress, DateTime.Now);
-                else if (DateTime.Now - _lastChecked[btAdv.BluetoothAddress] < minTimeBetweenChecks)
-                    return;
-
-                _lastChecked[btAdv.BluetoothAddress] = DateTime.Now;
-            }
+            if (connectionInProgress) return;
 
             Debug.WriteLine($"BLE advertisement received, aquiring device ...");
 
-            var deviceAwaiting = BluetoothLEDevice.FromBluetoothAddressAsync(btAdv.BluetoothAddress);
-
-            if (deviceAwaiting == null) return;
-
-            BluetoothLEDevice device = await deviceAwaiting;
-
-            if (device == null) return;
-
-            Debug.WriteLine($"BLE Device: {device.Name} ({device.DeviceId})");
-
-            if (device.Name != "Launch")
+            if (btAdv.Advertisement.LocalName != "Launch")
             {
                 Debug.WriteLine("Not a Launch");
-                _nonLaunchDevices.Add(device.BluetoothAddress);
-                device.Dispose();
                 return;
             }
 
-            bool foundAndConnected = false;
+            connectionInProgress = true;
 
             try
             {
-                Thread.Sleep(1000);
-                // SERVICES!!
+                BluetoothLEDevice device = await BluetoothLEDevice.FromBluetoothAddressAsync(btAdv.BluetoothAddress);
+
+                Debug.WriteLine($"BLE Device: {device.Name} ({device.DeviceId})");
                 GattDeviceService service = (await device.GetGattServicesForUuidAsync(Launch.Uids.MainService))
                     .Services.FirstOrDefault();
                 if (service == null) return;
@@ -145,7 +88,12 @@ namespace ScriptPlayer.Shared
                     .Characteristics.FirstOrDefault();
 
                 if (writeCharacteristics == null || commandCharacteristics == null ||
-                    notifyCharacteristics == null) return;
+                    notifyCharacteristics == null)
+                {
+                    Debug.WriteLine("Characteristics not found!");
+                    device.Dispose();
+                    return;
+                }
 
                 Debug.WriteLine("Characteristics found!");
 
@@ -156,22 +104,16 @@ namespace ScriptPlayer.Shared
 
                 Debug.WriteLine("Launch Initialized: " + init.ToString().ToUpper() + "!");
 
-                foundAndConnected = true;
                 OnDeviceFound(launch);
-                Stop();
+                w.Stop();
             }
             catch (Exception e)
             {
                 Debug.WriteLine("Exception: " + e.Message);
-                device.Dispose();
             }
             finally
             {
-                if (!foundAndConnected)
-                {
-                    Debug.WriteLine("Connect failed, try again ...");
-                    Start();
-                }
+                connectionInProgress = false;
             }
         }
     }
