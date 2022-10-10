@@ -67,7 +67,7 @@ namespace ScriptPlayer.Shared.Subtitles
 
         private static List<SubtitleFormat> _formats = new List<SubtitleFormat>
         {
-            new SubtitleFormat("SubRip","srt")
+            new SubtitleFormat("SubRip", "srt", "srt")
         };
 
         public override List<SubtitleFormat> GetSupportedFormats()

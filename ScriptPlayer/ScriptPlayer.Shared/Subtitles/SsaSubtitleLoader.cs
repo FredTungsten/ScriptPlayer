@@ -143,8 +143,8 @@ namespace ScriptPlayer.Shared.Subtitles
 
         private static List<SubtitleFormat> _formats = new List<SubtitleFormat>
         {
-            new SubtitleFormat("Sub Station Alpha","ssa"),
-            new SubtitleFormat("Advanced Sub Station Alpha","ass"),
+            new SubtitleFormat("Sub Station Alpha", "ssa", "ssa"),
+            new SubtitleFormat("Advanced Sub Station Alpha", "ass", "ass"),
         };
 
         public override List<SubtitleFormat> GetSupportedFormats()

@@ -29,6 +29,33 @@ namespace ScriptPlayer.Shared.Classes.Wrappers
             return outputDirectory;
         }
 
+        public string[] GetSubtitles(string videoFile, SubtitleStream stream)
+        {
+            string tempFile = Path.GetTempFileName();
+            string tempfileWithextension = tempFile + ".tmp";
+
+            try
+            {
+                FfmpegArguments arguments = new ExtractSubtitleArguments()
+                {
+                    StreamIndex = stream.StreamId,
+                    OutputFile = tempfileWithextension,
+                    Format = stream.Format,
+                    InputFile = videoFile
+                };
+
+                if (!Execute(arguments))
+                    return null;
+
+                return File.ReadAllLines(tempfileWithextension);
+            }
+            finally
+            {
+                File.Delete(tempFile);
+                File.Delete(tempfileWithextension);
+            }
+        }
+
         public VideoInfo GetVideoInfo(string videoFile)
         {
             VideoInfoArguments arguments = new VideoInfoArguments
@@ -41,7 +68,13 @@ namespace ScriptPlayer.Shared.Classes.Wrappers
                 DebugOutput = false,
             };
 
+            DateTime start = DateTime.Now;
+
             ExecuteWrapper(infoWrapper);
+
+            TimeSpan duration = DateTime.Now - start;
+
+            Debug.WriteLine($"GetVideoInfo took {duration.TotalMilliseconds:f2} ms");
 
             return infoWrapper.Result;
         }

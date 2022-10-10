@@ -137,6 +137,7 @@
     <Compile Include="Beats\MetronomeTick.cs" />
     <Compile Include="Classes\Ffmpeg\Arguments\ClipExtractorArguments.cs" />
     <Compile Include="Classes\Ffmpeg\Arguments\ClipMergeArguments.cs" />
+    <Compile Include="Classes\Ffmpeg\Arguments\ExtractSubtitleArguments.cs" />
     <Compile Include="Classes\Ffmpeg\Wrappers\ConsoleWrapper.cs" />
     <Compile Include="Classes\Ffmpeg\Arguments\FfmpegArguments.cs" />
     <Compile Include="Classes\Ffmpeg\Wrappers\FfmpegConsoleWrapper.cs" />

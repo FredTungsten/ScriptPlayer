@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace ScriptPlayer.Shared
@@ -17,9 +18,12 @@ namespace ScriptPlayer.Shared
 
         public double FrameRate { get; set; }
 
+        public List<SubtitleStream> Subtitles { get; set; }
+
         public VideoInfo()
         {
             Duration = TimeSpan.Zero;
+            Subtitles = new List<SubtitleStream>();
         }
 
         public void DumpInfo()

@@ -47,6 +47,14 @@ namespace ScriptPlayer.Shared.Subtitles
                 .ToArray();
         }
 
+        public static SubtitleLoader[] GetLoadersByFormat(string format)
+        {
+            return Loaders.Where(loader => loader.GetSupportedFormats().Any(
+                    f => string.Equals(f.Format,format, StringComparison.InvariantCultureIgnoreCase)))
+                .OrderBy(loader => Loaders.IndexOf(loader))
+                .ToArray();
+        }
+
         public static SubtitleLoader[] GetAllLoaders()
         {
             return Loaders.ToArray();
@@ -56,14 +64,22 @@ namespace ScriptPlayer.Shared.Subtitles
     public class SubtitleFormat
     {
         public string Name { get; set; }
+        public string Format { get; set; }
         public string[] Extensions { get; set; }
 
         public SubtitleFormat()
         { }
 
-        public SubtitleFormat(string name, params string[] extensions)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="format">Format as specified by ffmpeg (ffmpeg -codecs | grep subtitle)</param>
+        /// <param name="extensions"></param>
+        public SubtitleFormat(string name, string format, params string[] extensions)
         {
             Name = name;
+            Format = format;
             Extensions = extensions;
         }
     }

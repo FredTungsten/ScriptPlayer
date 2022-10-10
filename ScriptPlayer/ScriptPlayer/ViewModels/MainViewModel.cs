@@ -24,6 +24,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using ScriptPlayer.Dialogs;
 using ScriptPlayer.Generators;
+using ScriptPlayer.Shared.Classes.Wrappers;
 using ScriptPlayer.Shared.Devices;
 using ScriptPlayer.Shared.Estim;
 using ScriptPlayer.Shared.Interfaces;
@@ -1911,6 +1912,9 @@ namespace ScriptPlayer.ViewModels
 
         private void ReloadSubtitles()
         {
+            if (!IsVideoLoaded())
+                return;
+
             if(Settings.SubtitlesEnabled)
                 TryFindMatchingSubtitles(_loadedMedia);
             else
@@ -3436,15 +3440,31 @@ namespace ScriptPlayer.ViewModels
                 return;
             }
 
+            if (!string.IsNullOrWhiteSpace(Settings.FfmpegPath))
+            {
+                FfmpegWrapper wrapper = new FfmpegWrapper(Settings.FfmpegPath);
+                var videoInfo = wrapper.GetVideoInfo(videoFile);
+
+                foreach (var subtitle in videoInfo.Subtitles)
+                {
+                    string[] data = wrapper.GetSubtitles(videoFile, subtitle);
+
+                    if (data == null || data.Length == 0)
+                        continue;
+
+                    if (LoadSubtitles(subtitle.Format, data))
+                        return;
+                }
+            }
+
             string subtitleFile = GetRelatedFile(videoFile, GetSubtitleExtensions(), _supportedVideoExtensions);
             if (!string.IsNullOrEmpty(subtitleFile))
             {
-                LoadSubtitles(subtitleFile);
+                if (LoadSubtitles(subtitleFile))
+                    return;
             }
-            else
-            {
-                ClearSubtitles();
-            }
+            
+            ClearSubtitles();
         }
 
         private string[] GetSubtitleExtensions()
@@ -3457,7 +3477,27 @@ namespace ScriptPlayer.ViewModels
             SubtitleDisplay?.SetSubtitles(new List<SubtitleEntry>());
         }
 
-        private void LoadSubtitles(string subtitleFile)
+        private bool LoadSubtitles(string format, string[] lines)
+        {
+            foreach (SubtitleLoader loader in SubtitleLoaderManager.GetLoadersByFormat(format))
+            {
+                try
+                {
+                    var entries = loader.LoadEntriesFromLines(lines);
+                    if (entries.Count > 0)
+                    {
+                        SubtitleDisplay.SetSubtitles(entries);
+                        OsdShowMessage($"Subtitles extracted from video ({format})", TimeSpan.FromSeconds(2), "subtitles");
+                        return true;
+                    }
+                }
+                catch { }
+            }
+
+            return false;
+        }
+
+        private bool LoadSubtitles(string subtitleFile)
         {
             foreach (SubtitleLoader loader in SubtitleLoaderManager.GetLoaders(subtitleFile))
             {
@@ -3465,14 +3505,16 @@ namespace ScriptPlayer.ViewModels
                 {
                     var entries = loader.LoadEntriesFromFile(subtitleFile);
                     if (entries.Count > 0)
+                    {
                         SubtitleDisplay.SetSubtitles(entries);
-
-                    return;
+                        OsdShowMessage($"Subtitles loaded from file ({Path.GetFileName(subtitleFile)})", TimeSpan.FromSeconds(2), "subtitles");
+                        return true;
+                    }
                 }
                 catch { }
             }
 
-            ClearSubtitles();
+            return false;
         }
 
         private TimeSpan GetFirstEvent()
