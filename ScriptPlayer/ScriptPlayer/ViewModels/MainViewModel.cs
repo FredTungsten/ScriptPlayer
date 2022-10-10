@@ -69,6 +69,8 @@ namespace ScriptPlayer.ViewModels
         private readonly string[] _supportedAudioExtensions =
             {"mp3", "m4a", "wav", "flac", "opus"};
 
+        private readonly string[] _supportedSubtitleExtensions = SubtitleLoaderManager.GetSupportedExtensions();
+
         private readonly string[] _supportedMediaExtensions;
 
         private string _buttplugApiVersion = "Unknown";
@@ -1128,6 +1130,7 @@ namespace ScriptPlayer.ViewModels
 
             TryFindMatchingScript(videoFileName);
             TryFindMatchingThumbnails(videoFileName, true);
+            TryFindMatchingSubtitles(videoFileName);
 
             // We meed to explicitly reload the audio file because the time source does not change when file on remote player changes
 
@@ -1200,9 +1203,6 @@ namespace ScriptPlayer.ViewModels
             InstanceHandler.EnableEvents();
 
             UpdateVideoCrop();
-
-            //var loader = new SrtSubtitleLoader();
-            //SubtitleDisplay.SetSubtitles(loader.LoadEntriesFromFile(@"D:\Videos\CH\~Test\subtitles\BibleBlack.srt"));
         }
 
         private void AutoConnectButtplug()
@@ -1746,6 +1746,7 @@ namespace ScriptPlayer.ViewModels
             UpdateAutoReloadScript();
             UpdateHandySettings();
             ReloadAudio();
+            ReloadSubtitles();
         }
 
         private void UpdatePlaylistRandomChapter()
@@ -1899,7 +1900,21 @@ namespace ScriptPlayer.ViewModels
                     UpdateHandySettings();
                     break;
                 }
+                case nameof(SettingsViewModel.SubtitlesEnabled):
+                case nameof(SettingsViewModel.SubtitleFormatPreference):
+                {
+                    ReloadSubtitles();
+                    break;
+                }
             }
+        }
+
+        private void ReloadSubtitles()
+        {
+            if(Settings.SubtitlesEnabled)
+                TryFindMatchingSubtitles(_loadedMedia);
+            else
+                ClearSubtitles();
         }
 
         private void UpdateRange()
@@ -3341,6 +3356,7 @@ namespace ScriptPlayer.ViewModels
                 if (_supportedVideoExtensions.Contains(extension))
                     TryFindMatchingAudio(mediaFileName);
 
+                TryFindMatchingSubtitles(mediaFileName);
                 TryFindMatchingThumbnails(mediaFileName, true);
 
                 LoadedMedia = mediaFileName;
@@ -3410,6 +3426,53 @@ namespace ScriptPlayer.ViewModels
             {
                 DisposeAudioHandler();
             }
+        }
+
+        private void TryFindMatchingSubtitles(string videoFile)
+        {
+            if (!Settings.SubtitlesEnabled)
+            {
+                ClearSubtitles();
+                return;
+            }
+
+            string subtitleFile = GetRelatedFile(videoFile, GetSubtitleExtensions(), _supportedVideoExtensions);
+            if (!string.IsNullOrEmpty(subtitleFile))
+            {
+                LoadSubtitles(subtitleFile);
+            }
+            else
+            {
+                ClearSubtitles();
+            }
+        }
+
+        private string[] GetSubtitleExtensions()
+        {
+            return SortExtensionsByPreference(_supportedSubtitleExtensions, Settings.SubtitleFormatPreference);
+        }
+
+        private void ClearSubtitles()
+        {
+            SubtitleDisplay?.SetSubtitles(new List<SubtitleEntry>());
+        }
+
+        private void LoadSubtitles(string subtitleFile)
+        {
+            foreach (SubtitleLoader loader in SubtitleLoaderManager.GetLoaders(subtitleFile))
+            {
+                try
+                {
+                    var entries = loader.LoadEntriesFromFile(subtitleFile);
+                    if (entries.Count > 0)
+                        SubtitleDisplay.SetSubtitles(entries);
+
+                    return;
+                }
+                catch { }
+            }
+
+            ClearSubtitles();
         }
 
         private TimeSpan GetFirstEvent()

@@ -319,7 +319,10 @@
     <Compile Include="Sounds\SoundResources.cs" />
     <Compile Include="Beats\SpeedPredictor.cs" />
     <Compile Include="Helpers\SystemIdlePreventer.cs" />
+    <Compile Include="Subtitles\SrtSubtitleLoader.cs" />
+    <Compile Include="Subtitles\SsaSubtitleLoader.cs" />
     <Compile Include="Subtitles\SubtitleHandler.cs" />
+    <Compile Include="Subtitles\SubtitleLoaderManager.cs" />
     <Compile Include="TimeSource\AudioFileTimeSource.cs" />
     <Compile Include="TimeSource\CompositionTargetClock.cs" />
     <Compile Include="TimeSource\DeoVrTimeSource.cs" />

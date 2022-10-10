@@ -525,12 +525,12 @@ namespace ScriptPlayer.Shared.TheHandy
             //builder.Append(@"""{""""type"""":""""handy""""}"",");
             builder.Append("#");
 
-            ScaleScript(actions);
+            //ScaleScript(actions);
 
-            bool wiggle = true;
+            //bool wiggle = true;
 
-            if (wiggle)
-                WiggleScript(actions);
+            //if (wiggle)
+            //    WiggleScript(actions);
 
             foreach (FunScriptAction action in actions)
             {

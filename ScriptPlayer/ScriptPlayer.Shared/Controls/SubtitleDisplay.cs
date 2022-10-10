@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.TextFormatting;
 using ScriptPlayer.Shared.Subtitles;
+using Brushes = System.Windows.Media.Brushes;
+using Point = System.Windows.Point;
 
 namespace ScriptPlayer.Shared
 {
@@ -16,6 +20,7 @@ namespace ScriptPlayer.Shared
 
         private SubtitleHandler _handler;
         private string _text;
+        private List<SubtitleEntry> _entries;
 
         private static void OnTimeSourcePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -49,6 +54,7 @@ namespace ScriptPlayer.Shared
             if (newText != _text)
             {
                 _text = newText;
+                _entries = activeEntries;
                 InvalidateVisual();
             }
         }
@@ -69,9 +75,29 @@ namespace ScriptPlayer.Shared
             if (string.IsNullOrWhiteSpace(_text))
                 return;
 
+            double fontSize = this.ActualHeight * 0.06;
+            double borderSize = fontSize * 0.05;
+
             NumberSubstitution numSub = new NumberSubstitution();
-            FormattedText text = new FormattedText(_text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 12, Brushes.White, numSub, TextFormattingMode.Display, 96 );
-            drawingContext.DrawText(text, new Point(0,0));
+            foreach (SubtitleEntry entry in _entries)
+            {
+                FormattedText text = new FormattedText(entry.Text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Arial"), fontSize, Brushes.White, numSub, TextFormattingMode.Display, 96);
+
+                text.MaxTextWidth = this.ActualWidth;
+
+                Geometry g = text.BuildGeometry(new Point(0, 0));
+
+                Point offset = new Point((this.ActualWidth - g.Bounds.Width) / 2, this.ActualHeight * 0.9 - g.Bounds.Height);
+
+                drawingContext.PushTransform(new TranslateTransform(offset.X, offset.Y));
+
+                drawingContext.DrawGeometry(Brushes.Black, new Pen(Brushes.Black, borderSize * 2), g);
+                drawingContext.DrawGeometry(Brushes.White, null, g);
+
+                drawingContext.Pop();
+
+                //drawingContext.DrawText(text, new Point(0, 0));
+            }
         }
     }
 }

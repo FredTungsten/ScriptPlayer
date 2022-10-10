@@ -258,6 +258,8 @@ namespace ScriptPlayer.ViewModels
         private string _handyLocalIp;
         private int _handyLocalPort;
         private bool _urlDecodeFilenames;
+        private bool _subtitlesEnabled;
+        private string _subtitleFormatPreference;
 
         public SettingsViewModel()
         {
@@ -288,6 +290,9 @@ namespace ScriptPlayer.ViewModels
 
             FuzzyMatchingPattern = @"^(?<Title>.+?)\s?\(\d{4}\)$";
             FuzzyMatchingReplacement = @"${Title}";
+
+            SubtitlesEnabled = true;
+            SubtitleFormatPreference = "ass, ssa, srt";
 
             CropLeft = 0;
             CropRight = 1;
@@ -1409,6 +1414,28 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _urlDecodeFilenames) return;
                 _urlDecodeFilenames = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool SubtitlesEnabled
+        {
+            get => _subtitlesEnabled;
+            set
+            {
+                if (value == _subtitlesEnabled) return;
+                _subtitlesEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string SubtitleFormatPreference
+        {
+            get => _subtitleFormatPreference;
+            set
+            {
+                if (value == _subtitleFormatPreference) return;
+                _subtitleFormatPreference = value;
                 OnPropertyChanged();
             }
         }

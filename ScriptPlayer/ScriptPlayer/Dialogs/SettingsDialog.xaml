@@ -76,7 +76,7 @@
 
             <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="0" Grid.Column="1"/>
 
-            <controls:PageSelector DesignModeContentIdentifier="Players" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
+            <controls:PageSelector DesignModeContentIdentifier="Subtitles" x:Name="PageSelector" Grid.Column="2" Grid.Row="0" Margin="0,42,10,10" ActiveContentIdentifier="{Binding SelectedPage.SettingsId}">
                 <controls:PageSelector.Style>
                     <Style TargetType="{x:Type controls:PageSelector}">
                         <Setter Property="Template">
@@ -104,6 +104,22 @@
                     </Style>
                 </controls:PageSelector.Style>
                 <controls:PageSelector.Elements>
+                    <Grid controls:PageSelector.ContentIdentifier="Subtitles">
+                        <controls:PageSelector.Header>
+                            <controls:AwesomeIcon Icon="Closed_Captioning_Regular"/>
+                        </controls:PageSelector.Header>
+                        <StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Subtitles" FontWeight="Bold" Margin="0,5,0,0"/>
+                                <TextBlock Text="This feature is experimental and even remotely complete." TextWrapping="Wrap" Margin="0,10,0,0"/>
+                                <CheckBox IsChecked="{Binding Settings.SubtitlesEnabled}" Margin="20,10,4,4">Enable Subtitles</CheckBox>
+                                <DockPanel>
+                                    <TextBlock Width="100" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="Format Preference" VerticalAlignment="Center"/>
+                                    <TextBox Text="{Binding Settings.SubtitleFormatPreference}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="E-Stim Audio">
                         <controls:PageSelector.Header>
                             <controls:AwesomeIcon Icon="Lightning_Bolt_Solid"/>
@@ -195,6 +211,9 @@
 
                             <TextBlock Margin="4,4,4,0" Text="Media Format Preference:"/>
                             <TextBox Margin="4" Text="{Binding Settings.MediaFormatPreference}"/>
+
+                            <TextBlock Margin="4,4,4,0" Text="Subtitle Format Preference:"/>
+                            <TextBox Margin="4" Text="{Binding Settings.SubtitleFormatPreference}"/>
                         </StackPanel>
                     </Grid>
                     <Grid controls:PageSelector.ContentIdentifier="Devices">
