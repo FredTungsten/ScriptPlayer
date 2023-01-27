@@ -11,7 +11,7 @@ If you want to generate preview-gifs and thumbnails for your videos, download an
 [![Total Downloads](https://img.shields.io/github/downloads/FredTungsten/ScriptPlayer/total.svg?maxAge=3600)](https://github.com/FredTungsten/ScriptPlayer/releases)
 [![License](https://img.shields.io/badge/licence-GPL%203.0-blue.svg?style=flat)](https://github.com/FredTungsten/ScriptPlayer/blob/master/LICENSE)
 
-ScriptPlayer is a video player that controls the Fleshlight Launch and other toys in sync with videos.  
+ScriptPlayer is a video player that controls the Handy and other toys in sync with videos.  
 * [Installation](https://github.com/FredTungsten/ScriptPlayer/wiki/Installation)  
 * [Troubleshooting](https://github.com/FredTungsten/ScriptPlayer/wiki/Troubleshooting)  
 * [Report bugs or request features](https://github.com/FredTungsten/ScriptPlayer/wiki/Creating-Issues-to-report-bugs-or-request-features)  
