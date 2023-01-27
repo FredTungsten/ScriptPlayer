@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Security.Principal;
-using System.Windows;
 using System.Windows.Threading;
-using ScriptPlayer.Shared.Elevation;
 using ScriptPlayer.Shared.Helpers;
 using ScriptPlayer.ViewModels;
 using Application = System.Windows.Application;
-using MessageBox = System.Windows.MessageBox;
 
 namespace ScriptPlayer
 {
@@ -50,125 +45,136 @@ namespace ScriptPlayer
             File.AppendAllText(Environment.ExpandEnvironmentVariables("%APPDATA%\\ScriptPlayer\\Crash.log"), message);
         }
 
-        protected override void OnStartup(StartupEventArgs e)
-        {
+        //Direct BLE support retired - let Intiface/Buttplug handle that kind of thing :P
 
-#if DEBUGELEVATED
-            if (IsElevated())
-            {
-                if (Debugger.IsAttached)
-                    Debugger.Break();
-                else
-                    Debugger.Launch();
-            }
-#endif
-            if (OsInformation.GetWindowsReleaseVersion() < 1703)
-            {
-                // Version too low to use Bluetooth, skip check.
-                return;
-            }
 
-            string exeName = Path.GetFileName(PermissionChecker.GetExe());
-            Guid guid = Guid.NewGuid();
+        //using System.Linq;
+        //using System.Security.Principal;
+        //using System.Windows;
+        //using ScriptPlayer.Shared.Elevation;
+        //using MessageBox = System.Windows.MessageBox;
 
-            Debug.WriteLine(@"Is Admin: " + UserIsAdmin());
+//        protected override void OnStartup(StartupEventArgs e)
+//        {
+           
+//            return;
 
-            var result = PermissionChecker.EnsureAppPermissionsSet(exeName, guid);
+//#if DEBUGELEVATED
+//            if (IsElevated())
+//            {
+//                if (Debugger.IsAttached)
+//                    Debugger.Break();
+//                else
+//                    Debugger.Launch();
+//            }
+//#endif
+//            if (OsInformation.GetWindowsReleaseVersion() < 1703)
+//            {
+//                // Version too low to use Bluetooth, skip check.
+//                return;
+//            }
 
-            if (result == PermissionCheckResult.ElevationRequired)
-            {
-                if (IsElevated() || UserIsAdmin())
-                {
-                    MessageBox.Show("Failed to set BLE Permissions!", "Failed", MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+//            string exeName = Path.GetFileName(PermissionChecker.GetExe());
+//            Guid guid = Guid.NewGuid();
 
-                    Environment.Exit(1);
-                }
-                else
-                {
-                    if (MessageBox.Show("BLE permissions requried. Restart now with elevated privilegues?",
-                            "Register BLE now?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                    {
-                        LaunchCurrentAppAsAdmin();
-                        Environment.Exit(2);
-                    }
-                }
-            }
+//            Debug.WriteLine(@"Is Admin: " + UserIsAdmin());
 
-            if (!IsElevated()) return;
+//            var result = PermissionChecker.EnsureAppPermissionsSet(exeName, guid);
 
-            LaunchCurrentAppAgain();
-            Environment.Exit((int)result);
-        }
+//            if (result == PermissionCheckResult.ElevationRequired)
+//            {
+//                if (IsElevated() || UserIsAdmin())
+//                {
+//                    MessageBox.Show("Failed to set BLE Permissions!", "Failed", MessageBoxButton.OK,
+//                        MessageBoxImage.Error);
 
-        private void LaunchCurrentAppAgain()
-        {
-            ProcessStartInfo info = new ProcessStartInfo
-            {
-                FileName = PermissionChecker.GetExe(),
-                UseShellExecute = true
-            };
+//                    Environment.Exit(1);
+//                }
+//                else
+//                {
+//                    if (MessageBox.Show("BLE permissions requried. Restart now with elevated privilegues?",
+//                            "Register BLE now?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+//                    {
+//                        LaunchCurrentAppAsAdmin();
+//                        Environment.Exit(2);
+//                    }
+//                }
+//            }
 
-            try
-            {
-                Process process = new Process { StartInfo = info };
-                process.Start();
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-            }
-        }
+//            if (!IsElevated()) return;
 
-        /// <summary>
-        /// Determine if the current process was started with the "/elevated" argument
-        /// </summary>
-        private static bool IsElevated()
-        {
-            return Environment.GetCommandLineArgs().Contains("/elevated");
-        }
+//            LaunchCurrentAppAgain();
+//            Environment.Exit((int)result);
+//        }
 
-        /// <summary>
-        /// Determine if the current process was started with admin privileges
-        /// </summary>
-        /// <returns></returns>
-        private static bool UserIsAdmin()
-        {
-            WindowsIdentity identity = WindowsIdentity.GetCurrent();
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
-            return principal.IsInRole(WindowsBuiltInRole.Administrator);
-        }
+//        private void LaunchCurrentAppAgain()
+//        {
+//            ProcessStartInfo info = new ProcessStartInfo
+//            {
+//                FileName = PermissionChecker.GetExe(),
+//                UseShellExecute = true
+//            };
 
-        /// <summary>
-        /// Try to launch the program as admin, return result
-        /// </summary>
-        private static void LaunchCurrentAppAsAdmin()
-        {
-            ProcessStartInfo info = new ProcessStartInfo
-            {
-                FileName = PermissionChecker.GetExe(),
-                UseShellExecute = true,
-                CreateNoWindow = true
-            };
+//            try
+//            {
+//                Process process = new Process { StartInfo = info };
+//                process.Start();
+//            }
+//            catch (Exception e)
+//            {
+//                Debug.WriteLine(e.Message);
+//            }
+//        }
 
-            //Required by UAC ;(
-            info.UseShellExecute = true;
+//        /// <summary>
+//        /// Determine if the current process was started with the "/elevated" argument
+//        /// </summary>
+//        private static bool IsElevated()
+//        {
+//            return Environment.GetCommandLineArgs().Contains("/elevated");
+//        }
 
-            // Provides Run as Administrator
-            info.Verb = "runas";
+//        /// <summary>
+//        /// Determine if the current process was started with admin privileges
+//        /// </summary>
+//        /// <returns></returns>
+//        private static bool UserIsAdmin()
+//        {
+//            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+//            WindowsPrincipal principal = new WindowsPrincipal(identity);
+//            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+//        }
 
-            // Custom argument so we know we manually elevated the process
-            info.Arguments = "/elevated";
+//        /// <summary>
+//        /// Try to launch the program as admin, return result
+//        /// </summary>
+//        private static void LaunchCurrentAppAsAdmin()
+//        {
+//            ProcessStartInfo info = new ProcessStartInfo
+//            {
+//                FileName = PermissionChecker.GetExe(),
+//                UseShellExecute = true,
+//                CreateNoWindow = true
+//            };
 
-            try
-            {
-                Process process = new Process { StartInfo = info };
-                process.Start();
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-            }
-        }
+//            //Required by UAC ;(
+//            info.UseShellExecute = true;
+
+//            // Provides Run as Administrator
+//            info.Verb = "runas";
+
+//            // Custom argument so we know we manually elevated the process
+//            info.Arguments = "/elevated";
+
+//            try
+//            {
+//                Process process = new Process { StartInfo = info };
+//                process.Start();
+//            }
+//            catch (Exception e)
+//            {
+//                Debug.WriteLine(e.Message);
+//            }
+//        }
     }
 }

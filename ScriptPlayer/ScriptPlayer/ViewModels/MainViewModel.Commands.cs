@@ -37,7 +37,7 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand ToggleFullScreenCommand { get; set; }
 
-        public ScriptplayerCommand ConnectLaunchDirectlyCommand { get; set; }
+        //public ScriptplayerCommand ConnectLaunchDirectlyCommand { get; set; }
 
         public ScriptplayerCommand ConnectHandyDirectlyCommand { get; set; }
 
@@ -220,11 +220,11 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Add Folder To Playlist (first)"
             };
 
-            ConnectLaunchDirectlyCommand = new ScriptplayerCommand(ConnectLaunchDirectly)
-            {
-                CommandId = "ConnectLaunchDirectly",
-                DisplayText = "Connect Launch Directly"
-            };
+            //ConnectLaunchDirectlyCommand = new ScriptplayerCommand(ConnectLaunchDirectly)
+            //{
+            //    CommandId = "ConnectLaunchDirectly",
+            //    DisplayText = "Connect Launch Directly"
+            //};
 
             ConnectHandyDirectlyCommand = new ScriptplayerCommand(ConnectHandyDirectly)
             {
@@ -319,7 +319,7 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterCommand(OpenScriptCommand);
             GlobalCommandManager.RegisterCommand(OpenVideoCommand);
             GlobalCommandManager.RegisterCommand(AddScriptsToPlaylistCommand);
-            GlobalCommandManager.RegisterCommand(ConnectLaunchDirectlyCommand);
+            //GlobalCommandManager.RegisterCommand(ConnectLaunchDirectlyCommand);
             GlobalCommandManager.RegisterCommand(ConnectHandyDirectlyCommand);
             GlobalCommandManager.RegisterCommand(ConnectButtplugCommand);
             GlobalCommandManager.RegisterCommand(DisconnectButtplugCommand);

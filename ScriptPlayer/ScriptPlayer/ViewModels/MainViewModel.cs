@@ -56,7 +56,6 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler RequestShowDeviceManager;
         public event EventHandler<string> RequestShowSettings;
         public event EventHandler<ThumbnailBannerGeneratorSettings> RequestGenerateThumbnailBanner;
-        public event EventHandler<WindowStateModel> RequestSetWindowState;
         
         public event EventHandler Beat;
         public event EventHandler<double> IntermediateBeat;
@@ -270,7 +269,7 @@ namespace ScriptPlayer.ViewModels
         private bool _showBanner = true;
         private string _scriptPlayerVersion;
         private bool _blurVideo;
-        private bool _canDirectConnectLaunch;
+        //private bool _canDirectConnectLaunch;
         private SettingsViewModel _settings;
         private string _loadedScript;
         private string _loadedMedia;
@@ -359,16 +358,16 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public bool CanDirectConnectLaunch
-        {
-            get => _canDirectConnectLaunch;
-            private set
-            {
-                if (value == _canDirectConnectLaunch) return;
-                _canDirectConnectLaunch = value;
-                OnPropertyChanged();
-            }
-        }
+        //public bool CanDirectConnectLaunch
+        //{
+        //    get => _canDirectConnectLaunch;
+        //    private set
+        //    {
+        //        if (value == _canDirectConnectLaunch) return;
+        //        _canDirectConnectLaunch = value;
+        //        OnPropertyChanged();
+        //    }
+        //}
 
         public MainViewModel()
         {
@@ -391,11 +390,11 @@ namespace ScriptPlayer.ViewModels
             InitializeCommands();
             InitializeTestPatterns();
 
-            if (OsInformation.GetWindowsReleaseVersion() >= 1703)
-            {
-                // Only initialize LaunchFinder on Win10 15063+
-                InitializeLaunchFinder();
-            }
+            //if (OsInformation.GetWindowsReleaseVersion() >= 1703)
+            //{
+            //    // Only initialize LaunchFinder on Win10 15063+
+            //    InitializeLaunchFinder();
+            //}
 
             InitializeEstimController();
             InitializeFunstimController();
@@ -3238,16 +3237,16 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        private void InitializeLaunchFinder()
-        {
-            LaunchBluetooth launchController = _controllers.OfType<LaunchBluetooth>().FirstOrDefault();
-            if (launchController != null) return;
+        //private void InitializeLaunchFinder()
+        //{
+        //    LaunchBluetooth launchController = _controllers.OfType<LaunchBluetooth>().FirstOrDefault();
+        //    if (launchController != null) return;
 
-            launchController = new LaunchBluetooth();
-            launchController.DeviceFound += DeviceController_DeviceFound;
-            _controllers.Add(launchController);
-            CanDirectConnectLaunch = true;
-        }
+        //    launchController = new LaunchBluetooth();
+        //    launchController.DeviceFound += DeviceController_DeviceFound;
+        //    _controllers.Add(launchController);
+        //    CanDirectConnectLaunch = true;
+        //}
 
         private void InitializeEstimController()
         {
@@ -4725,18 +4724,18 @@ namespace ScriptPlayer.ViewModels
             return true;
         }
 
-        public void ConnectLaunchDirectly()
-        {
-            if (LaunchBluetooth.IsLaunchPaired())
-            {
-                MessageBox.Show(
-                    "It appears that you have paired your Launch. Since the Launch is a BLE-device, you don't have to pair it to use it - in fact it will probably not work if you do. Unpair your Launch and try again.",
-                    "Launch paired", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+        //public void ConnectLaunchDirectly()
+        //{
+        //    if (LaunchBluetooth.IsLaunchPaired())
+        //    {
+        //        MessageBox.Show(
+        //            "It appears that you have paired your Launch. Since the Launch is a BLE-device, you don't have to pair it to use it - in fact it will probably not work if you do. Unpair your Launch and try again.",
+        //            "Launch paired", MessageBoxButton.OK, MessageBoxImage.Warning);
+        //    }
 
-            LaunchBluetooth controller = _controllers.OfType<LaunchBluetooth>().Single();
-            controller.Start();
-        }
+        //    LaunchBluetooth controller = _controllers.OfType<LaunchBluetooth>().Single();
+        //    controller.Start();
+        //}
 
         private bool CheckHandySettings()
         {

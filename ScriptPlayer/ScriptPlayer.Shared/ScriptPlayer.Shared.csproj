@@ -127,10 +127,6 @@
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="Windows, Version=255.255.255.255, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.17763.0\Windows.winmd</HintPath>
-    </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -265,8 +261,8 @@
     <Compile Include="Helpers\ProcessHelper.cs" />
     <Compile Include="Helpers\ResizeHelper.cs" />
     <Compile Include="Indexer\Indexer.cs" />
-    <Compile Include="Devices\Launch.cs" />
-    <Compile Include="Devices\LaunchBluetooth.cs" />
+    <None Include="Devices\Launch.cs" />
+    <None Include="Devices\LaunchBluetooth.cs" />
     <Compile Include="Beats\Metronome.cs" />
     <Compile Include="Beats\MetronomeAudio.cs" />
     <Compile Include="Helpers\MouseHider.cs" />

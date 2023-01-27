@@ -293,7 +293,7 @@ namespace ScriptPlayer.Generators
 
                 return GeneratorResult.Failed();
             }
-            catch(Exception e)
+            catch(Exception)
             {
                 entry.DoneType = JobDoneTypes.Failure;
                 return GeneratorResult.Failed();

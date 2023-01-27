@@ -300,7 +300,7 @@
                     <MenuItem Header="Show devices" Command="{Binding ShowDeviceManagerCommand}"/>
                     <Separator/>
                     <MenuItem Header="Connect to Handy directly" Command="{Binding ConnectHandyDirectlyCommand}" ToolTipService.ShowOnDisabled="True"/>
-                    <MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" IsEnabled="{Binding CanDirectConnectLaunch}" ToolTipService.ShowOnDisabled="True">
+                    <!--<MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" IsEnabled="{Binding CanDirectConnectLaunch}" ToolTipService.ShowOnDisabled="True">
                         <MenuItem.Header>
                             <TextBlock Text="Connect Launch directly">
                                 <TextBlock.Style>
@@ -324,7 +324,7 @@
                                 </Style.Triggers>
                             </Style>
                         </MenuItem.Style>
-                    </MenuItem>
+                    </MenuItem>-->
                     <MenuItem Header="Add e-stim audio device (experimental)" Command="{Binding AddEstimAudioCommand}">
                     </MenuItem>
                     <MenuItem Header="Add funstim audio device" Command="{Binding AddFunstimAudioCommand}">
