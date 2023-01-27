@@ -879,6 +879,30 @@ namespace ScriptPlayer.VideoSync
             RefreshHeatMap();
         }
 
+
+        private void mnuInsertProject_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog { Filter = "Beat Projects|*.bproj" };
+            if (dialog.ShowDialog(this) != true)
+                return;
+
+            BeatProject project = BeatProject.Load(dialog.FileName);
+
+            TimeSpan currentPos = videoPlayer.TimeSource.Progress;
+
+            foreach (var pos in project.Positions)
+            {
+                var newPos = pos.Duplicate();
+                newPos.TimeStamp += currentPos;
+                Positions.Add(newPos);
+            }
+
+            foreach(long beat in project.Beats)
+                Beats.Add(TimeSpan.FromTicks(beat) + currentPos);
+
+            RefreshHeatMap();
+        }
+
         private string ChangePath(string path, string filename)
         {
             string directory = Path.GetDirectoryName(path);
@@ -3004,6 +3028,7 @@ namespace ScriptPlayer.VideoSync
 
             SetSelectedBeats(selectedBeats);
         }
+
     }
 
     public enum PositionType

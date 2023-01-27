@@ -59,6 +59,7 @@
                     <MenuItem Header="Funscript" Click="mnuLoadFun_Click" />
                     <MenuItem Header="Vorze" Click="mnuLoadVorze_Click" />
                     <MenuItem Header="OTT" Click="mnuLoadOtt_Click" />
+                    <MenuItem Header="Insert Project" Click="mnuInsertProject_Click"/>
                 </MenuItem>
                 <MenuItem Header="Save As">
                     <MenuItem Header="beats.txt" Click="mnuSaveBeats_Click"/>
