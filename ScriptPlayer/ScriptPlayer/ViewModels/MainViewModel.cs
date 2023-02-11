@@ -870,7 +870,7 @@ namespace ScriptPlayer.ViewModels
                             SimpleTcpConnectionSettings settings =
                                 OnRequestSimpleTcpConnectionSettings(new SimpleTcpConnectionSettings()
                                 {
-                                    IpAndPort = DeoVrTimeSource.DefaultEndpoint
+                                    IpAndPort = HereSphereTimeSource.DefaultEndpoint
                                 });
 
                             if (settings == null)
@@ -882,14 +882,14 @@ namespace ScriptPlayer.ViewModels
                             Settings.DeoVrEndpoint = settings.IpAndPort;
                         }
 
-                        TimeSource = new DeoVrTimeSource(
+                        TimeSource = new HereSphereTimeSource(
                             new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
                                 TimeSpan.FromMilliseconds(10)), new SimpleTcpConnectionSettings
                             {
                                 IpAndPort = Settings.DeoVrEndpoint
                             });
 
-                        ((DeoVrTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+                        ((HereSphereTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
 
                         break;
                     }

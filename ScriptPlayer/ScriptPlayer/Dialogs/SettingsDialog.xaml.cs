@@ -513,9 +513,9 @@ namespace ScriptPlayer.Dialogs
             Settings.MpcHcEndpoint = MpcTimeSource.DefaultEndpoint;
         }
 
-        private void BtnDeoVrDefault_Click(object sender, RoutedEventArgs e)
+        private void BtnHereSphereDefault_Click(object sender, RoutedEventArgs e)
         {
-            Settings.DeoVrEndpoint = DeoVrTimeSource.DefaultEndpoint;
+            Settings.DeoVrEndpoint = HereSphereTimeSource.DefaultEndpoint;
         }
 
         private void BtnSelectFallBackScript_Click(object sender, RoutedEventArgs e)

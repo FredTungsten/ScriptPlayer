@@ -690,7 +690,7 @@ namespace ScriptPlayer.Shared.Scripts
                 if (passedIndex > 0)
                     args.RawPreviousAction = _filledActions[passedIndex - 1];
 
-                Debug.WriteLine($"{DateTime.Now:HH:mm:ss.fff}: Action");
+                //Debug.WriteLine($"{DateTime.Now:HH:mm:ss.fff}: Action");
 
                 OnScriptActionRaised(args);
             }

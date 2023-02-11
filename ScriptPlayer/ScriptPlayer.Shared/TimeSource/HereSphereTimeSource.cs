@@ -8,9 +8,9 @@ using Newtonsoft.Json;
 
 namespace ScriptPlayer.Shared
 {
-    public class DeoVrTimeSource : TimeSource, IDisposable
+    public class HereSphereTimeSource : TimeSource, IDisposable
     {
-        public override string Name => "DeoVR";
+        public override string Name => "HereSphere";
         public override bool ShowBanner => true;
         public override string ConnectInstructions => "Not connected.\r\nOpen settings menu in selection scene or file browser. Toggle switch 'Enable remote control'.";
 
@@ -22,14 +22,14 @@ namespace ScriptPlayer.Shared
         private static readonly TimeSpan DisconnectTimeout = TimeSpan.FromSeconds(1.0);
         private static readonly TimeSpan PingDelay = TimeSpan.FromSeconds(1.0);
 
-        private readonly BlockingQueue<DeoVrApiData> _sendQueue = new BlockingQueue<DeoVrApiData>();
+        private readonly BlockingQueue<HereSphereApiData> _sendQueue = new BlockingQueue<HereSphereApiData>();
         private readonly ManualTimeSource _timeSource;
 
         private Thread _sendThread;
         private Thread _receiveThread;
         private TcpClient _client;
         private bool _connected;
-        private DeoVrApiData _previousData;
+        private HereSphereApiData _previousData;
         private SimpleTcpConnectionSettings _connectionSettings;
         private bool _disposed;
 
@@ -47,29 +47,29 @@ namespace ScriptPlayer.Shared
 
         public override void Play()
         {
-            Send(new DeoVrApiData
+            Send(new HereSphereApiData
             {
-                PlayerState = DeoVrPlayerState.Play
+                PlayerState = HereSpherePlayerState.Play
             });
         }
 
         public override void Pause()
         {
-            Send(new DeoVrApiData
+            Send(new HereSphereApiData
             {
-                PlayerState = DeoVrPlayerState.Pause
+                PlayerState = HereSpherePlayerState.Pause
             });
         }
 
         public override void SetPosition(TimeSpan position)
         {
-            Send(new DeoVrApiData
+            Send(new HereSphereApiData
             {
                 CurrentTime = (float)position.TotalSeconds
             });
         }
 
-        public DeoVrTimeSource(ISampleClock clock, SimpleTcpConnectionSettings connectionSettings)
+        public HereSphereTimeSource(ISampleClock clock, SimpleTcpConnectionSettings connectionSettings)
         {
             // Manual TimeSource that will interpolate Timestamps between updates
 
@@ -149,7 +149,7 @@ namespace ScriptPlayer.Shared
             _receiveThread.Start(stream);
         }
 
-        public void Send(DeoVrApiData newData)
+        public void Send(HereSphereApiData newData)
         {
             if (!_connected)
                 return;
@@ -261,7 +261,7 @@ namespace ScriptPlayer.Shared
                     }
 
                     string jsonMsg = Encoding.UTF8.GetString(buffer, headerLength, messageLength);
-                    DeoVrApiData data = JsonConvert.DeserializeObject<DeoVrApiData>(jsonMsg);
+                    HereSphereApiData data = JsonConvert.DeserializeObject<HereSphereApiData>(jsonMsg);
 
                     if (data == null)
                         continue;
@@ -280,7 +280,7 @@ namespace ScriptPlayer.Shared
             }
         }
 
-        private void InterpretData(DeoVrApiData data)
+        private void InterpretData(HereSphereApiData data)
         {
             if (data == null)
                 return;
@@ -320,7 +320,7 @@ namespace ScriptPlayer.Shared
             {
                 Debug.WriteLine("New PlayerState: " + data.PlayerState);
 
-                bool isPlaying = (data.PlayerState == DeoVrPlayerState.Play);
+                bool isPlaying = (data.PlayerState == HereSpherePlayerState.Play);
                 if (_timeSource.IsPlaying != isPlaying)
                 {
                     if (isPlaying)
@@ -362,8 +362,8 @@ namespace ScriptPlayer.Shared
             {
                 while (_connected)
                 {
-                    DeoVrApiData data = _sendQueue.Dequeue(PingDelay);
-                    Debug.WriteLine("Sending data to DeoVR");
+                    HereSphereApiData data = _sendQueue.Dequeue(PingDelay);
+                    Debug.WriteLine("Sending data to HereSphere");
                     SendData(data, stream);
                 }
 
@@ -379,7 +379,7 @@ namespace ScriptPlayer.Shared
             }
         }
 
-        private void SendData(DeoVrApiData data, Stream stream)
+        private void SendData(HereSphereApiData data, Stream stream)
         {
             if (_disposed || !_connected)
                 return;
@@ -420,7 +420,7 @@ namespace ScriptPlayer.Shared
     }
 
     [Serializable]
-    public class DeoVrApiData
+    public class HereSphereApiData
     {
         [JsonProperty("path")]
         public string Path;
@@ -435,10 +435,10 @@ namespace ScriptPlayer.Shared
         public float? PlaybackSpeed;
 
         [JsonProperty("playerState")]
-        public DeoVrPlayerState? PlayerState;
+        public HereSpherePlayerState? PlayerState;
     }
 
-    public enum DeoVrPlayerState
+    public enum HereSpherePlayerState
     {
         Play = 0,
         Pause = 1

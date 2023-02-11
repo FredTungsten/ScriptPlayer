@@ -445,10 +445,10 @@
                                 <CheckBox IsChecked="{Binding Settings.UrlDecodeFilenames}" Margin="20,10,4,4">Enable Url Decoding</CheckBox>
                             </StackPanel>
                             <StackPanel>
-                                <TextBlock Text="DeoVR" FontWeight="Bold" Margin="0,10,0,0"/>
+                                <TextBlock Text="HereSphere" FontWeight="Bold" Margin="0,10,0,0"/>
                                 <DockPanel>
                                     <TextBlock Width="80" HorizontalAlignment="Left" Margin="20,4,4,4" TextWrapping="Wrap" Text="IP : Port" VerticalAlignment="Center"/>
-                                    <Button DockPanel.Dock="Right"  Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnDeoVrDefault_Click"/>
+                                    <Button DockPanel.Dock="Right"  Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnHereSphereDefault_Click"/>
                                     <TextBox Text="{Binding Settings.DeoVrEndpoint}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                 </DockPanel>
                             </StackPanel>
