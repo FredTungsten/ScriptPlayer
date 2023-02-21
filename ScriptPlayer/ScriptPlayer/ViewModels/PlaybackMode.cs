@@ -10,6 +10,7 @@ namespace ScriptPlayer.ViewModels
         SamsungVr,
         ZoomPlayer,
         Kodi,
-        DeoVr
+        DeoVr,
+        GoProVrPlayer
     }
 }

@@ -163,6 +163,9 @@
     <Compile Include="Dialogs\AudioDeviceSelector.xaml.cs">
       <DependentUpon>AudioDeviceSelector.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\GoProVrPlayerConnectionSettingsDialog.xaml.cs">
+      <DependentUpon>GoProVrPlayerConnectionSettingsDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\HandyDeviceIdSettingsDialog.xaml.cs">
       <DependentUpon>HandyDeviceIdSettingsDialog.xaml</DependentUpon>
     </Compile>
@@ -354,6 +357,10 @@
     <Page Include="Dialogs\GeneratorSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\GoProVrPlayerConnectionSettingsDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialogs\HandyDeviceIdSettingsDialog.xaml">
       <SubType>Designer</SubType>

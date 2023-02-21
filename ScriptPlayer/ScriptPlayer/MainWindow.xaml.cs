@@ -76,6 +76,7 @@ namespace ScriptPlayer
             ViewModel.RequestWhirligigConnectionSettings += ViewModelOnRequestWhirligigConnectionSettings;
             ViewModel.RequestSimpleTcpConnectionSettings += ViewModelOnRequestSimpleTcpConnectionSettings;
             ViewModel.RequestSamsungVrConnectionSettings += ViewModelOnRequestSamsungVrConnectionSettings;
+            ViewModel.RequestGoProVrPlayerConnectionSettings += ViewModelOnRequestGoProVrPlayerConnectionSettings;
             ViewModel.RequestKodiConnectionSettings += ViewModelOnRequestKodiConnectionSettings;
             ViewModel.RequestGetWindowState += ViewModelOnRequestGetWindowState;
             ViewModel.RequestThumbnailGeneratorSettings += ViewModelOnRequestThumbnailGeneratorSettings;
@@ -412,6 +413,19 @@ namespace ScriptPlayer
                 UdpPort = dialog.UdpPort
             };
         }
+
+        private void ViewModelOnRequestGoProVrPlayerConnectionSettings(object sender, RequestEventArgs<GoProVrPlayerConnectionSettings> args)
+        {
+            GoProVrPlayerConnectionSettingsDialog dialog = new GoProVrPlayerConnectionSettingsDialog(args.Value.UdpPort) { Owner = this };
+            if (dialog.ShowDialog() != true) return;
+
+            args.Handled = true;
+            args.Value = new GoProVrPlayerConnectionSettings
+            {
+                UdpPort = dialog.UdpPort
+            };
+        }
+
         private void ViewModelOnRequestWhirligigConnectionSettings(object sender, RequestEventArgs<WhirligigConnectionSettings> args)
         {
             WhirligigConnectionSettingsDialog dialog = new WhirligigConnectionSettingsDialog(args.Value.IpAndPort) { Owner = this };
