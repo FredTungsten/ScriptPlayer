@@ -19,7 +19,7 @@ namespace ScriptPlayer.Shared
     {
         public override string Name => "GoPro VR Player";
         public override bool ShowBanner => true;
-        public override string ConnectInstructions => "Not connected.\r\nStart GoPro VR Player and go to File -> Preferences -> PRIMARY/SECONDARY and set: \r\n Communication mode:primary \r\n IP address: localhost \r\n IP Packet format: JSON";
+        public override string ConnectInstructions => "Not connected.\r\nStart GoPro VR Player (v 3.0.5) and go to File -> Preferences -> PRIMARY/SECONDARY and set: \r\n Communication mode: Primary \r\n IP address: localhost \r\n Port: 7755 (default) \r\n IP Packet format: JSON";
 
         private GoProVrPlayerConnectionSettings _connectionSettings;
 
@@ -215,27 +215,54 @@ namespace ScriptPlayer.Shared
                 command = "pause";
                 Console.WriteLine("PAUSE  !!!!!!!!!!");
             }
+
+
+            if (receivedState == 2 && currentState == 2)  //if is 'paused' and receive 'pause'
+            {
+                command = "pause";
+                //Console.WriteLine("PAUSE2  !!!!!!!!!!");
+            }
+
             currentState = receivedState;
 
             if(filenameReveiced != openedFilename) //if filename changed
             {
                 command = "load";
                 Console.WriteLine("LOAD!!!!!!!!!!!!");
+                //this.lastPositionreceived = 0;
             }
 
             if (currentPositionReceived < this.lastPositionreceived) //if backward
             {
-                command = "seekTo";
-                Console.WriteLine("SEEKTO!!!!!!!!!!!!");
+                if(command == "load")
+                {
+                    command = "loadAndseek";
+                    Console.WriteLine("LOAD AND SEEK backward!!!!!!!!!!!!");
+                }
+                else
+                {
+                    command = "seekTo";
+                    Console.WriteLine("SEEKTO backward!!!!!!!!!!!!");
+                }
+
             }
 
             if (currentPositionReceived > this.lastPositionreceived) //if forward
             {
                 if(currentPositionReceived - this.lastPositionreceived > 600) /* if forward more than 600ms (test optimal values) */
                 {
-                    command = "seekTo";
-                    Console.WriteLine(currentPositionReceived - this.lastPositionreceived);
-                    Console.WriteLine("SEEKTO!!!!!!!!!!!!");
+                    if (command == "load")
+                    {
+                        command = "loadAndseek";
+                        Console.WriteLine("LOAD AND SEEK Forward!!!!!!!!!!!!");
+                    }
+                    else
+                    {
+                        command = "seekTo";
+                        Console.WriteLine(currentPositionReceived - this.lastPositionreceived);
+                        Console.WriteLine("SEEKTO Forward!!!!!!!!!!!!");
+                    }
+
                 }
 
             }
@@ -250,7 +277,7 @@ namespace ScriptPlayer.Shared
                     }
                 case "play":
                     {
-                        Console.WriteLine("option play!!!!!");
+                        //Console.WriteLine("option play!!!!!");
                         _timeSource.Play();
                         break;
                     }
@@ -290,12 +317,31 @@ namespace ScriptPlayer.Shared
                         _timeSource.SetPosition(position);
                         break;
                     }
-                /*case "headpos2":
+
+                case "loadAndseek":
                     {
-                        outputCommand = false;
+                        Console.WriteLine("load file: " + filenameReveiced);
+                        openedFilename = filenameReveiced;
+                        OnFileOpened(filenameReveiced);
+                        _timeSource.Play();
+
+                        TimeSpan position = TimeSpan.FromMilliseconds(currentPositionReceived);
+                        this.lastPositionreceived = currentPositionReceived;
+
+                        if (position == _lastReceivedTimestamp)
+                            return;
+
+                        _lastReceivedTimestamp = position;
+                        _timeSource.SetPosition(position);
+
                         break;
                     }
-                */
+                    /*case "headpos2":
+                        {
+                            outputCommand = false;
+                            break;
+                        }
+                    */
             }
 
             this.lastPositionreceived = currentPositionReceived;
