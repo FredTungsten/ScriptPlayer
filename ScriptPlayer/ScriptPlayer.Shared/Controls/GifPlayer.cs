@@ -470,6 +470,44 @@ namespace ScriptPlayer.Shared
 
         private readonly object _cancelLocker = new object();
 
+        public static ImageSource LoadFirst(Stream stream)
+        {
+            GifBitmapDecoder decoder = new GifBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
+
+            int pixelWidth = decoder.Frames[0].PixelWidth;
+            int pixelHeight = decoder.Frames[0].PixelHeight;
+
+            BitmapFrame frame = decoder.Frames[0];
+            BitmapMetadata metadata = frame.Metadata as BitmapMetadata;
+
+            ushort left = (ushort)metadata.GetQuery("/imgdesc/Left");
+            ushort top = (ushort)metadata.GetQuery("/imgdesc/Top");
+            int width = frame.PixelWidth;
+            int height = frame.PixelHeight;
+
+            GifFrame gifFrame = new GifFrame
+            {
+                CompleteImage = null,
+                Height = height,
+                Left = left,
+                Top = top,
+                Width = width,
+            };
+            
+            BitmapFrame bitmapFrame = decoder.Frames[0];
+
+            DrawingVisual drawingVisual = new DrawingVisual();
+            using (DrawingContext dc = drawingVisual.RenderOpen())
+            {
+                dc.DrawImage(bitmapFrame, gifFrame.PartialRect);
+            }
+
+            RenderTargetBitmap bitmap = new RenderTargetBitmap(pixelWidth, pixelHeight, 96, 96, PixelFormats.Pbgra32);
+            bitmap.Render(drawingVisual);
+            bitmap.Freeze();
+
+            return bitmap;
+        }
 
         private void Load(Stream stream, CancellationToken sourceToken)
         {

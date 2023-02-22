@@ -19,6 +19,7 @@ namespace ScriptPlayer.ViewModels
         private DateTime _mediaCreationTime;
         private DateTime _scriptCreationTime;
         private bool _playing;
+        private ImageSource _preview;
 
         public PlaylistEntry()
         {
@@ -141,6 +142,17 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public ImageSource Preview  
+        {
+            get => _preview;
+            set
+            {
+                if (Equals(value, _preview)) return;
+                _preview = value;
+                OnPropertyChanged();
+            }
+        }
+
         public void UpdateStatus()
         {
             Status = HasMedia && HasScript ? PlaylistEntryStatus.FilesOk : PlaylistEntryStatus.MissingFile;
@@ -151,6 +163,7 @@ namespace ScriptPlayer.ViewModels
             Status = PlaylistEntryStatus.Loading;
             Duration = null;
             HeatMap = null;
+            Preview = null;
         }
 
         public bool HasScript

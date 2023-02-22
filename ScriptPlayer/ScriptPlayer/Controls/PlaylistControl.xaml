@@ -90,6 +90,10 @@
                 <Separator/>
                 <MenuItem Header="Shuffle" Command="{Binding Playlist.SortShuffleCommand}"/>
             </MenuItem>
+            <MenuItem Header="Style">
+                <MenuItem Header="List" Command="{Binding Playlist.SetViewStyleCommand}" CommandParameter="{x:Static viewModels:PlaylistViewStyle.List}"></MenuItem>
+                <MenuItem Header="Tiles" Command="{Binding Playlist.SetViewStyleCommand}" CommandParameter="{x:Static viewModels:PlaylistViewStyle.Tiles}"></MenuItem>
+            </MenuItem>
         </Menu>
 
         <TextBox x:Name="txtSearch" Text="{Binding Path=Playlist.Filter, UpdateSourceTrigger=PropertyChanged}" Height="22" Margin="10,10,10,0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top"/>
@@ -98,49 +102,132 @@
         <ListBox MaxHeight="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Grid}}, Path=ActualHeight}" x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,41,10,77" 
                  ItemsSource="{Binding Path=Playlist.FilteredEntries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" SelectionChanged="LstEntries_OnSelectionChanged" 
                  AllowDrop="True" Drop="ListBox_Drop" SelectionMode="Extended">
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
+            <ListBox.Style>
+                <Style TargetType="ListBox">
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
-                    <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
-                    <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
-                    <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"></Setter>
-                    <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:PlaylistControl}, Path=DataContext}"/>
-                    <Setter Property="ToolTip" Value="{StaticResource EntryToolTip}"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Path=Playlist.ViewStyle}" Value="{x:Static viewModels:PlaylistViewStyle.List}">
+                            <Setter Property="ItemContainerStyle">
+                                <Setter.Value>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
+                                        <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                                        <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"></Setter>
+                                        <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:PlaylistControl}, Path=DataContext}"/>
+                                        <Setter Property="ToolTip" Value="{StaticResource EntryToolTip}"/>
+                                    </Style>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="ItemTemplate">
+                                <Setter.Value>
+
+                                    <DataTemplate DataType="viewModels:PlaylistEntry">
+                                        <DockPanel HorizontalAlignment="Stretch">
+                                            <DockPanel.Style>
+                                                <Style TargetType="FrameworkElement">
+                                                    <Style.Setters>
+                                                        <Setter Property="TextElement.Foreground" Value="DimGray"/>
+                                                    </Style.Setters>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.Loading}">
+                                                            <Setter Property="TextElement.Foreground" Value="DimGray"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.FilesOk}">
+                                                            <Setter Property="TextElement.Foreground" Value="Black"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.MissingFile}">
+                                                            <Setter Property="TextElement.Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Playing}" Value="True">
+                                                            <Setter Property="TextElement.FontWeight" Value="Bold"></Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </DockPanel.Style>
+                                            <Grid Background="Black" DockPanel.Dock="Right" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="100" Visibility="{Binding Converter={StaticResource booleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:PlaylistControl}}, Path=ShowHeatmap}">
+                                                <Image Source="{Binding HeatMap}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
+                                            </Grid>
+                                            <TextBlock Text="{Binding Path=Duration, Converter={StaticResource DurationConverter}}" DockPanel.Dock="Right" Margin="8,0,2,0" />
+                                            <TextBlock Text="{Binding Shortname}" DockPanel.Dock="Left" TextTrimming="CharacterEllipsis"  Margin="2,0,0,0"/>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding Path=Playlist.ViewStyle}" Value="{x:Static viewModels:PlaylistViewStyle.Tiles}">
+                            <Setter Property="ItemsPanel">
+                                <Setter.Value>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel ItemWidth="150"/>
+                                    </ItemsPanelTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="ItemContainerStyle">
+                                <Setter.Value>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
+                                        <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                                        <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"></Setter>
+                                        <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:PlaylistControl}, Path=DataContext}"/>
+                                        <Setter Property="ToolTip" Value="{StaticResource EntryToolTip}"/>
+                                    </Style>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="ItemTemplate">
+                                <Setter.Value>
+
+                                    <DataTemplate DataType="viewModels:PlaylistEntry">
+                                        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                            <Grid.Style>
+                                                <Style TargetType="FrameworkElement">
+                                                    <Style.Setters>
+                                                        <Setter Property="TextElement.Foreground" Value="DimGray"/>
+                                                    </Style.Setters>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.Loading}">
+                                                            <Setter Property="TextElement.Foreground" Value="DimGray"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.FilesOk}">
+                                                            <Setter Property="TextElement.Foreground" Value="Black"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.MissingFile}">
+                                                            <Setter Property="TextElement.Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Playing}" Value="True">
+                                                            <Setter Property="TextElement.FontWeight" Value="Bold"></Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Grid.Style>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Grid Grid.Row="0" Grid.ColumnSpan="2"  Width="150" Height="85" Background="Black" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                                <Image RenderOptions.BitmapScalingMode="HighQuality" Stretch="Uniform" Source="{Binding Path=Preview}"></Image>
+                                            </Grid>
+                                            <Grid Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="0" Background="Black" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="16">
+                                                <Image Source="{Binding HeatMap}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
+                                            </Grid>
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding Shortname}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Path=Duration, Converter={StaticResource DurationConverter}}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
                 </Style>
-            </ListBox.ItemContainerStyle>
-            <ListBox.ItemTemplate>
-                <DataTemplate DataType="viewModels:PlaylistEntry">
-                    <DockPanel HorizontalAlignment="Stretch">
-                        <DockPanel.Style>
-                            <Style TargetType="FrameworkElement">
-                                <Style.Setters>
-                                    <Setter Property="TextElement.Foreground" Value="DimGray"/>
-                                </Style.Setters>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.Loading}">
-                                        <Setter Property="TextElement.Foreground" Value="DimGray"/>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.FilesOk}">
-                                        <Setter Property="TextElement.Foreground" Value="Black"/>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Status}" Value="{x:Static viewModels:PlaylistEntryStatus.MissingFile}">
-                                        <Setter Property="TextElement.Foreground" Value="Red"/>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Playing}" Value="True">
-                                        <Setter Property="TextElement.FontWeight" Value="Bold"></Setter>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DockPanel.Style>
-                        <Grid Background="Black" DockPanel.Dock="Right" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="100" Visibility="{Binding Converter={StaticResource booleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:PlaylistControl}}, Path=ShowHeatmap}">
-                            <Image Source="{Binding HeatMap}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
-                        </Grid>
-                        <TextBlock Text="{Binding Path=Duration, Converter={StaticResource DurationConverter}}" DockPanel.Dock="Right" Margin="8,0,2,0" />
-                        <TextBlock Text="{Binding Shortname}" DockPanel.Dock="Left" TextTrimming="CharacterEllipsis"  Margin="2,0,0,0"/>
-                    </DockPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
+            </ListBox.Style>
         </ListBox>
 
         <TextBlock Grid.Row="1" Grid.Column="0" Margin="10,0,10,37" Height="35" VerticalAlignment="Bottom">

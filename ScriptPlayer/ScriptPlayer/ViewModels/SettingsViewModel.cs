@@ -260,6 +260,7 @@ namespace ScriptPlayer.ViewModels
         private bool _urlDecodeFilenames;
         private bool _subtitlesEnabled;
         private string _subtitleFormatPreference;
+        private PlaylistViewStyle _playlistViewStyle;
 
         public SettingsViewModel()
         {
@@ -428,6 +429,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _randomChapters) return;
                 _randomChapters = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public PlaylistViewStyle PlaylistViewStyle
+        {
+            get => _playlistViewStyle;
+            set
+            {
+                if (value == _playlistViewStyle) return;
+                _playlistViewStyle = value;
                 OnPropertyChanged();
             }
         }

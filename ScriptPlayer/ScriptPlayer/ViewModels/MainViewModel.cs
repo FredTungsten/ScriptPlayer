@@ -326,7 +326,7 @@ namespace ScriptPlayer.ViewModels
         private AudioFileTimeSource _audioHandler;
         private string _loadedAudio;
         private Geometry _heatMapBounds;
-
+        
         public ObservableCollection<IDevice> Devices => _devices;
 
         public TimeSpan PositionsViewport
@@ -489,6 +489,7 @@ namespace ScriptPlayer.ViewModels
                 Playlist.RequestVideoFileName += Playlist_RequestVideoFileName;
                 Playlist.RequestScriptFileName += Playlist_RequestScriptFileName;
                 Playlist.RequestHeatmapFileName += PlaylistOnRequestHeatmapFileName;
+                Playlist.RequestPreviewFileName += PlaylistOnRequestPreviewFileName;
                 Playlist.RequestAllRelatedFiles += PlaylistOnRequestAllRelatedFiles;
 
                 Playlist.RequestRenameFile += PlaylistOnRequestRenameFile;
@@ -512,6 +513,7 @@ namespace ScriptPlayer.ViewModels
             Playlist.Repeat = Settings.RepeatPlaylist;
             Playlist.RandomChapters = Settings.RandomChapters;
             Playlist.Shuffle = Settings.ShufflePlaylist;
+            Playlist.ViewStyle = Settings.PlaylistViewStyle;
 
             InitializePlaylistCommands(Playlist);
 
@@ -619,9 +621,18 @@ namespace ScriptPlayer.ViewModels
         private void PlaylistOnRequestHeatmapFileName(object sender, RequestEventArgs<string> e)
         {
             e.Handled = true;
-            e.Value = GetRelatedFile(e.Value, new[] {"png"});
+            e.Value = GetRelatedFile(e.Value, new[] { "png" });
         }
 
+        private void PlaylistOnRequestPreviewFileName(object sender, RequestEventArgs<string> e)
+        {
+            e.Handled = true;
+            e.Value = GetRelatedFile(e.Value, new[] { "gif" });
+        }
+
+        /// <summary>
+        /// Transfer certain playlist properties to the general settings
+        /// </summary>
         private void PlaylistOnPropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
         {
             switch (eventArgs.PropertyName)
@@ -646,6 +657,11 @@ namespace ScriptPlayer.ViewModels
                         Settings.RandomChapters = Playlist.RandomChapters;
                         if (!Playlist.RandomChapters)
                             SelectedRange = null;
+                        break;
+                    }
+                case nameof(PlaylistViewModel.ViewStyle):
+                    {
+                        Settings.PlaylistViewStyle = Playlist.ViewStyle;
                         break;
                     }
             }
@@ -1737,6 +1753,7 @@ namespace ScriptPlayer.ViewModels
             UpdatePlaylistRepeat();
             UpdatePlaylistRepeatSingleFile();
             UpdatePlaylistRandomChapter();
+            UpdatePlaylistViewStyle();
             UpdateFillGaps();
             UpdateFallbackScriptModifiers();
             UpdateHeatMap();
@@ -1747,6 +1764,12 @@ namespace ScriptPlayer.ViewModels
             UpdateHandySettings();
             ReloadAudio();
             ReloadSubtitles();
+        }
+
+        private void UpdatePlaylistViewStyle()
+        {
+            if (Playlist == null) return;
+            Playlist.ViewStyle = Settings.PlaylistViewStyle;
         }
 
         private void UpdatePlaylistRandomChapter()
@@ -1830,6 +1853,11 @@ namespace ScriptPlayer.ViewModels
                 case nameof(SettingsViewModel.RandomChapters):
                     {
                         UpdatePlaylistRandomChapter();
+                        break;
+                    }
+                case nameof(SettingsViewModel.PlaylistViewStyle):
+                    {
+                        UpdatePlaylistViewStyle();
                         break;
                     }
                 case nameof(SettingsViewModel.RangeExtender):
