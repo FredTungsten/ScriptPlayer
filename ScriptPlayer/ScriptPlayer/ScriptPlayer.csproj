@@ -143,6 +143,7 @@
     <Compile Include="Controls\VideoDetailsPreview.xaml.cs">
       <DependentUpon>VideoDetailsPreview.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\VirtualizingWrapPanel.cs" />
     <Compile Include="Converters\AlternativeValueConverter.cs" />
     <Compile Include="Converters\InverterConverter.cs" />
     <Compile Include="Dialogs\CompactControlWindow.xaml.cs">

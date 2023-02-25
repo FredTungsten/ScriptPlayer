@@ -40,6 +40,26 @@
         <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static ToolBar.CheckBoxStyleKey}}">
             <Setter Property="Focusable" Value="False"/>
         </Style>
+
+        <Style TargetType="ListBoxItem" x:Key="TileItemStyle">
+            <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
+            <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
+            <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+            <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"></Setter>
+            <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:PlaylistControl}, Path=DataContext}"/>
+            <Setter Property="ToolTip" Value="{StaticResource EntryToolTip}"/>
+        </Style>
+
+        <Style TargetType="ListBoxItem" x:Key="ListItemStyle">
+            <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
+            <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
+            <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+            <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"></Setter>
+            <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:PlaylistControl}, Path=DataContext}"/>
+            <Setter Property="ToolTip" Value="{StaticResource EntryToolTip}"/>
+        </Style>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -101,24 +121,14 @@
         <!-- The MaxHeight Binding resolves an unbelievably stupid perforamnce issue. Even though the Stackpanel that layouts the ListBoxItems is virtualized, every single Element is layouted (for the Height!) -->
         <ListBox MaxHeight="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Grid}}, Path=ActualHeight}" x:Name="lstEntries" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="10,41,10,77" 
                  ItemsSource="{Binding Path=Playlist.FilteredEntries}" SelectedItem="{Binding Path=Playlist.SelectedEntry, Mode=TwoWay}" SelectionChanged="LstEntries_OnSelectionChanged" 
-                 AllowDrop="True" Drop="ListBox_Drop" SelectionMode="Extended">
+                 AllowDrop="True" Drop="ListBox_Drop" SelectionMode="Extended"
+                 >
             <ListBox.Style>
                 <Style TargetType="ListBox">
                     <EventSetter Event="MouseDoubleClick" Handler="PlaylistEntry_DoubleClicked"/>
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding Path=Playlist.ViewStyle}" Value="{x:Static viewModels:PlaylistViewStyle.List}">
-                            <Setter Property="ItemContainerStyle">
-                                <Setter.Value>
-                                    <Style TargetType="ListBoxItem">
-                                        <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
-                                        <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
-                                        <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"></Setter>
-                                        <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:PlaylistControl}, Path=DataContext}"/>
-                                        <Setter Property="ToolTip" Value="{StaticResource EntryToolTip}"/>
-                                    </Style>
-                                </Setter.Value>
-                            </Setter>
+                            <Setter Property="ItemContainerStyle" Value="{StaticResource ListItemStyle}"/>
                             <Setter Property="ItemTemplate">
                                 <Setter.Value>
 
@@ -160,25 +170,14 @@
                             <Setter Property="ItemsPanel">
                                 <Setter.Value>
                                     <ItemsPanelTemplate>
-                                        <WrapPanel ItemWidth="150"/>
+                                        <!--<local:VirtualizingWrapPanel ItemWidth="150" ItemHeight="121"/>-->
+                                        <WrapPanel ItemWidth="150" ItemHeight="121"/>
                                     </ItemsPanelTemplate>
                                 </Setter.Value>
                             </Setter>
-                            <Setter Property="ItemContainerStyle">
-                                <Setter.Value>
-                                    <Style TargetType="ListBoxItem">
-                                        <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
-                                        <Setter Property="ToolTipService.ShowDuration" Value="60000"/>
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
-                                        <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"></Setter>
-                                        <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:PlaylistControl}, Path=DataContext}"/>
-                                        <Setter Property="ToolTip" Value="{StaticResource EntryToolTip}"/>
-                                    </Style>
-                                </Setter.Value>
-                            </Setter>
+                            <Setter Property="ItemContainerStyle" Value="{StaticResource TileItemStyle}"/>
                             <Setter Property="ItemTemplate">
                                 <Setter.Value>
-
                                     <DataTemplate DataType="viewModels:PlaylistEntry">
                                         <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                             <Grid.Style>
