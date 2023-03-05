@@ -316,12 +316,12 @@ namespace ScriptPlayer.Shared
             UpdateMouseHider();
         }
 
-        public void Open(string filename)
+        public async void Open(string filename)
         {
-            Open(filename, TimeSpan.Zero, TimeSpan.Zero);
+            await Open(filename, TimeSpan.Zero, TimeSpan.Zero);
         }
 
-        public async void Open(string filename, TimeSpan startAt, TimeSpan duration)
+        public async Task Open(string filename, TimeSpan startAt, TimeSpan duration)
         {
             if (!File.Exists(filename)) return;
 

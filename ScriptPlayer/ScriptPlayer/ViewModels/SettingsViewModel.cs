@@ -93,6 +93,17 @@ namespace ScriptPlayer.ViewModels
         private string _kodiUser;
         private string _kodiPassword;
 
+        public bool WaitForDevicesToLoad
+        {
+            get => _waitForDevicesToLoad;
+            set
+            {
+                if (value == _waitForDevicesToLoad) return;
+                _waitForDevicesToLoad = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string HandyDeviceId 
         {
             get => _handyDeviceId;
@@ -261,6 +272,7 @@ namespace ScriptPlayer.ViewModels
         private bool _subtitlesEnabled;
         private string _subtitleFormatPreference;
         private PlaylistViewStyle _playlistViewStyle;
+        private bool _waitForDevicesToLoad;
 
         public SettingsViewModel()
         {
