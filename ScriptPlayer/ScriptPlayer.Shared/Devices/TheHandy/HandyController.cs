@@ -41,11 +41,11 @@ namespace ScriptPlayer.Shared.TheHandy
 
         public bool Connected { get; private set; }
 
-        private bool IsScriptLoaded { get; set; }
+
+        public event EventHandler ScriptLoaded;
 
         private long _offsetAverage; // holds calculated offset that gets added to current unix time in ms to estimate api server time
-
-
+        
         private TimeSpan _currentTime = TimeSpan.FromSeconds(0);
         private bool _playing;
 
@@ -68,6 +68,11 @@ namespace ScriptPlayer.Shared.TheHandy
         private HandyHost _host;
         private DateTime _lastTimeAdjustement = DateTime.MinValue;
         private DateTime _lastResync = DateTime.Now;
+        private bool _shouldBePlaying;
+
+
+        private bool _isScriptLoadedOnDevice;
+        private string _scriptTitle;
 
         public void UpdateSettings(string deviceId, HandyHost host, string localIp, int localPort)
         {
@@ -301,8 +306,28 @@ namespace ScriptPlayer.Shared.TheHandy
             }
         }
 
+        public bool IsScriptLoaded(string title)
+        {
+            return _scriptTitle == title && IsScriptLoaded();
+        }
+
+        public bool IsScriptLoaded()
+        {
+            return _isScriptLoadedOnDevice;
+        }
+
+        public void ClearScript()
+        {
+            _scriptTitle = "";
+            Play(false, TimeSpan.Zero);
+            _isScriptLoadedOnDevice = false;
+        }
+
         public void SetScript(string scriptTitle, IEnumerable<FunScriptAction> actions)
         {
+            ClearScript();
+
+            _scriptTitle = scriptTitle;
             string csvData = GenerateCsvFromActions(actions.ToList());
             long scriptSize = Encoding.UTF8.GetByteCount(csvData);
 
@@ -320,7 +345,6 @@ namespace ScriptPlayer.Shared.TheHandy
                     case HandyHost.Local:
                         {
                             LocalScriptServer.LoadedScript = csvData;
-                            IsScriptLoaded = true;
                             scriptUrl = $"{LocalScriptServer.ScriptHostUrl}{filename}.csv";
                             break;
                         }
@@ -331,7 +355,6 @@ namespace ScriptPlayer.Shared.TheHandy
                             if (response.success)
                             {
                                 scriptUrl = response.url;
-                                IsScriptLoaded = true;
                             }
                             else
                             {
@@ -347,7 +370,7 @@ namespace ScriptPlayer.Shared.TheHandy
                 SetSyncMode();
                 SyncPrepare(new HandyPrepare
                 {
-                    name = filename,// scriptTitle,
+                    name = filename,// _scriptTitle,
                     url = scriptUrl,
                     size = (int)scriptSize,
                     timeout = 20000
@@ -358,7 +381,7 @@ namespace ScriptPlayer.Shared.TheHandy
                 Debug.WriteLine("Failed to load script larger than 1MB");
                 OnOsdRequest("The script is to large for the Handy.", TimeSpan.FromSeconds(10), "TheHandyScriptError");
 
-                IsScriptLoaded = false;
+                _isScriptLoadedOnDevice = false;
 
                 if (_host == HandyHost.Local)
                     LocalScriptServer.LoadedScript = null;
@@ -462,8 +485,7 @@ namespace ScriptPlayer.Shared.TheHandy
                 _resetOffsetTask = true;
                 if (!_updateOffsetTask?.IsCompleted ?? false)
                     return;
-
-
+                
                 //Set value must be stable
                 TimeSpan preSleep = TimeSpan.FromMilliseconds(200);
 
@@ -522,16 +544,8 @@ namespace ScriptPlayer.Shared.TheHandy
         public static string GenerateCsvFromActions(List<FunScriptAction> actions)
         {
             StringBuilder builder = new StringBuilder(1024 * 1024);
-            //builder.Append(@"""{""""type"""":""""handy""""}"",");
             builder.Append("#");
-
-            //ScaleScript(actions);
-
-            //bool wiggle = true;
-
-            //if (wiggle)
-            //    WiggleScript(actions);
-
+            
             foreach (FunScriptAction action in actions)
             {
                 builder.Append($"\n{action.TimeStamp.TotalMilliseconds:F0},{action.Position}");
@@ -539,31 +553,9 @@ namespace ScriptPlayer.Shared.TheHandy
             return builder.ToString();
         }
 
-        private static void WiggleScript(List<FunScriptAction> actions)
-        {
-            TimeSpan minWiggle = TimeSpan.FromMilliseconds(100);
-            TimeSpan maxWiggle = TimeSpan.FromSeconds(4.5);
-
-
-            for (int i = 1; i < actions.Count; i++)
-            {
-                var previous = actions[i - 1];
-                var current = actions[i];
-
-                if (previous.Position != current.Position)
-                    continue;
-
-                TimeSpan duration = current.TimeStamp - previous.TimeStamp;
-                if (duration < minWiggle || duration > maxWiggle)
-                    continue;
-
-                current.Position = (byte) (current.Position > 0 ? current.Position - 1 : 1);
-            }
-        }
-
         public void Resync(TimeSpan time)
         {
-            if (IsScriptLoaded && _playing)
+            if (_isScriptLoadedOnDevice && _playing)
             {
                 TimeSpan diff = (EstimateCurrentTime() - time).Abs();
 
@@ -585,7 +577,7 @@ namespace ScriptPlayer.Shared.TheHandy
 
         private void ResyncNow(TimeSpan time, bool hard)
         {
-            if (!IsScriptLoaded)
+            if (!_isScriptLoadedOnDevice)
                 return;
 
             if (hard)
@@ -614,7 +606,7 @@ namespace ScriptPlayer.Shared.TheHandy
 
         private void AfterHardSync(HandyResponse handyResponse)
         {
-            if (_playing)
+            if (_playing || _shouldBePlaying)
                 SyncPlay(true, EstimateCurrentTime(), null);
             else
                 Debug.WriteLine("HandyController.AfterHardSync, but _playing = false");
@@ -673,22 +665,30 @@ namespace ScriptPlayer.Shared.TheHandy
 
         private void SyncPrepareFinished(HandyResponse resp)
         {
+            _isScriptLoadedOnDevice = true;
             TimeSpan time = EstimateCurrentTime();
             Debug.WriteLine($"success: (SyncPrepare), resyncing @ " + time.ToString("g"));
             OnOsdRequest("Handy finished downloading Script", TimeSpan.FromSeconds(3), "Handy");
+            OnScriptLoaded();
             ResyncNow(time, true);
         }
 
         public void Play(bool playing, TimeSpan progress)
         {
             Debug.WriteLine($"HandyController.Play: {playing} @ {progress}");
-            if (playing == _playing || !IsScriptLoaded)
-            {
-                if(playing == _playing)
-                    Debug.WriteLine("HandyController.Play, but playing == _playing");
-                else
-                    Debug.WriteLine("HandyController.Play, but !IsScriptLoading");
 
+            bool wasAlreadyPlayingRight = _shouldBePlaying == playing;
+            _shouldBePlaying = playing;
+            
+            if (!_isScriptLoadedOnDevice)
+            {
+                Debug.WriteLine("HandyController.Play, but !IsScriptLoading");
+                return;
+            }
+            
+            if (playing == _playing && wasAlreadyPlayingRight)
+            {
+                Debug.WriteLine("HandyController.Play, but playing == _playing (and was already)");
                 return;
             }
 
@@ -852,6 +852,11 @@ namespace ScriptPlayer.Shared.TheHandy
             
             LocalScriptServer?.Exit();
             _updateOffsetTask?.Dispose();
+        }
+
+        protected virtual void OnScriptLoaded()
+        {
+            ScriptLoaded?.Invoke(this, EventArgs.Empty);
         }
     }
 

@@ -172,6 +172,7 @@
     <Compile Include="Controls\VideoDetailsPreview.xaml.cs">
       <DependentUpon>VideoDetailsPreview.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\VirtualizingWrapPanel.cs" />
     <Compile Include="Converters\AlternativeValueConverter.cs" />
     <Compile Include="Converters\InverterConverter.cs" />
     <Compile Include="Dialogs\CompactControlWindow.xaml.cs">
@@ -295,6 +296,7 @@
     <Compile Include="ViewModels\MainViewModel.Commands.cs" />
     <Compile Include="ViewModels\PlaybackMode.cs" />
     <Compile Include="ViewModels\PlayerStateModel.cs" />
+    <Compile Include="ViewModels\PlaylistViewStyle.cs" />
     <Compile Include="ViewModels\PreviewGeneratorSettingsViewModel.cs" />
     <Compile Include="ViewModels\SettingsPage.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />

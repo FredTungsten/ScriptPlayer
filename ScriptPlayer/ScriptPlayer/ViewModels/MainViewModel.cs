@@ -327,6 +327,7 @@ namespace ScriptPlayer.ViewModels
         private AudioFileTimeSource _audioHandler;
         private string _loadedAudio;
         private Geometry _heatMapBounds;
+        private bool _playWhenDevicesAreReady;
 
         public ObservableCollection<IDevice> Devices => _devices;
 
@@ -490,6 +491,7 @@ namespace ScriptPlayer.ViewModels
                 Playlist.RequestVideoFileName += Playlist_RequestVideoFileName;
                 Playlist.RequestScriptFileName += Playlist_RequestScriptFileName;
                 Playlist.RequestHeatmapFileName += PlaylistOnRequestHeatmapFileName;
+                Playlist.RequestPreviewFileName += PlaylistOnRequestPreviewFileName;
                 Playlist.RequestAllRelatedFiles += PlaylistOnRequestAllRelatedFiles;
 
                 Playlist.RequestRenameFile += PlaylistOnRequestRenameFile;
@@ -513,6 +515,7 @@ namespace ScriptPlayer.ViewModels
             Playlist.Repeat = Settings.RepeatPlaylist;
             Playlist.RandomChapters = Settings.RandomChapters;
             Playlist.Shuffle = Settings.ShufflePlaylist;
+            Playlist.ViewStyle = Settings.PlaylistViewStyle;
 
             InitializePlaylistCommands(Playlist);
 
@@ -620,9 +623,18 @@ namespace ScriptPlayer.ViewModels
         private void PlaylistOnRequestHeatmapFileName(object sender, RequestEventArgs<string> e)
         {
             e.Handled = true;
-            e.Value = GetRelatedFile(e.Value, new[] {"png"});
+            e.Value = GetRelatedFile(e.Value, new[] { "png" });
         }
 
+        private void PlaylistOnRequestPreviewFileName(object sender, RequestEventArgs<string> e)
+        {
+            e.Handled = true;
+            e.Value = GetRelatedFile(e.Value, new[] { "gif" });
+        }
+
+        /// <summary>
+        /// Transfer certain playlist properties to the general settings
+        /// </summary>
         private void PlaylistOnPropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
         {
             switch (eventArgs.PropertyName)
@@ -647,6 +659,11 @@ namespace ScriptPlayer.ViewModels
                         Settings.RandomChapters = Playlist.RandomChapters;
                         if (!Playlist.RandomChapters)
                             SelectedRange = null;
+                        break;
+                    }
+                case nameof(PlaylistViewModel.ViewStyle):
+                    {
+                        Settings.PlaylistViewStyle = Playlist.ViewStyle;
                         break;
                     }
             }
@@ -1785,6 +1802,7 @@ namespace ScriptPlayer.ViewModels
             UpdatePlaylistRepeat();
             UpdatePlaylistRepeatSingleFile();
             UpdatePlaylistRandomChapter();
+            UpdatePlaylistViewStyle();
             UpdateFillGaps();
             UpdateFallbackScriptModifiers();
             UpdateHeatMap();
@@ -1795,6 +1813,12 @@ namespace ScriptPlayer.ViewModels
             UpdateHandySettings();
             ReloadAudio();
             ReloadSubtitles();
+        }
+
+        private void UpdatePlaylistViewStyle()
+        {
+            if (Playlist == null) return;
+            Playlist.ViewStyle = Settings.PlaylistViewStyle;
         }
 
         private void UpdatePlaylistRandomChapter()
@@ -1878,6 +1902,11 @@ namespace ScriptPlayer.ViewModels
                 case nameof(SettingsViewModel.RandomChapters):
                     {
                         UpdatePlaylistRandomChapter();
+                        break;
+                    }
+                case nameof(SettingsViewModel.PlaylistViewStyle):
+                    {
+                        UpdatePlaylistViewStyle();
                         break;
                     }
                 case nameof(SettingsViewModel.RangeExtender):
@@ -2301,6 +2330,8 @@ namespace ScriptPlayer.ViewModels
                     OsdShowMessage("Matching script alreadly loaded", TimeSpan.FromSeconds(6));
                 return;
             }
+
+            ClearScriptForSyncDevices();
 
             string scriptFile = FileFinder.FindFile(videoFileName, GetScriptExtensions(), GetAdditionalPaths());
             if (string.IsNullOrWhiteSpace(scriptFile))
@@ -3187,6 +3218,9 @@ namespace ScriptPlayer.ViewModels
             if (!_devices.Contains(device))
                 return;
 
+            if (device is ISyncBasedDevice sync)
+                sync.ScriptLoaded -= Device_ScriptLoaded;
+
             if (device is Device dev)
             {
                 dev.Disconnected -= Device_Disconnected;
@@ -3222,7 +3256,9 @@ namespace ScriptPlayer.ViewModels
             
             if (device is ISyncBasedDevice sync)
             {
-                if(!string.IsNullOrEmpty(LoadedScript))
+                sync.ScriptLoaded += Device_ScriptLoaded;
+
+                if (!string.IsNullOrEmpty(LoadedScript))
                     sync.SetScript(Path.GetFileNameWithoutExtension(LoadedScript), _scriptHandler.GetScript());
 
                 if(TimeSource.IsPlaying)
@@ -3231,6 +3267,11 @@ namespace ScriptPlayer.ViewModels
 
             if (Settings.NotifyDevices)
                 OsdShowMessage("Device Connected: " + device.Name, TimeSpan.FromSeconds(8));
+        }
+
+        private void Device_ScriptLoaded(object sender, EventArgs e)
+        {
+            ExecuteOrInvoke(CheckDevicesAgain);
         }
 
         private bool ShouldInvokeInstead(Action action)
@@ -3431,7 +3472,11 @@ namespace ScriptPlayer.ViewModels
                 if (PlaybackMode == PlaybackMode.Local)
                 {
                     HideBanner();
-                    VideoPlayer.Open(mediaFileName, start, Settings.SoftSeekFiles ? Settings.SoftSeekFilesDuration : TimeSpan.Zero);
+                    Task openVideo = VideoPlayer.Open(mediaFileName, start, Settings.SoftSeekFiles ? Settings.SoftSeekFilesDuration : TimeSpan.Zero);
+
+                    Thread waitForDevices = new Thread(CheckAndWaitForDevices);
+                    waitForDevices.Name = "DeviceWaiterThread";
+                    waitForDevices.Start(openVideo);
                 }
                 
                 Title = Path.GetFileNameWithoutExtension(mediaFileName);
@@ -3439,9 +3484,6 @@ namespace ScriptPlayer.ViewModels
                 if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
                     OsdShowMessage($"Loaded {Path.GetFileName(mediaFileName)}", TimeSpan.FromSeconds(4),
                         "VideoLoaded");
-
-                //Play();
-
             }
             catch (Exception e)
             {
@@ -3450,6 +3492,61 @@ namespace ScriptPlayer.ViewModels
             finally
             {
                 _loading = false;
+            }
+        }
+
+        private async void CheckAndWaitForDevices(object obj)
+        {
+            Task task = (Task) obj;
+            await task;
+            Debug.WriteLine("Video loaded, waiting for devices");
+
+            ExecuteOrInvoke(CheckDevices);
+        }
+
+        private void ExecuteOrInvoke(Action action)
+        {
+            if (Application.Current.Dispatcher.CheckAccess())
+            {
+                action();
+                return;
+            }
+
+            Application.Current.Dispatcher.Invoke(action);
+        }
+
+        private void CheckDevices()
+        {
+            if (!GetAllDevicesReady())
+            {
+                if(Settings.WaitForDevicesToLoad)
+                    Debug.WriteLine("Not all devices are ready! Pausing ...");
+                else
+                {
+                    Debug.WriteLine("Not all devices are ready, but we don't care");
+                    return;
+                }
+
+                _playWhenDevicesAreReady = true;
+                Pause();
+            }
+            else
+            {
+                Debug.WriteLine("All devices are ready!");
+            }
+        }
+
+        private void CheckDevicesAgain()
+        {
+            if (!_playWhenDevicesAreReady)
+                return;
+
+            if (GetAllDevicesReady())
+            {
+                Debug.WriteLine("All devices are ready! Playing ...");
+
+                Play();
+                _playWhenDevicesAreReady = false;
             }
         }
 
@@ -4766,8 +4863,34 @@ namespace ScriptPlayer.ViewModels
             FindMaxPositions();
             UpdateHeatMap();
 
-            foreach(ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
-                device.SetScript(Path.GetFileNameWithoutExtension(LoadedScript), _scriptHandler.GetScript());
+            SetScriptForSyncDevices(Path.GetFileNameWithoutExtension(LoadedScript), _scriptHandler.GetScript().ToList());
+
+            return true;
+        }
+
+        private void ClearScriptForSyncDevices()
+        {
+            foreach (ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
+            {
+                device.ClearScript();
+            }
+        }
+
+        private void SetScriptForSyncDevices(string title, List<FunScriptAction> script)
+        {
+            foreach (ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
+            {
+                device.SetScript(title, script);
+            }
+        }
+
+        private bool GetAllDevicesReady()
+        {
+            foreach (ISyncBasedDevice device in _devices.OfType<ISyncBasedDevice>())
+            {
+                if (!device.IsScriptLoaded())
+                    return false;
+            }
 
             return true;
         }

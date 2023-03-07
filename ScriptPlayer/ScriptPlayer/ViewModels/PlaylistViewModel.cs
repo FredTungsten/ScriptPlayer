@@ -75,6 +75,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<string>> RequestVideoFileName;
         public event EventHandler<RequestEventArgs<string>> RequestScriptFileName;
         public event EventHandler<RequestEventArgs<string>> RequestHeatmapFileName;
+        public event EventHandler<RequestEventArgs<string>> RequestPreviewFileName;
         public event EventHandler<RequestEventArgs<string, string[]>> RequestAllRelatedFiles;
 
         public event EventHandler<RequestEventArgs<string>> RequestRenameFile;
@@ -331,6 +332,20 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+
+        private PlaylistViewStyle _viewStyle;
+
+        public PlaylistViewStyle ViewStyle
+        {
+            get => _viewStyle;
+            set
+            {
+                if (value == _viewStyle) return;
+                _viewStyle = value;
+                OnPropertyChanged();
+            }
+        }
+
         private void UpdateFilter()
         {
             FilteredEntries = FilterEntries(Entries, Filter);
@@ -384,6 +399,7 @@ namespace ScriptPlayer.ViewModels
         public RelayCommand GenerateAllForSelectedVideosCommand { get; set; }
         public RelayCommand GenerateAllForAllVideosCommand { get; set; }
         public RelayCommand RecheckAllCommand { get; set; }
+        public RelayCommand<PlaylistViewStyle> SetViewStyleCommand { get; set; }
         public int EntryCount => Entries.Count;
 
 
@@ -424,10 +440,16 @@ namespace ScriptPlayer.ViewModels
             GenerateAllForSelectedVideosCommand = new RelayCommand(ExecuteGenerateAllForSelectedVideos, AreEntriesSelected);
             GenerateAllForAllVideosCommand = new RelayCommand(ExecuteGenerateAllForAllVideos, AreThereAnyEntries);
             RecheckAllCommand = new RelayCommand(ExecuteRecheckAll);
+            SetViewStyleCommand = new RelayCommand<PlaylistViewStyle>(ExecuteSetViewStlye);
 
             _dispatcher = Dispatcher.CurrentDispatcher;
             _mediaInfoThread = new Thread(MediaInfoLoop);
             _mediaInfoThread.Start();
+        }
+
+        private void ExecuteSetViewStlye(PlaylistViewStyle style)
+        {
+            ViewStyle = style;
         }
 
         private bool SingleEntrySelected(PlaylistEntry arg)
@@ -902,14 +924,35 @@ namespace ScriptPlayer.ViewModels
                 string heatMap = OnRequestHeatmapFileName(entry.Fullname);
                 if (!string.IsNullOrEmpty(heatMap))
                 {
-                    entry.HeatMap = GetImage(heatMap);
+                    entry.HeatMap = GetHeatMapImage(heatMap);
+                }
+
+                string preview = OnRequestPreviewFileName(entry.Fullname);
+                if (!string.IsNullOrEmpty(preview))
+                {
+                    entry.Preview = GetPreviewImage(preview);
                 }
 
                 entry.UpdateStatus();
             }
         }
 
-        private ImageSource GetImage(string path)
+        private ImageSource GetPreviewImage(string path)
+        {
+            try
+            {
+                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+                {
+                    return GifFrameCollection.LoadFirst(stream);
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private ImageSource GetHeatMapImage(string path)
         {
             try
             {
@@ -1227,6 +1270,8 @@ namespace ScriptPlayer.ViewModels
         {
             try
             {
+                int insertpos = 0;
+
                 DeferLoading = true;
                 foreach (PlaylistEntry entry in entries)
                 {
@@ -1240,7 +1285,7 @@ namespace ScriptPlayer.ViewModels
                     EnsureMediaInfo(entry);
 
                     if(first)
-                        Entries.Insert(0, entry);
+                        Entries.Insert(insertpos++, entry);
                     else
                         Entries.Add(entry);
                 }
@@ -1633,6 +1678,16 @@ namespace ScriptPlayer.ViewModels
         {
             RequestEventArgs<string> e = new RequestEventArgs<string>(initialValue);
             RequestHeatmapFileName?.Invoke(this, e);
+            if (!e.Handled)
+                return null;
+
+            return e.Value;
+        }
+
+        protected virtual string OnRequestPreviewFileName(string initialValue = "")
+        {
+            RequestEventArgs<string> e = new RequestEventArgs<string>(initialValue);
+            RequestPreviewFileName?.Invoke(this, e);
             if (!e.Handled)
                 return null;
 
