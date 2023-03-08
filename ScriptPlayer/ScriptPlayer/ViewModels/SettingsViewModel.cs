@@ -83,6 +83,7 @@ namespace ScriptPlayer.ViewModels
         private TimeSpan _softSeekLoopsDuration = TimeSpan.FromSeconds(3);
         private string _mpcHcEndpoint;
         private int _samsungVrUdpPort;
+        private int _GoProVrPlayerUdpPort;
         private string _zoomPlayerEndpoint;
         private bool _autoHomingEnabled = false;
 
@@ -281,6 +282,7 @@ namespace ScriptPlayer.ViewModels
             ButtplugUrl = null;
             MpcHcEndpoint = null;
             SamsungVrUdpPort = 0;
+            GoProVrPlayerUdpPort = 0;
             ZoomPlayerEndpoint = null;
             KodiUser = null;
             KodiPassword = null;
@@ -1240,6 +1242,17 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _samsungVrUdpPort) return;
                 _samsungVrUdpPort = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int GoProVrPlayerUdpPort
+        {
+            get => _GoProVrPlayerUdpPort;
+            set
+            {
+                if (value == _GoProVrPlayerUdpPort) return;
+                _GoProVrPlayerUdpPort = value;
                 OnPropertyChanged();
             }
         }

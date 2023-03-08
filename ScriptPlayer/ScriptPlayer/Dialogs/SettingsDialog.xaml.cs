@@ -538,6 +538,11 @@ namespace ScriptPlayer.Dialogs
             Settings.SamsungVrUdpPort = SamsungVrConnectionSettings.DefaultPort;
         }
 
+        private void BtnGoProVrDefault_Click(object sender, RoutedEventArgs e)
+        {
+            Settings.GoProVrPlayerUdpPort = GoProVrPlayerConnectionSettings.DefaultPort;
+        }
+
         private void BtnReset_OnClick(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show(this,

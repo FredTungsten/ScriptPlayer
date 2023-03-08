@@ -322,6 +322,8 @@
     <Compile Include="Subtitles\SubtitleLoaderManager.cs" />
     <Compile Include="TimeSource\AudioFileTimeSource.cs" />
     <Compile Include="TimeSource\CompositionTargetClock.cs" />
+    <Compile Include="TimeSource\GoProVrPlayerConnectionSettings.cs" />
+    <Compile Include="TimeSource\GoProVrPlayerTimesource.cs" />
     <Compile Include="TimeSource\HereSphereTimeSource.cs" />
     <Compile Include="TimeSource\DispatcherClock.cs" />
     <Compile Include="TimeSource\IOnScreenDisplay.cs" />

@@ -41,6 +41,7 @@ namespace ScriptPlayer.ViewModels
         public event EventHandler<RequestEventArgs<WhirligigConnectionSettings>> RequestWhirligigConnectionSettings;
         public event EventHandler<RequestEventArgs<SimpleTcpConnectionSettings>> RequestSimpleTcpConnectionSettings;
         public event EventHandler<RequestEventArgs<SamsungVrConnectionSettings>> RequestSamsungVrConnectionSettings;
+        public event EventHandler<RequestEventArgs<GoProVrPlayerConnectionSettings>> RequestGoProVrPlayerConnectionSettings;
         public event EventHandler<RequestEventArgs<ZoomPlayerConnectionSettings>> RequestZoomPlayerConnectionSettings;
         public event EventHandler<RequestEventArgs<KodiConnectionSettings>> RequestKodiConnectionSettings;
         public event EventHandler<RequestEventArgs<WindowStateModel>> RequestGetWindowState;
@@ -1016,6 +1017,40 @@ namespace ScriptPlayer.ViewModels
                             RefreshManualDuration();
                             break;
                         }
+                    case PlaybackMode.GoProVrPlayer:
+                        {
+                            HideBanner();
+                            Console.WriteLine("Settings.GoProVrPlayerUdpPort: ");
+                            Console.WriteLine(Settings.GoProVrPlayerUdpPort);
+                            if (Settings.GoProVrPlayerUdpPort == 0)
+                            {
+
+                                GoProVrPlayerConnectionSettings settings =
+                                    OnRequestGoProVrPlayerConnectionSettings(new GoProVrPlayerConnectionSettings
+                                    {
+                                        UdpPort = GoProVrPlayerConnectionSettings.DefaultPort
+                                    });
+
+                                if (settings == null)
+                                {
+                                    PlaybackMode = PlaybackMode.Local;
+                                    return;
+                                }
+
+                                Settings.GoProVrPlayerUdpPort = settings.UdpPort;
+                            }
+
+                            TimeSource = new GoProVrPlayerTimeSource(
+                                new DispatcherClock(Dispatcher.FromThread(Thread.CurrentThread),
+                                    TimeSpan.FromMilliseconds(10)), new GoProVrPlayerConnectionSettings
+                                    {
+                                        UdpPort = Settings.GoProVrPlayerUdpPort
+                                    });
+
+                            ((GoProVrPlayerTimeSource)TimeSource).FileOpened += OnVideoFileOpened;
+                            RefreshManualDuration();
+                            break;
+                        }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -1066,6 +1101,16 @@ namespace ScriptPlayer.ViewModels
         {
             RequestEventArgs<SamsungVrConnectionSettings> args = new RequestEventArgs<SamsungVrConnectionSettings>(currentSettings);
             RequestSamsungVrConnectionSettings?.Invoke(this, args);
+
+            if (!args.Handled)
+                return null;
+            return args.Value;
+        }
+
+        private GoProVrPlayerConnectionSettings OnRequestGoProVrPlayerConnectionSettings(GoProVrPlayerConnectionSettings currentSettings)
+        {
+            RequestEventArgs<GoProVrPlayerConnectionSettings> args = new RequestEventArgs<GoProVrPlayerConnectionSettings>(currentSettings);
+            RequestGoProVrPlayerConnectionSettings?.Invoke(this, args);
 
             if (!args.Handled)
                 return null;
@@ -1191,6 +1236,9 @@ namespace ScriptPlayer.ViewModels
 
             if (TimeSource is SamsungVrTimeSource samsung)
                 samsung.SetDuration(_scriptHandler.GetOriginalScriptDuration().Add(TimeSpan.FromSeconds(5)));
+
+            if (TimeSource is GoProVrPlayerTimeSource gopro)
+                gopro.SetDuration(_scriptHandler.GetOriginalScriptDuration().Add(TimeSpan.FromSeconds(5)));
         }
 
         private void TimeSourceChanged()
@@ -5137,6 +5185,13 @@ namespace ScriptPlayer.ViewModels
                             TcpPort = settings.KodiTcpPort,
                             User = settings.KodiUser,
                             Password = settings.KodiPassword
+                        });
+                    break;
+                case PlaybackMode.GoProVrPlayer:
+                    if (TimeSource is GoProVrPlayerTimeSource gopro)
+                        gopro.UpdateConnectionSettings(new GoProVrPlayerConnectionSettings
+                        {
+                            UdpPort = settings.GoProVrPlayerUdpPort
                         });
                     break;
 
