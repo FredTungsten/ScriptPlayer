@@ -32,6 +32,7 @@ using ScriptPlayer.Shared.Subtitles;
 using ScriptPlayer.Shared.TheHandy;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
+using ScriptPlayer.Shared.Devices.Estim;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -399,6 +400,8 @@ namespace ScriptPlayer.ViewModels
             //}
 
             InitializeEstimController();
+            InitializeMK312WifiController();
+            InitializeMK312SerialController();
             InitializeFunstimController();
 
             InitializeScriptHandler();
@@ -517,7 +520,7 @@ namespace ScriptPlayer.ViewModels
             Playlist.Shuffle = Settings.ShufflePlaylist;
             Playlist.ViewStyle = Settings.PlaylistViewStyle;
 
-            InitializePlaylistCommands(Playlist);
+ 
 
             if (!GlobalCommandManager.LoadMappings(GetCommandMappingsFilePath()))
                 GlobalCommandManager.BuildDefaultShortcuts();
@@ -2817,6 +2820,55 @@ namespace ScriptPlayer.ViewModels
             controller.SetDevice(dialog.SelectedDevice, dialog.Parameters);
         }
 
+        /// <summary>
+        /// Adds an MK312 device to the list
+        /// </summary>
+        private void AddMK312WifiDevice()
+        {
+            var controller = _controllers.OfType<EstimMK312WifiController>().FirstOrDefault();
+
+            var device = controller.FindDeviceWifi();
+            if (device == null) return;
+
+            controller.SetDevice(device);
+        }
+
+        /// <summary>
+        /// Adds an MK312 device to the list
+        /// </summary>
+        private void AddMK312SerialDevice()
+        {
+            string[] comports = EstimMK312SerialController.getComports();
+
+            String comporttouse = null;
+
+            if (comports.Length == 0) return; // If there are no comports, there is not a lot we can do
+
+            // If there is only one comport, we will try that one
+            if (comports.Length == 1) comporttouse = comports[0];
+
+            // If there is more than one, we ask the user
+            if (comports.Length > 1)
+            {
+                SerialPortSelector dialog = new SerialPortSelector(comports);
+
+                if (dialog.ShowDialog() != true)
+                    return;
+
+                comporttouse = dialog.SelectedPort;
+            }
+
+            // Initialize the controller
+            var controller = _controllers.OfType<EstimMK312SerialController>().FirstOrDefault();
+
+            var device = controller.FindDeviceSerial(comporttouse);
+            if (device == null) return;
+
+            // Add the device
+            controller.SetDevice(device);
+        }
+
+
         private void AddFunstimAudioDevice()
         {
             var controller = _controllers.OfType<FunstimAudioController>().FirstOrDefault();
@@ -3346,6 +3398,27 @@ namespace ScriptPlayer.ViewModels
             audioController.DeviceFound += DeviceController_DeviceFound;
             _controllers.Add(audioController);
         }
+
+        private void InitializeMK312WifiController()
+        {
+            EstimMK312WifiController mkwController = _controllers.OfType<EstimMK312WifiController>().FirstOrDefault();
+            if (mkwController != null) return;
+
+            mkwController = new EstimMK312WifiController();
+            mkwController.DeviceFound += DeviceController_DeviceFound;
+            _controllers.Add(mkwController);
+        }
+
+        private void InitializeMK312SerialController()
+        {
+            EstimMK312SerialController mksController = _controllers.OfType<EstimMK312SerialController>().FirstOrDefault();
+            if (mksController != null) return;
+
+            mksController = new EstimMK312SerialController();
+            mksController.DeviceFound += DeviceController_DeviceFound;
+            _controllers.Add(mksController);
+        }
+
 
         private void InitializeFunstimController()
         {

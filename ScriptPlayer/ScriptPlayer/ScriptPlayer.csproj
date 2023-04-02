@@ -176,6 +176,9 @@
     <Compile Include="Dialogs\RenameDialog.xaml.cs">
       <DependentUpon>RenameDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\SerialPortSelector.xaml.cs">
+      <DependentUpon>SerialPortSelector.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\DependecyObjectExtensions.cs" />
     <Compile Include="Dialogs\GeneratorSettingsDialog.xaml.cs">
       <DependentUpon>GeneratorSettingsDialog.xaml</DependentUpon>
@@ -383,6 +386,10 @@
     <Page Include="Dialogs\SectionDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\SerialPortSelector.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialogs\ThumbnailBannerGeneratorSettingsDialog.xaml">
       <SubType>Designer</SubType>
