@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer.Ipc", "ScriptP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptPlayer.Console", "ScriptPlayer.Console\ScriptPlayer.Console.csproj", "{DA12535F-08A2-49C2-8F93-616521E30D2D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MK312WifiLibDotNet", "MK312WifiDotNetLib\MK312WifiLibDotNet.csproj", "{6541D0E3-9075-4F35-AF79-943F8B695BBB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_Ubuntu|Any CPU = Debug_Ubuntu|Any CPU
@@ -227,6 +229,38 @@ Global
 		{DA12535F-08A2-49C2-8F93-616521E30D2D}.Release|x64.Build.0 = Release|Any CPU
 		{DA12535F-08A2-49C2-8F93-616521E30D2D}.Release|x86.ActiveCfg = Release|Any CPU
 		{DA12535F-08A2-49C2-8F93-616521E30D2D}.Release|x86.Build.0 = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug_Ubuntu|ARM.ActiveCfg = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug_Ubuntu|ARM.Build.0 = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug_Ubuntu|x64.ActiveCfg = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug_Ubuntu|x64.Build.0 = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug_Ubuntu|x86.ActiveCfg = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug_Ubuntu|x86.Build.0 = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug|ARM.Build.0 = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug|x64.Build.0 = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Debug|x86.Build.0 = Debug|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release_Ubuntu|ARM.ActiveCfg = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release_Ubuntu|ARM.Build.0 = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release_Ubuntu|x64.ActiveCfg = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release_Ubuntu|x64.Build.0 = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release_Ubuntu|x86.ActiveCfg = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release_Ubuntu|x86.Build.0 = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release|ARM.ActiveCfg = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release|ARM.Build.0 = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release|x64.ActiveCfg = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release|x64.Build.0 = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release|x86.ActiveCfg = Release|Any CPU
+		{6541D0E3-9075-4F35-AF79-943F8B695BBB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

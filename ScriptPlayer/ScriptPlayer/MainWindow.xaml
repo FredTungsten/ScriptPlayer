@@ -342,6 +342,10 @@
                         <MenuItem Header="Disconnect" Command="{Binding DisconnectButtplugCommand}"/>
                         <MenuItem Header="Scan for devices" Command="{Binding StartScanningButtplugCommand}"/>
                     </MenuItem>
+                    <MenuItem Header="Add MK312 Wifi Device" Command="{Binding AddMK312WifiCommand}">
+                    </MenuItem>
+                    <MenuItem Header="Add MK312 Serial Device" Command="{Binding AddMK312SerialCommand}">
+                    </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Video Player">
                     <MenuItem Header="Local" IsCheckable="True" IsChecked="{Binding Path=PlaybackMode, Mode=TwoWay, Converter={StaticResource BooleanConverter}, ConverterParameter={x:Static viewModels:PlaybackMode.Local}}"/>

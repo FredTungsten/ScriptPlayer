@@ -43,6 +43,10 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand AddEstimAudioCommand { get; set; }
 
+        public ScriptplayerCommand AddMK312WifiCommand { get; set; }
+
+        public ScriptplayerCommand AddMK312SerialCommand { get; set; }
+
         public ScriptplayerCommand AddFunstimAudioCommand { get; set; }
 
         public ScriptplayerCommand AddScriptsToPlaylistFirstCommand { get; set; }
@@ -242,6 +246,18 @@ namespace ScriptPlayer.ViewModels
             {
                 CommandId = "AddFunstimAudioDevice",
                 DisplayText = "Add Funstim Audio Device"
+            };
+
+            AddMK312WifiCommand = new ScriptplayerCommand(AddMK312WifiDevice)
+            {
+                CommandId = "AddMK312WifiDevice",
+                DisplayText = "Add MK312 Wifi Device"
+            };
+
+            AddMK312SerialCommand = new ScriptplayerCommand(AddMK312SerialDevice)
+            {
+                CommandId = "AddMK312SerialDevice",
+                DisplayText = "Add MK312 Serial Device"
             };
 
             ConnectButtplugCommand = new ScriptplayerCommand(ConnectButtplug)

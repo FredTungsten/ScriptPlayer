@@ -225,6 +225,9 @@
     <Compile Include="Devices\CommandConverter.cs" />
     <Compile Include="Devices\DeviceCommandInformation.cs" />
     <Compile Include="Devices\DeviceController.cs" />
+    <Compile Include="Devices\Estim\EStimMK312Device.cs" />
+    <Compile Include="Devices\Estim\EstimMK312SerialController.cs" />
+    <Compile Include="Devices\Estim\EstimMK312WifiController.cs" />
     <Compile Include="Devices\Estim\FunstimAudioController.cs" />
     <Compile Include="Devices\Estim\FunstimAudioDevice.cs" />
     <Compile Include="Devices\Estim\FunstimSampleProvider.cs" />
@@ -416,6 +419,12 @@
     <Resource Include="Images\Devices\Hush.png" />
     <Resource Include="Images\Devices\Launch.png" />
     <Resource Include="Images\Devices\Nora.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MK312WifiDotNetLib\MK312WifiLibDotNet.csproj">
+      <Project>{6541d0e3-9075-4f35-af79-943f8b695bbb}</Project>
+      <Name>MK312WifiLibDotNet</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
