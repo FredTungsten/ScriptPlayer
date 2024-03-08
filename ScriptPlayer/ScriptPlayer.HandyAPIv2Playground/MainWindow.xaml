@@ -1,0 +1,34 @@
+﻿<Window x:Class="ScriptPlayer.HandyAPIv2Playground.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptPlayer.HandyAPIv2Playground"
+        xmlns:shared="clr-namespace:ScriptPlayer.Shared;assembly=ScriptPlayer.Shared"
+        mc:Ignorable="d"
+        Title="Handy API v2 Playground" Height="393.75" Width="452.966">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="36"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="145"/>
+        </Grid.RowDefinitions>
+        <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="ApiKey" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtApiKey" HorizontalAlignment="Left" Height="23" Margin="63,9,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
+        <Button Content="Set Key" HorizontalAlignment="Left" Margin="188,10,0,0" VerticalAlignment="Top" Width="247" Click="btnConnect_Click"/>
+
+        <Grid Name="GridFunctions" Grid.Row="1">
+            <shared:RangeSlider Name="sldRange" Minimum="0" Maximum="100" LowerValue="20" UpperValue="90" Margin="10,32,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="173"/>
+            <Button Content="Get Connected" HorizontalAlignment="Left" Margin="188,7,0,0" VerticalAlignment="Top" Width="247" Click="btnGetConnected_Click"/>
+            <Button Content="Set SlideRange" HorizontalAlignment="Left" Margin="188,32,0,0" VerticalAlignment="Top" Width="247" Click="btnSetSlideRange_Click"/>
+            <Button Content="Set Hamp Mode" HorizontalAlignment="Left" Margin="188,57,0,0" VerticalAlignment="Top" Width="128" Click="btnSetHampMode_Click"/>
+            <Button Content="Get Velocity" HorizontalAlignment="Left" Margin="188,82,0,0" VerticalAlignment="Top" Width="128" Click="btnGetHampVelocity_Click"/>
+            <Slider Minimum="0" Maximum="100" Value="10" x:Name="sldVelocity" HorizontalAlignment="Left" Margin="10,56,0,0" VerticalAlignment="Top" Width="172"/>
+            <Button Content="Start" HorizontalAlignment="Left" Margin="188,107,0,0" VerticalAlignment="Top" Width="128" Click="btnStartHamp_Click"/>
+            <Button Content="Stop" HorizontalAlignment="Left" Margin="321,107,0,0" VerticalAlignment="Top" Width="114" Click="btnStopHamp_Click"/>
+            <Button Content="Set Velocity" HorizontalAlignment="Left" Margin="321,82,0,0" VerticalAlignment="Top" Width="114" Click="btnSetHampVelocity_Click"/>
+        </Grid>
+        <TextBox Name="txtResponse" IsReadOnly="True" HorizontalAlignment="Left" Margin="10,0,0,10" TextWrapping="Wrap" Text="txtResponse" Width="425" Height="125" VerticalAlignment="Bottom" Grid.Row="2"/>
+
+    </Grid>
+</Window>
