@@ -257,6 +257,17 @@ namespace ScriptPlayer.Shared
                         TimeSpan averageLength = (lastBeat - firstBeat).Divide(beatCount);
                         double value = fastest.Divide(averageLength) * multiplier;
 
+                        //double distance = 0;
+                        //for (int v = startIndex; v < endIndex -1; v++)
+                        //{
+                        //    distance += Math.Abs(segment[v].Position - segment[v + 1].Position);
+                        //}
+
+                        //distance /= 100;
+                        //distance /= beatCount;
+
+                        //value *= Math.Min(1.0, Math.Max(0.0, distance));
+                        
                         value = Math.Min(1, Math.Max(0, value));
                         Color color = GetColorAtPosition(HeatMap, value);
 

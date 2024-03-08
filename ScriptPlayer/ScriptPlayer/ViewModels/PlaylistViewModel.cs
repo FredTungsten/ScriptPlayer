@@ -334,6 +334,7 @@ namespace ScriptPlayer.ViewModels
 
 
         private PlaylistViewStyle _viewStyle;
+        private PlaylistEntry _nonPlaylistEntry;
 
         public PlaylistViewStyle ViewStyle
         {
@@ -1010,7 +1011,7 @@ namespace ScriptPlayer.ViewModels
 
         public bool CanPlayNextEntry()
         {
-            bool canPlaySameAgain = CurrentEntry != null;
+            bool canPlaySameAgain = (CurrentEntry != null || _nonPlaylistEntry != null);
 
             if (Repeat)
                 return Entries.Count > 0 || canPlaySameAgain;
@@ -1299,6 +1300,17 @@ namespace ScriptPlayer.ViewModels
         public void SetCurrentEntry(string[] files)
         {
             PlaylistEntry existingEntry = GetEntry(files);
+
+            if (existingEntry == null)
+            {
+                _nonPlaylistEntry = new PlaylistEntry(files[0]);
+            }
+            else
+            {
+                _nonPlaylistEntry = null;
+            }
+
+
             if (existingEntry == CurrentEntry)
                 return;
 
@@ -1380,8 +1392,14 @@ namespace ScriptPlayer.ViewModels
 
         public PlaylistEntry GetNextEntry()
         {
-            if (RepeatSingleFile && CurrentEntry != null)
-                return CurrentEntry;
+            if (RepeatSingleFile)
+            {
+                if (CurrentEntry != null)
+                    return CurrentEntry;
+
+                if (_nonPlaylistEntry != null)
+                    return _nonPlaylistEntry;
+            }
 
             if (Shuffle)
                 return GetRandomEntry();
