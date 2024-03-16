@@ -373,7 +373,7 @@ namespace ScriptPlayer.Shared.TheHandy
                     name = filename,// _scriptTitle,
                     url = scriptUrl,
                     size = (int)scriptSize,
-                    timeout = 20000
+                    timeout = 60000
                 });
             }
             else
