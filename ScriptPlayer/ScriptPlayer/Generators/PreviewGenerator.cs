@@ -121,7 +121,9 @@ namespace ScriptPlayer.Generators
                         {
                             Width = barSize.Width,
                             Height = barSize.Height,
-                            TotalDisplayedDuration = TimeSpan.FromSeconds(5),
+                            TimeFrameContext = new TimeFrameContext { 
+                            TotalDisplayedDuration = TimeSpan.FromSeconds(5)
+                            },
                             Background = Brushes.Black,
                             Positions = new PositionCollection(actions.Select(a => new TimedPosition()
                             {
@@ -158,7 +160,7 @@ namespace ScriptPlayer.Generators
                             {
                                 progress = start + TimeSpan.FromSeconds(frame / clipInfo.FrameRate);
 
-                                bar.Progress = progress;
+                                bar.TimeFrameContext.Progress = progress;
 
                                 var bitmap = RenderToBitmap(bar, barSize);
 

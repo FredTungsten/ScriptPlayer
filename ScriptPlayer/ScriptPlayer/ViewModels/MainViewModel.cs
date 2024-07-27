@@ -96,7 +96,20 @@ namespace ScriptPlayer.ViewModels
         public GeneratorWorkQueue WorkQueue { get; }
 
         public WindowStateModel InitialPlayerState { get; private set; }
-        
+
+        public TimeFrameContext TimeFrameContext { get; set; }
+
+        public BookmarkFolderViewModel Bookmarks
+        {
+            get => _bookmarks;
+            set
+            {
+                if (Equals(value, _bookmarks)) return;
+                _bookmarks = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool IsFullscreen
         {
             get => _isFullscreen;
@@ -329,6 +342,7 @@ namespace ScriptPlayer.ViewModels
         private string _loadedAudio;
         private Geometry _heatMapBounds;
         private bool _playWhenDevicesAreReady;
+        private BookmarkFolderViewModel _bookmarks;
 
         public ObservableCollection<IDevice> Devices => _devices;
 
@@ -345,6 +359,8 @@ namespace ScriptPlayer.ViewModels
 
                 if (_positionsViewport < TimeSpan.FromSeconds(2))
                     _positionsViewport = TimeSpan.FromSeconds(2);
+
+                TimeFrameContext.TotalDisplayedDuration = _positionsViewport;
 
                 OnPropertyChanged();
             }
@@ -374,6 +390,8 @@ namespace ScriptPlayer.ViewModels
 
         public MainViewModel()
         {
+            TimeFrameContext = new TimeFrameContext();
+
             // Can get rather intense even for low values, keep it at 1 for now (Ffmpeg is multi-threaded anyways)
             int threadCount = 1; //Environment.ProcessorCount;
 
@@ -520,12 +538,84 @@ namespace ScriptPlayer.ViewModels
             Playlist.Shuffle = Settings.ShufflePlaylist;
             Playlist.ViewStyle = Settings.PlaylistViewStyle;
 
- 
+            LoadBookmarks();
 
             if (!GlobalCommandManager.LoadMappings(GetCommandMappingsFilePath()))
                 GlobalCommandManager.BuildDefaultShortcuts();
 
             UpdateRandomChapterTooltip();
+        }
+
+        private void SaveBookmarks()
+        {
+            try
+            {
+                string fileName = GetBookmarksFilePath();
+                Bookmarks.Save(fileName);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+            }
+        }
+
+        private void LoadBookmarks()
+        {
+            try
+            {
+                string fileName = GetBookmarksFilePath();
+                if(File.Exists(fileName))
+                    Bookmarks = BookmarkFolderViewModel.Load(fileName);
+            }
+            catch
+            {
+                //
+            }
+
+            if (Bookmarks == null)
+            {
+                Bookmarks = new BookmarkFolderViewModel() { Label = "Open Bookmark" };
+                Bookmarks.Bookmarks = new ObservableCollection<BookmarkViewModel>();
+                Bookmarks.Bookmarks.Add(new BookmarkViewModel { Label = "Bookmark 1" });
+                Bookmarks.Bookmarks.Add(new BookmarkViewModel { Label = "Bookmark 2" });
+                Bookmarks.Bookmarks.Add(new BookmarkViewModel { Label = "Bookmark 3" });
+
+                Bookmarks.Folders = new ObservableCollection<BookmarkFolderViewModel>();
+                Bookmarks.Folders.Add(new BookmarkFolderViewModel()
+                {
+                    Label = "F1",
+                    Bookmarks = new ObservableCollection<BookmarkViewModel>()
+                    {
+                        new BookmarkViewModel { Label = "Bookmark a" },
+                        new BookmarkViewModel { Label = "Bookmark b" },
+                        new BookmarkViewModel { Label = "Bookmark c" }
+                    }
+                });
+
+                Bookmarks.Folders.Add(new BookmarkFolderViewModel()
+                {
+                    Label = "F2",
+                    Bookmarks = new ObservableCollection<BookmarkViewModel>()
+                    {
+                        new BookmarkViewModel { Label = "Bookmark A" },
+                        new BookmarkViewModel { Label = "Bookmark B" },
+                        new BookmarkViewModel { Label = "Bookmark C" }
+                    },
+                    Folders = new ObservableCollection<BookmarkFolderViewModel>
+                    {
+                        new BookmarkFolderViewModel()
+                        {
+                            Label = "F3",
+                            Bookmarks = new ObservableCollection<BookmarkViewModel>()
+                            {
+                                new BookmarkViewModel { Label = "Bookmark I" },
+                                new BookmarkViewModel { Label = "Bookmark II" },
+                                new BookmarkViewModel { Label = "Bookmark III" }
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         private void PlaylistOnRequestDirectory(object sender, RequestEventArgs<string> args)
@@ -718,6 +808,11 @@ namespace ScriptPlayer.ViewModels
             playerState.Save(GetPlayerStateFilePath());
 
             GlobalCommandManager.SaveMappings(GetCommandMappingsFilePath());
+        }
+
+        private static string GetBookmarksFilePath()
+        {
+            return GetAppDataFile("Bookmarks.xml");
         }
 
         private static string GetPlayerStateFilePath()
@@ -1473,6 +1568,7 @@ namespace ScriptPlayer.ViewModels
 
         private void TimeSourceOnProgressChanged(object sender, TimeSpan e)
         {
+            TimeFrameContext.Progress = e;
             UpdateDisplayedProgress();
 
             if (!TimeSource.IsPlaying || IsSeeking || IsTransistioning)

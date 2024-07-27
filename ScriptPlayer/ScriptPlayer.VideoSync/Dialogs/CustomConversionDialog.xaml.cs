@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using ScriptPlayer.Shared;
-using ScriptPlayer.Shared.Scripts;
 using ScriptPlayer.VideoSync.Annotations;
 
 namespace ScriptPlayer.VideoSync.Dialogs

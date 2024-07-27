@@ -57,15 +57,6 @@
     <ApplicationIcon>ScriptPlayerEditorIcon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Accord, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.3.8.2-alpha\lib\net462\Accord.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Video, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Video.3.8.2-alpha\lib\net462\Accord.Video.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Video.FFMPEG, Version=3.8.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=x86">
-      <HintPath>..\packages\Accord.Video.FFMPEG.3.8.2-alpha\lib\net462\Accord.Video.FFMPEG.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -87,23 +78,10 @@
     <Compile Include="Controls\BeatVisualizer.cs" />
     <Compile Include="Controls\DirectInputControl.cs" />
     <Compile Include="Controls\HistogramControl.cs" />
-    <Compile Include="Controls\SampleRectZoom.cs" />
     <Compile Include="Controls\StretchPanel.cs" />
     <Compile Include="Converters\ParameterToBooleanConverter.cs" />
     <Compile Include="Dialogs\BeatConversionSettingsDialog.xaml.cs">
       <DependentUpon>BeatConversionSettingsDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\ColorPicker.xaml.cs">
-      <DependentUpon>ColorPicker.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\ConditionEditorDialog.xaml.cs">
-      <DependentUpon>ConditionEditorDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\ColorSummary.xaml.cs">
-      <DependentUpon>ColorSummary.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\ProjectTree.xaml.cs">
-      <DependentUpon>ProjectTree.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\CustomConversionDialog.xaml.cs">
       <DependentUpon>CustomConversionDialog.xaml</DependentUpon>
@@ -129,39 +107,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dialogs\ColorPicker.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialogs\ConditionEditorDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\ColorSummary.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\ProjectTree.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Dialogs\CustomConversionDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\DoubleInputDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialogs\FrameAnalyserDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialogs\FrameSamplerDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialogs\FramePicture.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -185,18 +135,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="Dialogs\FrameAnalyserDialog.xaml.cs">
-      <DependentUpon>FrameAnalyserDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\FrameSamplerDialog.xaml.cs">
-      <DependentUpon>FrameSamplerDialog.xaml</DependentUpon>
-    </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Dialogs\FramePicture.xaml.cs">
-      <DependentUpon>FramePicture.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -221,7 +162,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -253,15 +193,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\Accord.3.8.2-alpha\build\Accord.targets" Condition="Exists('..\packages\Accord.3.8.2-alpha\build\Accord.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Accord.3.8.2-alpha\build\Accord.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Accord.3.8.2-alpha\build\Accord.targets'))" />
-    <Error Condition="!Exists('..\packages\Accord.Video.FFMPEG.3.8.2-alpha\build\Accord.Video.FFMPEG.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Accord.Video.FFMPEG.3.8.2-alpha\build\Accord.Video.FFMPEG.targets'))" />
-  </Target>
-  <Import Project="..\packages\Accord.Video.FFMPEG.3.8.2-alpha\build\Accord.Video.FFMPEG.targets" Condition="Exists('..\packages\Accord.Video.FFMPEG.3.8.2-alpha\build\Accord.Video.FFMPEG.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

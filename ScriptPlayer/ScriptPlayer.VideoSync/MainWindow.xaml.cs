@@ -10,9 +10,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using ScriptPlayer.Shared;
+using ScriptPlayer.Shared.Beats;
 using ScriptPlayer.Shared.Classes;
 using ScriptPlayer.Shared.Scripts;
 using ScriptPlayer.VideoSync.Controls;
@@ -27,6 +27,15 @@ namespace ScriptPlayer.VideoSync
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static readonly DependencyProperty TimeFrameContextProperty = DependencyProperty.Register(
+            "TimeFrameContext", typeof(TimeFrameContext), typeof(MainWindow), new PropertyMetadata(default(TimeFrameContext)));
+
+        public TimeFrameContext TimeFrameContext
+        {
+            get { return (TimeFrameContext) GetValue(TimeFrameContextProperty); }
+            set { SetValue(TimeFrameContextProperty, value); }
+        }
+
         public static readonly DependencyProperty SpeedRatioModifierProperty = DependencyProperty.Register(
             "SpeedRatioModifier", typeof(double), typeof(MainWindow), new PropertyMetadata(1.0d, OnSpeedRatioModifierPropertyChanged));
 
@@ -53,73 +62,6 @@ namespace ScriptPlayer.VideoSync
         {
             get => (PositionCollection)GetValue(PositionsProperty);
             set => SetValue(PositionsProperty, value);
-        }
-
-        public static readonly DependencyProperty BeatBarDurationProperty = DependencyProperty.Register(
-            "BeatBarDuration", typeof(TimeSpan), typeof(MainWindow), new PropertyMetadata(TimeSpan.FromSeconds(5.0)));
-
-        public TimeSpan BeatBarDuration
-        {
-            get => (TimeSpan)GetValue(BeatBarDurationProperty);
-            set => SetValue(BeatBarDurationProperty, value);
-        }
-
-        public static readonly DependencyProperty BeatBarCenterProperty = DependencyProperty.Register(
-            "BeatBarCenter", typeof(double), typeof(MainWindow), new PropertyMetadata(0.5));
-
-        public double BeatBarCenter
-        {
-            get => (double)GetValue(BeatBarCenterProperty);
-            set => SetValue(BeatBarCenterProperty, value);
-        }
-
-        public static readonly DependencyProperty SampleXProperty = DependencyProperty.Register(
-            "SampleX", typeof(int), typeof(MainWindow), new PropertyMetadata(680, OnSampleSizeChanged));
-
-        private static void OnSampleSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            ((MainWindow)d).UpdateSampleSize();
-        }
-
-        private void UpdateSampleSize()
-        {
-            var rect = new Int32Rect(SampleX, SampleY, SampleW, SampleH);
-            if (rect == _captureRect) return;
-
-            SetCaptureRect(rect);
-        }
-
-        public int SampleX
-        {
-            get => (int)GetValue(SampleXProperty);
-            set => SetValue(SampleXProperty, value);
-        }
-
-        public static readonly DependencyProperty SampleYProperty = DependencyProperty.Register(
-            "SampleY", typeof(int), typeof(MainWindow), new PropertyMetadata(700, OnSampleSizeChanged));
-
-        public int SampleY
-        {
-            get => (int)GetValue(SampleYProperty);
-            set => SetValue(SampleYProperty, value);
-        }
-
-        public static readonly DependencyProperty SampleWProperty = DependencyProperty.Register(
-            "SampleW", typeof(int), typeof(MainWindow), new PropertyMetadata(4, OnSampleSizeChanged));
-
-        public int SampleW
-        {
-            get => (int)GetValue(SampleWProperty);
-            set => SetValue(SampleWProperty, value);
-        }
-
-        public static readonly DependencyProperty SampleHProperty = DependencyProperty.Register(
-            "SampleH", typeof(int), typeof(MainWindow), new PropertyMetadata(4, OnSampleSizeChanged));
-
-        public int SampleH
-        {
-            get => (int)GetValue(SampleHProperty);
-            set => SetValue(SampleHProperty, value);
         }
 
         public static readonly DependencyProperty BookmarksProperty = DependencyProperty.Register(
@@ -158,6 +100,15 @@ namespace ScriptPlayer.VideoSync
             set => SetValue(BeatsProperty, value);
         }
 
+        public static readonly DependencyProperty TactsProperty = DependencyProperty.Register(
+            "Tacts", typeof(TactCollection), typeof(MainWindow), new PropertyMetadata(default(TactCollection)));
+
+        public TactCollection Tacts
+        {
+            get { return (TactCollection) GetValue(TactsProperty); }
+            set { SetValue(TactsProperty, value); }
+        }
+
 
         public static readonly DependencyProperty BeatCountProperty = DependencyProperty.Register(
             "BeatCount", typeof(int), typeof(MainWindow), new PropertyMetadata(default(int)));
@@ -168,7 +119,6 @@ namespace ScriptPlayer.VideoSync
             set => SetValue(BeatCountProperty, value);
         }
 
-
         public static readonly DependencyProperty PixelPreviewProperty = DependencyProperty.Register(
             "PixelPreview", typeof(Brush), typeof(MainWindow), new PropertyMetadata(default(Brush)));
 
@@ -178,12 +128,70 @@ namespace ScriptPlayer.VideoSync
             set => SetValue(PixelPreviewProperty, value);
         }
 
+        public static readonly DependencyProperty BarsProperty = DependencyProperty.Register(
+            "Bars", typeof(BarCollection), typeof(MainWindow), new PropertyMetadata(default(BarCollection)));
+
+        public BarCollection Bars
+        {
+            get { return (BarCollection) GetValue(BarsProperty); }
+            set { SetValue(BarsProperty, value); }
+        }
+
+        public static readonly DependencyProperty TickerProperty = DependencyProperty.Register(
+            "Ticker", typeof(Ticker), typeof(MainWindow), new PropertyMetadata(default(Ticker)));
+
+        public Ticker Ticker
+        {
+            get { return (Ticker) GetValue(TickerProperty); }
+            set { SetValue(TickerProperty, value); }
+        }
+
         public MainWindow()
         {
+            TimeFrameContext = new TimeFrameContext();
+            Ticker = new Ticker();
+            Tacts = new TactCollection();
+            Bars = new BarCollection();
+
+            for (int i = 0; i < 10; i++)
+            {
+                var tact = new Tact
+                {
+                    Beats = 11,
+                    BeatsPerBar = 4,
+                    Start = TimeSpan.FromSeconds(10).Multiply(i) + TimeSpan.FromSeconds(1),
+                    End = TimeSpan.FromSeconds(10).Multiply(i) + TimeSpan.FromSeconds(6)
+                };
+                
+                Tacts.Add(tact);
+
+                Bar b = new Bar
+                {
+                    Start = 2,
+                    End = 20,
+                    Rythm = new []{true, false, true, false, true, true, true, false},
+                    Tact = tact
+                };
+
+                Bars.Add(b);
+            }
+
+
             Bookmarks = new List<TimeSpan>();
             SetAllBeats(new BeatCollection());
             Positions = new PositionCollection();
             InitializeComponent();
+
+            videoPlayer.TimeSource.ProgressChanged += TimeSourceOnProgressChanged;
+            Ticker.SetSource(BeatBar);
+        }
+
+        private void TimeSourceOnProgressChanged(object sender, TimeSpan progress)
+        {
+            if (TimeFrameContext == null)
+                return;
+
+            TimeFrameContext.Progress = progress;
         }
 
         private void InitializeSampler()
@@ -311,92 +319,7 @@ namespace ScriptPlayer.VideoSync
 
         private void VideoPlayer_OnMediaOpened(object sender, EventArgs e)
         {
-            RefreshSampler();
-        }
-
-        private void videoPlayer_VideoMouseDown(object sender, int x, int y)
-        {
-            SetCaptureRect(new Int32Rect(x, y, SampleW, SampleH));
-        }
-
-        private void SetCaptureRect(Int32Rect rect)
-        {
-            _captureRect = rect;
-
-            SampleX = rect.X;
-            SampleY = rect.Y;
-            SampleW = rect.Width;
-            SampleH = rect.Height;
-
-            Debug.WriteLine($"Set Sample Area to: {_captureRect.X} / {_captureRect.Y} ({_captureRect.Width} x {_captureRect.Height})");
-            Sampler.Sample = _captureRect;
-            videoPlayer.SampleRect = new Rect(_captureRect.X, _captureRect.Y, _captureRect.Width, _captureRect.Height);
-        }
-
-        private void VideoPlayer_OnVideoMouseUp(object sender, int x, int y)
-        {
-            //throw new NotImplementedException();
-        }
-
-        private void mnuFrameSampler_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new FrameSamplerDialog(_videoFile, _captureRect, videoPlayer.Duration);
-            if (dialog.ShowDialog() != true) return;
-
-            SetSamples(dialog.Result, dialog.Thumbnails);
-        }
-
-        private void mnuSaveSamples_Click(object sender, RoutedEventArgs e)
-        {
-            if (_frameSamples == null)
-            {
-                MessageBox.Show("No Samples loaded!");
-                return;
-            }
-
-            SaveFileDialog dialog = new SaveFileDialog
-            {
-                Filter = "Frame Sample Files|*.framesamples|All Files|*.*",
-                FileName = Path.GetFileNameWithoutExtension(_videoFile) ?? Environment.CurrentDirectory
-            };
-
-            if (dialog.ShowDialog(this) != true) return;
-
-            _frameSamples.SaveToFile(dialog.FileName);
-        }
-
-        private void mnuLoadSamples_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog dialog = new OpenFileDialog { Filter = "Frame Sample Files|*.framesamples|All Files|*.*" };
-
-            if (dialog.ShowDialog(this) != true) return;
-
-            SetSamples(FrameCaptureCollection.FromFile(dialog.FileName), null);
-
-            if (_videoFile != _frameSamples.VideoFile)
-            {
-                if (MessageBox.Show(this, "Load '" + _frameSamples.VideoFile + "'?", "Open associated file?",
-                        MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                {
-                    OpenVideo(_frameSamples.VideoFile, true, false);
-                }
-            }
-        }
-
-        private void SetSamples(FrameCaptureCollection frames, Dictionary<long, BitmapSource> thumbnails)
-        {
-            _frameSamples = frames;
-            SetCaptureRect(_frameSamples.CaptureRect);
-            colorSampleBar.Frames = _frameSamples;
-
-            VideoThumbnailCollection collection = new VideoThumbnailCollection();
-            if (thumbnails != null)
-            {
-                foreach (var kvp in thumbnails)
-                    collection.Add(frames.FrameIndexToTimeSpan(kvp.Key), kvp.Value);
-            }
-
-            SeekBar.Thumbnails = collection;
+            
         }
 
         private void OpenVideo(string videoFile, bool play, bool resetFileNames)
@@ -413,57 +336,6 @@ namespace ScriptPlayer.VideoSync
             {
                 _projectFile = null;
             }
-        }
-
-        private void mnuAnalyseSamples_Click(object sender, RoutedEventArgs e)
-        {
-            AnalyseSamples();
-        }
-
-        private void AnalyseSamples()
-        {
-            if (_frameSamples == null)
-            {
-                MessageBox.Show(this, "No samples to analyse!");
-                return;
-            }
-
-            FrameAnalyserDialog dialog = new FrameAnalyserDialog(_frameSamples, _condition, _parameters);
-
-            if (dialog.ShowDialog() != true) return;
-
-            SetAllBeats(dialog.Result);
-        }
-
-        private void mnuAnalyseSelection_Click(object sender, RoutedEventArgs e)
-        {
-            AnalyseSelection();
-        }
-
-        private void AnalyseSelection()
-        {
-            if (_frameSamples == null)
-            {
-                MessageBox.Show(this, "No samples to analyse!");
-                return;
-            }
-
-            FrameAnalyserDialog dialog = new FrameAnalyserDialog(_frameSamples, _condition, _parameters);
-
-            if (dialog.ShowDialog() != true) return;
-
-            OverridesSelection(dialog.Result);
-        }
-
-        private void OverridesSelection(List<TimeSpan> beats)
-        {
-            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
-            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
-
-            List<TimeSpan> newBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
-            newBeats.AddRange(beats.Where(t => t >= tBegin && t <= tEnd).ToList());
-
-            SetAllBeats(newBeats);
         }
 
         private void SetAllBeats(IEnumerable<TimeSpan> beats)
@@ -537,52 +409,6 @@ namespace ScriptPlayer.VideoSync
             videoPlayer.TimeSource.SetPosition(position);
         }
 
-        private void mnuSetCondition_Click(object sender, RoutedEventArgs e)
-        {
-            PixelColorSampleCondition currentCondition = _condition;
-            AnalysisParameters currentParameters = _parameters;
-            ConditionEditorDialog dialog = new ConditionEditorDialog(currentCondition, currentParameters);
-            dialog.LiveConditionUpdate += DialogOnLiveConditionUpdate;
-
-            if (dialog.ShowDialog() != true)
-            {
-                SetCondition(currentCondition);
-                _parameters = currentParameters;
-            }
-            else
-            {
-                SetCondition(dialog.Result);
-                _parameters = dialog.Result2;
-
-                switch (dialog.Reanalyse)
-                {
-                    case ReanalyseType.Everything:
-                        AnalyseSamples();
-                        break;
-                    case ReanalyseType.Selection:
-                        AnalyseSelection();
-                        break;
-                    case ReanalyseType.Nothing:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-            }
-
-        }
-
-        private void DialogOnLiveConditionUpdate(object sender, PixelColorSampleCondition condition)
-        {
-            SetCondition(condition);
-        }
-
-        private void SetCondition(PixelColorSampleCondition condition)
-        {
-            _condition = condition;
-            colorSampleBar.SampleCondition = condition;
-        }
-
         private void ShiftTime(TimeSpan timespan)
         {
             videoPlayer.TimeSource.SetPosition(videoPlayer.GetPosition() + timespan);
@@ -590,12 +416,12 @@ namespace ScriptPlayer.VideoSync
 
         private void btnBeatBarDurationBack_Click(object sender, RoutedEventArgs e)
         {
-            ShiftTime(-BeatBarDuration);
+            ShiftTime(-TimeFrameContext.TotalDisplayedDuration);
         }
 
         private void btnBeatbarDurationForward_Click(object sender, RoutedEventArgs e)
         {
-            ShiftTime(BeatBarDuration);
+            ShiftTime(TimeFrameContext.TotalDisplayedDuration);
         }
 
         private void btnPreviousBookmark_Click(object sender, RoutedEventArgs e)
@@ -798,13 +624,6 @@ namespace ScriptPlayer.VideoSync
             script.Save(filename);
         }
 
-        private void btnResetSamples_Click(object sender, RoutedEventArgs e)
-        {
-            if (_frameSamples == null) return;
-
-            SetCaptureRect(_frameSamples.CaptureRect);
-        }
-
         private void DeleteBeatsWithinMarkers()
         {
             TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
@@ -837,8 +656,8 @@ namespace ScriptPlayer.VideoSync
                 VideoFile = _videoFile,
                 SampleCondition = _condition,
                 AnalysisParameters = _parameters,
-                BeatBarDuration = BeatBar.TotalDisplayedDuration.TotalSeconds,
-                BeatBarMidpoint = BeatBar.Midpoint,
+                BeatBarDuration = TimeFrameContext.TotalDisplayedDuration.TotalSeconds,
+                BeatBarMidpoint = TimeFrameContext.Midpoint,
                 Beats = Beats.Select(b => b.Ticks).ToList(),
                 Bookmarks = Bookmarks.Select(b => b.Ticks).ToList(),
                 Positions = Positions.ToList()
@@ -866,10 +685,9 @@ namespace ScriptPlayer.VideoSync
                 OpenVideo(otherPath, true, false);
             }
 
-            SetCondition(project.SampleCondition);
             _parameters = project.AnalysisParameters;
-            BeatBarDuration = TimeSpan.FromSeconds(project.BeatBarDuration);
-            BeatBarCenter = project.BeatBarMidpoint;
+            TimeFrameContext.TotalDisplayedDuration = TimeSpan.FromSeconds(project.BeatBarDuration);
+            TimeFrameContext.Midpoint = project.BeatBarMidpoint;
             Beats = new BeatCollection(project.Beats.Select(TimeSpan.FromTicks));
             Bookmarks = project.Bookmarks.Select(TimeSpan.FromTicks).ToList();
             Positions = new PositionCollection(project.Positions);
@@ -1405,18 +1223,6 @@ namespace ScriptPlayer.VideoSync
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (GridSampleRect.IsKeyboardFocusWithin)
-            {
-                switch (e.Key)
-                {
-                    case Key.Escape:
-                        GridSplitter.Focus();
-                        break;
-                }
-
-                return;
-            }
-
             bool control = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
             bool shift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
             bool caps = Keyboard.IsKeyToggled(Key.CapsLock);
@@ -1469,7 +1275,7 @@ namespace ScriptPlayer.VideoSync
                         else if (shift)
                             ShiftTime(TimeSpan.FromMilliseconds(multiplier * 20));
                         else
-                            ShiftTime(BeatBarDuration.Multiply(multiplier / 2.0));
+                            ShiftTime(TimeFrameContext.TotalDisplayedDuration.Multiply(multiplier / 2.0));
 
 
                         break;
@@ -2827,20 +2633,6 @@ namespace ScriptPlayer.VideoSync
             SeekBar.Background = heatmap;
         }
 
-        private void MnuSaveThumbnails_Click(object sender, RoutedEventArgs e)
-        {
-            VideoThumbnailCollection thumbs = SeekBar.Thumbnails;
-            if (thumbs == null) return;
-
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.Filter = "Video Thumbnails|*.thumbs";
-
-            if (dialog.ShowDialog(this) != true) return;
-
-            using (FileStream stream = new FileStream(dialog.FileName, FileMode.Create, FileAccess.Write))
-                thumbs.Save(stream);
-        }
-
         private void MnuLoadThumbnails_Click(object sender, RoutedEventArgs e)
         {
             VideoThumbnailCollection thumbs = new VideoThumbnailCollection();
@@ -2862,50 +2654,9 @@ namespace ScriptPlayer.VideoSync
             BeatBar.SoundDelay = 0;
         }
 
-        private void BtnYMinus_Click(object sender, RoutedEventArgs e)
-        {
-            SampleY = Math.Max(0, SampleY - 1);
-        }
-
-        private void BtnYPlus_Click(object sender, RoutedEventArgs e)
-        {
-            SampleY++;
-        }
-
-        private void BtnWMinus_Click(object sender, RoutedEventArgs e)
-        {
-            SampleW = Math.Max(1, SampleW - 1);
-        }
-
-        private void BtnWPlus_Click(object sender, RoutedEventArgs e)
-        {
-            SampleW++;
-        }
-
-        private void BtnXMinus_Click(object sender, RoutedEventArgs e)
-        {
-            SampleX = Math.Max(0, SampleX - 1);
-        }
-
-        private void BtnXPlus_Click(object sender, RoutedEventArgs e)
-        {
-            SampleX++;
-        }
-
-        private void BtnHMinus_Click(object sender, RoutedEventArgs e)
-        {
-            SampleH = Math.Max(1, SampleH - 1);
-        }
-
-        private void BtnHPlus_Click(object sender, RoutedEventArgs e)
-        {
-            SampleH++;
-        }
-
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             BeatBar.HighlightBeats = true;
-            BeatBar.SoundAfterBeat = true;
         }
 
         private double _previousSuperNormalizeDuration = 200;
@@ -3029,6 +2780,10 @@ namespace ScriptPlayer.VideoSync
             SetSelectedBeats(selectedBeats);
         }
 
+        private void TactBar_TactRightClicked(object sender, Tact e)
+        {
+
+        }
     }
 
     public enum PositionType

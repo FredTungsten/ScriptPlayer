@@ -146,6 +146,7 @@
     <Compile Include="Controls\VirtualizingWrapPanel.cs" />
     <Compile Include="Converters\AlternativeValueConverter.cs" />
     <Compile Include="Converters\InverterConverter.cs" />
+    <Compile Include="Converters\MultiCollectionConverter.cs" />
     <Compile Include="Dialogs\CompactControlWindow.xaml.cs">
       <DependentUpon>CompactControlWindow.xaml</DependentUpon>
     </Compile>
@@ -179,6 +180,10 @@
     <Compile Include="Dialogs\SerialPortSelector.xaml.cs">
       <DependentUpon>SerialPortSelector.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\Bookmark.cs" />
+    <Compile Include="ViewModels\BookmarkFolder.cs" />
+    <Compile Include="ViewModels\BookmarkFolderViewModel.cs" />
+    <Compile Include="ViewModels\BookmarkViewModel.cs" />
     <Compile Include="ViewModels\DependecyObjectExtensions.cs" />
     <Compile Include="Dialogs\GeneratorSettingsDialog.xaml.cs">
       <DependentUpon>GeneratorSettingsDialog.xaml</DependentUpon>

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -172,7 +171,10 @@ namespace ScriptPlayer.Shared
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 Height = 20,
-                TotalDisplayedDuration = TimeSpan.FromSeconds(16),
+                TimeFrameContext = new TimeFrameContext
+                {
+                    TotalDisplayedDuration = TimeSpan.FromSeconds(16),
+                },
                 DrawCircles = false,
                 DrawLines = false,
                 DrawZero = true,
@@ -370,7 +372,7 @@ namespace ScriptPlayer.Shared
 
             if (Positions != null)
             {
-                _pos.Progress = absolutePosition;
+                _pos.TimeFrameContext.Progress = absolutePosition;
                 _pos.Visibility = Visibility.Visible;   
             }
             else

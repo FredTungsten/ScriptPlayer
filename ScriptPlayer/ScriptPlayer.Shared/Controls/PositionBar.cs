@@ -9,7 +9,7 @@ using System.Windows.Media;
 
 namespace ScriptPlayer.Shared
 {
-    public class PositionBar : Control
+    public class PositionBar : TimelineBaseControl
     {
         public static readonly DependencyProperty DrawLinesProperty = DependencyProperty.Register(
             "DrawLines", typeof(bool), typeof(PositionBar), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
@@ -82,27 +82,6 @@ namespace ScriptPlayer.Shared
             get => (PositionCollection) GetValue(PreviewPositionsProperty);
             set => SetValue(PreviewPositionsProperty, value);
         }
-        
-        public static readonly DependencyProperty TotalDisplayedDurationProperty = DependencyProperty.Register(
-            "TotalDisplayedDuration", typeof(TimeSpan), typeof(PositionBar), new PropertyMetadata(TimeSpan.FromSeconds(5), OnVisualPropertyChanged));
-
-        public TimeSpan TotalDisplayedDuration
-        {
-            get => (TimeSpan)GetValue(TotalDisplayedDurationProperty);
-            set => SetValue(TotalDisplayedDurationProperty, value);
-        }
-
-        public static readonly DependencyProperty MidpointProperty = DependencyProperty.Register(
-            "Midpoint", typeof(double), typeof(PositionBar), new PropertyMetadata(0.5d, OnVisualPropertyChanged));
-
-        public double Midpoint
-        {
-            get => (double)GetValue(MidpointProperty);
-            set => SetValue(MidpointProperty, value);
-        }
-
-        public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
-            "Progress", typeof(TimeSpan), typeof(PositionBar), new PropertyMetadata(default(TimeSpan), OnVisualPropertyChanged));
 
         private bool _down;
         private Point _mousePos;
@@ -110,13 +89,7 @@ namespace ScriptPlayer.Shared
 
         private static void OnVisualPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((PositionBar)d).InvalidateVisual();
-        }
-
-        public TimeSpan Progress
-        {
-            get => (TimeSpan)GetValue(ProgressProperty);
-            set => SetValue(ProgressProperty, value);
+            ((PositionBar)d).VisualPropertyChanged();
         }
 
         public static readonly DependencyProperty IsReadOnlyProperty = DependencyProperty.Register(
@@ -213,8 +186,8 @@ namespace ScriptPlayer.Shared
 
         private TimedPosition GetClosestPosition(Point mousePos)
         {
-            TimeSpan timeFrom = Progress - TotalDisplayedDuration.Multiply(Midpoint);
-            TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
+            TimeSpan timeFrom = TimeFrameContext.Progress - TimeFrameContext.TotalDisplayedDuration.Multiply(TimeFrameContext.Midpoint);
+            TimeSpan timeTo = TimeFrameContext.Progress + TimeFrameContext.TotalDisplayedDuration.Multiply(1 - TimeFrameContext.Midpoint);
 
             List<TimedPosition> absoluteBeatPositions = Positions.GetPositions(timeFrom, timeTo).ToList();
 
@@ -293,15 +266,10 @@ namespace ScriptPlayer.Shared
 
         private Point GetPointFromPosition(TimedPosition position)
         {
-            double x = PositionToX(position.TimeStamp);
+            double x = XFromTime(position.TimeStamp);
             double y = PositionToY(position.Position);
 
             return new Point(x, y);
-        }
-
-        private double PositionToX(TimeSpan timeStamp)
-        {
-            return (timeStamp - (Progress - TotalDisplayedDuration.Multiply(Midpoint))).Divide(TotalDisplayedDuration) * ActualWidth;
         }
 
         private double PositionToY(byte position)
@@ -311,8 +279,8 @@ namespace ScriptPlayer.Shared
 
         private TimedPosition GetPositionFromPoint(Point point)
         {
-            TimeSpan timestamp = XToPosition(point.X);
-            byte position = YToPosition(point.Y);
+            TimeSpan timestamp = TimeFromX(point.X);
+            byte position = PositionFromY(point.Y);
 
             int rounded = (int)(Math.Round(position / 5.0) * 5.0);
 
@@ -325,12 +293,7 @@ namespace ScriptPlayer.Shared
             };
         }
 
-        private TimeSpan XToPosition(double x)
-        {
-            return TotalDisplayedDuration.Multiply(x / ActualWidth) + (Progress - TotalDisplayedDuration.Multiply(Midpoint));
-        }
-
-        private byte YToPosition(double y)
+        private byte PositionFromY(double y)
         {
             double usableHeight = ActualHeight - 2 * CircleRadius;
             return (byte)(Math.Min(usableHeight, Math.Max(0, usableHeight - (y - CircleRadius))) / usableHeight * 99.0);
@@ -338,65 +301,56 @@ namespace ScriptPlayer.Shared
 
         private static double CircleRadius = 4;
 
-        protected override void OnRender(DrawingContext drawingContext)
+        protected override void Render(TimeBasedRenderContext context)
         {
             if (_down)
             {
                 UpdateSelectedPosition(false);
             }
 
-            Rect fullRect = new Rect(new Point(), new Size(ActualWidth, ActualHeight));
-
-            drawingContext.PushClip(new RectangleGeometry(fullRect));
-            drawingContext.DrawRectangle(Background, null, fullRect);
+            context.DrawingContext.DrawRectangle(Background, null, context.FullRect);
 
             var gridBrush = LockTimeStamp ? Brushes.Red : Brushes.Green;
             Pen gridPen = new Pen(gridBrush, 1);
 
             if (DrawLines)
             {
-                drawingContext.PushOpacity(0.3);
+                context.DrawingContext.PushOpacity(0.3);
                 for (int i = 0; i <= 4; i++)
                 {
-                    drawingContext.DrawLine(gridPen, new Point(0, i * ActualHeight / 4.0),
+                    context.DrawingContext.DrawLine(gridPen, new Point(0, i * ActualHeight / 4.0),
                         new Point(ActualWidth, i * ActualHeight / 4.0));
                 }
 
-                drawingContext.Pop();
+                context.DrawingContext.Pop();
             }
 
             if (DrawZero)
             {
-                double midPointX = ActualWidth * Midpoint;
-
-                drawingContext.DrawLine(gridPen, new Point(midPointX, 0), new Point(midPointX, ActualHeight));
+                double midPointX = ActualWidth * TimeFrameContext.Midpoint;
+                context.DrawingContext.DrawLine(gridPen, new Point(midPointX, 0), new Point(midPointX, ActualHeight));
             }
 
             if (Positions != null)
             {
                 if (PreviewPositions != null)
-                    drawingContext.PushOpacity(0.2);
+                    context.DrawingContext.PushOpacity(0.2);
 
-                DrawPositions(drawingContext, Positions);
+                DrawPositions(context, Positions);
 
                 if (PreviewPositions != null)
-                    drawingContext.Pop();
+                    context.DrawingContext.Pop();
             }
 
             if (PreviewPositions != null)
             {
-                DrawPositions(drawingContext, PreviewPositions);
+                DrawPositions(context, PreviewPositions);
             }
-
-            drawingContext.Pop();
         }
 
-        private void DrawPositions(DrawingContext drawingContext, PositionCollection positions)
+        private void DrawPositions(TimeBasedRenderContext context, PositionCollection positions)
         {
-            TimeSpan timeFrom = Progress - TotalDisplayedDuration.Multiply(Midpoint);
-            TimeSpan timeTo = Progress + TotalDisplayedDuration.Multiply(1 - Midpoint);
-
-            List<TimedPosition> absoluteBeatPositions = positions.GetPositions(timeFrom, timeTo).ToList();
+            List<TimedPosition> absoluteBeatPositions = positions.GetPositions(context.TimeFrom, context.TimeTo).ToList();
             List<Point> beatPoints = absoluteBeatPositions.Select(GetPointFromPosition).ToList();
 
             if (beatPoints.Count > 0)
@@ -408,7 +362,7 @@ namespace ScriptPlayer.Shared
                     double speed = SpeedPredictor.PredictSpeed2(absoluteBeatPositions[i - 1].Position, absoluteBeatPositions[i].Position, duration) / 99.0;
 
                     Color color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap, speed);
-                    drawingContext.DrawLine(new Pen(new SolidColorBrush(color), 1), beatPoints[i - 1], beatPoints[i]);
+                    context.DrawingContext.DrawLine(new Pen(new SolidColorBrush(color), 1), beatPoints[i - 1], beatPoints[i]);
                 }
 
                 if (DrawCircles)
@@ -421,15 +375,14 @@ namespace ScriptPlayer.Shared
                             color = Colors.Lime;
                         else
                         {
-                            TimeSpan duration = absoluteBeatPositions[i].TimeStamp -
-                                                absoluteBeatPositions[i - 1].TimeStamp;
+                            TimeSpan duration = absoluteBeatPositions[i].TimeStamp - absoluteBeatPositions[i - 1].TimeStamp;
                             double durationFactor = MinCommandDelay.Divide(duration);
                             color = HeatMapGenerator.GetColorAtPosition(HeatMapGenerator.HeatMap3, durationFactor);
                         }
 
                         Color fillColor = HeatMapGenerator.MixColors(color, Colors.Black, 0.5);
 
-                        drawingContext.DrawEllipse(new SolidColorBrush(fillColor),
+                        context.DrawingContext.DrawEllipse(new SolidColorBrush(fillColor),
                             new Pen(new SolidColorBrush(color), 1), beatPoints[i], CircleRadius, CircleRadius);
                     }
                 }

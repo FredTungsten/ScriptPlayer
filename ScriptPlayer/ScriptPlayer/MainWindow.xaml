@@ -69,6 +69,8 @@
         <converters:BooleanInverter x:Key="Inverter"/>
         <converters1:EqualsConverter x:Key="EqualsConverter"/>
         <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
+        <converters1:MultiCollectionConverter x:Key="MultiCollectionConverter"/>
+        <converters1:OneToManyConverter x:Key="OneToManyConverter"/>
 
         <!-- Used in code -->
         <!-- ReSharper disable Xaml.RedundantResource -->
@@ -248,7 +250,7 @@
 
             <Grid Background="#E0000000" IsHitTestVisible="False" Visibility="{Binding Settings.ShowScriptPositions, Converter={StaticResource VisibilityConverter}}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="65">
                 <shared:TimeLineHeader ClipToBounds="True" Background="Transparent" ViewPort="{Binding PositionsViewport, Mode=TwoWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Marker="{Binding Path=TimeSource.Progress, Mode=OneWay}"></shared:TimeLineHeader>
-                <shared:PositionBar ClipToBounds="True" TotalDisplayedDuration="{Binding PositionsViewport, Mode=OneWay}" MinCommandDelay="{Binding Settings.CommandDelay}" IsReadOnly="True" Positions="{Binding Positions}" Progress="{Binding Path=TimeSource.Progress}"/>
+                <shared:PositionBar TimeFrameContext="{Binding TimeFrameContext}" ClipToBounds="True" MinCommandDelay="{Binding Settings.CommandDelay}" IsReadOnly="True" Positions="{Binding Positions}" />
             </Grid>
 
             <!-- NOTIFICATIONS -->
@@ -367,6 +369,43 @@
                     <MenuItem Header="Edit Meta-Data" Command="{Binding EditMetadataCommand}"/>
                     <MenuItem Header="Save as" Command="{Binding SaveScriptAsCommand}"/>
                     <MenuItem Header="Export as Handy CSV" Command="{Binding ExportHandyCsvCommand}"/>
+                </MenuItem>
+                <MenuItem Header="Bookmarks">
+                    <MenuItem.Resources>
+                        <HierarchicalDataTemplate DataType="{x:Type viewModels:BookmarkFolderViewModel}">
+                            <HierarchicalDataTemplate.ItemsSource>
+                                <MultiBinding Converter="{StaticResource MultiCollectionConverter}">
+                                    <Binding Path="Folders"/>
+                                    <Binding Path="Bookmarks"/>
+                                </MultiBinding>
+                            </HierarchicalDataTemplate.ItemsSource>
+                            <TextBlock Text="{Binding Label}"/>
+                        </HierarchicalDataTemplate>
+                        <DataTemplate DataType="{x:Type viewModels:BookmarkViewModel}">
+                            <TextBlock Text="{Binding Label}"/>
+                        </DataTemplate>
+                    </MenuItem.Resources>
+
+                    <MenuItem.ItemsSource>
+                        <MultiBinding Converter="{StaticResource MultiCollectionConverter}">
+                            <Binding Path="Bookmarks"/>
+                            <Binding>
+                                <Binding.Source>
+                                    <Separator/>
+                                </Binding.Source>
+                            </Binding>
+                            <Binding>
+                                <Binding.Source>
+                                    <MenuItem Header="Add Bookmark"></MenuItem>
+                                </Binding.Source>
+                            </Binding>
+                            <Binding>
+                                <Binding.Source>
+                                    <MenuItem Header="Manage Bookmarks"></MenuItem>
+                                </Binding.Source>
+                            </Binding>
+                        </MultiBinding>
+                    </MenuItem.ItemsSource>
                 </MenuItem>
                 <MenuItem Header="Selection">
                     <MenuItem Header="Set A" Command="{Binding SetLoopACommand}"/>

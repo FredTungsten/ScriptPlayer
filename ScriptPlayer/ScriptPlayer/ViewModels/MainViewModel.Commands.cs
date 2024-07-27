@@ -103,10 +103,22 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand ReloadScriptCommand { get; set; }
 
+        public ScriptplayerCommand ManageBookmarksCommand { get; set; }
+
+        public ScriptplayerCommand AddBookmarkCommand { get; set; }
+
+        public RelayCommand<BookmarkViewModel> OpenBookmarkCommand { get; set; }
+
         #endregion
 
         private void InitializeCommands()
         {
+            ManageBookmarksCommand = new ScriptplayerCommand(ManageBookmarks);
+
+            OpenBookmarkCommand = new RelayCommand<BookmarkViewModel>(ExecuteOpenBookmark);
+
+            AddBookmarkCommand = new ScriptplayerCommand(AddBookmark, CanAddBookmark);
+
             SetTimeDisplayModeCommand = new RelayCommand<TimeDisplayMode>(SetTimeDisplayMode);
 
             SetShowTimeLeftCommand = new RelayCommand<bool>(SetShowTimeLeft);
@@ -643,6 +655,27 @@ namespace ScriptPlayer.ViewModels
             InitializeActions();
         }
 
+        private bool CanAddBookmark()
+        {
+            return LoadedMedia != null;
+        }
+
+        private void AddBookmark()
+        {
+            //TODO RequestEditBookmark (values)
+        }
+
+        private void ExecuteOpenBookmark(BookmarkViewModel obj)
+        {
+            //TODO pass initial position
+            LoadFile(obj.FilePath);
+        }
+
+        private void ManageBookmarks()
+        {
+            //TODO RequestOpenBookmakrsmanager
+        }
+
         private void IncreaseRangeExtender()
         {
             SetRangeExtenderAction(new ArInt(5, true));
@@ -659,6 +692,8 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("OpenFile", new Func<string, ActionResult>(OpenFileAction)));
             GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("Seek", new Func<ArTimeSpan, ActionResult>(SeekAction)));
             GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("SetRange", new Func<byte, byte, ActionResult>(SetRangeAction)));
+            GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("SetUpperRange", new Func<byte, ActionResult>(SetUpperRangeAction)));
+            GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("SetLowerRange", new Func<byte, ActionResult>(SetLowerRangeAction)));
             GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("SetRangeExtender", new Action<ArInt>(SetRangeExtenderAction)));
             GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("SetPatternSpeed", new Action<ArInt>(SetPatternSpeedAction)));
         }
@@ -698,7 +733,7 @@ namespace ScriptPlayer.ViewModels
 
         private ActionResult SetRangeAction(byte min, byte max)
         {
-            if(min > 100 || max > 100 || min > max)
+            if (min > 100 || max > 100 || min > max)
                 return new ActionResult(false, "Invalid parameter value (out of range 0-100)");
 
             if (min == 100)
@@ -711,6 +746,32 @@ namespace ScriptPlayer.ViewModels
             Settings.MaxPosition = max;
 
             return new ActionResult(true, "Range set");
+        }
+
+        private ActionResult SetUpperRangeAction(byte value)
+        {
+            if (value > 100)
+                return new ActionResult(false, "Invalid parameter value (out of range 0-100)");
+
+            if (value == 100)
+                value = 99;
+
+            Settings.MaxPosition = value;
+
+            return new ActionResult(true, "Upper range set");
+        }
+
+        private ActionResult SetLowerRangeAction(byte value)
+        {
+            if (value > 100)
+                return new ActionResult(false, "Invalid parameter value (out of range 0-100)");
+
+            if (value == 100)
+                value = 99;
+
+            Settings.MinPosition = value;
+
+            return new ActionResult(true, "Lower range set");
         }
 
         private ActionResult SeekAction(ArTimeSpan value)

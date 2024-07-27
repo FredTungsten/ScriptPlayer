@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 
 namespace ScriptPlayer.VideoSync.Dialogs

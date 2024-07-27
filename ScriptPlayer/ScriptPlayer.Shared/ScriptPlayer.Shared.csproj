@@ -130,7 +130,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Beats\Bar.cs" />
+    <Compile Include="Beats\BarCollection.cs" />
     <Compile Include="Beats\MetronomeTick.cs" />
+    <Compile Include="Beats\Tact.cs" />
+    <Compile Include="Beats\TactCollection.cs" />
     <Compile Include="Classes\Ffmpeg\Arguments\ClipExtractorArguments.cs" />
     <Compile Include="Classes\Ffmpeg\Arguments\ClipMergeArguments.cs" />
     <Compile Include="Classes\Ffmpeg\Arguments\ExtractSubtitleArguments.cs" />
@@ -161,15 +165,19 @@
     <Compile Include="Classes\BlockingQueue.cs" />
     <Compile Include="Controls\AwesomeCharacters.cs" />
     <Compile Include="Controls\AwesomePaths.cs" />
+    <Compile Include="Controls\BarBar.cs" />
     <Compile Include="Controls\BeatAndPositionBar.cs" />
     <Compile Include="Controls\BetterTooltip.cs" />
     <Compile Include="Controls\MediaWrapper.cs" />
     <Compile Include="Controls\PageSelector.cs" />
     <Compile Include="Controls\SubtitleDisplay.cs" />
+    <Compile Include="Controls\TactBar.cs" />
     <Compile Include="Controls\ThumbnailPreview.cs" />
     <Compile Include="Controls\AwesomeIcon.xaml.cs">
       <DependentUpon>AwesomeIcon.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Ticker.cs" />
+    <Compile Include="Controls\TimelineBaseControl.cs" />
     <Compile Include="Converters\BooleanToColumnSpanConverter.cs" />
     <Compile Include="Converters\SeekBarPositionConverter.cs" />
     <Compile Include="Devices\Estim\EStimAudioController.cs" />
@@ -177,7 +185,6 @@
     <Compile Include="Devices\ButtplugAdapter.cs" />
     <Compile Include="Colors\ColorSampler.cs" />
     <Compile Include="Colors\HslConversion.cs" />
-    <Compile Include="Controls\BeatBar.cs" />
     <Compile Include="Beats\BeatGroup.cs" />
     <Compile Include="Beats\BeatPattern.cs" />
     <Compile Include="Beats\BeatTimeline.cs" />
