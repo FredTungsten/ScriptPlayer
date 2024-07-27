@@ -525,18 +525,6 @@ namespace ScriptPlayer.Shared
 
                 result.Add(new GradientStop(color, offset));
 
-                //if (Math.Abs(previous.Offset - stop.Offset) > float.Epsilon)
-                //{
-                //    for (int j = 1; j < 10; j++)
-                //    {
-                //        double progress = j / 10.0;
-                //        double offset = previous.Offset + (stop.Offset - previous.Offset) * progress;
-                //        Color color = HslConversion.Blend(previous.Color, stop.Color, progress);
-
-                //        result.Add(new GradientStop(color, offset));
-                //    }
-                //}
-
                 result.Add(stop);
             }
             return result;

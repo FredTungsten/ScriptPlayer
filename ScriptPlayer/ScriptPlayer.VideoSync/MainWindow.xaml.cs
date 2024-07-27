@@ -32,8 +32,8 @@ namespace ScriptPlayer.VideoSync
 
         public TimeFrameContext TimeFrameContext
         {
-            get { return (TimeFrameContext) GetValue(TimeFrameContextProperty); }
-            set { SetValue(TimeFrameContextProperty, value); }
+            get => (TimeFrameContext) GetValue(TimeFrameContextProperty);
+            set => SetValue(TimeFrameContextProperty, value);
         }
 
         public static readonly DependencyProperty SpeedRatioModifierProperty = DependencyProperty.Register(
@@ -73,15 +73,6 @@ namespace ScriptPlayer.VideoSync
             set => SetValue(BookmarksProperty, value);
         }
 
-        public static readonly DependencyProperty SamplerProperty = DependencyProperty.Register(
-            "Sampler", typeof(ColorSampler), typeof(MainWindow), new PropertyMetadata(default(ColorSampler)));
-
-        public ColorSampler Sampler
-        {
-            get => (ColorSampler)GetValue(SamplerProperty);
-            set => SetValue(SamplerProperty, value);
-        }
-
         public static readonly DependencyProperty DurationProperty = DependencyProperty.Register(
             "Duration", typeof(double), typeof(MainWindow), new PropertyMetadata(default(double)));
 
@@ -105,36 +96,17 @@ namespace ScriptPlayer.VideoSync
 
         public TactCollection Tacts
         {
-            get { return (TactCollection) GetValue(TactsProperty); }
-            set { SetValue(TactsProperty, value); }
+            get => (TactCollection) GetValue(TactsProperty);
+            set => SetValue(TactsProperty, value);
         }
-
-
-        public static readonly DependencyProperty BeatCountProperty = DependencyProperty.Register(
-            "BeatCount", typeof(int), typeof(MainWindow), new PropertyMetadata(default(int)));
-
-        public int BeatCount
-        {
-            get => (int)GetValue(BeatCountProperty);
-            set => SetValue(BeatCountProperty, value);
-        }
-
-        public static readonly DependencyProperty PixelPreviewProperty = DependencyProperty.Register(
-            "PixelPreview", typeof(Brush), typeof(MainWindow), new PropertyMetadata(default(Brush)));
-
-        public Brush PixelPreview
-        {
-            get => (Brush)GetValue(PixelPreviewProperty);
-            set => SetValue(PixelPreviewProperty, value);
-        }
-
+        
         public static readonly DependencyProperty BarsProperty = DependencyProperty.Register(
             "Bars", typeof(BarCollection), typeof(MainWindow), new PropertyMetadata(default(BarCollection)));
 
         public BarCollection Bars
         {
-            get { return (BarCollection) GetValue(BarsProperty); }
-            set { SetValue(BarsProperty, value); }
+            get => (BarCollection) GetValue(BarsProperty);
+            set => SetValue(BarsProperty, value);
         }
 
         public static readonly DependencyProperty TickerProperty = DependencyProperty.Register(
@@ -142,8 +114,8 @@ namespace ScriptPlayer.VideoSync
 
         public Ticker Ticker
         {
-            get { return (Ticker) GetValue(TickerProperty); }
-            set { SetValue(TickerProperty, value); }
+            get => (Ticker) GetValue(TickerProperty);
+            set => SetValue(TickerProperty, value);
         }
 
         public MainWindow()
@@ -194,34 +166,13 @@ namespace ScriptPlayer.VideoSync
             TimeFrameContext.Progress = progress;
         }
 
-        private void InitializeSampler()
-        {
-            Sampler = new ColorSampler();
-            Sampler.Sample = _captureRect;
-
-            RefreshSampler();
-        }
-
-        private void RefreshSampler()
-        {
-            Sampler.Resolution = videoPlayer.Player.Resolution;
-            Sampler.Source = videoPlayer.Player.VideoBrush;
-            Sampler.TimeSource = videoPlayer.TimeSource;
-            Sampler.Refresh();
-        }
-
-        private Int32Rect _captureRect = new Int32Rect(680, 700, 4, 4);
         private bool _wasplaying;
 
         private string _videoFile;
         private string _projectFile;
-
-        private FrameCaptureCollection _frameSamples;
+        
         private BeatCollection _originalBeats;
-
-        private PixelColorSampleCondition _condition = new PixelColorSampleCondition();
-        private AnalysisParameters _parameters = new AnalysisParameters();
-
+        
         private TimeSpan _marker1;
         private TimeSpan _marker2;
 
@@ -313,7 +264,6 @@ namespace ScriptPlayer.VideoSync
 
         private void videoPlayer_Loaded(object sender, RoutedEventArgs e)
         {
-            InitializeSampler();
             videoPlayer.Volume = 20;
         }
 
@@ -654,8 +604,6 @@ namespace ScriptPlayer.VideoSync
             BeatProject project = new BeatProject
             {
                 VideoFile = _videoFile,
-                SampleCondition = _condition,
-                AnalysisParameters = _parameters,
                 BeatBarDuration = TimeFrameContext.TotalDisplayedDuration.TotalSeconds,
                 BeatBarMidpoint = TimeFrameContext.Midpoint,
                 Beats = Beats.Select(b => b.Ticks).ToList(),
@@ -685,7 +633,6 @@ namespace ScriptPlayer.VideoSync
                 OpenVideo(otherPath, true, false);
             }
 
-            _parameters = project.AnalysisParameters;
             TimeFrameContext.TotalDisplayedDuration = TimeSpan.FromSeconds(project.BeatBarDuration);
             TimeFrameContext.Midpoint = project.BeatBarMidpoint;
             Beats = new BeatCollection(project.Beats.Select(TimeSpan.FromTicks));

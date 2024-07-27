@@ -9,8 +9,7 @@ namespace ScriptPlayer.Shared
         public string VideoFile { get; set; }
 
         public List<BeatSegment> Segments { get; set; }
-        public PixelColorSampleCondition SampleCondition { get; set; }
-        public AnalysisParameters AnalysisParameters { get; set; }
+       
         public double BeatBarDuration { get; set; }
         public double BeatBarMidpoint { get; set; }
         public List<long> Beats { get; set; }
@@ -21,11 +20,6 @@ namespace ScriptPlayer.Shared
         public BeatProject()
         {
             Segments = new List<BeatSegment>();
-            AnalysisParameters = new AnalysisParameters
-            {
-                MaxPositiveSamples = int.MaxValue,
-                Method = TimeStampDeterminationMethod.Center
-            };
         }
 
         public void Save(string filename)

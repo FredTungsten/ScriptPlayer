@@ -160,7 +160,6 @@
     <Compile Include="Classes\Ffmpeg\Data\VideoInfo.cs" />
     <Compile Include="Classes\Ffmpeg\Arguments\VideoInfoArguments.cs" />
     <Compile Include="Classes\Ffmpeg\Wrappers\VideoInfoWrapper.cs" />
-    <Compile Include="Colors\AnalysisParameters.cs" />
     <Compile Include="Beats\BeatCollection.cs" />
     <Compile Include="Classes\BlockingQueue.cs" />
     <Compile Include="Controls\AwesomeCharacters.cs" />
@@ -183,7 +182,6 @@
     <Compile Include="Devices\Estim\EStimAudioController.cs" />
     <Compile Include="Devices\Estim\EStimAudioDevice.cs" />
     <Compile Include="Devices\ButtplugAdapter.cs" />
-    <Compile Include="Colors\ColorSampler.cs" />
     <Compile Include="Colors\HslConversion.cs" />
     <Compile Include="Beats\BeatGroup.cs" />
     <Compile Include="Beats\BeatPattern.cs" />
@@ -199,10 +197,6 @@
     <Compile Include="Controls\BeatProject.cs" />
     <Compile Include="Controls\BeatTimeLine.xaml.cs">
       <DependentUpon>BeatTimeLine.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\ColorSampleBar.cs" />
-    <Compile Include="Controls\ColorSummary.xaml.cs">
-      <DependentUpon>ColorSummary.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\LaunchSimulator.xaml.cs">
       <DependentUpon>LaunchSimulator.xaml</DependentUpon>
@@ -257,9 +251,6 @@
     <Compile Include="Elevation\RegistryHelper.cs" />
     <Compile Include="Elevation\RegistryKeyResult.cs" />
     <Compile Include="Elevation\RegistryValue.cs" />
-    <Compile Include="Controls\Flash.cs" />
-    <Compile Include="Colors\FrameCapture.cs" />
-    <Compile Include="Colors\FrameCaptureCollection.cs" />
     <Compile Include="Colors\HeatMapGenerator.cs" />
     <Compile Include="Helpers\ExceptionHelper.cs" />
     <Compile Include="Helpers\FileFinder.cs" />
@@ -292,7 +283,6 @@
     <Compile Include="Scripts\IntermediateScriptActionEventArgs.cs" />
     <Compile Include="Scripts\RepeatablePattern.cs" />
     <Compile Include="Scripts\RepeatingScriptActions.cs" />
-    <Compile Include="Colors\SampleAnalyser.cs" />
     <Compile Include="Scripts\BeatsToFunScriptConverter.cs" />
     <Compile Include="Scripts\FeelMe\FeelMeBruteForceJsonLoader.cs" />
     <Compile Include="Scripts\FeelMe\FeelMeBruteForceLoader.cs" />
@@ -374,10 +364,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\BeatTimeLine.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Controls\ColorSummary.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

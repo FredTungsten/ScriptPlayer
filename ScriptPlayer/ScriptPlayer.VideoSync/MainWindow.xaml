@@ -8,8 +8,6 @@
         xmlns:converters1="clr-namespace:ScriptPlayer.VideoSync.Converters"
         xmlns:m="clr-namespace:ScriptPlayer.VideoSync.Extensions"
         xmlns:controls="clr-namespace:ScriptPlayer.VideoSync.Controls"
-        xmlns:videoSync="clr-namespace:ScriptPlayer.VideoSync"
-        xmlns:scripts="clr-namespace:ScriptPlayer.Shared.Scripts;assembly=ScriptPlayer.Shared"
         xmlns:controls1="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
 
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
