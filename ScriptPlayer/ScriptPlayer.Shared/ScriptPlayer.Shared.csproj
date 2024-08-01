@@ -135,6 +135,7 @@
     <Compile Include="Beats\MetronomeTick.cs" />
     <Compile Include="Beats\Tact.cs" />
     <Compile Include="Beats\TactCollection.cs" />
+    <Compile Include="Beats\TimeFrame.cs" />
     <Compile Include="Classes\Ffmpeg\Arguments\ClipExtractorArguments.cs" />
     <Compile Include="Classes\Ffmpeg\Arguments\ClipMergeArguments.cs" />
     <Compile Include="Classes\Ffmpeg\Arguments\ExtractSubtitleArguments.cs" />
@@ -148,6 +149,7 @@
     <Compile Include="Classes\InputMapping.cs" />
     <Compile Include="Classes\KeySource.cs" />
     <Compile Include="Classes\PreviewKeyEventArgs.cs" />
+    <Compile Include="Classes\RequestEventArgs.cs" />
     <Compile Include="Classes\ScriptplayerCommand.cs" />
     <Compile Include="Classes\Section.cs" />
     <Compile Include="Classes\VideoThumbnailCollection.cs" />

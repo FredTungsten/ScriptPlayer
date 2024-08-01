@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using JetBrains.Annotations;
+using ScriptPlayer.Shared.Beats;
 
 namespace ScriptPlayer.Shared
 {
@@ -145,8 +146,7 @@ namespace ScriptPlayer.Shared
             TimeBasedRenderContext context = new TimeBasedRenderContext
             {
                 DrawingContext = drawingContext,
-                TimeFrom = timeFrom,
-                TimeTo = timeTo,
+                TimeFrame = new TimeFrame(timeFrom, timeTo),
                 FullRect = fullRect
             };
 
@@ -247,8 +247,7 @@ namespace ScriptPlayer.Shared
 
     public class TimeBasedRenderContext
     {
-        public TimeSpan TimeFrom { get; set; }
-        public TimeSpan TimeTo { get; set; }
+        public TimeFrame TimeFrame { get; set; }
         public TimeSpan TotalDuration { get; set; }
 
         public Rect FullRect { get; set; }
@@ -256,12 +255,12 @@ namespace ScriptPlayer.Shared
 
         public void Prepare()
         {
-            TotalDuration = TimeTo - TimeFrom;
+            TotalDuration = TimeFrame.To - TimeFrame.From;
         }       
 
         public double GetRelativeXPosition(TimeSpan timePos)
         {
-            return (timePos - TimeFrom).Divide(TotalDuration);
+            return (timePos - TimeFrame.From).Divide(TotalDuration);
         }
 
         public double GetAbsoluteXPosition(TimeSpan timePos)

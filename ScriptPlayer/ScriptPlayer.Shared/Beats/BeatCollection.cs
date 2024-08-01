@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using ScriptPlayer.Shared.Beats;
 
 namespace ScriptPlayer.Shared
 {
-    public class BeatCollection : ICollection<TimeSpan>
+    public class BeatCollection : ICollection<TimeSpan>, ITickSource
     {
         private readonly List<TimeSpan> _beats;
 
@@ -130,6 +131,12 @@ namespace ScriptPlayer.Shared
         public int IndexOf(TimeSpan timestamp)
         {
             return _beats.IndexOf(timestamp);
+        }
+
+        public TickType DetermineTick(TimeFrame timeframe)
+        {
+            bool hit = _beats.Any(timeframe.Contains);
+            return hit ? TickType.Major : TickType.None;
         }
     }
 }

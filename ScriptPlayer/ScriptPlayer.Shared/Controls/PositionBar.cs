@@ -350,7 +350,7 @@ namespace ScriptPlayer.Shared
 
         private void DrawPositions(TimeBasedRenderContext context, PositionCollection positions)
         {
-            List<TimedPosition> absoluteBeatPositions = positions.GetPositions(context.TimeFrom, context.TimeTo).ToList();
+            List<TimedPosition> absoluteBeatPositions = positions.GetPositions(context.TimeFrame).ToList();
             List<Point> beatPoints = absoluteBeatPositions.Select(GetPointFromPosition).ToList();
 
             if (beatPoints.Count > 0)

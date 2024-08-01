@@ -15,6 +15,25 @@
     <Window.Resources>
         <converters:TimeSpanToSecondsConverter x:Key="TimeSpanConverter"/>
         <converters1:ParameterToBooleanConverter x:Key="ParameterToBooleanConverter"/>
+
+        <ContextMenu x:Key="BarContextMenu">
+            <MenuItem Header="Rythm" Click="BarContextMenuRythm_Click"/>
+            <MenuItem Header="Subdivisions">
+                <MenuItem Header="1" Tag="1" Click="BarContextMenuSubdivisions_Click"/>
+                <MenuItem Header="2" Tag="2" Click="BarContextMenuSubdivisions_Click"/>
+                <MenuItem Header="3" Tag="3" Click="BarContextMenuSubdivisions_Click"/>
+                <MenuItem Header="4" Tag="4" Click="BarContextMenuSubdivisions_Click"/>
+                <MenuItem Header="5" Tag="5" Click="BarContextMenuSubdivisions_Click"/>
+                <MenuItem Header="6" Tag="6" Click="BarContextMenuSubdivisions_Click"/>
+                <MenuItem Header="7" Tag="7" Click="BarContextMenuSubdivisions_Click"/>
+                <MenuItem Header="8" Tag="8" Click="BarContextMenuSubdivisions_Click"/>
+            </MenuItem>
+        </ContextMenu>
+
+        <ContextMenu x:Key="TactContextMenu">
+            <MenuItem Header="Beat-Count" Click="TactContextMenuBeatCount_Click"/>
+            <MenuItem Header="Split" Click="TactContextMenuSplit_Click"/>
+        </ContextMenu>
     </Window.Resources>
     <Grid Name="MainGrid">
         <Grid.RowDefinitions>
@@ -33,6 +52,11 @@
                 <MenuItem Header="Save Project" Click="mnuSaveProject_Click"/>
             </MenuItem>
             <MenuItem Header="Beats">
+                <MenuItem Header="Generate from selected Tacts" Click="mnuTactToBeats_Click"/>
+                <MenuItem Header="Generate ALL from Tacts" Click="mnuAllTactsToBeats_Click"/>
+                <MenuItem Header="Generate from selected Bars" Click="mnuBarsToBeats_Click"/>
+                <MenuItem Header="Generate ALL from Bars" Click="mnuAllBarsToBeats_Click"/>
+                <Separator/>
                 <MenuItem Header="Convert All Beats to Positions" Click="mnuBeatsToPositions_Click"/>
                 <MenuItem Header="Convert Selected Beats to Positions" Click="mnuSelectedBeatsToPositions_Click"/>
                 <MenuItem Header="Convert Selected Beats to Custom Positions" Click="mnuSelectedBeatsToCustomPositions_Click" InputGestureText="Q"/>
@@ -124,15 +148,23 @@
                         Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
                         x:Name="BeatBar" Background="Transparent" Beats="{Binding Beats}" 
                         LineColor="#FF00B9FF" LineWidth="3"  HighlightColor="Red"
-                                     TimeFrameContext="{Binding TimeFrameContext}"
-                        SpeedRatio="{Binding SpeedRatioModifier}"/>
+                                     TimeFrameContext="{Binding TimeFrameContext}"/>
 
-                    <controls1:BarBar TimeFrameContext="{Binding TimeFrameContext}" Grid.Row ="3" Name="barBar" Bars="{Binding Bars}" Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
-                                      Background="Black" Height="Auto" ></controls1:BarBar>
+                    <RadioButton Checked="RbTickBeat_OnChecked" Name="rbTickBeat" Grid.Row="2" Width="32" HorizontalAlignment="Left" Style="{StaticResource {x:Type ToggleButton}}">
+                        <controls1:AwesomeIcon Icon="Volume_Up_Solid"/>
+                    </RadioButton>
+                    <RadioButton Checked="RbTickBar_OnChecked" Name="rbTickBar" Grid.Row="3" Width="32" HorizontalAlignment="Left" Style="{StaticResource {x:Type ToggleButton}}">
+                        <controls1:AwesomeIcon Icon="Volume_Up_Solid"/>
+                    </RadioButton>
+                    <RadioButton Checked="RbTickTact_OnChecked" Name="rbTickTact" Grid.Row="4" Width="32" HorizontalAlignment="Left" Style="{StaticResource {x:Type ToggleButton}}">
+                        <controls1:AwesomeIcon Icon="Volume_Up_Solid"/>
+                    </RadioButton>
+
+                    <controls1:BarBar RequestNewBar="BarBar_OnRequestNewBar" TimeFrameContext="{Binding TimeFrameContext}" Grid.Row ="3" Name="barBar" Bars="{Binding Bars}" Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
+                                      Background="Black" Height="Auto" Tacts="{Binding Tacts}" BarRightClicked="BarBar_OnBarRightClicked"></controls1:BarBar>
 
 
                     <controls1:TactBar TimeFrameContext="{Binding TimeFrameContext}" Grid.Row ="4" Name="tactBar" Tacts="{Binding Tacts}" Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
-
                                        Background="Black" Height="Auto" TactRightClicked="TactBar_TactRightClicked"/>
 
                     <shared:PositionBar TimeFrameContext="{Binding TimeFrameContext}" Name="positionBar"  Width="{Binding ElementName=videoPlayer, Path=DisplayedWidth}" HorizontalAlignment="Center" MinWidth="200" 
@@ -177,7 +209,7 @@
                                         <Slider Margin="2" VerticalAlignment="Center" HorizontalAlignment="Stretch" Minimum="0.01" Maximum="0.99" Value="{Binding TimeFrameContext.Midpoint, Mode=TwoWay}" SmallChange="0.001" LargeChange="0.001"/>
                                         <TextBlock  Margin="2" VerticalAlignment="Center" Text="{Binding Path=TimeFrameContext.Midpoint, StringFormat={}{0:p2}}"/>
 
-                                        <CheckBox Margin="2" VerticalAlignment="Center" Name="cckRTL" Checked="CckRTL_OnChecked" Unchecked="CckRTL_OnUnchecked">Right to Left</CheckBox>
+                                        <CheckBox Margin="2" VerticalAlignment="Center" Name="cckRtl" Checked="CckRtl_OnChecked" Unchecked="CckRTL_OnUnchecked">Right to Left</CheckBox>
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=HighlightBeats}">Highlight Beats</CheckBox>
                                         <CheckBox Margin="2" IsChecked="{Binding ElementName=BeatBar, Path=FlashAfterBeat}">Flash after Beats</CheckBox>
                                         
@@ -233,6 +265,20 @@
                                     <TextBlock Name="txtSelectBeats" Text="0:00:00.000" Margin="12,0,2,10"/>
                                     <TextBlock Text="Avg. Duration:" Margin="2"/>
                                     <TextBlock Name="txtSelectAvgDuration" Text="0:00:00.000" Margin="12,0,2,10"/>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="Tact">
+                            <Grid DataContext="{Binding ElementName=tactBar, Path=SelectedTact}">
+                                <StackPanel>
+                                    <TextBlock Text="Beats" Margin="2"/>
+                                    <DockPanel Margin="2" LastChildFill="True">
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                            <Button Click="btnBeatCountDown_Click" FontFamily="Webdings" Content="6" Height="16" Width="16"/>
+                                            <Button Click="btnBeatCountUp_Click" FontFamily="Webdings" Content="5" Height="16" Width="16"/>
+                                        </StackPanel>
+                                        <TextBox Text="{Binding Beats}" DockPanel.Dock="Left"/>
+                                    </DockPanel>
                                 </StackPanel>
                             </Grid>
                         </TabItem>
@@ -331,6 +377,8 @@
                     </shared:TimeLineHeader>
                     <Button Grid.Row="0" Content="B" HorizontalAlignment="Left" Margin="105,0,0,0" VerticalAlignment="Top" Width="16" Click="btnRefreshHeatmapBeats_Click"/>
                     <Button Grid.Row="0" Content="P" HorizontalAlignment="Left" Margin="121,0,0,0" VerticalAlignment="Top" Width="16" Click="btnRefreshHeatmapPositions_Click"/>
+                    <Button Grid.Row="0" Content="T" HorizontalAlignment="Left" Margin="137,0,0,0" VerticalAlignment="Top" Width="16" Click="btnRefreshHeatmapTacts_Click"/>
+                    <Button Grid.Row="0" Content="B" HorizontalAlignment="Left" Margin="153,0,0,0" VerticalAlignment="Top" Width="16" Click="btnRefreshHeatmapBars_Click"/>
                 </Grid>
             </HeaderedContentControl>
         </Grid>

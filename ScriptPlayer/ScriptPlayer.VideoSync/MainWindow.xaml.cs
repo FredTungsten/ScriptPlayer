@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -14,6 +15,7 @@ using Microsoft.Win32;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Beats;
 using ScriptPlayer.Shared.Classes;
+using ScriptPlayer.Shared.Controls;
 using ScriptPlayer.Shared.Scripts;
 using ScriptPlayer.VideoSync.Controls;
 using ScriptPlayer.VideoSync.Dialogs;
@@ -84,7 +86,7 @@ namespace ScriptPlayer.VideoSync
 
         public static readonly DependencyProperty BeatsProperty = DependencyProperty.Register(
             "Beats", typeof(BeatCollection), typeof(MainWindow), new PropertyMetadata(default(BeatCollection)));
-
+        
         public BeatCollection Beats
         {
             get => (BeatCollection)GetValue(BeatsProperty);
@@ -124,38 +126,14 @@ namespace ScriptPlayer.VideoSync
             Ticker = new Ticker();
             Tacts = new TactCollection();
             Bars = new BarCollection();
-
-            for (int i = 0; i < 10; i++)
-            {
-                var tact = new Tact
-                {
-                    Beats = 11,
-                    BeatsPerBar = 4,
-                    Start = TimeSpan.FromSeconds(10).Multiply(i) + TimeSpan.FromSeconds(1),
-                    End = TimeSpan.FromSeconds(10).Multiply(i) + TimeSpan.FromSeconds(6)
-                };
-                
-                Tacts.Add(tact);
-
-                Bar b = new Bar
-                {
-                    Start = 2,
-                    End = 20,
-                    Rythm = new []{true, false, true, false, true, true, true, false},
-                    Tact = tact
-                };
-
-                Bars.Add(b);
-            }
-
-
             Bookmarks = new List<TimeSpan>();
             SetAllBeats(new BeatCollection());
             Positions = new PositionCollection();
             InitializeComponent();
 
             videoPlayer.TimeSource.ProgressChanged += TimeSourceOnProgressChanged;
-            Ticker.SetSource(BeatBar);
+            Ticker.SetTimeSource(videoPlayer.TimeSource);
+            Ticker.SetTickSource(Beats);
         }
 
         private void TimeSourceOnProgressChanged(object sender, TimeSpan progress)
@@ -276,8 +254,9 @@ namespace ScriptPlayer.VideoSync
         {
             _videoFile = videoFile;
             videoPlayer.Open(videoFile);
-
             SetTitle(videoFile);
+
+            TryLoadThumbnails(videoFile);
 
             if (play)
                 videoPlayer.TimeSource.Play();
@@ -286,6 +265,22 @@ namespace ScriptPlayer.VideoSync
             {
                 _projectFile = null;
             }
+        }
+
+        private void TryLoadThumbnails(string videoFile)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(videoFile) + ".thumbs";
+            string filePath = Path.Combine(Path.GetDirectoryName(videoFile), fileName);
+
+            if (!File.Exists(filePath))
+                return;
+
+            VideoThumbnailCollection thumbs = new VideoThumbnailCollection();
+
+            using (FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                thumbs.Load(stream);
+
+            SeekBar.Thumbnails = thumbs;
         }
 
         private void SetAllBeats(IEnumerable<TimeSpan> beats)
@@ -607,14 +602,46 @@ namespace ScriptPlayer.VideoSync
                 BeatBarDuration = TimeFrameContext.TotalDisplayedDuration.TotalSeconds,
                 BeatBarMidpoint = TimeFrameContext.Midpoint,
                 Beats = Beats.Select(b => b.Ticks).ToList(),
+                Tacts = GetTactDefinitions(),
                 Bookmarks = Bookmarks.Select(b => b.Ticks).ToList(),
                 Positions = Positions.ToList()
             };
+
             project.Save(filename);
             _projectFile = filename;
 
             SaveAsFunscript(Path.ChangeExtension(_videoFile, "funscript"));
             SaveAsBeatsFile(Path.ChangeExtension(_videoFile, "txt"));
+        }
+
+        private List<TactDefinition> GetTactDefinitions()
+        {
+            List<TactDefinition> tacts = new List<TactDefinition>();
+
+            foreach (Tact tact in Tacts)
+            {
+                TactDefinition definition = new TactDefinition();
+                definition.Start = tact.Start.Ticks;
+                definition.End = tact.End.Ticks;
+                definition.Beats = tact.Beats;
+                definition.BeatsPerBar = tact.BeatsPerBar;
+                definition.Bars = new List<BarDefinition>();
+
+                foreach (Bar bar in Bars.Where(b => b.Tact == tact))
+                {
+                    BarDefinition barDef = new BarDefinition();
+                    barDef.Start = bar.Start;
+                    barDef.Length = bar.Length;
+                    barDef.Rythm = bar.Rythm.Beats;
+                    barDef.Subdivisions = bar.Subdivisions;
+
+                    definition.Bars.Add(barDef);
+                }
+
+                tacts.Add(definition);
+            }
+
+            return tacts;
         }
 
         private void mnuLoadProject_Click(object sender, RoutedEventArgs e)
@@ -638,10 +665,54 @@ namespace ScriptPlayer.VideoSync
             Beats = new BeatCollection(project.Beats.Select(TimeSpan.FromTicks));
             Bookmarks = project.Bookmarks.Select(TimeSpan.FromTicks).ToList();
             Positions = new PositionCollection(project.Positions);
+            RegenerateTacts(project.Tacts, out TactCollection tacts, out BarCollection bars);
+
+            Tacts = tacts;
+            Bars = bars;
 
             _projectFile = dialog.FileName;
 
             RefreshHeatMap();
+        }
+
+        private void RegenerateTacts(List<TactDefinition> tactDefinitions, out TactCollection tacts, out BarCollection bars)
+        {
+            tacts = new TactCollection();
+            bars = new BarCollection();
+
+            foreach (TactDefinition tactDef in tactDefinitions)
+            {
+                Tact tact = new Tact();
+
+                if (tactDef.Start < tactDef.End)
+                {
+                    tact.Start = TimeSpan.FromTicks(tactDef.Start);
+                    tact.End = TimeSpan.FromTicks(tactDef.End);
+                }
+                else
+                {
+                    tact.Start = TimeSpan.FromTicks(tactDef.End);
+                    tact.End = TimeSpan.FromTicks(tactDef.Start);
+                }
+                
+                tact.Beats = tactDef.Beats;
+                tact.BeatsPerBar = tactDef.BeatsPerBar;
+                
+                tacts.Add(tact);
+
+                foreach (var barDef in tactDef.Bars)
+                {
+                    Bar bar = new Bar();
+                    bar.Tact = tact;
+                    bar.Start = barDef.Start;
+                    bar.Length = barDef.Length;
+
+                    bar.Rythm = new Rythm(barDef.Rythm);
+                    bar.Subdivisions = barDef.Subdivisions > 0 ? barDef.Subdivisions : 1;
+
+                    bars.Add(bar);
+                }
+            }
         }
 
 
@@ -1212,7 +1283,7 @@ namespace ScriptPlayer.VideoSync
                     {
                         double multiplier = e.Key == Key.Right ? 1 : -1;
 
-                        if (cckRTL.IsChecked == true)
+                        if (cckRtl.IsChecked == true)
                             multiplier *= -1;
 
                         if (control && shift)
@@ -2199,7 +2270,7 @@ namespace ScriptPlayer.VideoSync
             Bookmarks = newBookmarks;
         }
 
-        private void CckRTL_OnChecked(object sender, RoutedEventArgs e)
+        private void CckRtl_OnChecked(object sender, RoutedEventArgs e)
         {
             BeatBar.FlowDirection = FlowDirection.RightToLeft;
         }
@@ -2550,13 +2621,25 @@ namespace ScriptPlayer.VideoSync
 
         private void btnRefreshHeatmapBeats_Click(object sender, RoutedEventArgs e)
         {
-            _usePositionsForHeatmap = false;
+            _heatsource = Heatsource.Beats;
             RefreshHeatMap();
         }
 
         private void btnRefreshHeatmapPositions_Click(object sender, RoutedEventArgs e)
         {
-            _usePositionsForHeatmap = true;
+            _heatsource = Heatsource.Positions;
+            RefreshHeatMap();
+        }
+
+        private void btnRefreshHeatmapTacts_Click(object sender, RoutedEventArgs e)
+        {
+            _heatsource = Heatsource.Tacts;
+            RefreshHeatMap();
+        }
+
+        private void btnRefreshHeatmapBars_Click(object sender, RoutedEventArgs e)
+        {
+            _heatsource = Heatsource.Bars;
             RefreshHeatMap();
         }
 
@@ -2567,27 +2650,36 @@ namespace ScriptPlayer.VideoSync
 
             List<TimeSpan> beats;
 
-            if (_usePositionsForHeatmap)
+            switch (_heatsource)
             {
-                beats = Positions.Select(p => p.TimeStamp).ToList();
+                case Heatsource.Beats:
+                    beats = Beats.ToList();
+                    break;
+                case Heatsource.Positions:
+                    beats = Positions.Select(p => p.TimeStamp).ToList();
+                    break;
+                case Heatsource.Tacts:
+                    beats = Tacts.SelectMany(t => t.GetBeats()).ToList();
+                    break;
+                case Heatsource.Bars:
+                    beats = Bars.SelectMany(t => t.GetBeats()).ToList();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-            else
-            {
-                beats = Beats.ToList();
-            }
-
+            
             Brush heatmap = HeatMapGenerator.Generate2(beats, TimeSpan.FromSeconds(10), TimeSpan.Zero, videoPlayer.Duration);
             SeekBar.Background = heatmap;
         }
 
         private void MnuLoadThumbnails_Click(object sender, RoutedEventArgs e)
         {
-            VideoThumbnailCollection thumbs = new VideoThumbnailCollection();
-
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = "Video Thumbnails|*.thumbs";
 
             if (dialog.ShowDialog(this) != true) return;
+
+            VideoThumbnailCollection thumbs = new VideoThumbnailCollection();
 
             using (FileStream stream = new FileStream(dialog.FileName, FileMode.Open, FileAccess.Read))
                 thumbs.Load(stream);
@@ -2607,8 +2699,10 @@ namespace ScriptPlayer.VideoSync
         }
 
         private double _previousSuperNormalizeDuration = 200;
-        private bool _usePositionsForHeatmap;
+        private Heatsource _heatsource;
         private double _previousSpeedLimit = 400;
+        private Rythm _lastRythm = Rythm.Empty;
+        private int _lastSubdivisions = 1;
 
         private void mnuTrimBeats_Click(object sender, RoutedEventArgs e)
         {
@@ -2727,9 +2821,265 @@ namespace ScriptPlayer.VideoSync
             SetSelectedBeats(selectedBeats);
         }
 
-        private void TactBar_TactRightClicked(object sender, Tact e)
+        private void TactBar_TactRightClicked(object sender, Tuple<Tact, TimeSpan> e)
         {
+            ContextMenu menu = (ContextMenu)FindResource("TactContextMenu");
+            menu.PlacementTarget = barBar;
+            menu.Placement = PlacementMode.Mouse;
+            menu.DataContext = e;
 
+            menu.IsOpen = true;
+        }
+
+
+        private void TactContextMenuBeatCount_Click(object sender, RoutedEventArgs e)
+        {
+            Tact tact = ((Tuple<Tact, TimeSpan>) ((MenuItem) sender).DataContext).Item1;
+            ChangeBeatCount(tact);
+        }
+
+        private void TactContextMenuSplit_Click(object sender, RoutedEventArgs e)
+        {
+            Tuple<Tact, TimeSpan> data = (Tuple<Tact, TimeSpan>)((MenuItem)sender).DataContext;
+
+            Split(data.Item1, data.Item2);
+        }
+
+        private void Split(Tact tact, TimeSpan time)
+        {
+            int splitIndex = tact.GetClosestIndex(time);
+            TimeSpan splitTime = tact.TranslateIndex(splitIndex);
+
+            if (splitIndex <= 0 || splitIndex >= tact.Beats)
+                return;
+
+            Tact newTact = new Tact
+            {
+                Beats = tact.Beats - splitIndex,
+                BeatsPerBar = tact.BeatsPerBar,
+                Start = splitTime,
+                End = tact.End
+            };
+
+            tact.Beats = splitIndex +1;
+            tact.End = splitTime;
+
+            Tacts.Add(newTact);
+
+            foreach (Bar bar in Bars.ToList())
+            {
+                if (bar.Tact != tact)
+                    continue;
+
+                int splitSubdivisions = splitIndex * bar.Subdivisions;
+
+                if (bar.GetEndTime() <= splitTime)
+                {
+                    // Nothing to do
+                }
+                else if (bar.GetStartTime() >= splitTime)
+                {
+                    bar.Tact = newTact;
+                    bar.Start -= splitSubdivisions;
+                }
+                else
+                {
+                    //Split bar too
+                    Bar newBar = new Bar
+                    {
+                        Tact = newTact,
+                        Subdivisions = bar.Subdivisions,
+                        Start = 0,
+                        Length = (bar.Start + bar.Length) - splitSubdivisions,
+                        Rythm = bar.Rythm
+                    };
+
+                    Bars.Add(newBar);
+                    bar.Length = splitSubdivisions - bar.Start + 1;
+                }
+            }
+        }
+
+        private void ChangeBeatCount(Tact tact)
+        {
+            DoubleInputDialog dialog = new DoubleInputDialog(tact.Beats);
+            dialog.Owner = this;
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            dialog.Title = "Beats";
+            if (dialog.ShowDialog() != true)
+                return;
+
+            tact.Beats = (int)dialog.Result;
+        }
+
+        private void RbTickBeat_OnChecked(object sender, RoutedEventArgs e)
+        {
+            Ticker.SetTickSource(Beats);
+        }
+
+        private void RbTickBar_OnChecked(object sender, RoutedEventArgs e)
+        {
+            Ticker.SetTickSource(Bars);
+        }
+
+        private void RbTickTact_OnChecked(object sender, RoutedEventArgs e)
+        {
+            Ticker.SetTickSource(Tacts);
+        }
+
+        private void BarContextMenuRythm_Click(object sender, RoutedEventArgs e)
+        {
+            Bar bar = ((MenuItem)sender).DataContext as Bar;
+            EditRythm(bar);
+        }
+
+        private void EditRythm(Bar bar)
+        {
+            PatternFillOptionsDialog dialog = new PatternFillOptionsDialog(bar.Rythm.Beats) { Owner = this };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            bar.Rythm = new Rythm(dialog.Result);
+            _lastRythm = new Rythm(dialog.Result);
+        }
+
+        private void BarContextMenuSubdivisions_Click(object sender, RoutedEventArgs e)
+        {
+            Bar bar = ((MenuItem)sender).DataContext as Bar;
+            int divisions = int.Parse((string)((MenuItem)sender).Tag);
+            bar.ChangeSubdivisions(divisions);
+            _lastSubdivisions = divisions;
+        }
+        
+        private void BarBar_OnBarRightClicked(object sender, Bar e)
+        {
+            ContextMenu menu = (ContextMenu) FindResource("BarContextMenu");
+            menu.PlacementTarget = barBar;
+            menu.Placement = PlacementMode.Mouse;
+            menu.DataContext = e;
+
+            menu.IsOpen = true;
+        }
+
+        private void mnuTactToBeats_Click(object sender, RoutedEventArgs e)
+        {
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+
+            foreach (Tact tact in Tacts)
+            {
+                otherBeats.AddRange(tact.GetBeats(tBegin, tEnd));
+            }
+
+            SetAllBeats(otherBeats);
+        }
+
+        private void mnuBarsToBeats_Click(object sender, RoutedEventArgs e)
+        {
+            TimeSpan tBegin = _marker1 < _marker2 ? _marker1 : _marker2;
+            TimeSpan tEnd = _marker1 < _marker2 ? _marker2 : _marker1;
+
+            List<TimeSpan> otherBeats = Beats.Where(t => t < tBegin || t > tEnd).ToList();
+
+            foreach (Bar bar in Bars)
+            {
+                List<TimeSpan> beats = bar.GetBeats(tBegin, tEnd);
+
+                otherBeats.AddRange(beats);
+            }
+
+            SetAllBeats(otherBeats);
+        }
+
+        private void mnuAllTactsToBeats_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(this, "Are you sure you want to re-convert ALL tacts to beats?",
+                    "Confirmation required", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                return;
+
+            List<TimeSpan> beats = new List<TimeSpan>();
+
+            foreach (Tact tact in Tacts)
+            {
+                beats.AddRange(tact.GetBeats());
+            }
+
+            SetAllBeats(FilterDuplicates(beats));
+        }
+
+        private void mnuAllBarsToBeats_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(this, "Are you sure you want to re-convert ALL bars to beats?",
+                    "Confirmation required", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                return;
+
+            List<TimeSpan> beats = new List<TimeSpan>();
+
+            foreach (Bar bar in Bars)
+            {
+                beats.AddRange(bar.GetBeats());
+            }
+
+            SetAllBeats(FilterDuplicates(beats));
+        }
+
+        private IEnumerable<TimeSpan> FilterDuplicates(List<TimeSpan> beats)
+        {
+            TimeSpan threshold = TimeSpan.FromMilliseconds(5);
+
+            List<TimeSpan> filtered = new List<TimeSpan>();
+
+            TimeSpan previous = TimeSpan.MinValue;
+
+            foreach (TimeSpan time in beats.OrderBy(b => b))
+            {
+                if (previous != TimeSpan.MinValue)
+                {
+                    if (time - previous <= threshold)
+                        continue;
+                }
+
+                filtered.Add(time);
+                previous = time;
+            }
+
+            return filtered;
+        }
+
+        private void BarBar_OnRequestNewBar(object sender, RequestEventArgs<Bar> e)
+        {
+            if (_lastRythm.IsEmpty)
+                return;
+
+            e.Value = new Bar
+            {
+                Rythm = _lastRythm,
+                Subdivisions = _lastSubdivisions
+            };
+
+            e.Handled = true;
+        }
+
+        private void btnBeatCountDown_Click(object sender, RoutedEventArgs e)
+        {
+            if (tactBar.SelectedTact == null)
+                return;
+
+            if (tactBar.SelectedTact.Beats <= 2)
+                return;
+
+            tactBar.SelectedTact.Beats--;
+        }
+
+        private void btnBeatCountUp_Click(object sender, RoutedEventArgs e)
+        {
+            if (tactBar.SelectedTact == null)
+                return;
+
+            tactBar.SelectedTact.Beats++;
         }
     }
 
@@ -2881,5 +3231,13 @@ namespace ScriptPlayer.VideoSync
 
             return (byte)Math.Min(99, Math.Max(0, Math.Round(easedValue)));
         }
+    }
+
+    public enum Heatsource
+    {
+        Beats,
+        Positions,
+        Tacts,
+        Bars
     }
 }

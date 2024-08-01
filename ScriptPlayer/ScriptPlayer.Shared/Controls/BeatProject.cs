@@ -7,8 +7,6 @@ namespace ScriptPlayer.Shared
     public class BeatProject
     {
         public string VideoFile { get; set; }
-
-        public List<BeatSegment> Segments { get; set; }
        
         public double BeatBarDuration { get; set; }
         public double BeatBarMidpoint { get; set; }
@@ -16,10 +14,12 @@ namespace ScriptPlayer.Shared
         public List<long> Bookmarks { get; set; }
 
         public List<TimedPosition> Positions { get; set; }
+        public List<TactDefinition> Tacts { get; set; }
+
 
         public BeatProject()
         {
-            Segments = new List<BeatSegment>();
+
         }
 
         public void Save(string filename)
@@ -54,5 +54,23 @@ namespace ScriptPlayer.Shared
     public class BeatDefinition
     {
         public bool[] Pattern;
+    }
+
+    public class TactDefinition
+    {
+        public int Beats { get; set; }
+        public int BeatsPerBar { get; set; }
+        public long Start { get; set; }
+        public long End { get; set; }
+
+        public List<BarDefinition> Bars { get; set; }
+    }
+
+    public class BarDefinition
+    {
+        public int Start { get; set; }
+        public int Length { get; set; }
+        public bool[] Rythm { get; set; }
+        public int Subdivisions { get; set; }
     }
 }

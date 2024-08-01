@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using ScriptPlayer.Shared.Beats;
 
 namespace ScriptPlayer.Shared
 {
@@ -163,6 +164,11 @@ namespace ScriptPlayer.Shared
                 Position = b.Position,
                 TimeStamp = b.TimeStamp.Add(timeSpan)
             }));
+        }
+
+        public IEnumerable<TimedPosition> GetPositions(TimeFrame timeFrame)
+        {
+            return GetPositions(timeFrame.From, timeFrame.To);
         }
     }
 }

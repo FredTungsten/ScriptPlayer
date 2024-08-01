@@ -6,7 +6,7 @@ using System.Windows.Media;
 
 namespace ScriptPlayer.Shared
 {
-    public class BeatBar2 : TimelineBaseControl, ITickSource
+    public class BeatBar2 : TimelineBaseControl
     {
         public static readonly DependencyProperty FlashDurationProperty = DependencyProperty.Register(
             "FlashDuration", typeof(TimeSpan), typeof(BeatBar2), new PropertyMetadata(TimeSpan.FromMilliseconds(50)));
@@ -134,59 +134,27 @@ namespace ScriptPlayer.Shared
             set => SetValue(PreviewBeatsProperty, value);
         }
 
-        public static readonly DependencyProperty SpeedRatioProperty = DependencyProperty.Register(
-            "SpeedRatio", typeof(double), typeof(BeatBar2), new PropertyMetadata(1.0));
-
-        public double SpeedRatio
-        {
-            get => (double) GetValue(SpeedRatioProperty);
-            set => SetValue(SpeedRatioProperty, value);
-        }
-
-        public event EventHandler Tick;
-
-        protected virtual void OnTick()
-        {
-            Tick?.Invoke(this, EventArgs.Empty);
-        }
-
         private static void OnVisualPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((BeatBar2)d).VisualPropertyChanged();
         }
-
-        private bool _wasActive;
         
         protected override void Render(TimeBasedRenderContext context)
         {
             #region Background and Selection
             
-            List<TimeSpan> absoluteBeatPositions = Beats?.GetBeats(context.TimeFrom.Add(TimeSpan.FromSeconds(-1)), context.TimeTo.Add(TimeSpan.FromSeconds(1))).ToList() ?? new List<TimeSpan>();
+            List<TimeSpan> absoluteBeatPositions = Beats?.GetBeats(context.TimeFrame.From.Add(TimeSpan.FromSeconds(-1)), context.TimeFrame.To.Add(TimeSpan.FromSeconds(1))).ToList() ?? new List<TimeSpan>();
             List<TimeSpan> absolutePreviewPositions =
-                PreviewBeats?.GetBeats(context.TimeFrom, context.TimeTo).ToList() ?? new List<TimeSpan>();
+                PreviewBeats?.GetBeats(context.TimeFrame.From, context.TimeFrame.To).ToList() ?? new List<TimeSpan>();
 
-            //WTF weird ...
-            TimeSpan soundFileDelay = TimeSpan.FromMilliseconds(85 * Math.Max(0, 2 - SpeedRatio)); // TimeSpan.FromMilliseconds(100 + SpeedRatio < 1 ? 50 : 0);
-            TimeSpan delayedProgress = TimeFrameContext.Progress.Subtract(TimeSpan.FromMilliseconds(SoundDelay));
-            delayedProgress = delayedProgress.Subtract(soundFileDelay);
-            
-            bool isActive = absoluteBeatPositions.Any(b => delayedProgress >= b  && delayedProgress <= b.Add(FlashDuration));
-
-            if (isActive && !_wasActive)
-                OnTick();
-
-            _wasActive = isActive;
-
-            isActive &= FlashAfterBeat;
-
-            context.DrawingContext.DrawRectangle(isActive ? Brushes.White : Background, null, context.FullRect);
+            context.DrawingContext.DrawRectangle(Background, null, context.FullRect);
 
             if (Marker1 != TimeSpan.MinValue && Marker2 != TimeSpan.MinValue)
             {
                 TimeSpan earlier = Marker1 < Marker2 ? Marker1 : Marker2;
                 TimeSpan later = Marker1 > Marker2 ? Marker1 : Marker2;
 
-                if (later >= context.TimeFrom && earlier <= context.TimeTo)
+                if (later >= context.TimeFrame.From && earlier <= context.TimeFrame.To)
                 {
                     double xFrom = XFromTime(earlier);
                     double xTo = XFromTime(later);
@@ -213,7 +181,7 @@ namespace ScriptPlayer.Shared
 
             #region MidPoint
 
-            context.DrawingContext.DrawLine(new Pen(isActive ? Brushes.Black : Brushes.Red, 11), new Point(XFromTime(TimeFrameContext.Progress), 0), new Point(TimeFrameContext.Midpoint * ActualWidth, ActualHeight));
+            context.DrawingContext.DrawLine(new Pen(Brushes.Red, 11), new Point(XFromTime(TimeFrameContext.Progress), 0), new Point(TimeFrameContext.Midpoint * ActualWidth, ActualHeight));
 
             #endregion
 

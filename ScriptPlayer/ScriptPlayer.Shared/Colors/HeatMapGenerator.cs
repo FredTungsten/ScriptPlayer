@@ -465,7 +465,7 @@ namespace ScriptPlayer.Shared
 
             TimeSpan previous = timeFrom;
 
-            foreach (TimeSpan beat in beats)
+            foreach (TimeSpan beat in beats.OrderBy(b => b))
             {
                 if (beat < timeFrom || beat > timeTo) continue;
 

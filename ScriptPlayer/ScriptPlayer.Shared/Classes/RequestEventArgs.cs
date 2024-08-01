@@ -1,6 +1,6 @@
 using System;
 
-namespace ScriptPlayer.ViewModels
+namespace ScriptPlayer.Shared
 {
     public class RequestEventArgs<T> : EventArgs
     {
