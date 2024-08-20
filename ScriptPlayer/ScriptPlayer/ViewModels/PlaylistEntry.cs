@@ -103,7 +103,7 @@ namespace ScriptPlayer.ViewModels
             get => _duration;
             set
             {
-                if (value.Equals(_duration)) return;
+                if (value == _duration) return;
                 _duration = value;
                 OnPropertyChanged();
             }
