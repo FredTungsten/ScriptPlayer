@@ -370,7 +370,8 @@
                     <MenuItem Header="Save as" Command="{Binding SaveScriptAsCommand}"/>
                     <MenuItem Header="Export as Handy CSV" Command="{Binding ExportHandyCsvCommand}"/>
                 </MenuItem>
-                <MenuItem Header="Bookmarks">
+
+                <MenuItem Header="Bookmarks" Visibility="Collapsed">
                     <MenuItem.Resources>
                         <HierarchicalDataTemplate DataType="{x:Type viewModels:BookmarkFolderViewModel}">
                             <HierarchicalDataTemplate.ItemsSource>
