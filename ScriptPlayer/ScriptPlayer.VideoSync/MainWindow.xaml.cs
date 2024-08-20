@@ -3081,6 +3081,36 @@ namespace ScriptPlayer.VideoSync
 
             tactBar.SelectedTact.Beats++;
         }
+
+        private void BarContextMenuPositions_Click(object sender, RoutedEventArgs e)
+        {
+            Bar bar = ((MenuItem)sender).DataContext as Bar;
+            EditPositions(bar);
+        }
+
+        private void EditPositions(Bar bar)
+        {
+            CustomConversionSettings settings = new CustomConversionSettings
+            {
+                Pattern = bar.Rythm.Beats,
+                Positions = bar.Positions?.Duplicate() ?? new RelativePositionCollection(),
+            };
+
+            CustomConversionDialog dialog = new CustomConversionDialog(settings)
+                { Owner = this };
+
+            try
+            {
+                if (dialog.ShowDialog() != true)
+                    return;
+            }
+            finally
+            {
+                
+            }
+
+            bar.Positions = dialog.Settings.Positions;
+        }
     }
 
     public enum PositionType

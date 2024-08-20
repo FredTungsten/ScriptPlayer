@@ -18,6 +18,7 @@
 
         <ContextMenu x:Key="BarContextMenu">
             <MenuItem Header="Rythm" Click="BarContextMenuRythm_Click"/>
+            <MenuItem Header="Positions" Click="BarContextMenuPositions_Click"/>
             <MenuItem Header="Subdivisions">
                 <MenuItem Header="1" Tag="1" Click="BarContextMenuSubdivisions_Click"/>
                 <MenuItem Header="2" Tag="2" Click="BarContextMenuSubdivisions_Click"/>
@@ -363,7 +364,7 @@
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
-                    <shared:SeekBar Name="SeekBar" Grid.Row="0" Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Margin="137,0,0,0"/>
+                    <shared:SeekBar Name="SeekBar" Grid.Row="0" Seek="SeekBar_OnSeek"  Duration="{Binding ElementName=videoPlayer, Path=Duration}" Progress="{Binding ElementName=videoPlayer, Path=TimeSource.Progress}" Margin="174,0,0,0"/>
 
                     <shared:TimeLineHeader Height="52" Grid.Row="1" VerticalAlignment="Stretch" Marker="{Binding ElementName=videoPlayer, Path=TimeSource.Progress, Mode=OneWay}">
                         <shared:TimeLineHeader.ContextMenu>

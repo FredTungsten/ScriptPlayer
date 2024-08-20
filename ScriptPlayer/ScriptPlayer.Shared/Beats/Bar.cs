@@ -91,6 +91,8 @@ namespace ScriptPlayer.Shared.Beats
 
         public TimeSpan BeatDuration => Tact.BeatDuration.Divide(Subdivisions);
 
+        public RelativePositionCollection Positions { get; set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
@@ -171,17 +173,45 @@ namespace ScriptPlayer.Shared.Beats
 
         public IEnumerable<int> GetBeatIndices(TimeSpan start, TimeSpan end)
         {
-            int tactTotalBeats = Tact.Beats * Subdivisions;
+            GetBeatIndices(start, end, out int firstBeat, out int lastBeat);
+            return Enumerable.Range(firstBeat, lastBeat - firstBeat + 1);
+        }
 
+        public void GetBeatIndices(TimeFrame timeframe, out int firstBeat, out int lastBeat)
+        {
+            GetBeatIndices(timeframe.From, timeframe.To, out firstBeat, out lastBeat);
+        }
+
+        public void GetBeatIndices(TimeSpan start, TimeSpan end, out int firstBeat, out int lastBeat)
+        {
             TimeSpan barStart = GetStartTime();
 
-            int firstBeat = (int)Math.Ceiling((start - barStart).Divide(BeatDuration));
-            int lastBeat = (int)Math.Floor((end - barStart).Divide(BeatDuration));
+            firstBeat = (int)Math.Ceiling((start - barStart).Divide(BeatDuration));
+            lastBeat = (int)Math.Floor((end - barStart).Divide(BeatDuration));
 
-            firstBeat = Math.Min(tactTotalBeats - 1, Math.Max(0, firstBeat));
-            lastBeat = Math.Min(tactTotalBeats - 1, Math.Max(0, lastBeat));
+            firstBeat = ClampBeatIndex(firstBeat);
+            lastBeat = ClampBeatIndex(lastBeat);
+        }
 
-            return Enumerable.Range(firstBeat, lastBeat - firstBeat + 1);
+        private int ClampBeatIndex(int index)
+        {
+            return Math.Min(Tact.Beats * Subdivisions - 1, Math.Max(0, index));
+        }
+
+        public void GetBeatIndicesExtended(TimeFrame timeframe, out int firstBeat, out int lastBeat)
+        {
+            GetBeatIndices(timeframe, out firstBeat, out lastBeat);
+
+            firstBeat = ClampBeatIndex(firstBeat - 1);
+            lastBeat = ClampBeatIndex(lastBeat + 1);
+        }
+
+        public void GetBeatIndicesExtended(TimeSpan start, TimeSpan end, out int firstBeat, out int lastBeat)
+        {
+            GetBeatIndices(start, end, out firstBeat, out lastBeat);
+
+            firstBeat = ClampBeatIndex(firstBeat - 1);
+            lastBeat = ClampBeatIndex(lastBeat + 1);
         }
 
         public TimeSpan TranslateIndex(int indexRelativeToBar)
@@ -212,6 +242,19 @@ namespace ScriptPlayer.Shared.Beats
             Start = newStart;
             Length = newLength;
             Subdivisions = divisions;
+        }
+
+        public void GetBarIndices(TimeFrame timeFrame, out int firstBar, out int lastBar)
+        {
+            TimeSpan barLength = BeatDuration.Multiply(Rythm.Length);
+
+            firstBar = ClampBarIndex((int)Math.Floor((timeFrame.From - GetStartTime()).Divide(barLength)));
+            lastBar = ClampBarIndex((int)Math.Ceiling((timeFrame.To - GetStartTime()).Divide(barLength)));
+        }
+
+        private int ClampBarIndex(int barIndex)
+        {
+            return Math.Max(0, Math.Min(barIndex, (int)Math.Ceiling(Length / (double)Rythm.Length)));
         }
     }
 }

@@ -11,8 +11,8 @@
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="CustomConversionDialog" Height="460.469" Width="1040.527" WindowStartupLocation="CenterOwner" Loaded="Window_Loaded">
     <Grid>
-        <Button Content="Set Pattern" Margin="10,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="btnSetPattern_Click"/>
-        <Button Content="Clear Pattern" Margin="90,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="btnClearPattern_Click"/>
+        <Button IsEnabled="{Binding ChangePatternEnabled}" Content="Set Pattern" Margin="10,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="btnSetPattern_Click"/>
+        <Button IsEnabled="{Binding ChangePatternEnabled}" Content="Clear Pattern" Margin="90,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="btnClearPattern_Click"/>
         <Button Content="Clear Pos" Margin="170,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="btnClearPositions_Click"/>
         <Button Content="Invert Pos" Margin="250,0,0,10" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="btnInvertPositions_Click"/>
 

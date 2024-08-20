@@ -22,6 +22,15 @@ namespace ScriptPlayer.VideoSync.Dialogs
             ((CustomConversionDialog)d).OnResultChanged();
         }
 
+        public static readonly DependencyProperty ChangePatternEnabledProperty = DependencyProperty.Register(
+            "ChangePatternEnabled", typeof(bool), typeof(CustomConversionDialog), new PropertyMetadata(default(bool)));
+
+        public bool ChangePatternEnabled
+        {
+            get { return (bool) GetValue(ChangePatternEnabledProperty); }
+            set { SetValue(ChangePatternEnabledProperty, value); }
+        }
+
         public static readonly DependencyProperty SettingsProperty = DependencyProperty.Register(
             "Settings", typeof(CustomConversionSettings), typeof(CustomConversionDialog), new PropertyMetadata(default(CustomConversionSettings), OnSettingsChanged));
 
@@ -61,7 +70,17 @@ namespace ScriptPlayer.VideoSync.Dialogs
 
         public CustomConversionDialog()
         {
+            ChangePatternEnabled = true;
             Settings = _previousSettings.Duplicate();
+            KnownPatterns = _knownPatterns;
+
+            InitializeComponent();
+        }
+
+        public CustomConversionDialog(CustomConversionSettings initialSettings)
+        {
+            ChangePatternEnabled = false;
+            Settings = initialSettings;
             KnownPatterns = _knownPatterns;
 
             InitializeComponent();
@@ -141,6 +160,9 @@ namespace ScriptPlayer.VideoSync.Dialogs
                 Pattern = bar.BeatPattern.ToArray(),
                 Positions = bar.Positions
             };
+
+            if (!ChangePatternEnabled)
+                settings.Pattern = Settings.Pattern;
 
             Settings = settings.Duplicate();
         }

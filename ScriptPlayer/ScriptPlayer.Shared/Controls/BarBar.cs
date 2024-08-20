@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -436,12 +437,15 @@ namespace ScriptPlayer.Shared.Controls
                     double startX = XFromTime(barTimeFrame.From);
                     double endX = XFromTime(barTimeFrame.To);
 
+                    bar.GetBarIndices(context.TimeFrame, out int firstVisibleBar, out int lastVisibleBar);
+                    bar.GetBeatIndices(barTimeFrame, out int firstBeat, out int lastBeat);
+
                     Rect barRect = new Rect(startX, context.FullRect.Y,endX - startX,context.FullRect.Height);
 
                     Brush background = i % 2 == 0 ? Brushes.DarkRed : Brushes.DarkMagenta;
                     context.DrawingContext.DrawRectangle(background, new Pen(Brushes.Red, 1), barRect);
 
-                    for (int barNo = 0; barNo <= bar.Subdivisions * (bar.Length / bar.Rythm.Length); barNo++)
+                    for (int barNo = firstVisibleBar; barNo <= lastVisibleBar; barNo++)
                     {
                         if (barNo % 2 == 0)
                         {
@@ -457,8 +461,61 @@ namespace ScriptPlayer.Shared.Controls
                             context.DrawingContext.DrawRectangle(new SolidColorBrush(Color.FromArgb(100,0,0,0)), null, barRect2);
                         }
                     }
+
+                    /*
+                    RelativePositionCollection relativePositions = bar.Positions;
+                    if (relativePositions == null)
+                    {
+                        relativePositions = new RelativePositionCollection();
+                        relativePositions.Add(new RelativePosition() { RelativeTime = 0, Position = 0 });
+                        relativePositions.Add(new RelativePosition() { RelativeTime = 1, Position = 99 });
+                    }
+
+                    bool invert = relativePositions.First().Position != relativePositions.Last().Position;
+
+                    PathGeometry path = new PathGeometry();
+                    PathFigure figure = new PathFigure();
+                    figure.IsClosed = false;
+                    figure.IsFilled = false;
+                    bool started = false;
+                    path.Figures.Add(figure);
                     
-                    foreach (int tactIndex in bar.GetBeatIndices(barTimeFrame))
+                    for (int barNo = firstVisibleBar; barNo <= lastVisibleBar; barNo++)
+                    {
+                        double barStartX = XFromTime(bar.TranslateIndex(barNo * bar.Rythm.Length));
+                        double barEndX = XFromTime(bar.TranslateIndex((barNo + 1) * bar.Rythm.Length));
+                        double barWidth = barEndX - barStartX;
+
+                        foreach (var relativePoint in relativePositions)
+                        {
+                            double x = relativePoint.RelativeTime * barWidth + barStartX;
+                            double relativeHeight = (1 - (relativePoint.Position / 99.0));
+                            if (invert && barNo%2 == 0)
+                                relativeHeight = 1 - relativeHeight;
+                                    
+                            double y = context.FullRect.Y + context.FullRect.Height * relativeHeight;
+                            Point p = new Point(x,y);
+
+                            if (!started)
+                            {
+                                figure.StartPoint = p;
+                                started = true;
+                            }
+                            else
+                            {
+                                figure.Segments.Add(new LineSegment(p, true));
+                            }
+                        }
+                    }
+
+                    Pen linePen = new Pen(new SolidColorBrush(Color.FromArgb(100,255,255,255)), 1);
+
+                    context.DrawingContext.PushClip(new RectangleGeometry(new Rect(startX, context.FullRect.Y, endX - startX, context.FullRect.Height)));
+                    context.DrawingContext.DrawGeometry(null, linePen, path);
+                    context.DrawingContext.Pop();
+
+                */
+                    for (int tactIndex = firstBeat; tactIndex <= lastBeat; tactIndex++)
                     {
                         int beatIndex = tactIndex % bar.Rythm.Length;
 
@@ -477,6 +534,8 @@ namespace ScriptPlayer.Shared.Controls
 
                         context.DrawingContext.DrawLine(pen, new Point(x,context.FullRect.Top), new Point(x, context.FullRect.Bottom));
                     }
+
+                    
                 }
             }
         }
