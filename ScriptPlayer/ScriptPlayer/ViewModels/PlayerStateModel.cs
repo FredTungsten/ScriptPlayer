@@ -54,7 +54,7 @@ namespace ScriptPlayer.ViewModels
                 Height = Height,
                 X = X,
                 Y = Y,
-                Panels = Panels.Duplicate(),
+                Panels = Panels?.Duplicate(),
                 PanelsFullscreen = PanelsFullscreen?.Duplicate()
             };
         }
