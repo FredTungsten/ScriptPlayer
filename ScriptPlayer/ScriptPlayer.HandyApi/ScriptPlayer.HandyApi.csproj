@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{23068F98-AA0A-48BE-B929-7031335DCE55}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ScriptPlayer.HandyApi</RootNamespace>
+    <AssemblyName>ScriptPlayer.HandyApi</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BlockingTaskQueue.cs" />
+    <Compile Include="Messages\Hstp\DeviceTimeResponse.cs" />
+    <Compile Include="GetParameterAttribute.cs" />
+    <Compile Include="Messages\Hamp\HampStateResponse.cs" />
+    <Compile Include="Messages\Hamp\HampVelocityRequest.cs" />
+    <Compile Include="HandyApiV3.cs" />
+    <Compile Include="Messages\Slider\SliderSettings.cs" />
+    <Compile Include="Messages\Slider\SliderStateResponse.cs" />
+    <Compile Include="Messages\Slider\SliderStrokeResponse.cs" />
+    <None Include="HandyController.cs" />
+    <None Include="HandyHelper.cs" />
+    <None Include="HandyScriptServer.cs" />
+    <Compile Include="Messages\Hstp\HstpOffsetRequest.cs" />
+    <Compile Include="Messages\Auth\AuthTokenIssueRequest.cs" />
+    <Compile Include="Messages\Auth\AuthTokenIssueResponse.cs" />
+    <Compile Include="Messages\Hssp\HsspPlayRequest.cs" />
+    <Compile Include="Messages\Hssp\HsspSetupRequest.cs" />
+    <Compile Include="Messages\Hssp\HsspStateResponse.cs" />
+    <Compile Include="Messages\Hssp\HsspSyncTimeRequest.cs" />
+    <Compile Include="Messages\Info\InfoRequest.cs" />
+    <Compile Include="Messages\Utils\Servertime.cs" />
+    <Compile Include="Messages\Hstp\OffsetResponse.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
