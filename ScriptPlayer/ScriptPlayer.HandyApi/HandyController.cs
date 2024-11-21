@@ -107,9 +107,25 @@ namespace ScriptPlayer.HandyApi
 
         private void GetInfoResponse(InfoResponse response)
         {
+            ShowFirmwareStatusOsd(response.FirmwareStatus);
             CalcServerTimeOffset();
             SetSyncMode();
             OnHandyConnected();
+        }
+
+        private void ShowFirmwareStatusOsd(int firmwareStatus)
+        {
+            switch(firmwareStatus)
+            {
+                case 0: //up-to-date
+                    break;
+                case 1:
+                    OnOsdRequest("There is an optional firmware update available for your Handy", TimeSpan.FromSeconds(5), "HandyFirmware");
+                    break;
+                case 2:
+                    OnOsdRequest("There is a REQUIRED firmware update available for your Handy!", TimeSpan.FromSeconds(10), "HandyFirmware");
+                    break;
+            }
         }
 
         private void OnHandyDisconnected()
@@ -544,10 +560,9 @@ namespace ScriptPlayer.HandyApi
             for (int i = 0; i < maxSyncAttempts; i++)
             {
                 long tSent = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                long tReceived = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                long tTrip = tReceived - tSent;
-
                 var response = await _api.GetServerTime();
+                long tReceived = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                long tTrip = tReceived - tSent;              
 
                 long tServerResponse = response.ServerTime;
                 long tServerEstimate = tServerResponse + (tTrip / 2);

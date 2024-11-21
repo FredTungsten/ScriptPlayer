@@ -11,7 +11,7 @@ namespace ScriptPlayer.HandyApi.Messages
     public class InfoResponse
     {
         [JsonProperty("fw_status")]
-        public string FirmwareStatus { get; set; }
+        public int FirmwareStatus { get; set; }
 
         [JsonProperty("fw_version")]
         public string FirmwareVersion { get; set; }

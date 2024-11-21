@@ -161,7 +161,7 @@ namespace ScriptPlayer.HandyApi
 
         #endregion
 
-        #region slide
+        #region Slider
 
         public async Task<Response<SliderStateResponse>> GetSliderState()
         {
@@ -248,16 +248,15 @@ namespace ScriptPlayer.HandyApi
             if (responseMessage.StatusCode != HttpStatusCode.OK)
                 throw new Exception("HTTP Status <> 200 OK");
 
-            Response<T> response = new Response<T>
-            {
-                RateLimitPerMinute = TryToParseHeaderToInt(responseMessage.Headers, "X-RateLimit-Limit", 0),
-                RateLimitRemaining = TryToParseHeaderToInt(responseMessage.Headers, "X-RateLimit-Remaining", 0),
-                MsUntilRateLimitReset = TryToParseHeaderToInt(responseMessage.Headers, "X-RateLimit-Reset", 0)
-            };
-
             string responseContent = await responseMessage.Content.ReadAsStringAsync();
 
-            return JsonConvert.DeserializeObject<Response<T>>(responseContent);
+            Response<T> response = JsonConvert.DeserializeObject<Response<T>>(responseContent);
+
+            response.RateLimitPerMinute = TryToParseHeaderToInt(responseMessage.Headers, "X-RateLimit-Limit", 0);
+            response.RateLimitRemaining = TryToParseHeaderToInt(responseMessage.Headers, "X-RateLimit-Remaining", 0);
+            response.MsUntilRateLimitReset = TryToParseHeaderToInt(responseMessage.Headers, "X-RateLimit-Reset", 0);
+
+            return response;
         }
 
         private Uri GetUri(string relativeUrl)
