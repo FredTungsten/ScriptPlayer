@@ -1,12 +1,12 @@
 ﻿using Newtonsoft.Json;
 
-namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3.Messages.Hssp
+namespace ScriptPlayer.HandyApi.Messages
 {
     public abstract class HsspSetupRequest
     {
     }
 
-    public class HsspSetpUrlRequest
+    public class HsspSetupUrlRequest : HsspSetupRequest
     {
         [JsonProperty("url")]
         public string Url { get; set; }

@@ -1,4 +1,4 @@
-﻿namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3.Messages
+﻿namespace ScriptPlayer.HandyApi.Messages
 {
     public class AuthTokenIssueRequest
     {

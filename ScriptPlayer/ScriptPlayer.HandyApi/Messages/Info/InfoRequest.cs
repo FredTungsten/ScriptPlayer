@@ -1,11 +1,6 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3.Messages.Info
+namespace ScriptPlayer.HandyApi.Messages
 {
     public class InfoRequest
     {

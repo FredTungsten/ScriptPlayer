@@ -238,12 +238,6 @@
     <Compile Include="Devices\Interfaces\IActionBasedDevice.cs" />
     <Compile Include="Devices\Interfaces\IDevice.cs" />
     <Compile Include="Devices\Interfaces\ISyncBasedDevice.cs" />
-    <Compile Include="Devices\TheHandy\BlockingTaskQueue.cs" />
-    <Compile Include="Devices\TheHandy\HandyApi2Messages.cs" />
-    <Compile Include="Devices\TheHandy\HandyApiMessages.cs" />
-    <Compile Include="Devices\TheHandy\HandyController.cs" />
-    <Compile Include="Devices\TheHandy\HandyHelper.cs" />
-    <Compile Include="Devices\TheHandy\HandyScriptServer.cs" />
     <Compile Include="Dialogs\BeatPatternEditor.xaml.cs">
       <DependentUpon>BeatPatternEditor.xaml</DependentUpon>
     </Compile>

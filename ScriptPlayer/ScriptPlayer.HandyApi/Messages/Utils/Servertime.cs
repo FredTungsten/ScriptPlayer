@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3.Messages.Utils
+namespace ScriptPlayer.HandyApi.Messages
 {
     public class ServertimeResponse
     {

@@ -6,11 +6,15 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using ScriptPlayer.HandyAPIv3Playground.TheHandyV3.Messages.Hssp;
-using ScriptPlayer.HandyAPIv3Playground.TheHandyV3.Messages.Info;
+using ScriptPlayer.HandyApi.Messages;
 
-namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3
+namespace ScriptPlayer.HandyApi
 {
+    /// <summary>
+    /// Api Doks:
+    /// https://www.handyfeeling.com/api/handy-rest/v3/docs/
+    /// https://ohdoki.notion.site/Handy-API-v3-ea6c47749f854fbcabcc40c729ea6df4
+    /// </summary>
     public class HandyApiV3
     {
         private string _apiKey;
@@ -29,7 +33,7 @@ namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3
             // This value is specific to ScriptPlayer
             // If you "borrow" this code, at least register you own application: 
             // https://ohdoki.notion.site/Handy-API-v3-ea6c47749f854fbcabcc40c729ea6df4#8ca21fcf0e094c5287358bc7e8080a98
-            _client.DefaultRequestHeaders.Add("X-Api-Key", ".oBFYi~F2Ahyn~H3Q9zGMEHLGPSnCx7b"); 
+            _client.DefaultRequestHeaders.Add("X-Api-Key", ".oBFYi~F2Ahyn~H3Q9zGMEHLGPSnCx7b");
 
             if (string.IsNullOrEmpty(apiUrl))
                 _apiUrl = "https://www.handyfeeling.com/api/handy-rest/v3/";
@@ -107,9 +111,9 @@ namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3
             return await Get<OffsetResponse>("hstp/offset");
         }
 
-        public async Task<Response<string>> HstpPutOffset(int offset)
+        public async Task<Response<string>> HstpPutOffset(HstpOffsetRequest offset)
         {
-            return await Put<string>("hstp/offset", new HstpOffsetRequest { Offset = offset });
+            return await Put<string>("hstp/offset", offset);
         }
 
         public async Task<Response<string>> HstpClockSync()
@@ -117,6 +121,15 @@ namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3
             return await Put<string>("hstp/offset");
         }
 
+
+        #endregion
+
+        #region utils
+
+        public async Task<ServertimeResponse> GetServerTime()
+        {
+            return await GetRaw<ServertimeResponse>("servertime");
+        }
 
         #endregion
 
@@ -163,7 +176,7 @@ namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3
 
         #endregion
 
-        private async Task<Response<T>> Put<T>(string relativeUrl, object data = null) where T: class 
+        private async Task<Response<T>> Put<T>(string relativeUrl, object data = null) where T : class
         {
             return await Exchange<T>(relativeUrl, true, data);
         }
@@ -173,11 +186,16 @@ namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3
             return await Exchange<T>(relativeUrl, false, null);
         }
 
-        private async Task<Response<T>> Exchange<T>(string relativeUrl, bool put, object data) where T : class
+        private async Task<T> GetRaw<T>(string relativeUrl) where T : class
+        {
+            return await ExchangeRaw<T>(relativeUrl, false, null);
+        }
+
+        private async Task<T> ExchangeRaw<T>(string relativeUrl, bool put, object data) where T : class
         {
             HttpResponseMessage responseMessage;
             Uri uri = GetUri(relativeUrl);
-            
+
             if (put)
             {
                 HttpContent content = null;
@@ -194,7 +212,36 @@ namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3
                 responseMessage = await _client.GetAsync(uri);
             }
 
-            if(responseMessage.StatusCode != HttpStatusCode.OK)
+            if (responseMessage.StatusCode != HttpStatusCode.OK)
+                throw new Exception("HTTP Status <> 200 OK");
+
+            string responseContent = await responseMessage.Content.ReadAsStringAsync();
+
+            return JsonConvert.DeserializeObject<T>(responseContent);
+        }
+
+        private async Task<Response<T>> Exchange<T>(string relativeUrl, bool put, object data) where T : class
+        {
+            HttpResponseMessage responseMessage;
+            Uri uri = GetUri(relativeUrl);
+
+            if (put)
+            {
+                HttpContent content = null;
+                if (data != null)
+                {
+                    string json = JsonConvert.SerializeObject(data);
+                    content = new StringContent(json, _encoding, "application/json");
+                }
+
+                responseMessage = await _client.PutAsync(uri, content);
+            }
+            else
+            {
+                responseMessage = await _client.GetAsync(uri);
+            }
+
+            if (responseMessage.StatusCode != HttpStatusCode.OK)
                 throw new Exception("HTTP Status <> 200 OK");
 
             Response<T> response = new Response<T>
@@ -203,9 +250,9 @@ namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3
                 RateLimitRemaining = TryToParseHeaderToInt(responseMessage.Headers, "X-RateLimit-Remaining", 0),
                 MsUntilRateLimitReset = TryToParseHeaderToInt(responseMessage.Headers, "X-RateLimit-Reset", 0)
             };
-            
+
             string responseContent = await responseMessage.Content.ReadAsStringAsync();
-            
+
             return JsonConvert.DeserializeObject<Response<T>>(responseContent);
         }
 
@@ -255,7 +302,7 @@ namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3
         public int MsUntilRateLimitReset { get; set; }
     }
 
-    public class Response<T> : Response where T:class
+    public class Response<T> : Response where T : class
     {
         public T Result
         {

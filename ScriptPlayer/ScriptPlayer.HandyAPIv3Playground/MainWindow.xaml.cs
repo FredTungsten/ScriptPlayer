@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Win32;
 using Newtonsoft.Json;
-using ScriptPlayer.HandyAPIv3Playground.TheHandyV3;
+using ScriptPlayer.HandyApi;
 
 namespace ScriptPlayer.HandyAPIv3Playground
 {
@@ -46,7 +46,7 @@ namespace ScriptPlayer.HandyAPIv3Playground
 
         private void btnSetSlideRange_Click(object sender, RoutedEventArgs e)
         {
-            Execute(async ()=> await _api.PutSliderStroke(new SliderSettings
+            Execute(async ()=> await _api.PutSliderStroke(new HandyApi.Messages.SliderSettings
             {
                 Min = sldRange.LowerValue / 100.0,
                 Max = sldRange.UpperValue / 100.0,
@@ -104,7 +104,7 @@ namespace ScriptPlayer.HandyAPIv3Playground
 
         private void btnSetHampMode_Click(object sender, RoutedEventArgs e)
         {
-            Execute(async () => await _api.PutMode(TheHandyV3.Messages.Info.HandyModes.Hamp));
+            Execute(async () => await _api.PutMode(HandyApi.Messages.HandyModes.Hamp));
         }
 
         private void btnSetHampVelocity_Click(object sender, RoutedEventArgs e)

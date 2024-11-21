@@ -9,7 +9,7 @@
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
         xmlns:dialogs="clr-namespace:ScriptPlayer.Dialogs"
         xmlns:controls1="clr-namespace:ScriptPlayer.Controls"
-        xmlns:theHandy="clr-namespace:ScriptPlayer.Shared.TheHandy;assembly=ScriptPlayer.Shared"
+        xmlns:theHandy="clr-namespace:ScriptPlayer.HandyApi;assembly=ScriptPlayer.HandyApi"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
         WindowStartupLocation="CenterOwner"
         WindowStyle="ToolWindow" Loaded="SettingsDialog_OnLoaded"
@@ -279,13 +279,13 @@
                             <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
                                 ConverterParameter={x:Static viewModels:ChapterMode.FastestTimeSpan}}" Content="Fastest Section"/>
                             <StackPanel Orientation="Horizontal">
-                            <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
+                                <RadioButton Margin="4" IsChecked="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
                                 ConverterParameter={x:Static viewModels:ChapterMode.RandomTimeSpan}}" Content="Random Section"/>
                                 <CheckBox
                                     IsEnabled="{Binding Settings.ChapterMode, Converter={StaticResource BooleanConverter}, 
                                 ConverterParameter={x:Static viewModels:ChapterMode.RandomTimeSpan}}"
                                     Margin="8,0,0,0"  VerticalAlignment="Center" IsChecked="{Binding Settings.IncludeFilledGapsInRandomSelection}" Content="Include filled gaps"></CheckBox>
-                                </StackPanel>
+                            </StackPanel>
 
                             <DockPanel Margin="4" ToolTip="The approximate duration of randomly selected sections.">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Target Duration"/>
@@ -475,7 +475,7 @@
                                     <Button DockPanel.Dock="Right"  Content="Use Default" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Top" Width="75" Height="21" Click="BtnGoProVrDefault_Click"/>
                                     <TextBox Text="{Binding Settings.GoProVrPlayerUdpPort}" Height="23" Margin="0,4,4,4" VerticalAlignment="Center"/>
                                 </DockPanel>
-                            </StackPanel>                            
+                            </StackPanel>
                             <StackPanel>
                                 <TextBlock Text="VLC" FontWeight="Bold" Margin="0,10,0,0"/>
                                 <StackPanel>
@@ -543,25 +543,9 @@
                             <controls:AwesomeIcon Icon="Rock_Hand_Solid"/>
                         </controls:PageSelector.Header>
                         <StackPanel>
-                            <TextBlock Text="Common Settings"/>
                             <DockPanel Margin="4" ToolTip="Connection key used to connect to The Handy. Sometimes also referred to as device id oder device key">
                                 <TextBlock Style="{StaticResource SettingName}" Text="Connection Key"/>
                                 <TextBox Text="{Binding Settings.HandyDeviceId}"/>
-                            </DockPanel>
-                            <TextBlock Text="Script Host"/>
-                            <RadioButton Margin="4" IsChecked="{Binding Settings.HandyScriptHost, Converter={StaticResource BooleanConverter}, 
-                                ConverterParameter={x:Static theHandy:HandyHost.HandyfeelingCom}}" Content="handyfeeling.com"/>
-                            <RadioButton Margin="4" IsChecked="{Binding Settings.HandyScriptHost, Converter={StaticResource BooleanConverter}, 
-                                ConverterParameter={x:Static theHandy:HandyHost.Local}}" Content="Local"/>
-
-                            <TextBlock Text="Local settings:"/>
-                            <DockPanel Margin="4" ToolTip="IP of this computer on the network shared with The Handy.">
-                                <TextBlock Style="{StaticResource SettingName}" Text="Local IP"/>
-                                <ComboBox ItemsSource="{Binding LocalAdresses}" IsEditable="True" Text="{Binding Settings.HandyLocalIp}"/>
-                            </DockPanel>
-                            <DockPanel Margin="4" ToolTip="Script server port of this computer on the network shared with The Handy.">
-                                <TextBlock Style="{StaticResource SettingName}" Text="Local Port"/>
-                                <TextBox Text="{Binding Settings.HandyLocalPort}"/>
                             </DockPanel>
                             <CheckBox IsChecked="{Binding Settings.WaitForDevicesToLoad}" Margin="4">Pause video while downloading script</CheckBox>
                         </StackPanel>

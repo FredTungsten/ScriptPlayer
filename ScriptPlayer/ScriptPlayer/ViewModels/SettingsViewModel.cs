@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
+using ScriptPlayer.HandyApi;
 using ScriptPlayer.Shared;
 using ScriptPlayer.Shared.Scripts;
 using ScriptPlayer.Shared.TheHandy;
@@ -112,39 +113,6 @@ namespace ScriptPlayer.ViewModels
             {
                 if (value == _handyDeviceId) return;
                 _handyDeviceId = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public HandyHost HandyScriptHost
-        {
-            get => _handyScriptHost;
-            set
-            {
-                if (value == _handyScriptHost) return;
-                _handyScriptHost = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string HandyLocalIp
-        {
-            get => _handyLocalIp;
-            set
-            {
-                if (value == _handyLocalIp) return;
-                _handyLocalIp = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public int HandyLocalPort
-        {
-            get => _handyLocalPort;
-            set
-            {
-                if (value == _handyLocalPort) return;
-                _handyLocalPort = value;
                 OnPropertyChanged();
             }
         }
@@ -266,9 +234,6 @@ namespace ScriptPlayer.ViewModels
         private bool _funstimFadeOnPause;
         private TimeSpan _audioDelay;
         private string _deoVrEndpoint;
-        private HandyHost _handyScriptHost;
-        private string _handyLocalIp;
-        private int _handyLocalPort;
         private bool _urlDecodeFilenames;
         private bool _subtitlesEnabled;
         private string _subtitleFormatPreference;
@@ -291,9 +256,6 @@ namespace ScriptPlayer.ViewModels
             KodiHttpPort = 0;
 
             HandyDeviceId = HandyHelper.DefaultDeviceId;
-            HandyScriptHost = HandyHost.Local;
-            HandyLocalPort = 80;
-            HandyLocalIp = "";
 
             TimeDisplayMode = TimeDisplayMode.ContentOnly;
             AutogenerateThumbnails = true;

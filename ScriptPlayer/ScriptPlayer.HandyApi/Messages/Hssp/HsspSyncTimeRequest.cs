@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3.Messages.Hssp
+namespace ScriptPlayer.HandyApi.Messages
 {
     public class HsspSyncTimeRequest
     {
@@ -13,7 +13,7 @@ namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3.Messages.Hssp
         public int CurrentTime { get; set; }
         
         [JsonProperty("server_time")]
-        public int ServerTime { get; set; }
+        public long ServerTime { get; set; }
 
         [JsonProperty("filter")]
         public double Filter {  get; set; }

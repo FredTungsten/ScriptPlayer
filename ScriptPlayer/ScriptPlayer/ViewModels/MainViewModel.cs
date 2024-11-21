@@ -33,6 +33,7 @@ using ScriptPlayer.Shared.TheHandy;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using ScriptPlayer.Shared.Devices.Estim;
+using ScriptPlayer.HandyApi;
 
 namespace ScriptPlayer.ViewModels
 {
@@ -2068,10 +2069,7 @@ namespace ScriptPlayer.ViewModels
                     UpdateAudioDelay();
                     break;
                 }
-                case nameof(SettingsViewModel.HandyScriptHost):
                 case nameof(SettingsViewModel.HandyDeviceId):
-                case nameof(SettingsViewModel.HandyLocalIp):
-                case nameof(SettingsViewModel.HandyLocalPort):
                 {
                     UpdateHandySettings();
                     break;
@@ -2107,8 +2105,7 @@ namespace ScriptPlayer.ViewModels
         {
             HandyController handyController = _controllers.OfType<HandyController>().FirstOrDefault();
 
-            handyController?.UpdateSettings(Settings.HandyDeviceId, Settings.HandyScriptHost, Settings.HandyLocalIp,
-                Settings.HandyLocalPort);
+            handyController?.UpdateSettings(Settings.HandyDeviceId);
         }
 
         private void UpdateAudioDelay()
@@ -2850,26 +2847,7 @@ namespace ScriptPlayer.ViewModels
         {
             CommandSource = CommandSource.None;
             OsdShowMessage("Source: " + CommandSource, TimeSpan.FromSeconds(3), "Source");
-        }
-
-        private void IncreaseHandyStrokeLength()
-        {
-            ModifyHandyStrokeLength(true);
-        }
-
-        private void ModifyHandyStrokeLength(bool increase)
-        {
-            var handyController = _controllers.OfType<HandyController>().FirstOrDefault();
-            if (handyController == null)
-                return;
-
-            handyController.StepStroke(increase);
-        }
-
-        private void DecreaseHandyStrokeLength()
-        {
-            ModifyHandyStrokeLength(false);
-        }
+        }      
 
         private void DecreaseMinSpeed()
         {
@@ -3090,7 +3068,7 @@ namespace ScriptPlayer.ViewModels
                 return;
 
             var actions = _scriptHandler.GetScript().ToList();
-            var csv = HandyController.GenerateCsvFromActions(actions);
+            var csv = HandyScriptServer.GenerateCsvFromActions(actions);
             File.WriteAllText(fileName, csv);
         }
 
@@ -5064,34 +5042,10 @@ namespace ScriptPlayer.ViewModels
             return true;
         }
 
-        //public void ConnectLaunchDirectly()
-        //{
-        //    if (LaunchBluetooth.IsLaunchPaired())
-        //    {
-        //        MessageBox.Show(
-        //            "It appears that you have paired your Launch. Since the Launch is a BLE-device, you don't have to pair it to use it - in fact it will probably not work if you do. Unpair your Launch and try again.",
-        //            "Launch paired", MessageBoxButton.OK, MessageBoxImage.Warning);
-        //    }
-
-        //    LaunchBluetooth controller = _controllers.OfType<LaunchBluetooth>().Single();
-        //    controller.Start();
-        //}
-
         private bool CheckHandySettings()
         {
             if (string.IsNullOrEmpty(Settings.HandyDeviceId) || Settings.HandyDeviceId == HandyHelper.DefaultDeviceId)
                 return false;
-
-            switch (Settings.HandyScriptHost)
-            {
-                case HandyHost.Local:
-                {
-                    if (string.IsNullOrEmpty(Settings.HandyLocalIp))
-                        return false;
-
-                    break;
-                }
-            }
 
             return true;
         }

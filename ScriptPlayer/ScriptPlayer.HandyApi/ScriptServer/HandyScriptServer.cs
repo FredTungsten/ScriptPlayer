@@ -1,5 +1,9 @@
-﻿using System;
+﻿using ScriptPlayer.HandyApi;
+using ScriptPlayer.Shared.Scripts;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -170,6 +174,40 @@ namespace ScriptPlayer.Shared.TheHandy
         protected virtual void OnScriptDownloadFinished()
         {
             ScriptDownloadFinished?.Invoke(this, EventArgs.Empty);
+        }
+
+        private static void ScaleScript(List<FunScriptAction> actions)
+        {
+            // scale script across full range of the handy
+            // some scripts only go from 5 to 95 or 10 to 90 this will scale
+            // those scripts to the desired 0 - 100 range
+            const int desiredMax = 100;
+            const int desiredMin = 0;
+            int maxPos = actions.Max(action => action.Position);
+            int minPos = actions.Min(action => action.Position);
+
+            if (maxPos < 100 || minPos > 0)
+            {
+                foreach (FunScriptAction action in actions)
+                {
+                    int pos = action.Position;
+                    int scaledPos = desiredMin + ((pos - minPos) * (desiredMax - desiredMin) / (maxPos - minPos));
+                    if (scaledPos <= 100 && scaledPos >= 0)
+                        action.Position = (byte)scaledPos;
+                }
+            }
+        }
+
+        public static string GenerateCsvFromActions(List<FunScriptAction> actions)
+        {
+            StringBuilder builder = new StringBuilder(1024 * 1024);
+            builder.Append("#");
+
+            foreach (FunScriptAction action in actions)
+            {
+                builder.Append($"\n{action.TimeStamp.TotalMilliseconds:F0},{action.Position}");
+            }
+            return builder.ToString();
         }
     }
 }

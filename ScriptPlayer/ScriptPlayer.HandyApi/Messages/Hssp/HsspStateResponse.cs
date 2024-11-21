@@ -1,7 +1,7 @@
 ﻿
 using Newtonsoft.Json;
 
-namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3.Messages.Hssp
+namespace ScriptPlayer.HandyApi.Messages
 {
     public class HsspStateResponse
     {
@@ -36,7 +36,7 @@ namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3.Messages.Hssp
         public int LastPointTime { get; set; }
 
         [JsonProperty("stream_id")]
-        public int StreamId { get; set; }
+        public long StreamId { get; set; }
 
         [JsonProperty("tail_point_stream_index")]
         public int TailPointStreamIndex { get; set; }

@@ -34,6 +34,7 @@
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -46,16 +47,16 @@
   <ItemGroup>
     <Compile Include="BlockingTaskQueue.cs" />
     <Compile Include="Messages\Hstp\DeviceTimeResponse.cs" />
-    <Compile Include="GetParameterAttribute.cs" />
+    <Compile Include="Messages\GetParameterAttribute.cs" />
     <Compile Include="Messages\Hamp\HampStateResponse.cs" />
     <Compile Include="Messages\Hamp\HampVelocityRequest.cs" />
     <Compile Include="HandyApiV3.cs" />
     <Compile Include="Messages\Slider\SliderSettings.cs" />
     <Compile Include="Messages\Slider\SliderStateResponse.cs" />
     <Compile Include="Messages\Slider\SliderStrokeResponse.cs" />
-    <None Include="HandyController.cs" />
-    <None Include="HandyHelper.cs" />
-    <None Include="HandyScriptServer.cs" />
+    <Compile Include="HandyController.cs" />
+    <Compile Include="HandyHelper.cs" />
+    <Compile Include="ScriptServer\HandyScriptServer.cs" />
     <Compile Include="Messages\Hstp\HstpOffsetRequest.cs" />
     <Compile Include="Messages\Auth\AuthTokenIssueRequest.cs" />
     <Compile Include="Messages\Auth\AuthTokenIssueResponse.cs" />
@@ -67,7 +68,14 @@
     <Compile Include="Messages\Utils\Servertime.cs" />
     <Compile Include="Messages\Hstp\OffsetResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScriptServer\HandyUploadResponse.cs" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ScriptPlayer.Shared\ScriptPlayer.Shared.csproj">
+      <Project>{e6533970-6370-4cde-b7a8-a9e3f15bf26a}</Project>
+      <Name>ScriptPlayer.Shared</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -90,7 +90,11 @@ namespace ScriptPlayer.Shared
 
             if (newPosition < _timeWhenPaused)
             {
-                Debug.WriteLine($"Time went backwards after pausing!: Pause-{_timeWhenPaused:g} / Prog-{Progress:g} / Now:{newPosition:g}");
+                TimeSpan minNegativeJump = TimeSpan.FromMilliseconds(50); // (bit more than a Frame @24 FPS)
+
+                if(_timeWhenPaused - newPosition > minNegativeJump)
+                    Debug.WriteLine($"Time went backwards after pausing!: Pause-{_timeWhenPaused:g} / Prog-{Progress:g} / Now:{newPosition:g}");
+
                 return;
             }
 

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3.Messages
+namespace ScriptPlayer.HandyApi.Messages
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class GetParameterAttribute : Attribute

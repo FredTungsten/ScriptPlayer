@@ -518,6 +518,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ScriptPlayer.HandyApi\ScriptPlayer.HandyApi.csproj">
+      <Project>{23068f98-aa0a-48be-b929-7031335dce55}</Project>
+      <Name>ScriptPlayer.HandyApi</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ScriptPlayer.Ipc\ScriptPlayer.Ipc.csproj">
       <Project>{1c299420-2055-48d6-8db7-e297709cc9d3}</Project>
       <Name>ScriptPlayer.Ipc</Name>

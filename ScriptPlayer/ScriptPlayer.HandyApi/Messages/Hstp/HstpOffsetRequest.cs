@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace ScriptPlayer.HandyAPIv3Playground.TheHandyV3
+namespace ScriptPlayer.HandyApi.Messages
 {
-    internal class HstpOffsetRequest
+    public class HstpOffsetRequest
     {
         [JsonProperty("offset")]
         public int Offset { get; set; }
