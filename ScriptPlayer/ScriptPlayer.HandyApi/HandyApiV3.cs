@@ -31,8 +31,12 @@ namespace ScriptPlayer.HandyApi
             _client.DefaultRequestHeaders.Add("X-Connection-Key", apiKey);
 
             // This value is specific to ScriptPlayer
-            // If you "borrow" this code, at least register you own application: 
+            // It is a non-privileged Application-ID that can't be used with privileged API endpoints (e.g. /auth)
+            // If you "borrow" this code, pleas at least register you own application: 
+
             // https://ohdoki.notion.site/Handy-API-v3-ea6c47749f854fbcabcc40c729ea6df4#8ca21fcf0e094c5287358bc7e8080a98
+            // https://user.handyfeeling.com/
+
             _client.DefaultRequestHeaders.Add("X-Api-Key", ".oBFYi~F2Ahyn~H3Q9zGMEHLGPSnCx7b");
 
             if (string.IsNullOrEmpty(apiUrl))
