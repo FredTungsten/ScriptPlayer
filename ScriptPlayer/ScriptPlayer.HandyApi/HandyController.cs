@@ -317,12 +317,12 @@ namespace ScriptPlayer.HandyApi
                     }
 
                     Debug.WriteLine($"set range to {_newRangeMin}-{_newRangeMax}");
-                    SetStrokeZone(_newRangeMin, _newRangeMax);
+                    SetSliderSettings(_newRangeMin, _newRangeMax);
                 });
             }
         }
 
-        private void SetStrokeZone(int min, int max)
+        private void SetSliderSettings(int min, int max)
         {
             Continue(_api.PutSliderStroke(new SliderSettings
             {
