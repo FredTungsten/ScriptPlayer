@@ -2878,7 +2878,7 @@ namespace ScriptPlayer.ViewModels
             if (Settings.MaxSpeed < 99 )
                 Settings.MaxSpeed = (byte)Math.Min(99, Settings.MaxSpeed + 5);
 
-            OsdShowMessage("Min Speed: " + Settings.MinSpeed, TimeSpan.FromSeconds(2), "MaxSpeed");
+            OsdShowMessage("Max Speed: " + Settings.MaxSpeed, TimeSpan.FromSeconds(2), "MaxSpeed");
         }
 
        private void AddEstimAudioDevice()
@@ -3527,7 +3527,6 @@ namespace ScriptPlayer.ViewModels
             _controllers.Add(handyController);
 
             UpdateHandySettings();
-
         }
 
         private void CheckForArguments()
