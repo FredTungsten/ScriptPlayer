@@ -1,3 +1,4 @@
+# [Handy FW4 Pre-Release can be found here](https://github.com/FredTungsten/ScriptPlayer/releases/tag/1.2.2)
 # [Latest release can be found here](https://github.com/FredTungsten/ScriptPlayer/releases)
 # [Latest beta can be found here](https://github.com/FredTungsten/ScriptPlayer/wiki/Downloading-Beta-Builds)
 
