@@ -138,6 +138,9 @@ namespace ScriptPlayer.HandyApi
 
         private void OnHandyConnected()
         {
+            if (Connected)
+                OnHandyDisconnected();
+
             Connected = true;
             OnOsdRequest("The Handy is connected", TimeSpan.FromSeconds(2), "HandyStatus");
             Debug.WriteLine("Successfully connected");
