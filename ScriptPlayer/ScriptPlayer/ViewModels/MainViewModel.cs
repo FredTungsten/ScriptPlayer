@@ -2080,7 +2080,20 @@ namespace ScriptPlayer.ViewModels
                     ReloadSubtitles();
                     break;
                 }
+                case nameof(SettingsViewModel.SelectedSavedRange):
+                {
+                    SetSavedRange();
+                    break;
+                }
             }
+        }
+
+        private void SetSavedRange()
+        {
+            var selectedRange = Settings.SavedRanges[Settings.SelectedSavedRange];
+            var max = selectedRange.Max;
+            Settings.MinPosition = selectedRange.Min;
+            Settings.MaxPosition = max;
         }
 
         private void ReloadSubtitles()
@@ -2096,6 +2109,10 @@ namespace ScriptPlayer.ViewModels
 
         private void UpdateRange()
         {
+            var range = Settings.SavedRanges[Settings.SelectedSavedRange];            
+            range.Min = Settings.MinPosition;
+            range.Max = Settings.MaxPosition;
+
             HandyController handyController = _controllers.OfType<HandyController>().FirstOrDefault();
 
             handyController?.SetStrokeZone(Settings.MinPosition, Settings.MaxPosition);
@@ -3008,6 +3025,26 @@ namespace ScriptPlayer.ViewModels
         private void IncreaseUpperRange()
         {
             Settings.MaxPosition = (byte)Math.Min(99, Settings.MaxPosition + 5);
+            PrintRange();
+        }
+
+        private void SelectNextSavedRange()
+        {
+            if(Settings.SelectedSavedRange == Settings.SavedRanges.Length - 1)
+            {
+                OsdShowMessage("Last saved Range already selected.", TimeSpan.FromSeconds(2), "Range");
+            }
+            Settings.SelectedSavedRange++;
+            PrintRange();
+        }
+
+        private void SelectPreviousSavedRange()
+        {
+            if (Settings.SelectedSavedRange == byte.MinValue)
+            {
+                OsdShowMessage("First saved Range already selected.", TimeSpan.FromSeconds(2), "Range");
+            }
+            Settings.SelectedSavedRange--;
             PrintRange();
         }
 
