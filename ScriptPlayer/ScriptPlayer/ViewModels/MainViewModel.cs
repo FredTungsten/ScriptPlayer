@@ -3033,6 +3033,7 @@ namespace ScriptPlayer.ViewModels
             if(Settings.SelectedSavedRange == Settings.SavedRanges.Length - 1)
             {
                 OsdShowMessage("Last saved Range already selected.", TimeSpan.FromSeconds(2), "Range");
+                return;
             }
             Settings.SelectedSavedRange++;
             PrintRange();
@@ -3043,6 +3044,7 @@ namespace ScriptPlayer.ViewModels
             if (Settings.SelectedSavedRange == byte.MinValue)
             {
                 OsdShowMessage("First saved Range already selected.", TimeSpan.FromSeconds(2), "Range");
+                return;
             }
             Settings.SelectedSavedRange--;
             PrintRange();

@@ -1722,6 +1722,8 @@ namespace ScriptPlayer.ViewModels
         private byte _min;
         private byte _max;
 
+        public SavedRange() { }
+
         public SavedRange(byte min, byte max)
         {
             _min = min;
