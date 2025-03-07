@@ -2080,20 +2080,7 @@ namespace ScriptPlayer.ViewModels
                     ReloadSubtitles();
                     break;
                 }
-                case nameof(SettingsViewModel.SelectedSavedRange):
-                {
-                    SetSavedRange();
-                    break;
-                }
             }
-        }
-
-        private void SetSavedRange()
-        {
-            var selectedRange = Settings.SavedRanges[Settings.SelectedSavedRange];
-            var max = selectedRange.Max;
-            Settings.MinPosition = selectedRange.Min;
-            Settings.MaxPosition = max;
         }
 
         private void ReloadSubtitles()
@@ -2109,10 +2096,6 @@ namespace ScriptPlayer.ViewModels
 
         private void UpdateRange()
         {
-            var range = Settings.SavedRanges[Settings.SelectedSavedRange];            
-            range.Min = Settings.MinPosition;
-            range.Max = Settings.MaxPosition;
-
             HandyController handyController = _controllers.OfType<HandyController>().FirstOrDefault();
 
             handyController?.SetStrokeZone(Settings.MinPosition, Settings.MaxPosition);

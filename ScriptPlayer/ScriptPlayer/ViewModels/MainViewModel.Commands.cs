@@ -399,7 +399,7 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreaseUpperRange)
             {
                 CommandId = "IncreaseUpperRange",
-                DisplayText = "Increase Upper Range",
+                DisplayText = "Increase Upper Range"
             });
 
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(DecreaseUpperRange)
