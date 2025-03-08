@@ -142,7 +142,7 @@ namespace ScriptPlayer.ViewModels
         public long DurationEachXmlWrapper
         {
             get => DurationEach.Ticks;
-            set => Duration = TimeSpan.FromTicks(value);
+            set => DurationEach = TimeSpan.FromTicks(value);
         }
 
         [XmlIgnore]
