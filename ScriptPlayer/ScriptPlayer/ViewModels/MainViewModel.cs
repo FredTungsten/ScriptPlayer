@@ -1259,6 +1259,16 @@ namespace ScriptPlayer.ViewModels
 
             _previouslyOpenedVideoFile = videoFileName;
 
+            if(Settings.WaitForDevicesToLoad)
+            {
+                Pause();
+                Thread waitForDevices = new Thread(CheckAndWaitForDevices)
+                {
+                    Name = "DeviceWaiterThread"
+                };
+                waitForDevices.Start(Task.Run(() => Play()));
+            }
+
             if (Settings.UrlDecodeFilenames)
             {
                 try
@@ -1296,7 +1306,7 @@ namespace ScriptPlayer.ViewModels
             // We meed to explicitly reload the audio file because the time source does not change when file on remote player changes
 
             ReloadAudio(videoFileName);
-            
+
             UpdateGeneratorPriority();
         }
 
