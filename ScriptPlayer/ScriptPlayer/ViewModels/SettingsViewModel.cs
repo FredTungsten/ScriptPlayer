@@ -39,10 +39,20 @@ namespace ScriptPlayer.ViewModels
 
         private byte _maxPosition = 95;
         private byte _minPosition = 5;
+        private byte _selectedSavedRange = 0;
+        private SavedRange[] _savedRanges =
+        {
+            new SavedRange(5, 95),
+            new SavedRange(20, 80),
+            new SavedRange(20, 70),
+            new SavedRange(20,60),
+            new SavedRange(30,60),
+            new SavedRange(40,60)
+        };
         private byte _minSpeed = 20;
         private byte _maxSpeed = 95;
         private double _speedMultiplier = 1;
-        
+
         private bool _showHeatMap;
         private PositionFilterMode _filterMode = PositionFilterMode.FullRange;
         private double _filterRange = 0.5;
@@ -106,7 +116,7 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
-        public string HandyDeviceId 
+        public string HandyDeviceId
         {
             get => _handyDeviceId;
             set
@@ -818,12 +828,39 @@ namespace ScriptPlayer.ViewModels
             }
         }
 
+        public SavedRange[] SavedRanges
+        {
+            get => _savedRanges;
+            set
+            {
+                if (value == _savedRanges) return;
+                _savedRanges = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public byte SelectedSavedRange
+        {
+            get => _selectedSavedRange;
+            set
+            {
+                if (value == _selectedSavedRange) return;
+                byte minPosition = SavedRanges[value].Min;
+                byte maxPosition = SavedRanges[value].Max;
+                _selectedSavedRange = value;
+                MinPosition = minPosition;
+                MaxPosition = maxPosition;                
+                OnPropertyChanged();
+            }
+        }
+
         public byte MinPosition
         {
             get => _minPosition;
             set
             {
                 if (value == _minPosition) return;
+                SavedRanges[SelectedSavedRange].Min = value;
                 _minPosition = value;
                 OnPropertyChanged();
             }
@@ -857,6 +894,7 @@ namespace ScriptPlayer.ViewModels
             set
             {
                 if (value == _maxPosition) return;
+                SavedRanges[SelectedSavedRange].Max = value;
                 _maxPosition = value;
                 OnPropertyChanged();
             }
@@ -1508,7 +1546,7 @@ namespace ScriptPlayer.ViewModels
                 RebuildCropRect();
             }
         }
-        
+
         public double CropBottom
         {
             get => _cropBottom;
@@ -1579,7 +1617,7 @@ namespace ScriptPlayer.ViewModels
             get => _estimAudioDevice;
             set
             {
-                if (Equals(value,_estimAudioDevice)) return;
+                if (Equals(value, _estimAudioDevice)) return;
                 _estimAudioDevice = value;
                 OnPropertyChanged();
             }
@@ -1676,6 +1714,52 @@ namespace ScriptPlayer.ViewModels
         KeepLastScript = 1,
         ClearScript = 2,
         FallbackScript = 3
+    }
+
+    public class SavedRange : INotifyPropertyChanged
+    {
+        private byte _min;
+        private byte _max;
+
+        public SavedRange() { }
+
+        public SavedRange(byte min, byte max)
+        {
+            _min = min;
+            _max = max;
+        }
+
+        public byte Min
+        {
+            get => _min;
+            set
+            {
+                if (value == _min) return;
+                _min = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public byte Max
+        {
+            get => _max;
+            set
+            {
+                if (value == _max) return;
+                _max = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [field: XmlIgnore]
+        [field: NonSerialized]
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 
     public class FavouriteFolder : INotifyPropertyChanged

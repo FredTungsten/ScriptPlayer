@@ -341,7 +341,7 @@ namespace ScriptPlayer.ViewModels
             GlobalCommandManager.RegisterCommand(VolumeUpCommand);
             GlobalCommandManager.RegisterCommand(VolumeDownCommand);
             GlobalCommandManager.RegisterCommand(ToggleFullScreenCommand);
-                        GlobalCommandManager.RegisterCommand(ReloadScriptCommand);
+            GlobalCommandManager.RegisterCommand(ReloadScriptCommand);
 
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(ToggleCommandSourceVideoPattern)
             {
@@ -418,6 +418,20 @@ namespace ScriptPlayer.ViewModels
             {
                 CommandId = "DecreaseLowerRange",
                 DisplayText = "Decrease Lower Range"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SelectNextSavedRange)
+            {
+                CommandId = "SelectNextSavedRange",
+                DisplayText = "Select Next Saved Range",
+                DefaultShortCuts = { GlobalCommandManager.GetShortcut(Key.M, ModifierKeys.None) }
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SelectPreviousSavedRange)
+            {
+                CommandId = "SelectPreviousSavedRange",
+                DisplayText = "Select Previous Saved Range",
+                DefaultShortCuts = { GlobalCommandManager.GetShortcut(Key.N, ModifierKeys.None) }
             });
 
             GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(IncreasePlaybackSpeed)
@@ -668,7 +682,7 @@ namespace ScriptPlayer.ViewModels
         {
             SetRangeExtenderAction(new ArInt(-5, true));
         }
-        
+
         private void InitializeActions()
         {
             GlobalCommandManager.RegisterAction(new ScriptPlayerDelegateAction("OpenFile", new Func<string, ActionResult>(OpenFileAction)));
@@ -682,7 +696,7 @@ namespace ScriptPlayer.ViewModels
 
         private void SetPatternSpeedAction(ArInt value)
         {
-            int newValue = value.Adjust((int) Settings.PatternSpeed.TotalMilliseconds, 100, 1000);
+            int newValue = value.Adjust((int)Settings.PatternSpeed.TotalMilliseconds, 100, 1000);
 
             Settings.PatternSpeed = TimeSpan.FromMilliseconds(newValue);
 
@@ -698,7 +712,7 @@ namespace ScriptPlayer.ViewModels
         {
             SetPatternSpeedAction(new ArInt(-25, true));
         }
-        
+
         private void SetRangeExtenderAction(ArInt value)
         {
             int newValue;
@@ -894,7 +908,7 @@ namespace ScriptPlayer.ViewModels
                     value = value.Substring(1);
                 }
             }
-            
+
             bool success = TryParseInternal(value, isNegative, out T parsedValue);
             Value = success ? parsedValue : default(T);
             return success;
@@ -966,7 +980,7 @@ namespace ScriptPlayer.ViewModels
 
                 return (ActionResult)_action.DynamicInvoke(invokationParameters);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new ActionResult(false, ex.Message);
             }
@@ -979,7 +993,7 @@ namespace ScriptPlayer.ViewModels
                 hasDefault = true;
                 return methodParam.DefaultValue;
             }
-            
+
             hasDefault = false;
             return null;
         }

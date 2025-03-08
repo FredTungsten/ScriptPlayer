@@ -9,7 +9,7 @@
         xmlns:scriptPlayer="clr-namespace:ScriptPlayer"
         xmlns:viewModels="clr-namespace:ScriptPlayer.ViewModels"
         xmlns:controls="clr-namespace:ScriptPlayer.Shared.Controls;assembly=ScriptPlayer.Shared"
-        xmlns:controls1="clr-namespace:ScriptPlayer.Controls"
+        xmlns:controls1="clr-namespace:ScriptPlayer.Controls" 
         mc:Ignorable="d" PreviewKeyDown="MainWindow_OnPreviewKeyDown" Closing="MainWindow_OnClosing"
         DataContext="{Binding RelativeSource={RelativeSource Self}, Path=ViewModel}"
         Topmost="{Binding Settings.StayOnTop}"
@@ -71,7 +71,7 @@
         <BooleanToVisibilityConverter x:Key="VisibilityConverter"/>
         <converters1:MultiCollectionConverter x:Key="MultiCollectionConverter"/>
         <converters1:OneToManyConverter x:Key="OneToManyConverter"/>
-
+        
         <!-- Used in code -->
         <!-- ReSharper disable Xaml.RedundantResource -->
         <DataTemplate x:Key="SkipButton">
@@ -228,7 +228,7 @@
                     </Grid>
                 </Viewbox>
             </Grid>
-            
+
             <!-- SUBTITLES -->
             <Grid>
                 <shared:SubtitleDisplay TimeSource="{Binding TimeSource}" Name="subtitleDisplay" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"></shared:SubtitleDisplay>
@@ -748,7 +748,29 @@
                                             <TextBlock Margin="4,0" Text="{Binding Settings.MinPosition}" DockPanel.Dock="Left"/>
                                             <TextBlock Margin="4,0" Text="{Binding Settings.MaxPosition}" DockPanel.Dock="Right"/>
                                         </DockPanel>
-                                        
+                                        <Grid>
+                                            <Grid.Resources>
+                                                <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}">
+                                                    <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
+                                                </Style>
+                                            </Grid.Resources>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <RadioButton Grid.Column="0" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 0}}" Content="1" ToolTip="Custom Range" />
+                                            <RadioButton Grid.Column="1" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 1}}" Content="2" ToolTip="Custom Range" />
+                                            <RadioButton Grid.Column="2" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 2}}" Content="3" ToolTip="Custom Range" />
+                                            <RadioButton Grid.Column="3" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 3}}" Content="4" ToolTip="Custom Range" />
+                                            <RadioButton Grid.Column="4" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 4}}" Content="5" ToolTip="Custom Range" />
+                                            <RadioButton Grid.Column="5" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 5}}" Content="6" ToolTip="Custom Range" />
+                                        </Grid>
+
                                         <CheckBox Margin="4" Content="Invert Positions" IsChecked="{Binding Settings.InvertPosition}"/>
                                         <CheckBox Margin="4" Content="Enable Auto Homing" IsChecked="{Binding Settings.AutoHomingEnabled}"/>
 

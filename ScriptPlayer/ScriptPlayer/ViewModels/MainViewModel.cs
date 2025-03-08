@@ -3011,6 +3011,28 @@ namespace ScriptPlayer.ViewModels
             PrintRange();
         }
 
+        private void SelectNextSavedRange()
+        {
+            if(Settings.SelectedSavedRange == Settings.SavedRanges.Length - 1)
+            {
+                OsdShowMessage("Last saved Range already selected.", TimeSpan.FromSeconds(2), "Range");
+                return;
+            }
+            Settings.SelectedSavedRange++;
+            PrintRange();
+        }
+
+        private void SelectPreviousSavedRange()
+        {
+            if (Settings.SelectedSavedRange == byte.MinValue)
+            {
+                OsdShowMessage("First saved Range already selected.", TimeSpan.FromSeconds(2), "Range");
+                return;
+            }
+            Settings.SelectedSavedRange--;
+            PrintRange();
+        }
+
         private void ShiftScript()
         {
             TimeSpan timeSpan = OnRequestScriptShiftTimespan(_previousShiftTimeSpan);
