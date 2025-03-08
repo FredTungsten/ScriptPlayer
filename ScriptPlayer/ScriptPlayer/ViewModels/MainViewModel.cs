@@ -1895,6 +1895,7 @@ namespace ScriptPlayer.ViewModels
         private void UpdateAllFromSettings()
         {
             UpdateFilter();
+            UpdateRange();
             UpdateScriptDelay();
             UpdateDeviceSettings();
             UpdateConversionMode();
