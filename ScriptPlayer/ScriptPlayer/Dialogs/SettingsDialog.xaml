@@ -10,6 +10,7 @@
         xmlns:dialogs="clr-namespace:ScriptPlayer.Dialogs"
         xmlns:controls1="clr-namespace:ScriptPlayer.Controls"
         xmlns:theHandy="clr-namespace:ScriptPlayer.HandyApi;assembly=ScriptPlayer.HandyApi"
+        xmlns:x1="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
         WindowStartupLocation="CenterOwner"
         WindowStyle="ToolWindow" Loaded="SettingsDialog_OnLoaded"
@@ -606,6 +607,31 @@
                                 </TextBlock>
 
                                 <shared:RangeSlider Margin="0,4" Minimum="0" Maximum="99" LowerValue="{Binding Settings.MinPosition, Mode=TwoWay}" UpperValue="{Binding Settings.MaxPosition, Mode=TwoWay}"/>
+                            </DockPanel>
+
+                            <DockPanel Margin="4" ToolTip="Saved minimum and maximum position of the device.">
+                                <Grid>
+                                    <Grid.Resources>
+                                        <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}">
+                                            <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
+                                        </Style>
+                                    </Grid.Resources>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <RadioButton Grid.Column="0" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 0}}" Content="1" ToolTip="Custom Range" />
+                                    <RadioButton Grid.Column="1" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 1}}" Content="2" ToolTip="Custom Range" />
+                                    <RadioButton Grid.Column="2" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 2}}" Content="3" ToolTip="Custom Range" />
+                                    <RadioButton Grid.Column="3" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 3}}" Content="4" ToolTip="Custom Range" />
+                                    <RadioButton Grid.Column="4" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 4}}" Content="5" ToolTip="Custom Range" />
+                                    <RadioButton Grid.Column="5" HorizontalAlignment="Stretch" IsChecked="{Binding Path=Settings.SelectedSavedRange, Converter={StaticResource BooleanConverter}, ConverterParameter={shared:Byte 5}}" Content="6" ToolTip="Custom Range" />
+                                </Grid>
                             </DockPanel>
 
                             <DockPanel Margin="4" ToolTip="Inverts the input position before calculating the output position.">
