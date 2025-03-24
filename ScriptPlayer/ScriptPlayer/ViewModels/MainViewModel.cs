@@ -535,6 +535,7 @@ namespace ScriptPlayer.ViewModels
                 LoadPlaylist();
 
             Playlist.Repeat = Settings.RepeatPlaylist;
+            Playlist.RepeatSingleFile = Settings.RepeatSingleFile;
             Playlist.RandomChapters = Settings.RandomChapters;
             Playlist.Shuffle = Settings.ShufflePlaylist;
             Playlist.ViewStyle = Settings.PlaylistViewStyle;
