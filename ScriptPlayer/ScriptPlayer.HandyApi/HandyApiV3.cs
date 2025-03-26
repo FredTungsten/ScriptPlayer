@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -200,6 +201,8 @@ namespace ScriptPlayer.HandyApi
             HttpResponseMessage responseMessage;
             Uri uri = GetUri(relativeUrl);
 
+            Debug.WriteLine("Handy API call: " + relativeUrl);
+
             if (put)
             {
                 HttpContent content = null;
@@ -228,6 +231,8 @@ namespace ScriptPlayer.HandyApi
         {
             HttpResponseMessage responseMessage;
             Uri uri = GetUri(relativeUrl);
+
+            Debug.WriteLine("Handy API call: " + relativeUrl);
 
             if (put)
             {
