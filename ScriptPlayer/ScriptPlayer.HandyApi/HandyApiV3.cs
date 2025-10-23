@@ -54,10 +54,10 @@ namespace ScriptPlayer.HandyApi
             return await Get<GetModeResult>("mode");
         }
 
-        public async Task<Response<string>> PutMode(HandyModes mode)
+        public async Task<Response<ModeResponse>> PutMode(HandyModes mode)
         {
             PutModeRequest request = new PutModeRequest { Mode = (int)mode };
-            return await Put<string>("mode", request);
+            return await Put<ModeResponse>("mode", request);
         }
 
         public async Task<Response<ConnectedResponse>> GetConnected()
@@ -249,7 +249,7 @@ namespace ScriptPlayer.HandyApi
                 throw new Exception("HTTP Status <> 200 OK");
 
             string responseContent = await responseMessage.Content.ReadAsStringAsync();
-
+            
             Response<T> response = JsonConvert.DeserializeObject<Response<T>>(responseContent);
 
             response.RateLimitPerMinute = TryToParseHeaderToInt(responseMessage.Headers, "X-RateLimit-Limit", 0);
