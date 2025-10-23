@@ -1,5 +1,5 @@
 # [Handy FW4 Pre-Release can be found here](https://github.com/FredTungsten/ScriptPlayer/releases/tag/1.2.3)
-Include a fix for Windows 11 25H2
+Includes a fix for Windows 11 25H2
 # [Latest release can be found here](https://github.com/FredTungsten/ScriptPlayer/releases)
 # [Latest beta can be found here](https://github.com/FredTungsten/ScriptPlayer/wiki/Downloading-Beta-Builds)
 
