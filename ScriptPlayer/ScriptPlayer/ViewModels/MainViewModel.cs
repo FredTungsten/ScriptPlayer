@@ -535,6 +535,7 @@ namespace ScriptPlayer.ViewModels
                 LoadPlaylist();
 
             Playlist.Repeat = Settings.RepeatPlaylist;
+            Playlist.RepeatSingleFile = Settings.RepeatSingleFile;
             Playlist.RandomChapters = Settings.RandomChapters;
             Playlist.Shuffle = Settings.ShufflePlaylist;
             Playlist.ViewStyle = Settings.PlaylistViewStyle;
@@ -2434,7 +2435,7 @@ namespace ScriptPlayer.ViewModels
             if (IsMatchingScriptLoaded(videoFileName))
             {
                 if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
-                    OsdShowMessage("Matching script alreadly loaded", TimeSpan.FromSeconds(6));
+                    OsdShowMessage("Matching script already loaded", TimeSpan.FromSeconds(6));
                 return;
             }
 
@@ -2540,7 +2541,7 @@ namespace ScriptPlayer.ViewModels
             if (IsMatchingVideoLoaded(scriptFileName))
             {
                 if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
-                    OsdShowMessage("Matching media file alreadly loaded", TimeSpan.FromSeconds(6));
+                    OsdShowMessage("Matching media file already loaded", TimeSpan.FromSeconds(6));
                 return;
             }
 
