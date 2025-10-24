@@ -2435,7 +2435,7 @@ namespace ScriptPlayer.ViewModels
             if (IsMatchingScriptLoaded(videoFileName))
             {
                 if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
-                    OsdShowMessage("Matching script alreadly loaded", TimeSpan.FromSeconds(6));
+                    OsdShowMessage("Matching script already loaded", TimeSpan.FromSeconds(6));
                 return;
             }
 
@@ -2541,7 +2541,7 @@ namespace ScriptPlayer.ViewModels
             if (IsMatchingVideoLoaded(scriptFileName))
             {
                 if (Settings.NotifyFileLoaded && !Settings.NotifyFileLoadedOnlyFailed)
-                    OsdShowMessage("Matching media file alreadly loaded", TimeSpan.FromSeconds(6));
+                    OsdShowMessage("Matching media file already loaded", TimeSpan.FromSeconds(6));
                 return;
             }
 
