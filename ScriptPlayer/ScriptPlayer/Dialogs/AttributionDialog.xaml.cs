@@ -41,6 +41,7 @@ namespace ScriptPlayer.Dialogs
                 new ExtendedAttributionEntry("space-nuko", "Standalone audio support"),
                 new ExtendedAttributionEntry("delorean57", "GoPro VR Player"),
                 new ExtendedAttributionEntry("Rangaring", "MK312"),
+                new ExtendedAttributionEntry("HornyTomcat", "Saveable ranges"),
                 new ExtendedAttributionEntry("Milovana", "Community", new Link("Homepage", "https://milovana.com/")),
                 new ExtendedAttributionEntry("EroScripts", "Community", new Link("Homepage", "https://discuss.eroscripts.com/")),
                 new ExtendedAttributionEntry("RTS", "Community", new Link("Homepage", "http://realtouchscripts.com/")),
