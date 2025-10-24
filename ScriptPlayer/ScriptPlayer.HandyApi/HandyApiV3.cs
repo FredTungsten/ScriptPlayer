@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -54,7 +55,7 @@ namespace ScriptPlayer.HandyApi
             return await Get<GetModeResult>("mode");
         }
 
-        public async Task<Response<ModeResponse>> PutMode(HandyModes mode)
+        public async Task<Response<string>> PutMode(HandyModes mode)
         {
             PutModeRequest request = new PutModeRequest { Mode = (int)mode };
             return await Put<ModeResponse>("mode2", request);
@@ -200,6 +201,8 @@ namespace ScriptPlayer.HandyApi
             HttpResponseMessage responseMessage;
             Uri uri = GetUri(relativeUrl);
 
+            Debug.WriteLine("Handy API call: " + relativeUrl);
+
             if (put)
             {
                 HttpContent content = null;
@@ -228,6 +231,8 @@ namespace ScriptPlayer.HandyApi
         {
             HttpResponseMessage responseMessage;
             Uri uri = GetUri(relativeUrl);
+
+            Debug.WriteLine("Handy API call: " + relativeUrl);
 
             if (put)
             {

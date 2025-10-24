@@ -1278,7 +1278,7 @@ namespace ScriptPlayer.ViewModels
                 {
                     if (!_allowDuplicates)
                     {
-                        if (Entries.Any(e => e.Fullname == entry.Fullname))
+                        if (Entries.Any(e => string.Equals(e.Fullname, entry.Fullname, StringComparison.InvariantCultureIgnoreCase)))
                             continue;
                     }
 

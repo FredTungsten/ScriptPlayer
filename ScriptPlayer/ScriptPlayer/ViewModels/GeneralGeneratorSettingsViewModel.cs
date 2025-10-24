@@ -146,8 +146,8 @@ namespace ScriptPlayer.ViewModels
             settings.SkipIfExists = false;
 
             string fileName = Path.GetFileNameWithoutExtension(video);
-            string newDirectory = SaveFilesToDifferentPath ? SaveFilesToThisPath : Path.GetDirectoryName(video);
-            string newPath = Path.Combine(newDirectory, fileName + "." + extension);
+            string newDirectory = (SaveFilesToDifferentPath && Directory.Exists(SaveFilesToThisPath)) ? SaveFilesToThisPath : Path.GetDirectoryName(video);
+            string newPath = Path.Combine(newDirectory , fileName + "." + extension);
 
             if (File.Exists(newPath))
             {
