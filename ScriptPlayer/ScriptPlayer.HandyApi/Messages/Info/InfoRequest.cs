@@ -73,6 +73,14 @@ namespace ScriptPlayer.HandyApi.Messages
         Vibrate = 8,
     }
 
+    public class ModeResponse
+    {
+        [JsonProperty("mode")]
+        public int Mode { get; set; }
+        [JsonProperty("mode_session_id")]
+        public int ModeSessionId { get; set; }
+    }
+
     public class ConnectedResponse
     {
         [JsonProperty("connected")]

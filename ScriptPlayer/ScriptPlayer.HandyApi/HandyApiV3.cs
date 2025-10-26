@@ -55,10 +55,10 @@ namespace ScriptPlayer.HandyApi
             return await Get<GetModeResult>("mode");
         }
 
-        public async Task<Response<string>> PutMode(HandyModes mode)
+        public async Task<Response<ModeResponse>> PutMode(HandyModes mode)
         {
             PutModeRequest request = new PutModeRequest { Mode = (int)mode };
-            return await Put<string>("mode", request);
+            return await Put<ModeResponse>("mode2", request);
         }
 
         public async Task<Response<ConnectedResponse>> GetConnected()
