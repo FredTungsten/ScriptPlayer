@@ -4,6 +4,10 @@ namespace ScriptPlayer.Shared
 {
     public static class CommandConverter
     {
+        // WIP
+        const double VibratorMaxSpeed = 1.0;
+        const double VibratorMinSpeed = 0.0;
+
         public static double LaunchToVorzeSpeed(DeviceCommandInformation info)
         {
             //Information from https://github.com/metafetish/syncydink/blob/4c8c31d6f8ffba2c9d1f3fcb69209630b209cd89/src/utils/HapticsToButtplug.ts#L186
@@ -19,22 +23,16 @@ namespace ScriptPlayer.Shared
         // https://github.com/FredTungsten/ScriptPlayer/issues/64
         public static double LaunchPositionToVibratorSpeed(byte position)
         {
-            const double max = 1.0;
-            const double min = 0.0;
-
             double speedRelative = 1.0 - ((position + 1) / 100.0);
-            double result = min + (max - min) * speedRelative;
-            return Math.Min(max, Math.Max(min, result));
+            double result = VibratorMinSpeed + (VibratorMaxSpeed - VibratorMinSpeed) * speedRelative;
+            return Math.Min(VibratorMaxSpeed, Math.Max(VibratorMinSpeed, result));
         }
 
         public static double LaunchSpeedToVibratorSpeed(byte speed)
         {
-            const double max = 1.0;
-            const double min = 0.0;
-
             double speedRelative = (speed + 1) / 100.0;
-            double result = min + (max - min) * speedRelative;
-            return Math.Min(max, Math.Max(min, result));
+            double result = VibratorMinSpeed + (VibratorMaxSpeed - VibratorMinSpeed) * speedRelative;
+            return Math.Min(VibratorMaxSpeed, Math.Max(VibratorMinSpeed, result));
         }
 
         public static uint LaunchToKiiroo(byte position, uint min, uint max)

@@ -6,7 +6,8 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Buttplug;
+using Buttplug.Client;
+using Buttplug.Core;
 using JetBrains.Annotations;
 using ScriptPlayer.Shared.Helpers;
 
@@ -67,7 +68,7 @@ namespace ScriptPlayer.Shared
 
                 _client = client;
 
-                await client.ConnectAsync(new ButtplugWebsocketConnectorOptions(new Uri(_url)));
+                await client.ConnectAsync(new ButtplugWebsocketConnector(new Uri(_url)));
                 
                 foreach (var buttplugClientDevice in _client.Devices)
                 {
@@ -150,7 +151,9 @@ namespace ScriptPlayer.Shared
         {
             if (_client == null) return;
 
-            if (device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.VibrateCmd))
+            // Legacy code
+            // AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.VibrateCmd)
+            if (device.VibrateAttributes.Count > 0 )
             {
                 double speed;
                 switch (VibratorConversionMode)
@@ -227,7 +230,7 @@ namespace ScriptPlayer.Shared
                 {
                     await _clientLock.WaitAsync();
 
-                    await device.SendVibrateCmd(speed);
+                    await device.VibrateAsync(speed);
 
                     //ButtplugMessage response = await device.SendMessageAsync(new SingleMotorVibrateCmd(device.Index, speed));
 
@@ -252,31 +255,30 @@ namespace ScriptPlayer.Shared
             {
                 await _clientLock.WaitAsync();
 
-                if (device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.LinearCmd))
+                if (device.LinearAttributes.Count > 0)
                 {
                     double val = information.PositionToTransformed / (double)99;
                     val = Math.Min(1.0, Math.Max(0, val));
 
-                    await device.SendLinearCmd(
-                        (uint) information.DurationStretched.TotalMilliseconds, val);
+                    await device.LinearAsync((uint) information.DurationStretched.TotalMilliseconds, val);
                 }
-                else if (device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.VibrateCmd))
+                else if (device.VibrateAttributes.Count > 0)
                 {
                     switch (VibratorConversionMode)
                     {
                         case VibratorConversionMode.PositionToSpeed:
-                            await device.SendVibrateCmd(information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed(information.PositionFromOriginal)));
+                            await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed(information.PositionFromOriginal)));
                             break;
                         case VibratorConversionMode.PositionToSpeedInverted:
-                            await device.SendVibrateCmd(information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed((byte)(99 - information.PositionFromOriginal))));
+                            await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed((byte)(99 - information.PositionFromOriginal))));
                             break;
                         case VibratorConversionMode.SpeedHalfDuration:
                         case VibratorConversionMode.SpeedFullDuration:
-                            await device.SendVibrateCmd(information.TransformSpeed(CommandConverter.LaunchSpeedToVibratorSpeed(information.SpeedTransformed)));
+                            await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchSpeedToVibratorSpeed(information.SpeedTransformed)));
                             break;
                         case VibratorConversionMode.SpeedTimesLengthHalfDuration:
                         case VibratorConversionMode.SpeedTimesLengthFullDuration:
-                            await device.SendVibrateCmd(information.TransformSpeed(CommandConverter.LaunchSpeedAndLengthToVibratorSpeed(
+                            await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchSpeedAndLengthToVibratorSpeed(
                                 information.SpeedOriginal,
                                 information.PositionFromTransformed,
                                 information.PositionToTransformed)));
@@ -285,9 +287,9 @@ namespace ScriptPlayer.Shared
                             throw new ArgumentOutOfRangeException();
                     }
                 }
-                else if (device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.RotateCmd))
+                else if (device.RotateAttributes.Count > 0)
                 {
-                    await device.SendRotateCmd(CommandConverter.LaunchToVorzeSpeed(information), information.PositionToTransformed > information.PositionFromTransformed);
+                    await device.RotateAsync(CommandConverter.LaunchToVorzeSpeed(information), information.PositionToTransformed > information.PositionFromTransformed);
                 }
             }
             catch (Exception e)
@@ -305,12 +307,13 @@ namespace ScriptPlayer.Shared
             if (_client == null)
                 return;
 
-            if (!device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.StopDeviceCmd))
-                return;
+            // No legacy replacement?
+            //if (!device.AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.StopDeviceCmd))
+            //    return;
 
             try
             {
-                await device.SendStopDeviceCmd();
+                await device.Stop();
             }
             catch (Exception e)
             {
@@ -366,7 +369,8 @@ namespace ScriptPlayer.Shared
 
         public static string GetDownloadUrl()
         {
-            return "https://github.com/intiface/intiface-desktop/releases/";
+            return "https://intiface.com/central/";
+            //return "https://github.com/intiface/intiface-desktop/releases/";
             //return "https://github.com/buttplugio/buttplug-windows-suite/releases/tag/" + GetButtplugApiVersion();
         }
 

@@ -1390,20 +1390,25 @@ namespace ScriptPlayer.ViewModels
 
         private void AutoStartButtplug()
         {
+            if (!Settings.AutoStartButtplug)
+                return;
+
+            StartButtplug();
+        }
+
+        private void StartButtplug()
+        {
             try
             {
-                if (!Settings.AutoStartButtplug)
-                    return;
-
                 if (string.IsNullOrEmpty(Settings.ButtplugExePath))
                 {
-                    OsdShowMessage("Can't autostart Buttplug - path not set", TimeSpan.FromSeconds(5), "Buttplug");
+                    OsdShowMessage("Can't start Buttplug - path not set", TimeSpan.FromSeconds(5), "Buttplug");
                     return;
                 }
 
                 if (!File.Exists(Settings.ButtplugExePath))
                 {
-                    OsdShowMessage("Can't autostart Buttplug - file not found (or inaccessible)", TimeSpan.FromSeconds(5), "Buttplug");
+                    OsdShowMessage("Can't start Buttplug - file not found (or inaccessible)", TimeSpan.FromSeconds(5), "Buttplug");
                     return;
                 }
 
@@ -1411,7 +1416,7 @@ namespace ScriptPlayer.ViewModels
 
                 if (alreadyRunning)
                 {
-                    OsdShowMessage("Buttplug is already running - no autostart needed", TimeSpan.FromSeconds(5),
+                    OsdShowMessage("Buttplug is already running - no start needed", TimeSpan.FromSeconds(5),
                         "Buttplug");
                     return;
                 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Buttplug;
+using Buttplug.Client;
 
 namespace ScriptPlayer.Shared
 {

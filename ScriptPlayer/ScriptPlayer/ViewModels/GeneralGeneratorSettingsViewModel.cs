@@ -143,7 +143,7 @@ namespace ScriptPlayer.ViewModels
         public bool ApplyToOrSkip(string video, FfmpegGeneratorSettings settings, string extension)
         {
             settings.VideoFile = video;
-            settings.SkipIfExists = false;
+            settings.SkipIfExists = true; // false;
 
             string fileName = Path.GetFileNameWithoutExtension(video);
             string newDirectory = (SaveFilesToDifferentPath && Directory.Exists(SaveFilesToThisPath)) ? SaveFilesToThisPath : Path.GetDirectoryName(video);

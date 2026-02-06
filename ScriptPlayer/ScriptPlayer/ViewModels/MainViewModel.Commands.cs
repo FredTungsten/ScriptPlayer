@@ -31,13 +31,13 @@ namespace ScriptPlayer.ViewModels
 
         public ScriptplayerCommand ClearLoopCommand { get; set; }
 
+        public ScriptplayerCommand StartButtplugCommand { get; set; }
+
         public ScriptplayerCommand ConnectButtplugCommand { get; set; }
 
         public ScriptplayerCommand DisconnectButtplugCommand { get; set; }
 
         public ScriptplayerCommand ToggleFullScreenCommand { get; set; }
-
-        //public ScriptplayerCommand ConnectLaunchDirectlyCommand { get; set; }
 
         public ScriptplayerCommand ConnectHandyDirectlyCommand { get; set; }
 
@@ -254,6 +254,12 @@ namespace ScriptPlayer.ViewModels
             {
                 CommandId = "AddMK312SerialDevice",
                 DisplayText = "Add MK312 Serial Device"
+            };
+
+            StartButtplugCommand = new ScriptplayerCommand(StartButtplug)
+            {
+                CommandId = "StartButtplug",
+                DisplayText = "Start Buttplug"
             };
 
             ConnectButtplugCommand = new ScriptplayerCommand(ConnectButtplug)

@@ -302,31 +302,6 @@
                     <MenuItem Header="Show devices" Command="{Binding ShowDeviceManagerCommand}"/>
                     <Separator/>
                     <MenuItem Header="Connect to Handy directly" Command="{Binding ConnectHandyDirectlyCommand}" ToolTipService.ShowOnDisabled="True"/>
-                    <!--<MenuItem Command="{Binding ConnectLaunchDirectlyCommand}" IsEnabled="{Binding CanDirectConnectLaunch}" ToolTipService.ShowOnDisabled="True">
-                        <MenuItem.Header>
-                            <TextBlock Text="Connect Launch directly">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Style.Triggers>
-                                            <Trigger Property="IsEnabled" Value="False">
-                                                <Setter Property="Foreground" Value="DarkGray"></Setter>
-                                                <Setter Property="TextDecorations" Value="{x:Static TextDecorations.Strikethrough}"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </MenuItem.Header>
-                        <MenuItem.Style>
-                            <Style TargetType="MenuItem">
-                                <Style.Triggers>
-                                    <Trigger Property="IsEnabled" Value="False">
-                                        <Setter Property="ToolTip" Value="This feature requires Win10 15063 or higher"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </MenuItem.Style>
-                    </MenuItem>-->
                     <MenuItem Header="Add e-stim audio device (experimental)" Command="{Binding AddEstimAudioCommand}">
                     </MenuItem>
                     <MenuItem Header="Add funstim audio device" Command="{Binding AddFunstimAudioCommand}">
@@ -340,6 +315,7 @@
                         </MenuItem.Header>-->
                         <MenuItem Header="Download" Click="MnuDownloadButtplug_Click"/>
                         <Separator/>
+                        <MenuItem Header="Start" Command="{Binding StartButtplugCommand}"/>
                         <MenuItem Header="Connect" Command="{Binding ConnectButtplugCommand}"/>
                         <MenuItem Header="Disconnect" Command="{Binding DisconnectButtplugCommand}"/>
                         <MenuItem Header="Scan for devices" Command="{Binding StartScanningButtplugCommand}"/>
