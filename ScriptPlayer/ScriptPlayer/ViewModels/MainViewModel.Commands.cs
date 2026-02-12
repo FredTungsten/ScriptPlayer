@@ -654,6 +654,66 @@ namespace ScriptPlayer.ViewModels
                 DisplayText = "Move to recycle bin, play next"
             });
 
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetPlaybackModeLocal)
+            {
+                CommandId = "SetPlaybackModeLocal",
+                DisplayText = "Set Playback Mode Local"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetPlaybackModeBlind)
+            {
+                CommandId = "SetPlaybackModeBlind",
+                DisplayText = "Set Playback Mode Blind"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetPlaybackModeHereSphere)
+            {
+                CommandId = "SetPlaybackModeHereSphere",
+                DisplayText = "Set Playback Mode HereSphere"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetPlaybackModeMPC)
+            {
+                CommandId = "SetPlaybackModeMPC",
+                DisplayText = "Set Playback Mode MPC"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetPlaybackModeSamsungVR)
+            {
+                CommandId = "SetPlaybackModeSamsungVR",
+                DisplayText = "Set Playback Mode SamsungVR"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetPlaybackModeVLC)
+            {
+                CommandId = "SetPlaybackModeVLC",
+                DisplayText = "Set Playback Mode VLC"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetPlaybackModeWhirligig)
+            {
+                CommandId = "SetPlaybackModeWhirligig",
+                DisplayText = "Set Playback Mode Whirligig"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetPlaybackModeZoomPlayer)
+            {
+                CommandId = "SetPlaybackModeZoomPlayer",
+                DisplayText = "Set Playback Mode ZoomPlayer"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetPlaybackModeKodi)
+            {
+                CommandId = "SetPlaybackModeKodi",
+                DisplayText = "Set Playback Mode Kodi"
+            });
+
+            GlobalCommandManager.RegisterCommand(new ScriptplayerCommand(SetPlaybackModeGoProVR)
+            {
+                CommandId = "SetPlaybackModeGoProVR",
+                DisplayText = "Set Playback Mode GoPro VR"
+            });
+
             InitializeActions();
         }
 
@@ -687,6 +747,90 @@ namespace ScriptPlayer.ViewModels
         private void DecreaseRangeExtender()
         {
             SetRangeExtenderAction(new ArInt(-5, true));
+        }
+
+        private void SetPlaybackModeLocal()
+        {
+            SetPlaybackMode(PlaybackMode.Local);
+        }
+
+        private void SetPlaybackModeBlind()
+        {
+            SetPlaybackMode(PlaybackMode.Blind);
+        }
+
+        private void SetPlaybackModeHereSphere()
+        {
+            SetPlaybackMode(PlaybackMode.DeoVr);
+        }
+
+        private void SetPlaybackModeMPC()
+        {
+            SetPlaybackMode(PlaybackMode.MpcHc);
+        }
+
+        private void SetPlaybackModeVLC()
+        {
+            SetPlaybackMode(PlaybackMode.Vlc);
+        }
+
+        private void SetPlaybackModeSamsungVR()
+        {
+            SetPlaybackMode(PlaybackMode.SamsungVr);
+        }
+
+        private void SetPlaybackModeWhirligig()
+        {
+            SetPlaybackMode(PlaybackMode.Whirligig);
+        }
+
+        private void SetPlaybackModeZoomPlayer()
+        {
+            SetPlaybackMode(PlaybackMode.ZoomPlayer);
+        }
+
+        private void SetPlaybackModeKodi()
+        {
+            SetPlaybackMode(PlaybackMode.Kodi);
+        }
+
+        private void SetPlaybackModeGoProVR()
+        {
+            SetPlaybackMode(PlaybackMode.GoProVrPlayer);
+        }
+
+        private void SetPlaybackMode(PlaybackMode mode)
+        {
+            OsdShowMessage("Playback Mode: " + GetDescription(mode), TimeSpan.FromSeconds(3), "PlaybackMode");
+            PlaybackMode = mode;
+        }
+
+        private string GetDescription(PlaybackMode playbackMode)
+        {
+            switch (playbackMode)
+            {
+                case PlaybackMode.Local:
+                    return "Local";
+                case PlaybackMode.Blind:
+                    return "Blind";
+                case PlaybackMode.Whirligig:
+                    return "Whirligig";
+                case PlaybackMode.Vlc:
+                    return "VLC";
+                case PlaybackMode.MpcHc:
+                    return "MPC-HC";
+                case PlaybackMode.SamsungVr:
+                    return "Samsung VR";
+                case PlaybackMode.ZoomPlayer:
+                    return "ZoomPlayer";
+                case PlaybackMode.Kodi:
+                    return "Kodi";
+                case PlaybackMode.DeoVr:
+                    return "HereSphere";
+                case PlaybackMode.GoProVrPlayer:
+                    return "GoPro VR";
+            }
+            return "Unknown " + playbackMode;
         }
 
         private void InitializeActions()
