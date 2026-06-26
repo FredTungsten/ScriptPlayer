@@ -1,15 +1,16 @@
-﻿using System;
+﻿using Buttplug.Client;
+using Buttplug.Core;
+using JetBrains.Annotations;
+using ScriptPlayer.Shared.Helpers;
+using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Net.PeerToPeer.Collaboration;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Buttplug.Client;
-using Buttplug.Core;
-using JetBrains.Annotations;
-using ScriptPlayer.Shared.Helpers;
 
 namespace ScriptPlayer.Shared
 {
@@ -153,7 +154,8 @@ namespace ScriptPlayer.Shared
 
             // Legacy code
             // AllowedMessages.ContainsKey(ServerMessage.Types.MessageAttributeType.VibrateCmd)
-            if (device.VibrateAttributes.Count > 0 )
+            // device.VibrateAttributes.Count > 0
+            if (device.HasOutput(Buttplug.Core.Messages.OutputType.Vibrate))
             {
                 double speed;
                 switch (VibratorConversionMode)
@@ -230,7 +232,9 @@ namespace ScriptPlayer.Shared
                 {
                     await _clientLock.WaitAsync();
 
-                    await device.VibrateAsync(speed);
+                    await device.RunOutputAsync(new DeviceOutputCommand(Buttplug.Core.Messages.OutputType.Vibrate, PercentOrSteps.FromPercent(speed)));
+
+                    //await device.VibrateAsync(speed);
 
                     //ButtplugMessage response = await device.SendMessageAsync(new SingleMotorVibrateCmd(device.Index, speed));
 
@@ -255,41 +259,66 @@ namespace ScriptPlayer.Shared
             {
                 await _clientLock.WaitAsync();
 
-                if (device.LinearAttributes.Count > 0)
+                if (device.HasOutput(Buttplug.Core.Messages.OutputType.Position))
                 {
                     double val = information.PositionToTransformed / (double)99;
                     val = Math.Min(1.0, Math.Max(0, val));
 
-                    await device.LinearAsync((uint) information.DurationStretched.TotalMilliseconds, val);
+                    await device.RunOutputAsync(new DeviceOutputCommand(Buttplug.Core.Messages.OutputType.Position, PercentOrSteps.FromPercent(val)));
+                    //await device.LinearAsync((uint) information.DurationStretched.TotalMilliseconds, val);
                 }
-                else if (device.VibrateAttributes.Count > 0)
+                else if (device.HasOutput(Buttplug.Core.Messages.OutputType.Vibrate))
                 {
                     switch (VibratorConversionMode)
                     {
                         case VibratorConversionMode.PositionToSpeed:
-                            await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed(information.PositionFromOriginal)));
-                            break;
+                            { 
+                                //await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed(information.PositionFromOriginal)));
+                                double speed = information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed(information.PositionFromOriginal));
+                                await device.RunOutputAsync(new DeviceOutputCommand(Buttplug.Core.Messages.OutputType.Vibrate, PercentOrSteps.FromPercent(speed)));
+                                break;
+                            }
                         case VibratorConversionMode.PositionToSpeedInverted:
-                            await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed((byte)(99 - information.PositionFromOriginal))));
-                            break;
+                            {                            
+                                //await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed((byte)(99 - information.PositionFromOriginal))));
+                                double speed = information.TransformSpeed(CommandConverter.LaunchPositionToVibratorSpeed((byte)(99 - information.PositionFromOriginal)));
+                                await device.RunOutputAsync(new DeviceOutputCommand(Buttplug.Core.Messages.OutputType.Vibrate, PercentOrSteps.FromPercent(speed)));
+                                break;
+                            }
                         case VibratorConversionMode.SpeedHalfDuration:
                         case VibratorConversionMode.SpeedFullDuration:
-                            await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchSpeedToVibratorSpeed(information.SpeedTransformed)));
-                            break;
+                            {
+                                //await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchSpeedToVibratorSpeed(information.SpeedTransformed)));
+                                double speed = information.TransformSpeed(CommandConverter.LaunchSpeedToVibratorSpeed(information.SpeedTransformed));
+                                await device.RunOutputAsync(new DeviceOutputCommand(Buttplug.Core.Messages.OutputType.Vibrate, PercentOrSteps.FromPercent(speed)));
+                                break;
+                            }
                         case VibratorConversionMode.SpeedTimesLengthHalfDuration:
                         case VibratorConversionMode.SpeedTimesLengthFullDuration:
-                            await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchSpeedAndLengthToVibratorSpeed(
+                            {
+                                /*
+                                await device.VibrateAsync(information.TransformSpeed(CommandConverter.LaunchSpeedAndLengthToVibratorSpeed(
                                 information.SpeedOriginal,
                                 information.PositionFromTransformed,
-                                information.PositionToTransformed)));
-                            break;
+                                information.PositionToTransformed)));*/
+                                double speed = information.TransformSpeed(CommandConverter.LaunchSpeedAndLengthToVibratorSpeed(
+                                information.SpeedOriginal,
+                                information.PositionFromTransformed,
+                                information.PositionToTransformed));
+                                await device.RunOutputAsync(new DeviceOutputCommand(Buttplug.Core.Messages.OutputType.Vibrate, PercentOrSteps.FromPercent(speed)));
+                                break;
+                            }
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
                 }
-                else if (device.RotateAttributes.Count > 0)
+                else if (device.HasOutput(Buttplug.Core.Messages.OutputType.Rotate))
                 {
-                    await device.RotateAsync(CommandConverter.LaunchToVorzeSpeed(information), information.PositionToTransformed > information.PositionFromTransformed);
+                    //await device.RotateAsync(CommandConverter.LaunchToVorzeSpeed(information), information.PositionToTransformed > information.PositionFromTransformed);
+
+                    //TODO where does CW / CCW Info go in Buttplug 5?
+                    // information.PositionToTransformed > information.PositionFromTransformed
+                    await device.RunOutputAsync(new DeviceOutputCommand(Buttplug.Core.Messages.OutputType.Rotate, PercentOrSteps.FromPercent(CommandConverter.LaunchToVorzeSpeed(information))));
                 }
             }
             catch (Exception e)
@@ -313,7 +342,7 @@ namespace ScriptPlayer.Shared
 
             try
             {
-                await device.Stop();
+                await device.StopAsync();
             }
             catch (Exception e)
             {
