@@ -455,10 +455,13 @@ namespace ScriptPlayer.HandyApi
         ///<remarks>/syncPrepare</remarks> 
         private void SyncPrepare(string scriptUrl)
         {
-            Continue(_api.HsspSetup(new HsspSetupUrlRequest
-            {
-                Url = scriptUrl
-            }), SyncPrepareFinished, SyncPrepareFailed);
+            Play(false, TimeSpan.Zero, _ => {
+
+                Continue(_api.HsspSetup(new HsspSetupUrlRequest
+                {
+                    Url = scriptUrl
+                }), SyncPrepareFinished, SyncPrepareFailed);
+            });
         }
 
         private void SyncPrepareFailed(DeviceError error)
@@ -478,6 +481,11 @@ namespace ScriptPlayer.HandyApi
 
         public void Play(bool playing, TimeSpan progress)
         {
+            Play(playing, progress, null);
+        }
+
+        public void Play(bool playing, TimeSpan progress, Action<HsspStateResponse> continueWith = null)
+        {
             Debug.WriteLine($"HandyController.Play: {playing} @ {progress}");
 
             bool wasAlreadyPlayingRight = _shouldBePlaying == playing;
@@ -485,20 +493,22 @@ namespace ScriptPlayer.HandyApi
             
             if (!_isScriptLoadedOnDevice)
             {
-                Debug.WriteLine("HandyController.Play, but !IsScriptLoading");
+                Debug.WriteLine("HandyController.Play, but !IsScriptLoaded");
+                continueWith?.Invoke(null);
                 return;
             }
             
             if (playing == _playing && wasAlreadyPlayingRight)
             {
                 Debug.WriteLine("HandyController.Play, but playing == _playing (and was already)");
+                continueWith?.Invoke(null);
                 return;
             }
 
             _playing = playing;
             Debug.WriteLine("HandyController.Play, _playing = " + _playing);
 
-            SyncPlay(playing, progress, null);
+            SyncPlay(playing, progress, continueWith);
         }
 
         private void SyncPlay(bool playing, TimeSpan progress, Action<HsspStateResponse> continueWith)
